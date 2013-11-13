@@ -1,0 +1,62 @@
+* {
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+}
+
+.packery {
+  /* background: #f5f5f5; */
+}
+
+/* clearfix */
+.packery:after {
+  content: ' ';
+  display: block;
+  clear: both;
+}
+
+.item {
+  width: 48%;
+  min-height: 400px;
+  cursor: default;
+  float: left;
+  background: #DDD;/*#C09;*/
+  border: 2px solid #333;
+  border-color: hsla(0, 0%, 0%, 0.3);
+-webkit-border-radius: 4px 4px 4px 4px;
+border-radius: 4px 4px 4px 4px;
+
+}
+
+.item .handle:hover {
+    cursor: move;
+}
+
+.item:hover {
+  border-color: #C90;
+}
+
+.item.is-dragging,
+.item.is-positioning-post-drag {
+  border-color: white;
+  background: #09F;
+  z-index: 2;
+}
+
+
+.item .delete {
+display: block;
+color: white;
+background: hsla(0, 0%, 0%, 0.3);/*rgba(255, 255, 255, 0.2)*/;
+width: 30px;
+height: 30px;
+top: 0;
+right: 0;
+position: absolute;
+text-align: center;
+line-height: 30px;
+}
+
+.item .delete:hover {
+  cursor: pointer;
+}

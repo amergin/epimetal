@@ -8,7 +8,8 @@
     "angular-bootstrap": "~0.3.0",
     "angular-ui-router": "~0.0.1",
     "angular-ui-utils": "~0.0.3",
-    "dcjs": "~1.6.0"
+    "dcjs": "~1.6.0",
+    "draggabilly": "~1.0.6"
   },
   "dependencies": {
     "packery": "~1.1.2"

@@ -1,0 +1,22 @@
+<div>
+	<h4>New histogram</h4>
+	<form class="form-horizontal">
+		<div class="control-group">
+			<label class="control-label" for="xCoordinate">Variable</label>
+			<div class="controls">
+				<select>
+					<option ng-repeat="var in getVariables()" value="{{var}}">{{var}}</option>
+				</select>
+			</div>
+		</div>
+
+		<div class="control-group">
+			<div class="controls">
+				<label class="checkbox">
+					<input type="checkbox"> Pool datasets
+				</label>
+				<button type="submit" class="btn btn-primary">Add plot</button>
+			</div>
+		</div>
+	</form>
+</div>

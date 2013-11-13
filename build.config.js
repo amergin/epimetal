@@ -66,7 +66,13 @@ module.exports = {
       'vendor/angular-bootstrap/ui-bootstrap-tpls.min.js',
       'vendor/placeholders/angular-placeholders-0.0.1-SNAPSHOT.min.js',
       'vendor/angular-ui-router/release/angular-ui-router.js',
-      'vendor/angular-ui-utils/modules/route/route.js'
+      'vendor/angular-ui-utils/modules/route/route.js',
+      'vendor/crossfilter/crossfilter.js',
+      'vendor/d3/d3.js',
+      'vendor/dcjs/dc.js',
+      'vendor/packery/packery.pkgd.js',
+      'vendor/draggabilly/draggabilly.pkgd.js',
+      'vendor/underscore/underscore.js',
     ],
     css: [
     ],

@@ -1,4 +1,4 @@
-# [Plotter]
+# Plotter
 
 ***
 

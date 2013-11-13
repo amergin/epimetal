@@ -1,0 +1,19 @@
+<div class="well well-small">
+  <h4>Datasets</h4>
+  <table class="table table-striped" id="dataset">
+    <thead>
+      <tr>
+        <th>Select</th>
+        <th>Name</th>
+        <th>Samples</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="dset in datasets">
+        <td class="dataset-select"><input type="checkbox" ng-click="toggleSelection($index)" ng-checked="isSelected($index)"></td>
+        <td class="dataset-name">{{dset.name}}</td>
+        <td class="dataset-size">{{dset.samples.length}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
