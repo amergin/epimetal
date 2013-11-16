@@ -2,10 +2,12 @@
 	<h4>New histogram</h4>
 	<form class="form-horizontal">
 		<div class="control-group">
-			<label class="control-label" for="xCoordinate">Variable</label>
+			<label class="control-label" for="xcoordinate">Variable</label>
 			<div class="controls">
-				<select>
-					<option ng-repeat="var in getVariables()" value="{{var}}">{{var}}</option>
+				<select ng-disabled="!canEdit()" id="xcoordinate">
+					<optgroup ng-repeat="(ind,set) in variables" label="{{set.name}}">
+						<option ng-repeat="var in set.vars">{{var}}</option>
+					</optgroup>					
 				</select>
 			</div>
 		</div>
@@ -13,9 +15,9 @@
 		<div class="control-group">
 			<div class="controls">
 				<label class="checkbox">
-					<input type="checkbox"> Pool datasets
+					<input type="checkbox" ng-disabled="!canEdit()"> Pool datasets
 				</label>
-				<button type="submit" class="btn btn-primary">Add plot</button>
+				<button type="submit" class="btn btn-primary" ng-disabled="!canEdit()">Add plot</button>
 			</div>
 		</div>
 	</form>

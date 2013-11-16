@@ -1,0 +1,36 @@
+<div>
+	<h4>New scatterplot</h4>
+	<form class="form-horizontal" name="plot" novalidate>
+		<fieldset>
+			<div class="control-group">
+				<label class="control-label" for="xcoordinate">X coordinate</label>
+				<div class="controls">
+					<select id="xcoordinate" ng-disabled="!canEdit()">
+						<optgroup ng-repeat="(ind,set) in variables" label="{{set.name}}">
+							<option ng-repeat="var in set.vars">{{var}}</option>
+						</optgroup>					
+					</select>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="ycoordinate">Y coordinate</label>
+				<div class="controls">
+					<select id="ycoordinate" ng-disabled="!canEdit()">
+						<optgroup ng-repeat="(ind,set) in variables" label="{{set.name}}">
+							<option ng-repeat="var in set.vars">{{var}}</option>
+						</optgroup>					
+					</select>
+				</div>
+			</div>
+
+			<div class="control-group">
+				<div class="controls">
+					<label class="checkbox">
+						<input type="checkbox" ng-disabled="!canEdit()"> Pool datasets
+					</label>
+					<button type="submit" class="btn btn-primary" ng-disabled="!canEdit()">Add plot</button>
+				</div>
+			</div>
+		</fieldset>
+	</form>
+</div>

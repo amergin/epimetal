@@ -53,8 +53,10 @@
 /**
  * And of course we define a controller for our route.
  */
- vis.controller( 'VisCtrl', function VisController( $scope ) {
- });
+ vis.controller( 'VisCtrl', ['$scope','DatasetService', 
+  function VisController( $scope, DatasetService) {
+    DatasetService.fetch();
+ }]);
 
 
  vis.controller('PackeryController', function($scope) {
@@ -133,8 +135,15 @@
 };
 });
 
-App.controller('HistogramController', function($scope, $http) {
-});
+App.controller('HistogramController', ['$scope', '$http', 'DatasetService', 
+  function($scope, $http, DatasetService) {
+
+    $scope.variables = DatasetService.variables;
+
+    $scope.canEdit = function() {
+      return $scope.variables.length > 0;
+    };    
+}]);
 
 App.directive('histogram', function() {
   return {
@@ -152,32 +161,41 @@ App.directive('histogram', function() {
 });
 
 
+App.controller('ScatterplotController', ['$scope', '$http', 'DatasetService', 
+  function($scope, $http, DatasetService) {
+    $scope.variables = DatasetService.variables;
+
+    $scope.canEdit = function() {
+      return $scope.variables.length > 0;
+    };
+}]);
+
+App.directive('scatterplot', function() {
+  return {
+    restrict: 'C',
+    templateUrl : 'vis/scatterplot.tpl.html',
+    replace: true,
+    controller: 'ScatterplotController',
+    link: function(scope, elm, attrs) {
+
+    }
+  };
+});
+
+
+
 vis.controller('DatasetController', ['$scope', 'DatasetService',
   function($scope, DatasetService)
   {
 
-  DatasetService.load().then( function(response) {
-    $scope.datasets = response.data;
-  },
-  function(response) {
-    console.log(response);
-  });
-
-  $scope.toggleSelection = function( ind ) {
-    if( (ind >= 0) && ( ind < $scope.datasets.length ) )
-    {
-      var dset = $scope.datasets[ind];
-      if( typeof( dset['selected'] ) === "undefined" ) {
-        dset['selected'] = true;
-      }
-      else {
-        dset['selected'] = !dset['selected'];
-      }
-    } 
-  };
+  $scope.datasets = DatasetService.datasets;
 
   $scope.isActive = function(ind) {
-    return $scope.datasets[ind]['selected'] === true;
+    return $scope.datasets[ind].active;
+  };
+
+  $scope.toggle = function(ind) {
+    return DatasetService.toggle(ind);
   };
 
 
@@ -200,63 +218,60 @@ vis.directive('dataset', function() {
 });
 
 
-vis.factory('DatasetService', ['$http', function($http) {
+vis.factory('DatasetService', ['$http', '$rootScope', function($http, $rootScope) {
 
   // privates
   var config = {
-    url : '/plotter/random_data.json'
+    url : '/plotter/random_data.json',
+    broadcast: 'DATASET_UPDATE'
   };
+  var datasets = [];
+  var variables = [];
 
   var service = {};
 
-  service.load = function() {
-    return $http.get( config.url );
+  // load datasets
+  service.fetch = function() {
+    var promise = $http.get( config.url ).then( function(response) {
+
+      var res = response.data;
+      console.log("Load Datasets",res);
+
+      _.each( res, function( value, key, res ) {
+        _.extend( value, {active: false} );
+      });
+
+      angular.copy(res, datasets);
+
+      // $rootScope.$broadcast(config.broadcast, datasets);
+
+      // return value is picked up on the controller from promise
+      return datasets;
+    });
+
+    return promise;
   };
 
-  // service.count = function() { return datasets.length; };
+  service.datasets = datasets;
 
-  // service.getVariables = function() {
-  //   if( datasets.length === 0 )
-  //   {
-  //     // no datasets -> no vars
-  //     return [];
-  //   }
+  service.isActive = function(ind) {
+    return datasets[ind].active;
+  };
 
-  //   return _.keys( datasets[selectedSetInd] );
-  // };
+  service.toggle = function(ind) {
+    datasets[ind].active = !datasets[ind].active;
 
-  // service.setActive = function( ind ) {
-  //   selectedSetInd = ind || null;
-  // };
+    // update available variables
+    var vars = [];
+    _.each( datasets, function(set, ind) {
+      if( set.active ) {
+        vars.push( { name: set.name, vars: _.keys(set.samples[0]) } );
+      }
+    });
+    angular.copy(vars,variables);
+  };
 
-  // service.get = function() {
-  //   return datasets;
-  // };
+  service.variables = variables;
 
   return service;
 }]);
-
-
-
-
-// $scope.getVariables = function(setName) {
-//   console.log("called");
-//   if( typeof( $scope.datasets ) !== "undefined" )
-//   {
-//     var foundSet = _.filter( $scope.datasets, function(set) {
-//       return set.name === setName;
-//     });
-
-//     if( foundSet == 'undefined' ) { 
-//       console.log("Cannot find corresponding dataset");
-//       return ["error"];
-//     }
-
-//     return _.keys( foundSet.samples );
-//   }
-//   else {
-//     console.log("Datasets not loaded");
-//     return ["error"];
-//   }
-
-// };
