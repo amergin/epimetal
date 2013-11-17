@@ -1,24 +1,18 @@
-<div>
+<div class="well-small well">
 	<h4>New scatterplot</h4>
 	<form class="form-horizontal" name="plot" novalidate>
 		<fieldset>
 			<div class="control-group">
 				<label class="control-label" for="xcoordinate">X coordinate</label>
 				<div class="controls">
-					<select id="xcoordinate" ng-disabled="!canEdit()">
-						<optgroup ng-repeat="(ind,set) in variables" label="{{set.name}}">
-							<option ng-repeat="var in set.vars">{{var}}</option>
-						</optgroup>					
+					<select id="xcoordinate" ng-model="selection.x" ng-options="item.variable group by item.set for item in variables" required ng-disabled="!canEdit()">
 					</select>
 				</div>
 			</div>
 			<div class="control-group">
 				<label class="control-label" for="ycoordinate">Y coordinate</label>
 				<div class="controls">
-					<select id="ycoordinate" ng-disabled="!canEdit()">
-						<optgroup ng-repeat="(ind,set) in variables" label="{{set.name}}">
-							<option ng-repeat="var in set.vars">{{var}}</option>
-						</optgroup>					
+					<select id="ycoordinate" ng-model="selection.y" ng-options="item.variable group by item.set for item in variables" required ng-disabled="!canEdit()">
 					</select>
 				</div>
 			</div>
@@ -28,7 +22,7 @@
 					<label class="checkbox">
 						<input type="checkbox" ng-disabled="!canEdit()"> Pool datasets
 					</label>
-					<button type="submit" class="btn btn-primary" ng-disabled="!canEdit()">Add plot</button>
+					<button type="submit" class="btn btn-primary" ng-disabled="!canEdit()" ng-click="add(selection)">Add plot</button>
 				</div>
 			</div>
 		</fieldset>

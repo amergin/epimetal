@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app="plotter" ng-controller="AppCtrl">
+<html ng-app="plotter">
 <head>
   <title ng-bind="pageTitle"></title>
 
@@ -8,7 +8,7 @@
   <meta property="og:title" content="Plotter" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="http://www.github.com/amergin/plotter" />
-  <meta property="og:image" content="https://a248.e.akamai.net/assets.github.com/images/modules/logos_page/Octocat.png?1366128846" />
+  <meta property="og:image" content="https://a248.e.akamai.net/assets.github.com/images/modules/logos_page/Octocat.png" />
   <meta property="og:description" content="Plotter tool.">
 
   <!-- font awesome from BootstrapCDN -->
@@ -31,8 +31,7 @@
         <h1>Plotter <small>Generic single-page plotting application</small></h1>
       </div>
       <div class="row-fluid">
-        <div class="span3">
-
+        <div class="span3" id="sidebar">
 
           <div class="dataset">
           </div>
@@ -41,23 +40,22 @@
             <h4>Plots</h4>
 
             <!-- Scatterplot -->
-            <div class="scatterplot well-small well">
+            <div class="scatterplot" ng-controller="ScatterplotController">
             </div>
 
             <!-- Histogram -->
-            <div class="histogram well-small well">
+            <div class="histogram" ng-controller="HistogramController">
             </div>
-
 
           </div>
 
         </div>
 
 
-        <div class="span9 container" ui-view>          
+        <div class="span9 container" ui-view>
         </div>
       </div>
-    <!-- end row-fluid -->
+      <!-- end row-fluid -->
     </div> 
     <!-- end container -->
 

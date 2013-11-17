@@ -11,9 +11,9 @@ App.config( function myAppConfig ( $stateProvider, $urlRouterProvider ) {
   $urlRouterProvider.otherwise( '/vis' );
 })
 .run(['$rootScope', '$state', '$stateParams', function ($rootScope,   $state,   $stateParams) {
-    $rootScope.$state = $state;
-    $rootScope.$stateParams = $stateParams;
-    $state.transitionTo('vis');
+  $rootScope.$state = $state;
+  $rootScope.$stateParams = $stateParams;
+  $state.transitionTo('vis');
 }]);
 
 App.controller( 'AppCtrl', function AppCtrl ( $scope, $location ) {
@@ -24,3 +24,20 @@ App.controller( 'AppCtrl', function AppCtrl ( $scope, $location ) {
   });
 });
 
+
+// see http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
+App.config(['$provide', function($provide){
+  $provide.decorator('$rootScope', ['$delegate', function($delegate){
+
+    Object.defineProperty($delegate.constructor.prototype, '$onRootScope', {
+      value: function(name, listener){
+        var unsubscribe = $delegate.$on(name, listener);
+        this.$on('$destroy', unsubscribe);
+      },
+      enumerable: false
+    });
+
+
+    return $delegate;
+  }]);
+}]);

@@ -50,20 +50,189 @@
   // });
 });
 
+
 /**
  * And of course we define a controller for our route.
  */
  vis.controller( 'VisCtrl', ['$scope','DatasetService', 
   function VisController( $scope, DatasetService) {
+
+    // load datasets
     DatasetService.fetch();
  }]);
 
 
- vis.controller('PackeryController', function($scope) {
+vis.controller('HistogramController', ['$scope', '$rootScope', 'DatasetService', 
+  function($scope, $rootScope, DatasetService) {
+
+    $scope.variables = DatasetService.variables;
+    $scope.selection = {};
+
+    $scope.canEdit = function() {
+      return $scope.variables.length > 0;
+    };
+
+    $scope.getSets = function() {
+      return $scope.datasets;
+    };
+
+    $scope.add = function(selection) {
+      $rootScope.$emit('packery.add', selection);
+    };
+
+}]);
+
+vis.directive('histogram', function() {
+  return {
+    restrict: 'C',
+    transclude: true,
+    replace: true,
+    templateUrl : 'vis/histogram.tpl.html',
+    link: function(scope, elm, attrs) {
+
+    }
+  };
+});
+
+
+vis.controller('ScatterplotController', ['$scope', '$rootScope', '$http', 'DatasetService', 
+  function($scope, $rootScope, $http, DatasetService) {
+    $scope.variables = DatasetService.variables;
+    $scope.selection = {};
+
+    $scope.canEdit = function() {
+      return $scope.variables.length > 0;
+    };
+
+    $scope.add = function(vars) {
+      $rootScope.$emit('packery.add', vars);
+    };
+
+    $scope.add = function(selection) {
+      $rootScope.$emit('packery.add', selection);
+    };
+    
+}]);
+
+vis.directive('scatterplot', function() {
+  return {
+    restrict: 'C',
+    transclude: true,
+    replace: true,
+    templateUrl : 'vis/scatterplot.tpl.html',
+    controller: 'ScatterplotController',
+    link: function(scope, elm, attrs) {
+
+    }
+  };
+});
+
+
+
+vis.controller('DatasetController', ['$scope', 'DatasetService',
+  function($scope, DatasetService)
+  {
+
+  $scope.datasets = DatasetService.datasets;
+
+  $scope.isActive = function(ind) {
+    return $scope.datasets[ind].active;
+  };
+
+  $scope.toggle = function(ind) {
+    return DatasetService.toggle(ind);
+  };
+
+
+}]);
+
+
+vis.directive('dataset', function() {
+  return {
+    restrict: 'C',
+    templateUrl : 'vis/dataset.tpl.html',
+
+    replace: true,
+    controller: 'DatasetController',
+    link: function(scope, elm, attrs) {
+
+    }
+  };
+});
+
+
+vis.factory('DatasetService', ['$http', '$rootScope', function($http) {
+
+  // privates
+  var config = {
+    url : '/plotter/random_data.json',
+    broadcast: 'DATASET_UPDATE'
+  };
+  var datasets = [];
+  var variables = [];
+
+  var service = {};
+
+  // load datasets
+  service.fetch = function() {
+    var promise = $http.get( config.url ).then( function(response) {
+
+      var res = response.data;
+      console.log("Load Datasets",res);
+
+      _.each( res, function( value, key, res ) {
+        _.extend( value, {active: false} );
+      });
+
+      angular.copy(res, datasets);
+
+      // return value is picked up on the controller from promise
+      return datasets;
+    });
+
+    return promise;
+  };
+
+  service.datasets = datasets;
+
+  service.isActive = function(ind) {
+    return datasets[ind].active;
+  };
+
+  service.toggle = function(ind) {
+    datasets[ind].active = !datasets[ind].active;
+
+    // update available variables
+    var vars = [];
+
+    // create structure suitable for ng-options (flat list)
+    _.each( datasets, function(set,ind) {
+      if(set.active) {
+        vars = _.map( _.keys( set.samples[0] ), function(ele) {
+          return { set: set.name, variable: ele };
+        }).concat(vars);
+      }
+    });
+    angular.copy(vars,variables);
+  };
+
+  service.variables = variables;
+
+  return service;
+}]);
+
+
+
+
+ vis.controller('PackeryController', ['$scope', '$rootScope', function($scope,$rootScope) {
 
   $scope.init = function(element) {
     console.log("init", element);
   };
+
+  $scope.$onRootScope('packery.add', function(event,variables) {
+    console.log(variables);
+  });
 
   $scope.windows = {};
   $scope.windowRunningNumber = 0;
@@ -83,15 +252,12 @@
     console.log("applied");
 
   };
-});
+}]);
 
  vis.directive('packery', function() {
   return {
     restrict: 'C',
     templateUrl : 'vis/packery.tpl.html',
-    scope : {
-      initAttributes : "@"
-    },
     replace: true,
     controller: 'PackeryController',
     link: function(scope, elm, attrs) {
@@ -135,143 +301,3 @@
 };
 });
 
-App.controller('HistogramController', ['$scope', '$http', 'DatasetService', 
-  function($scope, $http, DatasetService) {
-
-    $scope.variables = DatasetService.variables;
-
-    $scope.canEdit = function() {
-      return $scope.variables.length > 0;
-    };    
-}]);
-
-App.directive('histogram', function() {
-  return {
-    restrict: 'C',
-    templateUrl : 'vis/histogram.tpl.html',
-    // scope : {
-    //   initAttributes : "@"
-    // },
-    replace: true,
-    controller: 'HistogramController',
-    link: function(scope, elm, attrs) {
-
-    }
-  };
-});
-
-
-App.controller('ScatterplotController', ['$scope', '$http', 'DatasetService', 
-  function($scope, $http, DatasetService) {
-    $scope.variables = DatasetService.variables;
-
-    $scope.canEdit = function() {
-      return $scope.variables.length > 0;
-    };
-}]);
-
-App.directive('scatterplot', function() {
-  return {
-    restrict: 'C',
-    templateUrl : 'vis/scatterplot.tpl.html',
-    replace: true,
-    controller: 'ScatterplotController',
-    link: function(scope, elm, attrs) {
-
-    }
-  };
-});
-
-
-
-vis.controller('DatasetController', ['$scope', 'DatasetService',
-  function($scope, DatasetService)
-  {
-
-  $scope.datasets = DatasetService.datasets;
-
-  $scope.isActive = function(ind) {
-    return $scope.datasets[ind].active;
-  };
-
-  $scope.toggle = function(ind) {
-    return DatasetService.toggle(ind);
-  };
-
-
-}]);
-
-
-vis.directive('dataset', function() {
-  return {
-    restrict: 'C',
-    templateUrl : 'vis/dataset.tpl.html',
-    // scope : {
-    //   initAttributes : "@"
-    // },
-    replace: true,
-    controller: 'DatasetController',
-    link: function(scope, elm, attrs) {
-
-    }
-  };
-});
-
-
-vis.factory('DatasetService', ['$http', '$rootScope', function($http, $rootScope) {
-
-  // privates
-  var config = {
-    url : '/plotter/random_data.json',
-    broadcast: 'DATASET_UPDATE'
-  };
-  var datasets = [];
-  var variables = [];
-
-  var service = {};
-
-  // load datasets
-  service.fetch = function() {
-    var promise = $http.get( config.url ).then( function(response) {
-
-      var res = response.data;
-      console.log("Load Datasets",res);
-
-      _.each( res, function( value, key, res ) {
-        _.extend( value, {active: false} );
-      });
-
-      angular.copy(res, datasets);
-
-      // $rootScope.$broadcast(config.broadcast, datasets);
-
-      // return value is picked up on the controller from promise
-      return datasets;
-    });
-
-    return promise;
-  };
-
-  service.datasets = datasets;
-
-  service.isActive = function(ind) {
-    return datasets[ind].active;
-  };
-
-  service.toggle = function(ind) {
-    datasets[ind].active = !datasets[ind].active;
-
-    // update available variables
-    var vars = [];
-    _.each( datasets, function(set, ind) {
-      if( set.active ) {
-        vars.push( { name: set.name, vars: _.keys(set.samples[0]) } );
-      }
-    });
-    angular.copy(vars,variables);
-  };
-
-  service.variables = variables;
-
-  return service;
-}]);

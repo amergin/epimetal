@@ -1,5 +1,5 @@
 module.exports = function ( karma ) {
-  karma.configure({
+  karma.set({
     /** 
      * From where to look for files, starting with the location of this file.
      */
@@ -12,16 +12,12 @@ module.exports = function ( karma ) {
       <% scripts.forEach( function ( file ) { %>'<%= file %>',
       <% }); %>
       'src/**/*.js',
-      'src/**/*.coffee',
     ],
     exclude: [
       'src/assets/**/*.js'
     ],
     frameworks: [ 'jasmine' ],
     plugins: [ 'karma-jasmine', 'karma-firefox-launcher', 'karma-chrome-launcher', 'karma-phantomjs-launcher', 'karma-coffee-preprocessor' ],
-    preprocessors: {
-      '**/*.coffee': 'coffee',
-    },
 
     /**
      * How to report, by default.
@@ -32,14 +28,13 @@ module.exports = function ( karma ) {
      * On which port should the browser connect, on which port is the test runner
      * operating, and what is the URL path for the browser to use.
      */
-    port: 9218,
-    runnerPort: 9500,
+    port: 9018,
     urlRoot: '/',
 
     /** 
      * Disable file watching by default.
      */
-    autoWatch: true,
+    autoWatch: false,
 
     /**
      * The list of browsers to launch to test on. This includes only "Firefox" by
@@ -55,7 +50,7 @@ module.exports = function ( karma ) {
      * the aesthetic advantage of not launching a browser every time you save.
      */
     browsers: [
-      'Firefox'
+      'Chrome'
     ]
   });
 };
