@@ -72,6 +72,10 @@ vis.controller('HistogramController', ['$scope', '$rootScope', 'DatasetService',
       return $scope.variables.length > 0;
     };
 
+    $scope.canSubmit = function() {
+      return !_.isEmpty( $scope.selection );
+    };
+
     $scope.getSets = function() {
       return $scope.datasets;
     };
@@ -111,7 +115,11 @@ vis.controller('ScatterplotController', ['$scope', '$rootScope', '$http', 'Datas
     $scope.add = function(selection) {
       $rootScope.$emit('packery.add', selection);
     };
-    
+
+    $scope.canSubmit = function() {
+      return ( $scope.selection.x !== undefined ) && ( $scope.selection.x !== undefined );
+    };    
+
 }]);
 
 vis.directive('scatterplot', function() {
@@ -230,8 +238,8 @@ vis.factory('DatasetService', ['$http', '$rootScope', function($http) {
     console.log("init", element);
   };
 
-  $scope.$onRootScope('packery.add', function(event,variables) {
-    console.log(variables);
+  $scope.$onRootScope('packery.add', function(event,selection) {
+    $scope.add( selection );
   });
 
   $scope.windows = {};
@@ -243,8 +251,8 @@ vis.factory('DatasetService', ['$http', '$rootScope', function($http) {
   };
 
   // adds window to grid
-  $scope.add = function() {
-    console.log("add");
+  $scope.add = function(selection) {
+    console.log("add",selection);
 
     // apply
     $scope.windows[ 'win_' +  (++$scope.windowRunningNumber) ] = 
@@ -292,11 +300,12 @@ vis.factory('DatasetService', ['$http', '$rootScope', function($http) {
           { 
           // columnWidth: 220, 
           // gutter: 10,
+          // see https://github.com/metafizzy/packery/issues/7
           rowHeight: 420,
-          gutter: '.gutter-sizer',
           itemSelector: '.item',
+          gutter: '.gutter-sizer',
           columnWidth: '.grid-sizer'
-          } );//scope.$eval( attrs.initAttributes ) );
+          } );
 }
 };
 });

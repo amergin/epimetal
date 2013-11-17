@@ -1,8 +1,8 @@
 <div>
+	<div class="gutter-sizer"></div>
+	<div class="grid-sizer"></div>
 	<div ng-repeat="(ind,window) in windows" class="item">
 		<div class="handle">HANDLE HANDLE HANDLE HANDLE HANDLE HANDLE</div>
-		<div class="gutter-sizer"></div>
-		<div class="grid-sizer"></div>
 		{{window}}
 		<a class="delete" ng-click="remove(window.number)">×</a>
 	</div>

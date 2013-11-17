@@ -8,6 +8,18 @@
   SIDEBAR
  *********************/
 
+/* Plot div configurations */
+.scatterplot, .histogram {
+  background-color: #ffffff;
+}
+
+/* Dataset configuration */
+table#dataset {
+  table-layout: fixed;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 #sidebar {
   min-width: 370px;
 }
@@ -40,7 +52,8 @@
 }
 
 .item {
-  width: 48%;
+  width: 46%;
+  min-width: 400px;
   min-height: 400px;
   cursor: default;
   float: left;
@@ -83,4 +96,12 @@ line-height: 30px;
 
 .item .delete:hover {
   cursor: pointer;
+}
+
+.gutter-sizer {
+  width: 0.5%;
+}
+
+.grid-sizer {
+  width: 46%;
 }
