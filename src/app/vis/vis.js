@@ -59,10 +59,10 @@
 
     // load datasets
     DatasetService.fetch();
- }]);
+  }]);
 
 
-vis.controller('HistogramController', ['$scope', '$rootScope', 'DatasetService', 
+ vis.controller('HistogramController', ['$scope', '$rootScope', 'DatasetService', 
   function($scope, $rootScope, DatasetService) {
 
     $scope.variables = DatasetService.variables;
@@ -84,9 +84,9 @@ vis.controller('HistogramController', ['$scope', '$rootScope', 'DatasetService',
       $rootScope.$emit('packery.add', selection);
     };
 
-}]);
+  }]);
 
-vis.directive('histogram', function() {
+ vis.directive('histogram', function() {
   return {
     restrict: 'C',
     transclude: true,
@@ -99,7 +99,7 @@ vis.directive('histogram', function() {
 });
 
 
-vis.controller('ScatterplotController', ['$scope', '$rootScope', '$http', 'DatasetService', 
+ vis.controller('ScatterplotController', ['$scope', '$rootScope', '$http', 'DatasetService', 
   function($scope, $rootScope, $http, DatasetService) {
     $scope.variables = DatasetService.variables;
     $scope.selection = {};
@@ -117,12 +117,12 @@ vis.controller('ScatterplotController', ['$scope', '$rootScope', '$http', 'Datas
     };
 
     $scope.canSubmit = function() {
-      return ( $scope.selection.x !== undefined ) && ( $scope.selection.x !== undefined );
+      return ( $scope.selection.x !== undefined ) && ( $scope.selection.y !== undefined );
     };    
 
-}]);
+  }]);
 
-vis.directive('scatterplot', function() {
+ vis.directive('scatterplot', function() {
   return {
     restrict: 'C',
     transclude: true,
@@ -137,25 +137,33 @@ vis.directive('scatterplot', function() {
 
 
 
-vis.controller('DatasetController', ['$scope', 'DatasetService',
+ vis.controller('DatasetController', ['$scope', 'DatasetService',
   function($scope, DatasetService)
   {
 
-  $scope.datasets = DatasetService.datasets;
+    $scope.datasets = DatasetService.datasets;
 
-  $scope.isActive = function(ind) {
-    return $scope.datasets[ind].active;
-  };
+    $scope.isActive = function(ind) {
+      return $scope.datasets[ind].active;
+    };
 
-  $scope.toggle = function(ind) {
-    return DatasetService.toggle(ind);
-  };
+    $scope.toggle = function(ind) {
+      return DatasetService.toggle(ind);
+    };
+
+    $scope.getBgColor = function(index) {
+      var hue = 360 * ( index / DatasetService.datasets.length );
+      var saturation = 1;
+      var lightness = 0.65;
+      var retval = d3.hsl( hue, saturation, lightness ).toString();
+      console.log( index, retval);
+      return retval;
+    };
+
+  }]);
 
 
-}]);
-
-
-vis.directive('dataset', function() {
+ vis.directive('dataset', function() {
   return {
     restrict: 'C',
     templateUrl : 'vis/dataset.tpl.html',
@@ -169,7 +177,7 @@ vis.directive('dataset', function() {
 });
 
 
-vis.factory('DatasetService', ['$http', '$rootScope', function($http) {
+ vis.factory('DatasetService', ['$http', '$rootScope', function($http) {
 
   // privates
   var config = {
@@ -232,7 +240,7 @@ vis.factory('DatasetService', ['$http', '$rootScope', function($http) {
 
 
 
- vis.controller('PackeryController', ['$scope', '$rootScope', function($scope,$rootScope) {
+vis.controller('PackeryController', ['$scope', '$rootScope', function($scope,$rootScope) {
 
   $scope.init = function(element) {
     console.log("init", element);
@@ -244,6 +252,8 @@ vis.factory('DatasetService', ['$http', '$rootScope', function($http) {
 
   $scope.windows = {};
   $scope.windowRunningNumber = 0;
+  $scope.packery = {};
+  $scope.element = {};
 
   // remove from grid
   $scope.remove = function(number) {
@@ -262,30 +272,30 @@ vis.factory('DatasetService', ['$http', '$rootScope', function($http) {
   };
 }]);
 
- vis.directive('packery', function() {
+vis.directive('packery', function() {
   return {
     restrict: 'C',
     templateUrl : 'vis/packery.tpl.html',
     replace: true,
     controller: 'PackeryController',
-    link: function(scope, elm, attrs) {
+    // scope: {
+    //   element: '@'
+    // },
+    link: function(scope, elm, attrs, controller) {
 
-      scope.$watch('windows', function(newVals, oldVals, scope) {
+      scope.$watch('windows', function(newVals, oldVals) {
         console.log("data change");
 
         newWins = _.keys(newVals).length;
         oldWins = _.keys(oldVals).length;
         if( newWins > oldWins ) { 
           // add
+
+          scope.element = document.getElementsByClassName('item')[ newWins - 1 ];
           scope.packery.bindDraggabillyEvents( 
-            new Draggabilly( 
-              document.getElementsByClassName('item')[ newWins - 1 ],
-              // document.getElementsByClassName('packery')[0],
-              //$('div[packery] .item').last()[0], 
-              { handle : '.handle' } 
-              ) 
+            new Draggabilly( scope.element, { handle : '.handle' } ) 
             );
-          window.packery = scope.packery;
+          // window.packery = scope.packery;
         }
 
         // update in every case
