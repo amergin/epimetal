@@ -55,7 +55,7 @@ table#dataset {
   clear: both;
 }
 
-.item {
+.window {
   width: 46%;
   min-width: 400px;
   min-height: 400px;
@@ -69,23 +69,23 @@ border-radius: 4px 4px 4px 4px;
 
 }
 
-.item .handle:hover {
+.window .handle:hover {
     cursor: move;
 }
 
-.item:hover {
+.window:hover {
   border-color: #C90;
 }
 
-.item.is-dragging,
-.item.is-positioning-post-drag {
+.window.is-dragging,
+.window.is-positioning-post-drag {
   border-color: white;
   background: #09F;
   z-index: 2;
 }
 
 
-.item .delete {
+.window .delete {
 display: block;
 color: white;
 background: hsla(0, 0%, 0%, 0.3);/*rgba(255, 255, 255, 0.2)*/;
@@ -98,7 +98,7 @@ text-align: center;
 line-height: 30px;
 }
 
-.item .delete:hover {
+.window .delete:hover {
   cursor: pointer;
 }
 

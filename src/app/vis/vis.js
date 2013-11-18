@@ -81,7 +81,7 @@
     };
 
     $scope.add = function(selection) {
-      $rootScope.$emit('packery.add', selection);
+      $rootScope.$emit('packery.add', selection, 'histogram');
     };
 
   }]);
@@ -113,7 +113,7 @@
     };
 
     $scope.add = function(selection) {
-      $rootScope.$emit('packery.add', selection);
+      $rootScope.$emit('packery.add', selection, 'scatterplot');
     };
 
     $scope.canSubmit = function() {
@@ -155,9 +155,7 @@
       var hue = 360 * ( index / DatasetService.datasets.length );
       var saturation = 1;
       var lightness = 0.65;
-      var retval = d3.hsl( hue, saturation, lightness ).toString();
-      console.log( index, retval);
-      return retval;
+      return d3.hsl( hue, saturation, lightness ).toString();
     };
 
   }]);
@@ -229,6 +227,7 @@
         }).concat(vars);
       }
     });
+    // this will trigger the change
     angular.copy(vars,variables);
   };
 
@@ -240,36 +239,33 @@
 
 
 
-vis.controller('PackeryController', ['$scope', '$rootScope', function($scope,$rootScope) {
+vis.controller('PackeryController', ['$scope', '$rootScope', '$timeout', function($scope,$rootScope, $timeout) {
 
-  $scope.init = function(element) {
-    console.log("init", element);
-  };
-
-  $scope.$onRootScope('packery.add', function(event,selection) {
-    $scope.add( selection );
+  $scope.$onRootScope('packery.add', function(event,selection,type) {
+    $scope.add( selection,type );
   });
 
-  $scope.windows = {};
+  $scope.windows = [];
   $scope.windowRunningNumber = 0;
-  $scope.packery = {};
-  $scope.element = {};
 
   // remove from grid
-  $scope.remove = function(number) {
-    delete $scope.windows['win_' + number];
+  $scope.remove = function(number, element) {
+    // console.log("remove window ", number, ", array size=", $scope.windows.length);
+    $scope.windows = _.reject( $scope.windows, function(obj) { 
+      return obj.number === number; 
+    });
+    // $scope.windows.splice(number,1);
+    $scope.packery.remove( element );
+    $scope.packery.layout();
   };
 
   // adds window to grid
-  $scope.add = function(selection) {
-    console.log("add",selection);
-
-    // apply
-    $scope.windows[ 'win_' +  (++$scope.windowRunningNumber) ] = 
-    { number : $scope.windowRunningNumber };
-    console.log("applied");
-
+  $scope.add = function(selection, type) {
+    console.log("add",selection, type);
+    $scope.windows.push({ number : (++$scope.windowRunningNumber),
+      type: type, variables: selection });
   };
+
 }]);
 
 vis.directive('packery', function() {
@@ -278,31 +274,9 @@ vis.directive('packery', function() {
     templateUrl : 'vis/packery.tpl.html',
     replace: true,
     controller: 'PackeryController',
-    // scope: {
-    //   element: '@'
-    // },
+    scope: true,
     link: function(scope, elm, attrs, controller) {
 
-      scope.$watch('windows', function(newVals, oldVals) {
-        console.log("data change");
-
-        newWins = _.keys(newVals).length;
-        oldWins = _.keys(oldVals).length;
-        if( newWins > oldWins ) { 
-          // add
-
-          scope.element = document.getElementsByClassName('item')[ newWins - 1 ];
-          scope.packery.bindDraggabillyEvents( 
-            new Draggabilly( scope.element, { handle : '.handle' } ) 
-            );
-          // window.packery = scope.packery;
-        }
-
-        // update in every case
-        scope.packery.reloadItems();
-        scope.packery.layout();
-
-      }, true);
 
       console.log("postlink");
           // create a new empty grid system
@@ -312,11 +286,33 @@ vis.directive('packery', function() {
           // gutter: 10,
           // see https://github.com/metafizzy/packery/issues/7
           rowHeight: 420,
-          itemSelector: '.item',
+          itemSelector: '.window',
           gutter: '.gutter-sizer',
           columnWidth: '.grid-sizer'
-          } );
-}
-};
-});
+        } );
 
+          window.packery = scope.packery;
+        }
+      };
+    });
+
+
+vis.directive('window', [function(){
+  return {
+    scope: false,
+    require: '^packery',
+    restrict: 'C',
+    templateUrl : 'vis/window.tpl.html',
+    replace: true,
+    transclude: true,
+    link: function($scope, ele, iAttrs, controller) {
+      console.log('window linker');
+      $scope.element = ele;
+      $scope.packery.bindDraggabillyEvents( 
+        new Draggabilly( $scope.element[0], { handle : '.handle' } ) 
+        );
+      $scope.packery.reloadItems();      
+      $scope.packery.layout();
+    }
+  };
+}]);
