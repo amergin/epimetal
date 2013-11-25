@@ -55,22 +55,28 @@ table#dataset {
   clear: both;
 }
 
-.window {
-  width: 46%;
-  min-width: 400px;
-  min-height: 400px;
-  cursor: default;
-  float: left;
-  background: #DDD;/*#C09;*/
-  border: 2px solid #333;
-  border-color: hsla(0, 0%, 0%, 0.3);
--webkit-border-radius: 4px 4px 4px 4px;
-border-radius: 4px 4px 4px 4px;
+.window > .handle {
+  height: 25px;
+  background-color: #E6E4E1;
 
 }
 
-.window .handle:hover {
-    cursor: move;
+.window > .handle:hover {
+  background-color: #EFEFEF;
+  cursor: move;
+}
+
+.window {
+  width: 500px;
+  height: 400px;
+  cursor: default;
+  float: left;
+  /*background: #DDD;#C09;*/
+  border: 2px solid #333;
+  border-color: hsla(0, 0%, 0%, 0.3);
+  -webkit-border-radius: 4px 4px 4px 4px;
+  border-radius: 4px 4px 4px 4px;
+
 }
 
 .window:hover {
@@ -79,33 +85,58 @@ border-radius: 4px 4px 4px 4px;
 
 .window.is-dragging,
 .window.is-positioning-post-drag {
-  border-color: white;
-  background: #09F;
+  border-color: #09F;
+  border: 2px solid;
+  /*background: #09F;*/
   z-index: 2;
 }
 
-
-.window .delete {
-display: block;
-color: white;
-background: hsla(0, 0%, 0%, 0.3);/*rgba(255, 255, 255, 0.2)*/;
-width: 30px;
-height: 30px;
-top: 0;
-right: 0;
-position: absolute;
-text-align: center;
-line-height: 30px;
-}
-
-.window .delete:hover {
+.window .ctrl-delete {
+  position: absolute;
+  right: 10px;
+  top: 3px;
   cursor: pointer;
 }
 
+.icon-remove-sign:hover
+{
+  color: #C90;
+}
+
+
+
+.ctrl-filter {
+  position: absolute;
+  top: 0px;
+  left: 40%;
+}
+
+
+/* .ctrl-filter {
+  background-color: white;
+  width: 100px;
+  height: 24px;
+  position: absolute;
+  top: 0;
+  border: 1px solid lightgrey;
+  text-align: center;
+  text-color: grey;  
+  border-radius: 0px 0px 10px 10px;
+}
+
+.ctrl-filter:hover {
+  background-color: rgba(204, 153, 0, 0.25);
+}
+
+*/
+
+
 .gutter-sizer {
-  width: 0.5%;
+  width: 0.4%;
+  min-width: 15px;
 }
 
 .grid-sizer {
-  width: 46%;
+  width: 520px;
+  /* width: 46%; */
 }

@@ -1,0 +1,237 @@
+[ {
+"name": "set1",
+"samples": [
+    {
+        "sample": 0,
+        "varInt1": "802",
+        "varInt2": "931",
+        "varDbl1": "891.600",
+        "varDbl2": "707.500"
+    },
+    {
+        "sample": 1,
+        "varInt1": "444",
+        "varInt2": "1041",
+        "varDbl1": "1226.900",
+        "varDbl2": "455.300"
+    },
+    {
+        "sample": 2,
+        "varInt1": "1356",
+        "varInt2": "1177",
+        "varDbl1": "1136.800",
+        "varDbl2": "771.100"
+    },
+    {
+        "sample": 3,
+        "varInt1": "47",
+        "varInt2": "627",
+        "varDbl1": "629.100",
+        "varDbl2": "460.500"
+    },
+    {
+        "sample": 4,
+        "varInt1": "553",
+        "varInt2": "487",
+        "varDbl1": "742.100",
+        "varDbl2": "84.900"
+    },
+    {
+        "sample": 5,
+        "varInt1": "377",
+        "varInt2": "41",
+        "varDbl1": "1042.000",
+        "varDbl2": "557.300"
+    },
+    {
+        "sample": 6,
+        "varInt1": "730",
+        "varInt2": "977",
+        "varDbl1": "1339.900",
+        "varDbl2": "1068.300"
+    },
+    {
+        "sample": 7,
+        "varInt1": "945",
+        "varInt2": "1403",
+        "varDbl1": "150.000",
+        "varDbl2": "1344.600"
+    },
+    {
+        "sample": 8,
+        "varInt1": "173",
+        "varInt2": "1290",
+        "varDbl1": "956.200",
+        "varDbl2": "1355.600"
+    },
+    {
+        "sample": 9,
+        "varInt1": "532",
+        "varInt2": "597",
+        "varDbl1": "769.100",
+        "varDbl2": "725.800"
+    },
+    {
+        "sample": 10,
+        "varInt1": "1497",
+        "varInt2": "1121",
+        "varDbl1": "1132.600",
+        "varDbl2": "651.200"
+    },
+    {
+        "sample": 11,
+        "varInt1": "936",
+        "varInt2": "1009",
+        "varDbl1": "1257.300",
+        "varDbl2": "1337.100"
+    },
+    {
+        "sample": 12,
+        "varInt1": "1225",
+        "varInt2": "736",
+        "varDbl1": "659.400",
+        "varDbl2": "1417.300"
+    },
+    {
+        "sample": 13,
+        "varInt1": "1148",
+        "varInt2": "856",
+        "varDbl1": "676.400",
+        "varDbl2": "797.800"
+    },
+    {
+        "sample": 14,
+        "varInt1": "77",
+        "varInt2": "167",
+        "varDbl1": "1027.100",
+        "varDbl2": "453.800"
+    },
+    {
+        "sample": 15,
+        "varInt1": "1117",
+        "varInt2": "1051",
+        "varDbl1": "978.800",
+        "varDbl2": "545.800"
+    },
+    {
+        "sample": 16,
+        "varInt1": "1451",
+        "varInt2": "1471",
+        "varDbl1": "712.600",
+        "varDbl2": "109.400"
+    },
+    {
+        "sample": 17,
+        "varInt1": "1218",
+        "varInt2": "432",
+        "varDbl1": "377.300",
+        "varDbl2": "449.000"
+    },
+    {
+        "sample": 18,
+        "varInt1": "632",
+        "varInt2": "255",
+        "varDbl1": "732.000",
+        "varDbl2": "977.400"
+    },
+    {
+        "sample": 19,
+        "varInt1": "651",
+        "varInt2": "1371",
+        "varDbl1": "1163.700",
+        "varDbl2": "1428.500"
+    },
+    {
+        "sample": 20,
+        "varInt1": "37",
+        "varInt2": "227",
+        "varDbl1": "129.700",
+        "varDbl2": "825.200"
+    },
+    {
+        "sample": 21,
+        "varInt1": "795",
+        "varInt2": "747",
+        "varDbl1": "844.600",
+        "varDbl2": "482.200"
+    },
+    {
+        "sample": 22,
+        "varInt1": "1299",
+        "varInt2": "682",
+        "varDbl1": "1416.200",
+        "varDbl2": "238.900"
+    },
+    {
+        "sample": 23,
+        "varInt1": "1054",
+        "varInt2": "1487",
+        "varDbl1": "653.400",
+        "varDbl2": "757.200"
+    },
+    {
+        "sample": 24,
+        "varInt1": "1440",
+        "varInt2": "631",
+        "varDbl1": "1336.500",
+        "varDbl2": "1233.800"
+    },
+    {
+        "sample": 25,
+        "varInt1": "598",
+        "varInt2": "737",
+        "varDbl1": "182.500",
+        "varDbl2": "1393.700"
+    },
+    {
+        "sample": 26,
+        "varInt1": "1500",
+        "varInt2": "1197",
+        "varDbl1": "894.700",
+        "varDbl2": "491.500"
+    },
+    {
+        "sample": 27,
+        "varInt1": "921",
+        "varInt2": "1001",
+        "varDbl1": "1108.000",
+        "varDbl2": "1281.900"
+    },
+    {
+        "sample": 28,
+        "varInt1": "450",
+        "varInt2": "793",
+        "varDbl1": "1227.700",
+        "varDbl2": "234.900"
+    },
+    {
+        "sample": 29,
+        "varInt1": "271",
+        "varInt2": "465",
+        "varDbl1": "1407.000",
+        "varDbl2": "156.500"
+    },
+    {
+        "sample": 30,
+        "varInt1": "1136",
+        "varInt2": "494",
+        "varDbl1": "1391.600",
+        "varDbl2": "583.100"
+    },
+    {
+        "sample": 31,
+        "varInt1": "447",
+        "varInt2": "673",
+        "varDbl1": "109.800",
+        "varDbl2": "785.800"
+    },
+    {
+        "sample": 32,
+        "varInt1": "872",
+        "varInt2": "1048",
+        "varDbl1": "579.400",
+        "varDbl2": "307.600"
+    }
+]
+
+}]

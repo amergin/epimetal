@@ -75,6 +75,7 @@ module.exports = {
       'vendor/underscore/underscore.js',
     ],
     css: [
+      'vendor/dcjs/dc.css'
     ],
     assets: [
     ]

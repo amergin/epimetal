@@ -14,9 +14,7 @@
  */
 
  var vis = 
- angular.module( 'plotter.vis', [
-  'ui.state'
-  ]);
+ angular.module( 'plotter.vis', [ 'ui.state' ]);
 
 /**
  * Each section or module of the site can also have its own routes. AngularJS
@@ -62,7 +60,7 @@
   }]);
 
 
- vis.controller('HistogramController', ['$scope', '$rootScope', 'DatasetService', 
+ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetService', 
   function($scope, $rootScope, DatasetService) {
 
     $scope.variables = DatasetService.variables;
@@ -86,7 +84,7 @@
 
   }]);
 
- vis.directive('histogram', function() {
+ vis.directive('histogramForm', function() {
   return {
     restrict: 'C',
     transclude: true,
@@ -99,7 +97,7 @@
 });
 
 
- vis.controller('ScatterplotController', ['$scope', '$rootScope', '$http', 'DatasetService', 
+ vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$http', 'DatasetService', 
   function($scope, $rootScope, $http, DatasetService) {
     $scope.variables = DatasetService.variables;
     $scope.selection = {};
@@ -122,13 +120,12 @@
 
   }]);
 
- vis.directive('scatterplot', function() {
+ vis.directive('scatterplotForm', function() {
   return {
     restrict: 'C',
     transclude: true,
     replace: true,
     templateUrl : 'vis/scatterplot.tpl.html',
-    controller: 'ScatterplotController',
     link: function(scope, elm, attrs) {
 
     }
@@ -179,8 +176,8 @@
 
   // privates
   var config = {
-    url : '/plotter/random_data.json',
-    broadcast: 'DATASET_UPDATE'
+    url : '/plotter/random_data.json'
+    //'/plotter/random_data_samplenames.json'
   };
   var datasets = [];
   var variables = [];
@@ -194,7 +191,22 @@
       var res = response.data;
       console.log("Load Datasets",res);
 
+      // for each dataset
       _.each( res, function( value, key, res ) {
+
+        // find out keys of every sample
+        var keys = _.keys( value.samples[0] );
+
+        // modify each variable to contain numeric results, not strings
+        _.each( value.samples, function(obj,ind) {
+
+          _.each( keys, function(k) {
+            // to number if possible
+            value.samples[ind][k] = +obj[k];
+          });
+
+        });
+
         _.extend( value, {active: false} );
       });
 
@@ -212,6 +224,20 @@
   service.isActive = function(ind) {
     return datasets[ind].active;
   };
+
+  service.getActives = function(setNames) {
+    if( !_.isArray(setNames) ) {
+      throw new Error("invalid parameters");
+    }
+
+    var results = _.filter( datasets, function(set) {
+      return _.contains( setNames, set.name ) && set.active;
+    });
+
+    return results;
+  };
+
+
 
   service.toggle = function(ind) {
     datasets[ind].active = !datasets[ind].active;
@@ -264,6 +290,10 @@ vis.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
     console.log("add",selection, type);
     $scope.windows.push({ number : (++$scope.windowRunningNumber),
       type: type, variables: selection });
+
+    // pass signal to dc plotter
+    $rootScope.$emit('dc.add', selection, type);
+
   };
 
 }]);
@@ -297,7 +327,7 @@ vis.directive('packery', function() {
     });
 
 
-vis.directive('window', [function(){
+vis.directive('window', ['$compile', function($compile){
   return {
     scope: false,
     require: '^packery',
@@ -308,11 +338,151 @@ vis.directive('window', [function(){
     link: function($scope, ele, iAttrs, controller) {
       console.log('window linker');
       $scope.element = ele;
+
+      // create window and let Packery know
       $scope.packery.bindDraggabillyEvents( 
         new Draggabilly( $scope.element[0], { handle : '.handle' } ) 
         );
       $scope.packery.reloadItems();      
       $scope.packery.layout();
+
+      // append a new suitable div to execute its directive
+      var elName = '';
+      if( $scope.window.type === 'histogram' ) {
+        elName = 'histogram';
+      }
+      else if( $scope.window.type === 'scatterplot' ) {
+        elName = 'scatterplot';
+      }
+      else {
+        throw new Error("unknown plot type");
+      }
+
+      var newEl = angular.element(
+        '<div class="' + elName + '"' + 
+        ' id="window' + $scope.window.number + '"></div>');
+      $scope.element.append( newEl );
+      $compile( newEl )($scope);
     }
   };
 }]);
+
+
+vis.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetService', 
+  function($scope, $rootScope, DatasetService) {
+    console.log("scope:",$scope);
+
+    $scope.data = DatasetService.getActives( [$scope.window.variables.x.set] )[0];
+
+    $scope.resetFilter = function() {
+      $scope.histogram.filterAll();
+      dc.redrawAll();
+    };
+
+  }]);
+
+vis.directive('histogram', [ function(){
+
+  var createSVG = function( scope, element, data, variable ) {
+    // check css window rules before touching these
+    scope.width = 470;
+    scope.height = 365;
+
+    scope.histogram = dc.barChart( element[0] );
+    scope.crossData = crossfilter(data.samples);
+
+    scope.varDimension = scope.crossData.dimension( function(d) {
+      return d[variable];
+    });
+
+    scope.varGroup = scope.varDimension.group().reduceCount( function(d) {
+      return d[variable];
+    });
+
+    var minAndMax = d3.extent( data.samples, function(d) { return d[variable]; } );
+
+    scope.histogram
+    .width( scope.width )
+    .height( scope.height )
+    .margins({ top: 10, right: 10, bottom: 20, left: 40 })
+    .dimension(scope.varDimension)
+    .group(scope.varGroup)
+    .transitionDuration(500)
+    .centerBar(true)
+    .gap(80)
+    .x( d3.scale.linear().domain( minAndMax ) )
+    .elasticY(true)
+    .xAxis().tickFormat();
+
+    scope.histogram.render();
+
+
+    // // calculate bin information
+    // var numBins = Math.ceil( Math.sqrt( data.samples.length ) );
+    // // var maxVal = _.max( data.samples, function(d) { return d[variable] } );
+    // // var minVal = _.min( data.samples, function(d) { return d[variable] } );
+    // var maxAndMin = d3.extent(data.samples, function(d) { return d[variable]; });
+    // var binWidth = ( maxAndMin[0] - maxAndMin[1] ) / numBins;
+
+
+    // scope.ordinalBarChart = dc.barChart( element[0]  );
+    // var ndx = crossfilter(data.samples);
+    // var varDimension = ndx.dimension( function(d) {
+    //   return +d[variable];
+    // });
+    // var varGroup = varDimension.group( function(d) {
+    //   return Math.floor( d / binWidth ) * binWidth;
+    // });
+
+    // scope.ordinalBarChart
+    // .width(scope.width)
+    // .height(scope.height)
+    // .dimension(varDimension)
+    // .round(Math.floor)
+    // .group(varGroup)
+    // .elasticY(true)
+    // .x( d3.scale.linear().domain(maxAndMin).range([0,numBins]) )
+    // .xUnits(dc.units.linear)
+    // .xAxis();
+    // //.x(d3.scale.ordinal().domain( varGroup.all() ) )
+
+    // scope.ordinalBarChart.render();
+
+  };
+
+  var linkFn = function($scope, ele, iAttrs) {
+    createSVG( $scope, ele, $scope.data, $scope.window.variables.x.variable );
+  };
+
+  return {
+    scope: false,
+    // scope: {},
+    restrict: 'C',
+    require: '^?window',
+    replace: true,
+    controller: 'HistogramPlotController',
+    transclude: true,
+    link: linkFn
+  };
+}]);
+
+
+
+
+// vis.directive('scatterplot', [function(){
+//   return {
+//     // scope: {},
+//     restrict: 'C',
+//     templateUrl : 'vis/dc-scatterplot.tpl.html',
+//     replace: true,
+//     controller: 'DcPlotter',
+//     transclude: true,
+//     link: function($scope, ele, iAttrs, controller) {
+//       createSVG( $scope, ele );
+
+//       var createSVG = function( scope, element, data ) {
+//         scope.width = 350;
+//         scope.height = 250;
+//     }
+//   };
+// }]);
