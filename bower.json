@@ -8,14 +8,11 @@
     "angular-bootstrap": "~0.3.0",
     "angular-ui-router": "~0.0.1",
     "angular-ui-utils": "~0.0.3",
-    "dcjs": "~1.6.0",
+    "dcjs": "cb4beee136fd13ddd14d70b9cf4c284d0d4cd19f",
     "draggabilly": "~1.0.6",
     "underscore": "~1.5.2"
   },
   "dependencies": {
     "packery": "~1.1.2"
-  },
-  "resolutions": {
-    "dcjs": "cb4beee136fd13ddd14d70b9cf4c284d0d4cd19f"
   }
 }
