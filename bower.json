@@ -9,7 +9,8 @@
     "angular-ui-router": "~0.0.1",
     "angular-ui-utils": "~0.0.3",
     "dcjs": "~1.6.0",
-    "draggabilly": "~1.0.6"
+    "draggabilly": "~1.0.6",
+    "underscore": "~1.5.2"
   },
   "dependencies": {
     "packery": "~1.1.2"
