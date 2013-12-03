@@ -3,6 +3,6 @@
 build/
 bin/
 node_modules/
-!vendor/packery/*
-!vendor/draggabilly/*
 vendor/*
+vendor/packery/
+vendor/draggabilly/
