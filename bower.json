@@ -13,5 +13,8 @@
   },
   "dependencies": {
     "packery": "~1.1.2"
+  },
+  "resolutions": {
+    "dcjs": "cb4beee136fd13ddd14d70b9cf4c284d0d4cd19f"
   }
 }

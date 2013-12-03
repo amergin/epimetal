@@ -386,7 +386,7 @@ vis.directive('histogram', [ function(){
   var createSVG = function( scope, element, data, variable ) {
     // check css window rules before touching these
     scope.width = 470;
-    scope.height = 365;
+    scope.height = 345;
 
     scope.histogram = dc.barChart( element[0] );
     scope.crossData = crossfilter(data.samples);
@@ -409,7 +409,7 @@ vis.directive('histogram', [ function(){
     .group(scope.varGroup)
     .transitionDuration(500)
     .centerBar(true)
-    .gap(80)
+    .gap(2)
     .x( d3.scale.linear().domain( minAndMax ) )
     .elasticY(true)
     .xAxis().tickFormat();
@@ -469,20 +469,73 @@ vis.directive('histogram', [ function(){
 
 
 
-// vis.directive('scatterplot', [function(){
-//   return {
-//     // scope: {},
-//     restrict: 'C',
-//     templateUrl : 'vis/dc-scatterplot.tpl.html',
-//     replace: true,
-//     controller: 'DcPlotter',
-//     transclude: true,
-//     link: function($scope, ele, iAttrs, controller) {
-//       createSVG( $scope, ele );
 
-//       var createSVG = function( scope, element, data ) {
-//         scope.width = 350;
-//         scope.height = 250;
-//     }
-//   };
-// }]);
+vis.controller('ScatterPlotController', ['$scope', '$rootScope', 'DatasetService', 
+  function($scope, $rootScope, DatasetService) {
+    console.log("scope:",$scope);
+
+    $scope.data = DatasetService.getActives( [$scope.window.variables.x.set] )[0];
+
+    $scope.resetFilter = function() {
+      $scope.histogram.filterAll();
+      dc.redrawAll();
+    };
+
+  }]);
+
+
+
+
+vis.directive('scatterplot', [ function(){
+
+  var createSVG = function( scope, element, data, variableX, variableY ) {
+    // check css window rules before touching these
+    scope.width = 470;
+    scope.height = 345;
+
+    scope.scatterplot = dc.scatterPlot( element[0] );
+    scope.crossData = crossfilter( [ { x: 5, y: 10 }, { x: 15, y: 15 }, { x: 40, y: 5 }, { x: 50, y: 2 } ] );
+    //crossfilter(data.samples);
+
+    scope.varDimension = scope.crossData.dimension( function(d) {
+      return [ d.x, d.y ];
+      //return [ d[variableX], d[variableY] ];
+    });
+
+    scope.varGroup = scope.varDimension.group();
+
+    // scope.varGroup = scope.varDimension.group().reduceCount( function(d) {
+    //   return d[variable];
+    // });
+
+    // var minAndMax = d3.extent( data.samples, function(d) { return d[variable]; } );
+
+    scope.scatterplot
+    .symbol( d3.svg.symbol().type('circle') )
+    .symbolSize(5)
+    .highlightedSize(7)
+    .brushOn(true)
+    .yAxisLabel("This is the Y Axis!")
+    .dimension( scope.varDimension )
+    .group( scope.varGroup );
+
+    scope.scatterplot.render();
+
+  };
+
+  var linkFn = function($scope, ele, iAttrs) {
+    createSVG( $scope, ele, $scope.data, 
+      $scope.window.variables.x.variable, $scope.window.variables.y.variable );
+  };
+
+  return {
+    scope: false,
+    // scope: {},
+    restrict: 'C',
+    require: '^?window',
+    replace: true,
+    controller: 'ScatterPlotController',
+    transclude: true,
+    link: linkFn
+  };
+}]);
