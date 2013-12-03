@@ -10,4 +10,6 @@
     "angular-ui-utils": "~0.0.3",
     "dcjs": "cb4beee136fd13ddd14d70b9cf4c284d0d4cd19f",
     "underscore": "~1.5.2"
+    },
+    "dependencies": {}
 }
