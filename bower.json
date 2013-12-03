@@ -9,10 +9,5 @@
     "angular-ui-router": "~0.0.1",
     "angular-ui-utils": "~0.0.3",
     "dcjs": "cb4beee136fd13ddd14d70b9cf4c284d0d4cd19f",
-    "draggabilly": "~1.0.6",
-    "underscore": "~1.5.2"
-  },
-  "dependencies": {
-    "packery": "~1.1.2"
   }
 }
