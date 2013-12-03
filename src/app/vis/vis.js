@@ -370,8 +370,6 @@ vis.directive('window', ['$compile', function($compile){
 
 vis.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetService', 
   function($scope, $rootScope, DatasetService) {
-    console.log("scope:",$scope);
-
     $scope.data = DatasetService.getActives( [$scope.window.variables.x.set] )[0];
 
     $scope.resetFilter = function() {
@@ -402,6 +400,8 @@ vis.directive('histogram', [ function(){
     var minAndMax = d3.extent( data.samples, function(d) { return d[variable]; } );
 
     scope.histogram
+    .renderTitle(true)
+    .brushOn(true)
     .width( scope.width )
     .height( scope.height )
     .margins({ top: 10, right: 10, bottom: 20, left: 40 })
@@ -474,10 +474,38 @@ vis.controller('ScatterPlotController', ['$scope', '$rootScope', 'DatasetService
   function($scope, $rootScope, DatasetService) {
     console.log("scope:",$scope);
 
-    $scope.data = DatasetService.getActives( [$scope.window.variables.x.set] )[0];
+    var sets = DatasetService.getActives( [$scope.window.variables.x.set, $scope.window.variables.y.set] );
+
+    var joinedSamples = function( dataX, dataY ) {
+      var joined = [];
+
+      // same dset for x-y
+      if( _.isUndefined( dataY ) ) {
+        _.each( dataX.samples, function(ele,ind) {
+          joined.push( { x: ele, y: ele } );
+        });        
+      }
+      else if( ( dataX.length < dataY.length ) ) {
+        _.each( dataX.samples, function(ele,ind) {
+          // join only using the shortest array, rest won't pair
+          joined.push( { x: ele, y: dataY.samples[ind] } );
+        });
+      }
+      else {
+        _.each( dataY.samples, function(ele,ind) {
+          // join only using the shortest array, rest won't pair
+          joined.push( { y: ele, x: dataX.samples[ind] } );
+        });
+      }
+
+      return joined;
+    };
+
+    $scope.data = joinedSamples( sets[0], sets[1] );
+
 
     $scope.resetFilter = function() {
-      $scope.histogram.filterAll();
+      $scope.scatterplot.filterAll();
       dc.redrawAll();
     };
 
@@ -493,29 +521,33 @@ vis.directive('scatterplot', [ function(){
     scope.width = 470;
     scope.height = 345;
 
+    // data = [ { x: 5, y: 10 }, { x: 15, y: 15 }, { x: 40, y: 5 }, { x: 50, y: 2 } ];
+
     scope.scatterplot = dc.scatterPlot( element[0] );
-    scope.crossData = crossfilter( [ { x: 5, y: 10 }, { x: 15, y: 15 }, { x: 40, y: 5 }, { x: 50, y: 2 } ] );
-    //crossfilter(data.samples);
+    scope.crossData = crossfilter( data );
 
     scope.varDimension = scope.crossData.dimension( function(d) {
-      return [ d.x, d.y ];
-      //return [ d[variableX], d[variableY] ];
+      return [ d.x[variableX], d.y[variableY] ];
     });
 
     scope.varGroup = scope.varDimension.group();
 
-    // scope.varGroup = scope.varDimension.group().reduceCount( function(d) {
-    //   return d[variable];
-    // });
-
-    // var minAndMax = d3.extent( data.samples, function(d) { return d[variable]; } );
+    var xExtent = d3.extent( data, function(d) { return d.x[variableX]; } );
 
     scope.scatterplot
+    // .title( function(d) {
+    //   return variableX + ": " + d.x + "\n" + variableY + ": " + d.y;
+    // })
+    // .renderTitle(true)
+    .width( scope.width )
+    .height( scope.height )
     .symbol( d3.svg.symbol().type('circle') )
     .symbolSize(5)
     .highlightedSize(7)
     .brushOn(true)
-    .yAxisLabel("This is the Y Axis!")
+    .x(d3.scale.linear().domain( xExtent ) )
+    .yAxisLabel( variableY )
+    .xAxisLabel( variableX )
     .dimension( scope.varDimension )
     .group( scope.varGroup );
 
