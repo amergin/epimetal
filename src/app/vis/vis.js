@@ -56,7 +56,7 @@
   function VisController( $scope, DatasetService) {
 
     // load datasets
-    DatasetService.fetch();
+    //DatasetService.fetch();
   }]);
 
 
@@ -67,11 +67,11 @@
     $scope.selection = {};
 
     $scope.canEdit = function() {
-      return $scope.variables.length > 0;
+      return DatasetService.anyActiveSets();
     };
 
     $scope.canSubmit = function() {
-      return !_.isEmpty( $scope.selection );
+      return $scope.canEdit() && !_.isEmpty( $scope.selection );
     };
 
     $scope.getSets = function() {
@@ -103,11 +103,7 @@
     $scope.selection = {};
 
     $scope.canEdit = function() {
-      return $scope.variables.length > 0;
-    };
-
-    $scope.add = function(vars) {
-      $rootScope.$emit('packery.add', vars);
+      return DatasetService.anyActiveSets();
     };
 
     $scope.add = function(selection) {
@@ -115,8 +111,8 @@
     };
 
     $scope.canSubmit = function() {
-      return ( $scope.selection.x !== undefined ) && ( $scope.selection.y !== undefined );
-    };    
+      return $scope.canEdit() && !_.isUndefined( $scope.selection.x ) && !_.isUndefined( $scope.selection.y );
+    };
 
   }]);
 
@@ -138,21 +134,32 @@
   function($scope, DatasetService)
   {
 
-    $scope.datasets = DatasetService.datasets;
+    $scope.sets = DatasetService.getDatasets();
+    $scope.datasets = [];
+
+    $scope.sets.then( function(result) {
+      angular.copy(result, $scope.datasets);
+      console.log($scope.datasets);
+    });
 
     $scope.isActive = function(ind) {
       return $scope.datasets[ind].active;
     };
 
     $scope.toggle = function(ind) {
-      return DatasetService.toggle(ind);
+      DatasetService.toggle(ind);
+
+      // redraw all plots so they notice the changed sample
+      // selections
+      dc.redrawAll();
     };
 
     $scope.getBgColor = function(index) {
-      var hue = 360 * ( index / DatasetService.datasets.length );
-      var saturation = 1;
-      var lightness = 0.65;
-      return d3.hsl( hue, saturation, lightness ).toString();
+      return $scope.datasets[index].color;
+    };
+
+    $scope.getVariables = function() {
+      return DatasetService.getVariables();
     };
 
   }]);
@@ -172,57 +179,125 @@
 });
 
 
- vis.factory('DatasetService', ['$http', '$rootScope', function($http) {
+ vis.factory('DatasetService', 
+  ['$http', '$rootScope', '$q', function($http, $rootScope, $q) {
 
   // privates
   var config = {
-    url : '/plotter/random_data.json'
+    url : '../plotter_sampledata.tsv'
+    //'/plotter/random_data.json'
     //'/plotter/random_data_samplenames.json'
   };
+
+  // raw samples
+  var samples = [];
+
+  // datasets for navigation
   var datasets = [];
+
+  // active, selectable variables
   var variables = [];
 
+  // dimensions and crossfilter data
+  var crossData = null;
+  var dimensions = {};
+
+  // Privates end
+  // --------------------------------------
+
+
+  // the service to be returned from factory
   var service = {};
 
-  // load datasets
-  service.fetch = function() {
-    var promise = $http.get( config.url ).then( function(response) {
+  var getInitDatasets = function() {
 
-      var res = response.data;
-      console.log("Load Datasets",res);
+    var getBgColor = function(index, length) {
+      var hue = 360 * ( index / length );
+      var saturation = 1;
+      var lightness = 0.65;
+      return d3.hsl( hue, saturation, lightness ).toString();
+    };    
 
-      // for each dataset
-      _.each( res, function( value, key, res ) {
+    var setGroup = dimensions['datasets'].group().top(Infinity);
+    var sets = _.map( setGroup, 
+      function(ele,ind) { 
+        return { 
+          name: ele.key,
+          sampleCount: ele.value,
+          active: false,
+          color: getBgColor(ind, setGroup.length) }; 
+        } );
 
-        // find out keys of every sample
-        var keys = _.keys( value.samples[0] );
-
-        // modify each variable to contain numeric results, not strings
-        _.each( value.samples, function(obj,ind) {
-
-          _.each( keys, function(k) {
-            // to number if possible
-            value.samples[ind][k] = +obj[k];
-          });
-
-        });
-
-        _.extend( value, {active: false} );
-      });
-
-      angular.copy(res, datasets);
-
-      // return value is picked up on the controller from promise
-      return datasets;
-    });
-
-    return promise;
+    sets = _.sortBy( sets, function(e) { return e.name; } );
+    return sets;
   };
 
-  service.datasets = datasets;
+  var initCrossfilter = function() {
+    // add all samples
+    crossData = crossfilter(samples);
+
+    // create dataset dimension
+    dimensions['datasets'] = crossData.dimension( function(s) { return s.dataset; } );
+  };
+
+  var initVariables = function() {
+    var keys = _.keys( samples[0].variables );
+    keys.sort();
+    
+    // trigger change
+    angular.copy( keys, variables );
+  };
+
+
+  // load and init datasets when this is called
+  service.getDatasets = function() {
+      console.log("Load Datasets");
+
+      var deferred = $q.defer();
+
+      // load raw sample data
+      d3.tsv( config.url, function(error, resData) {
+        resData.forEach( function(s) {
+          var sample = {};
+          sample.dataset = s.dataset;
+          sample.sampleid = s.sampleid;
+          sample.variables = _.omit( s, ['dataset', 'sampleid'] );
+
+          // each variable to number or NaN
+          _.each( sample.variables, function(ele, key) {
+            sample.variables[key] = +ele;
+          });
+          samples.push(sample);
+  
+        });
+
+        // init structures
+        initCrossfilter();
+        var dsets = getInitDatasets();
+        initVariables();
+        datasets = dsets;
+        $rootScope.$apply( function() {
+          console.log("...Datasets loaded");
+          deferred.resolve(dsets);
+        });
+
+      });
+
+      return deferred.promise;
+    };
+
+  service.samples = samples;
 
   service.isActive = function(ind) {
     return datasets[ind].active;
+  };
+
+  service.getVariables = function() {
+    return variables;
+  };
+
+  service.anyActiveSets = function() {
+    return _.any( datasets, function(set) { return set.active; } );
   };
 
   service.getActives = function(setNames) {
@@ -237,24 +312,64 @@
     return results;
   };
 
+  service.getDimension = function(variable) {
 
+    var legalInput = function(vari) {
+      if( !_.contains(variables, vari) || _.isUndefined( vari ) ) {
+        throw new Error("Undefined variable tried");
+      }
+    };
+
+    _.each( arguments, function(arg) {
+      legalInput(arg);
+    });
+
+    var dim;
+    // x,y variables
+    if( arguments.length === 2 ) {
+
+      var varX = arguments[0];
+      var varY = arguments[1];
+      var varComb = varX + "|" + varY;
+
+      // dimension does not exist, create one
+      if( _.isUndefined( dimensions[varComb] ) ) {
+         dim = crossData.dimension( function(d) { return [ d.variables[varX], d.variables[varY] ]; } );
+         dimensions[varComb] = dim;
+      }
+      else {
+        // already defined earlier
+        dim = dimensions[varComb];
+      }      
+    }
+
+    // one variable
+    else {
+      // dimension does not exist, create one
+      if( _.isUndefined( dimensions[variable] ) ) {
+         dim = crossData.dimension( function(d) { return d.variables[variable]; } );
+         dimensions[variable] = dim;
+      }
+      else {
+        // already defined earlier
+        dim = dimensions[variable];
+      }
+    }
+    return dim;
+  };
 
   service.toggle = function(ind) {
     datasets[ind].active = !datasets[ind].active;
 
-    // update available variables
-    var vars = [];
-
-    // create structure suitable for ng-options (flat list)
-    _.each( datasets, function(set,ind) {
-      if(set.active) {
-        vars = _.map( _.keys( set.samples[0] ), function(ele) {
-          return { set: set.name, variable: ele };
-        }).concat(vars);
-      }
+    var activeNames = _.filter( datasets, function(d) { return d.active; } );
+    // update crossfilter to know about the (de)selection
+    dimensions.datasets.filterFunction( function(dsetName) {
+      return _.any( activeNames, function(d) { return d.name === dsetName; } );
     });
-    // this will trigger the change
-    angular.copy(vars,variables);
+  };
+
+  service.sampleCount = function(ind) {
+    return datasets[ind].sampleCount;
   };
 
   service.variables = variables;
@@ -287,13 +402,13 @@ vis.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
 
   // adds window to grid
   $scope.add = function(selection, type) {
-    console.log("add",selection, type);
+
+    // always form a copy so that the form selection is not updated via reference here.
+    var selectionCopy = {};
+    angular.copy(selection, selectionCopy);
+
     $scope.windows.push({ number : (++$scope.windowRunningNumber),
-      type: type, variables: selection });
-
-    // pass signal to dc plotter
-    $rootScope.$emit('dc.add', selection, type);
-
+      type: type, variables: selectionCopy });
   };
 
 }]);
@@ -304,7 +419,7 @@ vis.directive('packery', function() {
     templateUrl : 'vis/packery.tpl.html',
     replace: true,
     controller: 'PackeryController',
-    scope: true,
+    scope: {},
     link: function(scope, elm, attrs, controller) {
 
 
@@ -334,13 +449,13 @@ vis.directive('window', ['$compile', function($compile){
     restrict: 'C',
     templateUrl : 'vis/window.tpl.html',
     replace: true,
-    transclude: true,
+    // transclude: true,
     link: function($scope, ele, iAttrs, controller) {
       console.log('window linker');
       $scope.element = ele;
 
       // create window and let Packery know
-      $scope.packery.bindDraggabillyEvents( 
+      $scope.$parent.packery.bindDraggabillyEvents( 
         new Draggabilly( $scope.element[0], { handle : '.handle' } ) 
         );
       $scope.packery.reloadItems();      
@@ -370,7 +485,11 @@ vis.directive('window', ['$compile', function($compile){
 
 vis.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetService', 
   function($scope, $rootScope, DatasetService) {
-    $scope.data = DatasetService.getActives( [$scope.window.variables.x.set] )[0];
+
+    //$scope.data = DatasetService.getActives( [$scope.window.variables.x.set] )[0];
+    $scope.dimension = DatasetService.getDimension( $scope.window.variables.x );
+
+    $scope.testi = DatasetService.samples;//.slice(0,5);
 
     $scope.resetFilter = function() {
       $scope.histogram.filterAll();
@@ -381,82 +500,54 @@ vis.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetServi
 
 vis.directive('histogram', [ function(){
 
-  var createSVG = function( scope, element, data, variable ) {
+  var createSVG = function( scope, element, dimension, variable ) {
     // check css window rules before touching these
     scope.width = 470;
     scope.height = 345;
+    scope.xBarWidth = 80;
 
     scope.histogram = dc.barChart( element[0] );
-    scope.crossData = crossfilter(data.samples);
-
-    scope.varDimension = scope.crossData.dimension( function(d) {
+    scope.varGroup = dimension.group().reduceCount( function(d) {
       return d[variable];
     });
+    var minAndMax = d3.extent( dimension.group().all(), function(sample) { return sample.key; } );
 
-    scope.varGroup = scope.varDimension.group().reduceCount( function(d) {
-      return d[variable];
-    });
 
-    var minAndMax = d3.extent( data.samples, function(d) { return d[variable]; } );
+    // var cross = crossfilter(scope.testi);
+    // var dim = cross.dimension( function(d) { return d.variables['Ala']; } ); // [ d.variables['Ala'], d.variables['Alb'] ]; } );
+    // var group = dim.group().reduceCount();
+    // var extent = d3.extent( dim.group().all(), function(d) { return d.key; } );
+
 
     scope.histogram
     .renderTitle(true)
     .brushOn(true)
+    .xUnits( function() { return scope.xBarWidth; } )
     .width( scope.width )
     .height( scope.height )
     .margins({ top: 10, right: 10, bottom: 20, left: 40 })
-    .dimension(scope.varDimension)
+    // .dimension( dim )
+    // .group( group )
+    .dimension(scope.dimension)
     .group(scope.varGroup)
     .transitionDuration(500)
     .centerBar(true)
     .gap(2)
     .x( d3.scale.linear().domain( minAndMax ) )
+    // .x( d3.scale.linear().domain( extent ) )
     .elasticY(true)
+    .elasticX(true)
     .xAxis().tickFormat();
 
     scope.histogram.render();
-
-
-    // // calculate bin information
-    // var numBins = Math.ceil( Math.sqrt( data.samples.length ) );
-    // // var maxVal = _.max( data.samples, function(d) { return d[variable] } );
-    // // var minVal = _.min( data.samples, function(d) { return d[variable] } );
-    // var maxAndMin = d3.extent(data.samples, function(d) { return d[variable]; });
-    // var binWidth = ( maxAndMin[0] - maxAndMin[1] ) / numBins;
-
-
-    // scope.ordinalBarChart = dc.barChart( element[0]  );
-    // var ndx = crossfilter(data.samples);
-    // var varDimension = ndx.dimension( function(d) {
-    //   return +d[variable];
-    // });
-    // var varGroup = varDimension.group( function(d) {
-    //   return Math.floor( d / binWidth ) * binWidth;
-    // });
-
-    // scope.ordinalBarChart
-    // .width(scope.width)
-    // .height(scope.height)
-    // .dimension(varDimension)
-    // .round(Math.floor)
-    // .group(varGroup)
-    // .elasticY(true)
-    // .x( d3.scale.linear().domain(maxAndMin).range([0,numBins]) )
-    // .xUnits(dc.units.linear)
-    // .xAxis();
-    // //.x(d3.scale.ordinal().domain( varGroup.all() ) )
-
-    // scope.ordinalBarChart.render();
-
   };
 
   var linkFn = function($scope, ele, iAttrs) {
-    createSVG( $scope, ele, $scope.data, $scope.window.variables.x.variable );
+    createSVG( $scope, ele, $scope.dimension, $scope.window.variables.x );
   };
 
   return {
     scope: false,
-    // scope: {},
     restrict: 'C',
     require: '^?window',
     replace: true,
@@ -472,37 +563,8 @@ vis.directive('histogram', [ function(){
 
 vis.controller('ScatterPlotController', ['$scope', '$rootScope', 'DatasetService', 
   function($scope, $rootScope, DatasetService) {
-    console.log("scope:",$scope);
 
-    var sets = DatasetService.getActives( [$scope.window.variables.x.set, $scope.window.variables.y.set] );
-
-    var joinedSamples = function( dataX, dataY ) {
-      var joined = [];
-
-      // same dset for x-y
-      if( _.isUndefined( dataY ) ) {
-        _.each( dataX.samples, function(ele,ind) {
-          joined.push( { x: ele, y: ele } );
-        });        
-      }
-      else if( ( dataX.length < dataY.length ) ) {
-        _.each( dataX.samples, function(ele,ind) {
-          // join only using the shortest array, rest won't pair
-          joined.push( { x: ele, y: dataY.samples[ind] } );
-        });
-      }
-      else {
-        _.each( dataY.samples, function(ele,ind) {
-          // join only using the shortest array, rest won't pair
-          joined.push( { y: ele, x: dataX.samples[ind] } );
-        });
-      }
-
-      return joined;
-    };
-
-    $scope.data = joinedSamples( sets[0], sets[1] );
-
+    $scope.dimension = DatasetService.getDimension( $scope.window.variables.x, $scope.window.variables.y );
 
     $scope.resetFilter = function() {
       $scope.scatterplot.filterAll();
@@ -516,7 +578,7 @@ vis.controller('ScatterPlotController', ['$scope', '$rootScope', 'DatasetService
 
 vis.directive('scatterplot', [ function(){
 
-  var createSVG = function( scope, element, data, variableX, variableY ) {
+  var createSVG = function( scope, element, dimension, variableX, variableY ) {
     // check css window rules before touching these
     scope.width = 470;
     scope.height = 345;
@@ -524,15 +586,10 @@ vis.directive('scatterplot', [ function(){
     // data = [ { x: 5, y: 10 }, { x: 15, y: 15 }, { x: 40, y: 5 }, { x: 50, y: 2 } ];
 
     scope.scatterplot = dc.scatterPlot( element[0] );
-    scope.crossData = crossfilter( data );
 
-    scope.varDimension = scope.crossData.dimension( function(d) {
-      return [ d.x[variableX], d.y[variableY] ];
-    });
+    scope.varGroup = dimension.group();
 
-    scope.varGroup = scope.varDimension.group();
-
-    var xExtent = d3.extent( data, function(d) { return d.x[variableX]; } );
+    var xExtent = d3.extent( scope.varGroup.top(Infinity), function(d) { return d.key[0]; } );
 
     scope.scatterplot
     // .title( function(d) {
@@ -548,7 +605,7 @@ vis.directive('scatterplot', [ function(){
     .x(d3.scale.linear().domain( xExtent ) )
     .yAxisLabel( variableY )
     .xAxisLabel( variableX )
-    .dimension( scope.varDimension )
+    .dimension( dimension )
     .group( scope.varGroup );
 
     scope.scatterplot.render();
@@ -556,7 +613,7 @@ vis.directive('scatterplot', [ function(){
   };
 
   var linkFn = function($scope, ele, iAttrs) {
-    createSVG( $scope, ele, $scope.data, 
+    createSVG( $scope, ele, $scope.dimension,
       $scope.window.variables.x.variable, $scope.window.variables.y.variable );
   };
 

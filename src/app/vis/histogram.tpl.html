@@ -4,7 +4,7 @@
 		<div class="control-group">
 			<label class="control-label" for="xcoordinate">Variable</label>
 			<div class="controls">
-				<select ng-model="selection.x" ng-options="item.variable group by item.set for item in variables" required ng-disabled="!canEdit()">
+				<select ng-model="selection.x" ng-options="item as item for item in variables" required ng-disabled="!canEdit()">
 				</select>
 			</div>
 		</div>

@@ -5,10 +5,10 @@
 	<div class="text-center plot-title" ng-switch on="window.type"> 
 		{{window.type }} of
 		<strong ng-switch-when="histogram">
-			{{window.variables.x.variable}}
+			{{window.variables.x}}
 		</strong>
 		<strong ng-switch-when="scatterplot">
-			{{window.variables.x.variable}}, {{window.variables.y.variable}}
+			{{window.variables.x}}, {{window.variables.y}}
 		</strong>
 		<strong ng-switch-default>
 			default

@@ -5,14 +5,14 @@
 			<div class="control-group">
 				<label class="control-label" for="xcoordinate">X coordinate</label>
 				<div class="controls">
-					<select id="xcoordinate" ng-model="selection.x" ng-options="item.variable group by item.set for item in variables" required ng-disabled="!canEdit()">
+					<select id="xcoordinate" ng-model="selection.x" ng-options="item as item for item in variables" required ng-disabled="!canEdit()">
 					</select>
 				</div>
 			</div>
 			<div class="control-group">
 				<label class="control-label" for="ycoordinate">Y coordinate</label>
 				<div class="controls">
-					<select id="ycoordinate" ng-model="selection.y" ng-options="item.variable group by item.set for item in variables" required ng-disabled="!canEdit()">
+					<select id="xcoordinate" ng-model="selection.y" ng-options="item as item for item in variables" required ng-disabled="!canEdit()">
 					</select>
 				</div>
 			</div>

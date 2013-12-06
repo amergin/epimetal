@@ -13,7 +13,7 @@
         <tr ng-repeat="dset in datasets" ng-style="{ 'background-color': getBgColor($index) }">
           <td class="dataset-select"><input type="checkbox" ng-click="toggle($index)" ng-checked="isActive($index)"></td>
           <td class="dataset-name">{{dset.name}}</td>
-          <td class="dataset-size">{{dset.samples.length}}</td>
+          <td class="dataset-size">{{dset.sampleCount}}</td>
         </tr>
       </tbody>
     </table>
