@@ -134,7 +134,7 @@
   function($scope, DatasetService)
   {
 
-    $scope.sets = DatasetService.getDatasets();
+    $scope.sets = DatasetService.loadDatasets();
     $scope.datasets = [];
 
     $scope.sets.then( function(result) {
@@ -250,7 +250,7 @@
 
 
   // load and init datasets when this is called
-  service.getDatasets = function() {
+  service.loadDatasets = function() {
       console.log("Load Datasets");
 
       var deferred = $q.defer();
@@ -288,14 +288,29 @@
 
   service.samples = samples;
 
+  service.getColor = function(name) {
+    return _.filter( datasets, function(set) { return set.name === name; } )[0]['color'];
+  };
+
+  service.getColors = function() {
+      var obj = {
+        colors: _.pluck( datasets, 'color')
+      };
+      obj.indices = {};
+      _.each( datasets, function(set,ind) { obj.indices[set.name] = ind;  } );
+      return obj;
+  };
+
   service.isActive = function(ind) {
     return datasets[ind].active;
   };
 
+  // what variables can be selected from any dataset?
   service.getVariables = function() {
     return variables;
   };
 
+  // are there currently any active sets?
   service.anyActiveSets = function() {
     return _.any( datasets, function(set) { return set.active; } );
   };
@@ -312,9 +327,22 @@
     return results;
   };
 
+  service.getActiveDatasetNames = function() { 
+    return _.pluck( _.filter( datasets, function(set) { return set.active; } ), 'name' );
+    //_.pluck( datasets, 'name' );
+  };
+
+  service.getDatasetNames = function() { 
+    return _.pluck( datasets, 'name' );
+  };
+
+  // create a crossfilter dimension. Takes one or two arguments
   service.getDimension = function(variable) {
 
     var legalInput = function(vari) {
+      if( variable === 'datasets') {
+        return;
+      }
       if( !_.contains(variables, vari) || _.isUndefined( vari ) ) {
         throw new Error("Undefined variable tried");
       }
@@ -325,7 +353,8 @@
     });
 
     var dim;
-    // x,y variables
+
+    // x,y variables asked, for scatterplot
     if( arguments.length === 2 ) {
 
       var varX = arguments[0];
@@ -358,6 +387,43 @@
     return dim;
   };
 
+  // form a grouping using a custom reduce function
+  service.getReduce = function(dimensionGroup, variable) {
+
+    var reduceAdd = function(p,v) {
+      p.counts[v.dataset] = p.counts[v.dataset] + 1;
+      p.sums[v.dataset] = p.sums[v.dataset] + v.variables[variable];
+      p.dataset = v.dataset;
+      p.sampleid = v.sampleid;
+      return p;
+    };
+
+    var reduceRemove = function(p,v) {
+      p.counts[v.dataset] = p.counts[v.dataset] - 1;
+      p.sums[v.dataset] = p.sums[v.dataset] - v.variables[variable];
+      p.dataset = v.dataset;
+      p.sampleid = v.sampleid;
+      return p;
+    };
+
+    var reduceInitial = function() {
+      var setNames = service.getDatasetNames();
+      var p = {
+        sums: {},
+        counts: {}
+      };
+
+      _.each( setNames, function(name) {
+        p.sums[name] = 0;
+        p.counts[name] = 0;
+      });
+      return p;
+    };
+
+    return dimensionGroup.reduce( reduceAdd, reduceRemove, reduceInitial );
+  };
+
+  // toggle whether the dataset, determined by index, is active
   service.toggle = function(ind) {
     datasets[ind].active = !datasets[ind].active;
 
@@ -368,6 +434,7 @@
     });
   };
 
+  // returns the amount of samples in a dataset
   service.sampleCount = function(ind) {
     return datasets[ind].sampleCount;
   };
@@ -488,9 +555,19 @@ vis.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetServi
 
     //$scope.data = DatasetService.getActives( [$scope.window.variables.x.set] )[0];
     $scope.dimension = DatasetService.getDimension( $scope.window.variables.x );
+    $scope.dsetDimension = DatasetService.getDimension( 'datasets' );
 
-    $scope.testi = DatasetService.samples;//.slice(0,5);
+    $scope.noBins = 20;
+    $scope.extent = d3.extent( $scope.dimension.group().all(), function(sample) { return sample.key; } );    
+    $scope.binWidth = ($scope.extent[1] - $scope.extent[0]) / $scope.noBins;
+    $scope.group = $scope.dimension.group(function(d){return Math.floor(d / $scope.binWidth) * $scope.binWidth;});
+    $scope.reduced = DatasetService.getReduce( $scope.group, $scope.window.variables.x );
+    $scope.activeNames = DatasetService.getDatasetNames();
+    $scope.color = DatasetService.getColor;
+    $scope.colorMap = DatasetService.getColors();
 
+
+    //$scope.testi = DatasetService.samples;//.slice(0,5);
     $scope.resetFilter = function() {
       $scope.histogram.filterAll();
       dc.redrawAll();
@@ -500,50 +577,133 @@ vis.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetServi
 
 vis.directive('histogram', [ function(){
 
-  var createSVG = function( scope, element, dimension, variable ) {
+  var createSVG = function( scope, element, dimension, reducedGroup, variable, noBins, extent, binWidth, colorMap ) {
     // check css window rules before touching these
     scope.width = 470;
     scope.height = 345;
     scope.xBarWidth = 80;
 
     scope.histogram = dc.barChart( element[0] );
-    scope.varGroup = dimension.group().reduceCount( function(d) {
-      return d[variable];
-    });
-    var minAndMax = d3.extent( dimension.group().all(), function(sample) { return sample.key; } );
 
 
+    // only for testing purposes!!
     // var cross = crossfilter(scope.testi);
     // var dim = cross.dimension( function(d) { return d.variables['Ala']; } ); // [ d.variables['Ala'], d.variables['Alb'] ]; } );
     // var group = dim.group().reduceCount();
     // var extent = d3.extent( dim.group().all(), function(d) { return d.key; } );
 
 
-    scope.histogram
-    .renderTitle(true)
-    .brushOn(true)
-    .xUnits( function() { return scope.xBarWidth; } )
-    .width( scope.width )
-    .height( scope.height )
-    .margins({ top: 10, right: 10, bottom: 20, left: 40 })
-    // .dimension( dim )
-    // .group( group )
-    .dimension(scope.dimension)
-    .group(scope.varGroup)
-    .transitionDuration(500)
-    .centerBar(true)
-    .gap(2)
-    .x( d3.scale.linear().domain( minAndMax ) )
-    // .x( d3.scale.linear().domain( extent ) )
-    .elasticY(true)
-    .elasticX(true)
-    .xAxis().tickFormat();
+  // see http://stackoverflow.com/questions/15191258/properly-display-bin-width-in-barchart-using-dc-js-and-crossfilter-js
+  // var n_bins = 20;
+  // var binWidth = (xMinAndMax[1] - xMinAndMax[0]) / n_bins;
+  // var grp = dimension.group(function(d){return Math.floor(d / binWidth) * binWidth;});
+
+  scope.histogram
+      .width(scope.width)
+      .height(scope.height)
+      .xUnits( function() { return 30; } )
+      .margins({top: 15, right: 10, bottom: 20, left: 40})
+      .dimension(dimension);
+
+
+      // .group(reducedGroup, 'DATASET1')
+      // .valueAccessor( function(d) {
+      //   return d.value.counts['DATASET1'] || 0;
+      // })
+      // .keyAccessor( function(d) {
+      //   return d.key;
+      // });
+      // .stack( reducedGroup, 'DATASET2', function(d) {
+      //   return d.value.counts['DATASET2'] || 0;
+      // })
+      // .stack( reducedGroup, 'DATASET3', function(d) {
+      //   return d.value.counts['DATASET3'] || 0;
+      // });
+
+
+      // .colors(colorMap.colors)
+      // .colorAccessor( function(d,i) {
+      //   return colorMap.indices[d.value.dataset];
+      // })
+      // .group(reducedGroup)
+      // .valueAccessor( function(d) {
+      //   return d.value.counts[name];
+      // });
+
+      _.each( scope.activeNames, function(name,ind) {
+        if( ind === 0 )
+        {
+          scope.histogram
+          .group(reducedGroup, name)
+          .valueAccessor( function(d) {
+            if( _.isUndefined( d.value.dataset ) ) {
+              return 0;
+            }
+            return d.value.counts[name];
+          });
+        }
+        else {
+          scope.histogram
+          .stack( reducedGroup, name, function(d) {
+            if( _.isUndefined( d.value.dataset ) ) {
+              return 0;
+            }
+            return d.value.counts[name];
+          });
+        }
+      });
+
+
+      scope.histogram.round(Math.floor)
+      .centerBar(false)
+      .x(d3.scale.linear().domain(extent).range([0,noBins]))
+      .elasticY(true)
+      .brushOn(true)      
+      .xAxis().ticks(7).tickFormat( d3.format(".2s") );
+
+
+
+
+
+
+
+      // .group(scope.group)
+      // .valueAccessor( function(d) {
+      //   console.log(d);
+      //   return d.value;
+      // })
+
+    // scope.varGroup = dimension.group().reduceCount( function(d) {
+    //   return d[variable];
+    // });
+    // without dividing to bins:
+    // scope.histogram
+    // .renderTitle(true)
+    // .brushOn(true)
+    // .xUnits( function() { return scope.xBarWidth; } )
+    // .width( scope.width )
+    // .height( scope.height )
+    // .margins({ top: 10, right: 10, bottom: 20, left: 40 })
+    // // .dimension( dim )
+    // // .group( group )
+    // .dimension(scope.dimension)
+    // .group(scope.varGroup)
+    // .stack( dsetDimension )
+    // .transitionDuration(500)
+    // .centerBar(true)
+    // .gap(2)
+    // .x( d3.scale.linear().domain( xMinAndMax ) )
+    // // .x( d3.scale.linear().domain( extent ) )
+    // .elasticY(true)
+    // .elasticX(true)
+    // .xAxis().ticks(5).tickFormat( d3.format(".2s") );
 
     scope.histogram.render();
   };
 
   var linkFn = function($scope, ele, iAttrs) {
-    createSVG( $scope, ele, $scope.dimension, $scope.window.variables.x );
+    createSVG( $scope, ele, $scope.dimension, $scope.reduced, $scope.window.variables.x, 
+      $scope.noBins, $scope.extent, $scope.binWidth, $scope.colorMap);
   };
 
   return {
@@ -605,8 +765,11 @@ vis.directive('scatterplot', [ function(){
     .x(d3.scale.linear().domain( xExtent ) )
     .yAxisLabel( variableY )
     .xAxisLabel( variableX )
+    .elasticY(true)
+    .elasticX(true)
     .dimension( dimension )
-    .group( scope.varGroup );
+    .group( scope.varGroup )
+    .xAxis().ticks(5).tickFormat( d3.format(".2s") );
 
     scope.scatterplot.render();
 
