@@ -286,7 +286,7 @@
       return deferred.promise;
     };
 
-  service.samples = samples;
+  service.samples = samples;  
 
   // service.getColor = function(name) {
   //   return _.filter( datasets, function(set) { return set.name === name; } )[0]['color'];
@@ -608,8 +608,9 @@ vis.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetServi
     $scope.dimension = DatasetService.getDimension( $scope.window.variables.x );
     $scope.dsetDimension = DatasetService.getDimension( 'datasets' );
 
-    $scope.noBins = 20;
+    //20;
     $scope.extent = d3.extent( $scope.dimension.group().all(), function(sample) { return sample.key; } );    
+    $scope.noBins = _.max( [ _.min( [ Math.floor( $scope.dimension.group().all().length / 20 ), 50 ] ), 20 ] );
     $scope.binWidth = ($scope.extent[1] - $scope.extent[0]) / $scope.noBins;
     $scope.group = $scope.dimension.group(function(d){return Math.floor(d / $scope.binWidth) * $scope.binWidth;});
     $scope.reduced = DatasetService.getReduce( $scope.group, $scope.window.variables.x );
@@ -637,41 +638,13 @@ vis.directive('histogram', [ function(){
 
     scope.histogram = dc.barChart( element[0] );
 
-
-    // only for testing purposes!!
-    // var cross = crossfilter(scope.testi);
-    // var dim = cross.dimension( function(d) { return d.variables['Ala']; } ); // [ d.variables['Ala'], d.variables['Alb'] ]; } );
-    // var group = dim.group().reduceCount();
-    // var extent = d3.extent( dim.group().all(), function(d) { return d.key; } );
-
-
-  // see http://stackoverflow.com/questions/15191258/properly-display-bin-width-in-barchart-using-dc-js-and-crossfilter-js
-  // var n_bins = 20;
-  // var binWidth = (xMinAndMax[1] - xMinAndMax[0]) / n_bins;
-  // var grp = dimension.group(function(d){return Math.floor(d / binWidth) * binWidth;});
-
   scope.histogram
       .width(scope.width)
       .height(scope.height)
       .xUnits( function() { return scope.xBarWidth; } )
       .margins({top: 15, right: 10, bottom: 20, left: 40})
       .dimension(dimension);
-
-      // .group(reducedGroup, 'DATASET1')
-      // .valueAccessor( function(d) {
-      //   return d.value.counts['DATASET1'] || 0;
-      // })
-      // .keyAccessor( function(d) {
-      //   return d.key;
-      // });
-      // .stack( reducedGroup, 'DATASET2', function(d) {
-      //   return d.value.counts['DATASET2'] || 0;
-      // })
-      // .stack( reducedGroup, 'DATASET3', function(d) {
-      //   return d.value.counts['DATASET3'] || 0;
-      // });
-
-  
+ 
       if( isPooled ) {
         scope.histogram
         .group(reducedGroup, name)
