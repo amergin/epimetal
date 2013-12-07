@@ -55,8 +55,6 @@
  vis.controller( 'VisCtrl', ['$scope','DatasetService', 
   function VisController( $scope, DatasetService) {
 
-    // load datasets
-    //DatasetService.fetch();
   }]);
 
 
@@ -155,7 +153,7 @@
     };
 
     $scope.getBgColor = function(index) {
-      return $scope.datasets[index].color;
+      return DatasetService.getColorScale()(index);
     };
 
     $scope.getVariables = function() {
@@ -189,6 +187,8 @@
     //'/plotter/random_data_samplenames.json'
   };
 
+  var colorScale = d3.scale.category20();
+
   // raw samples
   var samples = [];
 
@@ -211,12 +211,12 @@
 
   var getInitDatasets = function() {
 
-    var getBgColor = function(index, length) {
-      var hue = 360 * ( index / length );
-      var saturation = 1;
-      var lightness = 0.65;
-      return d3.hsl( hue, saturation, lightness ).toString();
-    };    
+    // var getBgColor = function(index, length) {
+    //   var hue = 360 * ( index / length );
+    //   var saturation = 1;
+    //   var lightness = 0.65;
+    //   return d3.hsl( hue, saturation, lightness ).toString();
+    // };    
 
     var setGroup = dimensions['datasets'].group().top(Infinity);
     var sets = _.map( setGroup, 
@@ -224,8 +224,8 @@
         return { 
           name: ele.key,
           sampleCount: ele.value,
-          active: false,
-          color: getBgColor(ind, setGroup.length) }; 
+          active: false };
+          //color: getBgColor(ind, setGroup.length) }; 
         } );
 
     sets = _.sortBy( sets, function(e) { return e.name; } );
@@ -288,18 +288,18 @@
 
   service.samples = samples;
 
-  service.getColor = function(name) {
-    return _.filter( datasets, function(set) { return set.name === name; } )[0]['color'];
-  };
+  // service.getColor = function(name) {
+  //   return _.filter( datasets, function(set) { return set.name === name; } )[0]['color'];
+  // };
 
-  service.getColors = function() {
-      var obj = {
-        colors: _.pluck( datasets, 'color')
-      };
-      obj.indices = {};
-      _.each( datasets, function(set,ind) { obj.indices[set.name] = ind;  } );
-      return obj;
-  };
+  // service.getColors = function() {
+  //     var obj = {
+  //       colors: _.pluck( datasets, 'color')
+  //     };
+  //     obj.indices = {};
+  //     _.each( datasets, function(set,ind) { obj.indices[set.name] = ind;  } );
+  //     return obj;
+  // };
 
   service.isActive = function(ind) {
     return datasets[ind].active;
@@ -392,7 +392,10 @@
 
     var reduceAdd = function(p,v) {
       p.counts[v.dataset] = p.counts[v.dataset] + 1;
+      p.counts.total = p.counts.total + 1;
       p.sums[v.dataset] = p.sums[v.dataset] + v.variables[variable];
+      p.sums.total = p.sums.total + v.variables[variable];
+
       p.dataset = v.dataset;
       p.sampleid = v.sampleid;
       return p;
@@ -401,6 +404,9 @@
     var reduceRemove = function(p,v) {
       p.counts[v.dataset] = p.counts[v.dataset] - 1;
       p.sums[v.dataset] = p.sums[v.dataset] - v.variables[variable];
+      p.sums.total = p.sums.total - v.variables[variable];
+      p.counts.total = p.counts.total - 1;
+
       p.dataset = v.dataset;
       p.sampleid = v.sampleid;
       return p;
@@ -417,11 +423,56 @@
         p.sums[name] = 0;
         p.counts[name] = 0;
       });
+      p.sums.total = 0;
+      p.counts.total = 0;
       return p;
     };
 
     return dimensionGroup.reduce( reduceAdd, reduceRemove, reduceInitial );
   };
+
+
+  service.getColorScale = function() {
+    return colorScale;
+  };
+
+
+
+  // form a grouping using a custom reduce function
+  service.getReduceScatterplot = function(dimensionGroup) {
+
+    var reduceAdd = function(p,v) {
+      p.counts[v.dataset] = p.counts[v.dataset] + 1;
+      p.dataset = v.dataset;
+      p.sampleid = v.sampleid;
+      return p;
+    };
+
+    var reduceRemove = function(p,v) {
+      p.counts[v.dataset] = p.counts[v.dataset] - 1;
+      p.dataset = v.dataset;
+      p.sampleid = v.sampleid;
+      return p;
+    };
+
+    var reduceInitial = function() {
+      var setNames = service.getDatasetNames();
+      var p = {
+        counts: {}
+      };
+
+      _.each( setNames, function(name) {
+        p.counts[name] = 0;
+      });
+      return p;
+    };
+
+    return dimensionGroup.reduce( reduceAdd, reduceRemove, reduceInitial );
+  };
+
+
+
+
 
   // toggle whether the dataset, determined by index, is active
   service.toggle = function(ind) {
@@ -470,7 +521,7 @@ vis.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
   // adds window to grid
   $scope.add = function(selection, type) {
 
-    // always form a copy so that the form selection is not updated via reference here.
+    // always form a copy so that the form selection is not updated via reference to here.
     var selectionCopy = {};
     angular.copy(selection, selectionCopy);
 
@@ -562,9 +613,10 @@ vis.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetServi
     $scope.binWidth = ($scope.extent[1] - $scope.extent[0]) / $scope.noBins;
     $scope.group = $scope.dimension.group(function(d){return Math.floor(d / $scope.binWidth) * $scope.binWidth;});
     $scope.reduced = DatasetService.getReduce( $scope.group, $scope.window.variables.x );
-    $scope.activeNames = DatasetService.getDatasetNames();
-    $scope.color = DatasetService.getColor;
-    $scope.colorMap = DatasetService.getColors();
+    $scope.datasetNames = DatasetService.getDatasetNames();
+    $scope.colorScale = DatasetService.getColorScale();
+    // $scope.color = DatasetService.getColor;
+    // $scope.colorMap = DatasetService.getColors();
 
 
     //$scope.testi = DatasetService.samples;//.slice(0,5);
@@ -577,11 +629,11 @@ vis.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetServi
 
 vis.directive('histogram', [ function(){
 
-  var createSVG = function( scope, element, dimension, reducedGroup, variable, noBins, extent, binWidth, colorMap ) {
+  var createSVG = function( scope, element, dimension, reducedGroup, variable, noBins, extent, binWidth, colorMap, isPooled, colorScale ) {
     // check css window rules before touching these
     scope.width = 470;
     scope.height = 345;
-    scope.xBarWidth = 80;
+    scope.xBarWidth = 20;
 
     scope.histogram = dc.barChart( element[0] );
 
@@ -601,10 +653,9 @@ vis.directive('histogram', [ function(){
   scope.histogram
       .width(scope.width)
       .height(scope.height)
-      .xUnits( function() { return 30; } )
+      .xUnits( function() { return scope.xBarWidth; } )
       .margins({top: 15, right: 10, bottom: 20, left: 40})
       .dimension(dimension);
-
 
       // .group(reducedGroup, 'DATASET1')
       // .valueAccessor( function(d) {
@@ -620,41 +671,68 @@ vis.directive('histogram', [ function(){
       //   return d.value.counts['DATASET3'] || 0;
       // });
 
+  
+      if( isPooled ) {
+        scope.histogram
+        .group(reducedGroup, name)
+        .valueAccessor( function(d) {
+          return d.value.counts.total;
+        })
+        .linearColors(['black']);
+      }
+      else {
+        _.each( scope.datasetNames, function(name,ind) {
+          if( ind === 0 )
+          {
+            scope.histogram
+            .group(reducedGroup, name)
+            .valueAccessor( function(d) {
+              if( _.isUndefined( d.value.dataset ) ) {
+                return 0;
+              }
+              return d.value.counts[name];
+            });
+          }
+          else {
+            scope.histogram
+            .stack( reducedGroup, name, function(d) {
+              if( _.isUndefined( d.value.dataset ) ) {
+                return 0;
+              }
+              return d.value.counts[name];
+            });
+          }
+        });
 
-      // .colors(colorMap.colors)
-      // .colorAccessor( function(d,i) {
-      //   return colorMap.indices[d.value.dataset];
-      // })
-      // .group(reducedGroup)
-      // .valueAccessor( function(d) {
-      //   return d.value.counts[name];
-      // });
 
-      _.each( scope.activeNames, function(name,ind) {
-        if( ind === 0 )
-        {
-          scope.histogram
-          .group(reducedGroup, name)
-          .valueAccessor( function(d) {
-            if( _.isUndefined( d.value.dataset ) ) {
-              return 0;
-            }
-            return d.value.counts[name];
-          });
-        }
-        else {
-          scope.histogram
-          .stack( reducedGroup, name, function(d) {
-            if( _.isUndefined( d.value.dataset ) ) {
-              return 0;
-            }
-            return d.value.counts[name];
-          });
-        }
-      });
+        // right colors for group & stack(s)
+        scope.histogram
+        .colors( d3.scale.category20() );
+        // .colors( d3.scale.category20() )
+        // .colorAccessor( function(d) {
+        //   var ret;
+        //   if( _.isUndefined(d.value.dataset) ) { ret = 0;}
+        //   else {
+        //     ret = _.indexOf( scope.datasetNames, d.value.dataset );
+        //   }
+        //   console.log( d.value.dataset, ret);
+        //   return ret;
+        // });
+
+        //colorScale );
+
+// //        .ordinalColors( colorMap.colors )
+//         .colorAccessor( function(d) {
+//           // console.log(d.value.dataset);
+//           // return 0;
+//           return colorMap.indices[d.value.dataset];
+//         });
+
+      }
 
 
-      scope.histogram.round(Math.floor)
+
+      scope.histogram//.round(Math.floor)
       .centerBar(false)
       .x(d3.scale.linear().domain(extent).range([0,noBins]))
       .elasticY(true)
@@ -702,8 +780,11 @@ vis.directive('histogram', [ function(){
   };
 
   var linkFn = function($scope, ele, iAttrs) {
+
+    var isPooled = $scope.window.variables.pooled || false;
+
     createSVG( $scope, ele, $scope.dimension, $scope.reduced, $scope.window.variables.x, 
-      $scope.noBins, $scope.extent, $scope.binWidth, $scope.colorMap);
+      $scope.noBins, $scope.extent, $scope.binWidth, $scope.colorMap, isPooled, $scope.colorScale);
   };
 
   return {
@@ -725,11 +806,14 @@ vis.controller('ScatterPlotController', ['$scope', '$rootScope', 'DatasetService
   function($scope, $rootScope, DatasetService) {
 
     $scope.dimension = DatasetService.getDimension( $scope.window.variables.x, $scope.window.variables.y );
+    $scope.reduced = DatasetService.getReduceScatterplot( $scope.dimension.group() );
+    $scope.datasetNames = DatasetService.getDatasetNames();
 
     $scope.resetFilter = function() {
       $scope.scatterplot.filterAll();
       dc.redrawAll();
     };
+
 
   }]);
 
@@ -738,7 +822,7 @@ vis.controller('ScatterPlotController', ['$scope', '$rootScope', 'DatasetService
 
 vis.directive('scatterplot', [ function(){
 
-  var createSVG = function( scope, element, dimension, variableX, variableY ) {
+  var createSVG = function( scope, element, dimension, reducedGroup, variableX, variableY, isPooled) {
     // check css window rules before touching these
     scope.width = 470;
     scope.height = 345;
@@ -769,15 +853,21 @@ vis.directive('scatterplot', [ function(){
     .elasticX(true)
     .dimension( dimension )
     .group( scope.varGroup )
-    .xAxis().ticks(5).tickFormat( d3.format(".2s") );
+    .xAxis().ticks(7).tickFormat( d3.format(".2s") );
+
+    if( isPooled) {
+      scope.scatterplot.colors(['black']);
+    }
 
     scope.scatterplot.render();
 
   };
 
   var linkFn = function($scope, ele, iAttrs) {
-    createSVG( $scope, ele, $scope.dimension,
-      $scope.window.variables.x.variable, $scope.window.variables.y.variable );
+    var isPooled = $scope.window.variables.pooled || false;
+
+    createSVG( $scope, ele, $scope.dimension, $scope.reduced, 
+      $scope.window.variables.x.variable, $scope.window.variables.y.variable, isPooled );
   };
 
   return {

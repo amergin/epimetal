@@ -12,7 +12,7 @@
 		<div class="control-group">
 			<div class="controls">
 				<label class="checkbox">
-					<input type="checkbox" ng-disabled="!canEdit()"> Pool datasets
+					<input type="checkbox" ng-model="selection.pooled" ng-disabled="!canEdit()"> Pool datasets
 				</label>
 				<button type="submit" class="btn btn-primary" ng-disabled="!canSubmit()" ng-click="add(selection)">Add plot</button>
 			</div>
