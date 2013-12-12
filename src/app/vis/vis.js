@@ -636,120 +636,107 @@ vis.directive('histogram', [ function(){
     scope.height = 345;
     scope.xBarWidth = 20;
 
-    scope.histogram = dc.barChart( element[0] );
+    //scope.histogram = dc.barChart( element[0] );
 
-  scope.histogram
-      .width(scope.width)
-      .height(scope.height)
-      .xUnits( function() { return scope.xBarWidth; } )
-      .margins({top: 15, right: 10, bottom: 20, left: 40})
-      .dimension(dimension);
+
+  // collect charts here
+  var charts = [];
+
+  // 1. create composite chart
+  scope.histogram = dc.compositeChart( element[0] )
+  .width(scope.width)
+
+  .height(scope.height)
+  .colors( d3.scale.category20() )
+  .shareColors(true)
+  .brushOn(true)
+  .elasticY(true)
+  .x(d3.scale.linear().domain(extent).range([0,noBins]))
+  .xUnits( function() { return scope.xBarWidth; } )
+  .margins({top: 15, right: 10, bottom: 20, left: 40});
+  //.xAxis().ticks(7).tickFormat( d3.format(".2s") );
+
+
+
+  // 2. for each of the additional stacks, create a child chart
+  _.each( scope.datasetNames, function(name,ind) {
+
+    var chart = dc.barChart( scope.histogram )
+    .centerBar(false)
+    .dimension(dimension)
+    .group(reducedGroup, name)
+    .valueAccessor( function(d) {
+      if( _.isUndefined( d.value.dataset ) ) {
+        return 0;
+      }
+      return d.value.counts[name];
+    });
+
+    charts.push( chart );
+
+  });
+
+  // 4. compose & render the composite chart
+  scope.histogram.compose( charts );
+  scope.histogram.render();
+
+
+  // scope.histogram
+  //     .width(scope.width)
+  //     .height(scope.height)
+  //     .xUnits( function() { return scope.xBarWidth; } )
+  //     .margins({top: 15, right: 10, bottom: 20, left: 40})
+  //     .dimension(dimension);
  
-      if( isPooled ) {
-        scope.histogram
-        .group(reducedGroup, name)
-        .valueAccessor( function(d) {
-          return d.value.counts.total;
-        })
-        .linearColors(['black']);
-      }
-      else {
-        _.each( scope.datasetNames, function(name,ind) {
-          if( ind === 0 )
-          {
-            scope.histogram
-            .group(reducedGroup, name)
-            .valueAccessor( function(d) {
-              if( _.isUndefined( d.value.dataset ) ) {
-                return 0;
-              }
-              return d.value.counts[name];
-            });
-          }
-          else {
-            scope.histogram
-            .stack( reducedGroup, name, function(d) {
-              if( _.isUndefined( d.value.dataset ) ) {
-                return 0;
-              }
-              return d.value.counts[name];
-            });
-          }
-        });
+  //     if( isPooled ) {
+  //       scope.histogram
+  //       .group(reducedGroup, name)
+  //       .valueAccessor( function(d) {
+  //         return d.value.counts.total;
+  //       })
+  //       .linearColors(['black']);
+  //     }
+  //     else {
+  //       _.each( scope.datasetNames, function(name,ind) {
+  //         if( ind === 0 )
+  //         {
+  //           scope.histogram
+  //           .group(reducedGroup, name)
+  //           .valueAccessor( function(d) {
+  //             if( _.isUndefined( d.value.dataset ) ) {
+  //               return 0;
+  //             }
+  //             return d.value.counts[name];
+  //           });
+  //         }
+  //         else {
+  //           scope.histogram
+  //           .stack( reducedGroup, name, function(d) {
+  //             if( _.isUndefined( d.value.dataset ) ) {
+  //               return 0;
+  //             }
+  //             return d.value.counts[name];
+  //           });
+  //         }
+  //       });
 
 
-        // right colors for group & stack(s)
-        scope.histogram
-        .colors( d3.scale.category20() );
-        // .colors( d3.scale.category20() )
-        // .colorAccessor( function(d) {
-        //   var ret;
-        //   if( _.isUndefined(d.value.dataset) ) { ret = 0;}
-        //   else {
-        //     ret = _.indexOf( scope.datasetNames, d.value.dataset );
-        //   }
-        //   console.log( d.value.dataset, ret);
-        //   return ret;
-        // });
+  //       // right colors for group & stack(s)
+  //       scope.histogram
+  //       .colors( d3.scale.category20() );
 
-        //colorScale );
-
-// //        .ordinalColors( colorMap.colors )
-//         .colorAccessor( function(d) {
-//           // console.log(d.value.dataset);
-//           // return 0;
-//           return colorMap.indices[d.value.dataset];
-//         });
-
-      }
+  //     }
 
 
 
-      scope.histogram//.round(Math.floor)
-      .centerBar(false)
-      .x(d3.scale.linear().domain(extent).range([0,noBins]))
-      .elasticY(true)
-      .brushOn(true)      
-      .xAxis().ticks(7).tickFormat( d3.format(".2s") );
+  //     scope.histogram
+  //     .centerBar(false)
+  //     .x(d3.scale.linear().domain(extent).range([0,noBins]))
+  //     .elasticY(true)
+  //     .brushOn(true)      
+  //     .xAxis().ticks(7).tickFormat( d3.format(".2s") );
 
-
-
-
-
-
-
-      // .group(scope.group)
-      // .valueAccessor( function(d) {
-      //   console.log(d);
-      //   return d.value;
-      // })
-
-    // scope.varGroup = dimension.group().reduceCount( function(d) {
-    //   return d[variable];
-    // });
-    // without dividing to bins:
-    // scope.histogram
-    // .renderTitle(true)
-    // .brushOn(true)
-    // .xUnits( function() { return scope.xBarWidth; } )
-    // .width( scope.width )
-    // .height( scope.height )
-    // .margins({ top: 10, right: 10, bottom: 20, left: 40 })
-    // // .dimension( dim )
-    // // .group( group )
-    // .dimension(scope.dimension)
-    // .group(scope.varGroup)
-    // .stack( dsetDimension )
-    // .transitionDuration(500)
-    // .centerBar(true)
-    // .gap(2)
-    // .x( d3.scale.linear().domain( xMinAndMax ) )
-    // // .x( d3.scale.linear().domain( extent ) )
-    // .elasticY(true)
-    // .elasticX(true)
-    // .xAxis().ticks(5).tickFormat( d3.format(".2s") );
-
-    scope.histogram.render();
+  //   scope.histogram.render();
   };
 
   var linkFn = function($scope, ele, iAttrs) {
