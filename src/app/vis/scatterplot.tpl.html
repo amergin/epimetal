@@ -3,16 +3,16 @@
 	<form class="form-horizontal" name="plot" novalidate>
 		<fieldset>
 			<div class="control-group">
-				<label class="control-label" for="xcoordinate">X coordinate</label>
+				<label class="control-label" for="xcoord-scatter">X coordinate</label>
 				<div class="controls">
-					<select id="xcoordinate" ng-model="selection.x" ng-options="item as item for item in variables" required ng-disabled="!canEdit()">
+					<select id="xcoord-scatter" ng-model="selection.x" ng-options="item as item for item in variables" required ng-disabled="!canEdit()">
 					</select>
 				</div>
 			</div>
 			<div class="control-group">
-				<label class="control-label" for="ycoordinate">Y coordinate</label>
+				<label class="control-label" for="ycoord-scatter">Y coordinate</label>
 				<div class="controls">
-					<select id="xcoordinate" ng-model="selection.y" ng-options="item as item for item in variables" required ng-disabled="!canEdit()">
+					<select id="ycoord-scatter" ng-model="selection.y" ng-options="item as item for item in variables" required ng-disabled="!canEdit()">
 					</select>
 				</div>
 			</div>

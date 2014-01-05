@@ -336,9 +336,45 @@
     return _.pluck( datasets, 'name' );
   };
 
+  // called whenever window is removed to check whether
+  // the dimension is still needed
+  service.checkDimension = function(variable) {
+
+    // form accessor key
+    var key;
+    if( !_.isUndefined(variable.x) && !_.isUndefined(variable.y) ) {
+      key = variable.x + "|" + variable.y;
+    }
+    else if( !_.isUndefined(variable.x) ) { 
+      key = variable.x;
+    }
+    else {
+      throw new Error("Undefined variable tried");
+    }
+
+    var dim = dimensions[key];
+    if( _.isUndefined( dim ) ) {
+      throw new Error("Undefined variable tried");      
+    }
+    else {
+      --dim.count;
+
+      if( dim.count === 0 ) {
+        // ready to be destroyed
+        dim.dimension.dispose();
+        delete dimensions[key];
+      }
+      else {
+        // still in use
+        return;
+      }
+    }
+  };
+
   // create a crossfilter dimension. Takes one or two arguments
   service.getDimension = function(variable) {
 
+    // check input sanity
     var legalInput = function(vari) {
       if( variable === 'datasets') {
         return;
@@ -364,11 +400,13 @@
       // dimension does not exist, create one
       if( _.isUndefined( dimensions[varComb] ) ) {
          dim = crossData.dimension( function(d) { return [ d.variables[varX], d.variables[varY] ]; } );
-         dimensions[varComb] = dim;
+         dimensions[varComb] = { count: 1, dimension: dim };
+         //dim;
       }
       else {
         // already defined earlier
-        dim = dimensions[varComb];
+        ++dimensions[varComb].count;
+        dim = dimensions[varComb]['dimension'];
       }      
     }
 
@@ -377,11 +415,12 @@
       // dimension does not exist, create one
       if( _.isUndefined( dimensions[variable] ) ) {
          dim = crossData.dimension( function(d) { return d.variables[variable]; } );
-         dimensions[variable] = dim;
+         dimensions[variable] = { count: 1, dimension: dim };
       }
       else {
         // already defined earlier
-        dim = dimensions[variable];
+        ++dimensions[variable].count;
+        dim = dimensions[variable]['dimension'];
       }
     }
     return dim;
@@ -525,8 +564,10 @@ vis.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
     var selectionCopy = {};
     angular.copy(selection, selectionCopy);
 
-    $scope.windows.push({ number : (++$scope.windowRunningNumber),
-      type: type, variables: selectionCopy });
+    $scope.windows.push({ 
+      number : (++$scope.windowRunningNumber),
+      type: type, variables: selectionCopy 
+    });
   };
 
 }]);
@@ -560,9 +601,10 @@ vis.directive('packery', function() {
     });
 
 
-vis.directive('window', ['$compile', function($compile){
+vis.directive('window', ['$compile', 'DatasetService', function($compile, DatasetService){
   return {
     scope: false,
+    // must be within packery directive
     require: '^packery',
     restrict: 'C',
     templateUrl : 'vis/window.tpl.html',
@@ -596,6 +638,12 @@ vis.directive('window', ['$compile', function($compile){
         ' id="window' + $scope.window.number + '"></div>');
       $scope.element.append( newEl );
       $compile( newEl )($scope);
+
+      // catch window destroys
+      $scope.$on('$destroy', function() {
+        // go and check if the var dimension is still needed
+        DatasetService.checkDimension( $scope.window.variables );
+      });
     }
   };
 }]);
@@ -608,8 +656,7 @@ vis.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetServi
     $scope.dimension = DatasetService.getDimension( $scope.window.variables.x );
     $scope.dsetDimension = DatasetService.getDimension( 'datasets' );
 
-    //20;
-    $scope.extent = d3.extent( $scope.dimension.group().all(), function(sample) { return sample.key; } );    
+    $scope.extent = d3.extent( $scope.dimension.group().all(), function(sample) { return sample.key; } );
     $scope.noBins = _.max( [ _.min( [ Math.floor( $scope.dimension.group().all().length / 20 ), 50 ] ), 20 ] );
     $scope.binWidth = ($scope.extent[1] - $scope.extent[0]) / $scope.noBins;
     $scope.group = $scope.dimension.group(function(d){return Math.floor(d / $scope.binWidth) * $scope.binWidth;});
@@ -676,67 +723,10 @@ vis.directive('histogram', [ function(){
 
   });
 
-  // 4. compose & render the composite chart
+  // 3. compose & render the composite chart
   scope.histogram.compose( charts );
   scope.histogram.render();
 
-
-  // scope.histogram
-  //     .width(scope.width)
-  //     .height(scope.height)
-  //     .xUnits( function() { return scope.xBarWidth; } )
-  //     .margins({top: 15, right: 10, bottom: 20, left: 40})
-  //     .dimension(dimension);
- 
-  //     if( isPooled ) {
-  //       scope.histogram
-  //       .group(reducedGroup, name)
-  //       .valueAccessor( function(d) {
-  //         return d.value.counts.total;
-  //       })
-  //       .linearColors(['black']);
-  //     }
-  //     else {
-  //       _.each( scope.datasetNames, function(name,ind) {
-  //         if( ind === 0 )
-  //         {
-  //           scope.histogram
-  //           .group(reducedGroup, name)
-  //           .valueAccessor( function(d) {
-  //             if( _.isUndefined( d.value.dataset ) ) {
-  //               return 0;
-  //             }
-  //             return d.value.counts[name];
-  //           });
-  //         }
-  //         else {
-  //           scope.histogram
-  //           .stack( reducedGroup, name, function(d) {
-  //             if( _.isUndefined( d.value.dataset ) ) {
-  //               return 0;
-  //             }
-  //             return d.value.counts[name];
-  //           });
-  //         }
-  //       });
-
-
-  //       // right colors for group & stack(s)
-  //       scope.histogram
-  //       .colors( d3.scale.category20() );
-
-  //     }
-
-
-
-  //     scope.histogram
-  //     .centerBar(false)
-  //     .x(d3.scale.linear().domain(extent).range([0,noBins]))
-  //     .elasticY(true)
-  //     .brushOn(true)      
-  //     .xAxis().ticks(7).tickFormat( d3.format(".2s") );
-
-  //   scope.histogram.render();
   };
 
   var linkFn = function($scope, ele, iAttrs) {

@@ -2,9 +2,9 @@
 	<h4>New histogram</h4>
 	<form class="form-horizontal">
 		<div class="control-group">
-			<label class="control-label" for="xcoordinate">Variable</label>
+			<label class="control-label" for="xcoord-hist">Variable</label>
 			<div class="controls">
-				<select ng-model="selection.x" ng-options="item as item for item in variables" required ng-disabled="!canEdit()">
+				<select id="xcoord-hist" ng-model="selection.x" ng-options="item as item for item in variables" required ng-disabled="!canEdit()">
 				</select>
 			</div>
 		</div>
