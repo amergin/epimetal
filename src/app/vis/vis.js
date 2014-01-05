@@ -692,7 +692,6 @@ vis.directive('histogram', [ function(){
   // 1. create composite chart
   scope.histogram = dc.compositeChart( element[0] )
   .width(scope.width)
-
   .height(scope.height)
   .colors( d3.scale.category20() )
   .shareColors(true)
@@ -701,7 +700,10 @@ vis.directive('histogram', [ function(){
   .x(d3.scale.linear().domain(extent).range([0,noBins]))
   .xUnits( function() { return scope.xBarWidth; } )
   .margins({top: 15, right: 10, bottom: 20, left: 40});
-  //.xAxis().ticks(7).tickFormat( d3.format(".2s") );
+
+  scope.histogram
+  .xAxis().ticks(7).tickFormat( d3.format(".2s") );
+
 
 
 
