@@ -518,6 +518,7 @@
     datasets[ind].active = !datasets[ind].active;
 
     var activeNames = _.filter( datasets, function(d) { return d.active; } );
+
     // update crossfilter to know about the (de)selection
     dimensions.datasets.filterFunction( function(dsetName) {
       return _.any( activeNames, function(d) { return d.name === dsetName; } );
@@ -693,7 +694,6 @@ vis.directive('histogram', [ function(){
   scope.histogram = dc.compositeChart( element[0] )
   .width(scope.width)
   .height(scope.height)
-  .colors( d3.scale.category20() )
   .shareColors(true)
   .brushOn(true)
   .elasticY(true)
@@ -701,8 +701,17 @@ vis.directive('histogram', [ function(){
   .xUnits( function() { return scope.xBarWidth; } )
   .margins({top: 15, right: 10, bottom: 20, left: 40});
 
+  // set x axis format
   scope.histogram
   .xAxis().ticks(7).tickFormat( d3.format(".2s") );
+
+  // set colors
+  if( isPooled ) {
+    scope.histogram.linearColors(['black']);
+  }
+  else {
+    scope.histogram.colors( d3.scale.category20() );
+  }
 
 
 
@@ -728,6 +737,16 @@ vis.directive('histogram', [ function(){
   // 3. compose & render the composite chart
   scope.histogram.compose( charts );
   scope.histogram.render();
+
+  // if pooling is in place, override global css opacity rules for these
+  // stacks
+  if( isPooled ) {
+    d3.select(scope.histogram.g()[0][0])
+    .selectAll("g.stack > rect.bar")
+    .each( function(d) { 
+      d3.select(this).style('opacity', 1); 
+    });
+  }
 
   };
 
