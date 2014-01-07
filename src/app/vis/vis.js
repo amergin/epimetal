@@ -332,6 +332,7 @@
     //_.pluck( datasets, 'name' );
   };
 
+  // returns all dataset names, whether active or not 
   service.getDatasetNames = function() { 
     return _.pluck( datasets, 'name' );
   };
@@ -372,6 +373,8 @@
   };
 
   // create a crossfilter dimension. Takes one or two arguments
+  // Keeps booking of how many window instances use the current
+  // dimension and disposes unneeded ones
   service.getDimension = function(variable) {
 
     // check input sanity
@@ -399,9 +402,18 @@
 
       // dimension does not exist, create one
       if( _.isUndefined( dimensions[varComb] ) ) {
-         dim = crossData.dimension( function(d) { return [ d.variables[varX], d.variables[varY] ]; } );
-         dimensions[varComb] = { count: 1, dimension: dim };
-         //dim;
+         dim = crossData.dimension( function(d) { 
+          return {
+            x: d.variables[varX],
+            y: d.variables[varY],
+            // override prototype function to ensure the object is naturally ordered
+            valueOf : function() {
+              return (+this.x) + (+this.y);
+            }
+          };
+          // return [ d.variables[varX], d.variables[varY] ]; } );
+        });
+        dimensions[varComb] = { count: 1, dimension: dim };
       }
       else {
         // already defined earlier
@@ -410,11 +422,14 @@
       }      
     }
 
-    // one variable
+    // one variable -> histogram
     else {
       // dimension does not exist, create one
       if( _.isUndefined( dimensions[variable] ) ) {
-         dim = crossData.dimension( function(d) { return d.variables[variable]; } );
+         dim = crossData.dimension( function(d) { 
+          // a little checking to make sure NaN's are not returned
+          return +d.variables[variable] || 0; 
+        } );
          dimensions[variable] = { count: 1, dimension: dim };
       }
       else {
@@ -427,6 +442,8 @@
   };
 
   // form a grouping using a custom reduce function
+  // NB! reduce functions will only affect the 
+  // grouping object VALUE part! (not the key part)  
   service.getReduce = function(dimensionGroup, variable) {
 
     var reduceAdd = function(p,v) {
@@ -478,6 +495,8 @@
 
 
   // form a grouping using a custom reduce function
+  // NB! reduce functions will only affect the 
+  // grouping object VALUE part! (not the key part)  
   service.getReduceScatterplot = function(dimensionGroup) {
 
     var reduceAdd = function(p,v) {
@@ -664,11 +683,8 @@ vis.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetServi
     $scope.reduced = DatasetService.getReduce( $scope.group, $scope.window.variables.x );
     $scope.datasetNames = DatasetService.getDatasetNames();
     $scope.colorScale = DatasetService.getColorScale();
-    // $scope.color = DatasetService.getColor;
-    // $scope.colorMap = DatasetService.getColors();
 
 
-    //$scope.testi = DatasetService.samples;//.slice(0,5);
     $scope.resetFilter = function() {
       $scope.histogram.filterAll();
       dc.redrawAll();
@@ -683,9 +699,6 @@ vis.directive('histogram', [ function(){
     scope.width = 470;
     scope.height = 345;
     scope.xBarWidth = 20;
-
-    //scope.histogram = dc.barChart( element[0] );
-
 
   // collect charts here
   var charts = [];
@@ -794,43 +807,124 @@ vis.controller('ScatterPlotController', ['$scope', '$rootScope', 'DatasetService
 vis.directive('scatterplot', [ function(){
 
   var createSVG = function( scope, element, dimension, reducedGroup, variableX, variableY, isPooled) {
+
     // check css window rules before touching these
     scope.width = 470;
     scope.height = 345;
 
-    // data = [ { x: 5, y: 10 }, { x: 15, y: 15 }, { x: 40, y: 5 }, { x: 50, y: 2 } ];
+  // collect charts here
+  var charts = [];
 
-    scope.scatterplot = dc.scatterPlot( element[0] );
+  var xExtent = d3.extent( reducedGroup.top(Infinity), function(d) { return d.key.x; } );
 
-    scope.varGroup = dimension.group();
+  // 1. create composite chart
+  scope.scatterplot = dc.compositeChart( element[0] )
+  .width(scope.width)
+  .height(scope.height)
+  .brushOn(true)
+  .x(d3.scale.linear().domain( xExtent ) )
+  .colors( d3.scale.category20() )
+  .shareColors(true)
+  .brushOn(false)
+  .elasticY(true)
+  .margins({top: 15, right: 10, bottom: 20, left: 40});
 
-    var xExtent = d3.extent( scope.varGroup.top(Infinity), function(d) { return d.key[0]; } );
+  // set x axis format
+  scope.scatterplot
+  .xAxis().ticks(7).tickFormat( d3.format(".2s") );
 
-    scope.scatterplot
-    // .title( function(d) {
-    //   return variableX + ": " + d.x + "\n" + variableY + ": " + d.y;
-    // })
-    // .renderTitle(true)
-    .width( scope.width )
-    .height( scope.height )
+  // set colors
+  if( isPooled ) {
+    scope.scatterplot.linearColors(['black']);
+  }
+  else {
+    scope.scatterplot.colors( d3.scale.category20() );
+  }
+
+
+  // 2. for each of the additional stacks, create a child chart
+  _.each( scope.datasetNames, function(name,ind) {
+
+    var chart = dc.scatterPlot( scope.scatterplot )
+    .dimension(dimension)
+    .group(reducedGroup, name)
     .symbol( d3.svg.symbol().type('circle') )
     .symbolSize(5)
-    .highlightedSize(7)
     .brushOn(true)
-    .x(d3.scale.linear().domain( xExtent ) )
-    .yAxisLabel( variableY )
+    .highlightedSize(6)
+    .valueAccessor( function(d) {
+      if( _.isUndefined( d.value.dataset ) ) {
+        return 0;
+      }
+      return d.value.counts[name];
+    })
     .xAxisLabel( variableX )
-    .elasticY(true)
-    .elasticX(true)
-    .dimension( dimension )
-    .group( scope.varGroup )
-    .xAxis().ticks(7).tickFormat( d3.format(".2s") );
+    .yAxisLabel( variableY )
+    .keyAccessor( function(d) { 
+      if( _.isUndefined( d.value.dataset ) ) { return null; }
+      return d.key.x;
+    })
+    .valueAccessor( function(d) { 
+      if( _.isUndefined( d.value.dataset ) ) { return null; }      
+      return d.key.y;
+    });
 
-    if( isPooled) {
-      scope.scatterplot.colors(['black']);
-    }
+    charts.push( chart );
+  });
 
-    scope.scatterplot.render();
+  // 3. compose & render the composite chart
+  scope.scatterplot.compose( charts );
+  scope.scatterplot.render();
+
+
+
+    // scope.scatterplot = dc.scatterPlot( element[0] );
+
+    // // scope.varGroup = dimension.group();
+
+    // var xExtent = d3.extent( reducedGroup.top(Infinity), function(d) { return d.key.x; } );
+
+
+    // // var group = dimension.group
+
+    // scope.scatterplot
+    // // .title( function(d) {
+    // //   return variableX + ": " + d.x + "\n" + variableY + ": " + d.y;
+    // // })
+    // // .renderTitle(true)
+    // .width( scope.width )
+    // .height( scope.height )
+    // .symbol( d3.svg.symbol().type('circle') )
+    // .symbolSize(5)
+    // .highlightedSize(7)
+    // .brushOn(true)
+    // .x(d3.scale.linear().domain( xExtent ) )
+    // .yAxisLabel( variableY )
+    // .xAxisLabel( variableX )
+    // .keyAccessor( function(d) { 
+    //   if( _.isUndefined( d.value.dataset ) ) { return null; }
+    //   return d.key.x;
+    // })
+    // .valueAccessor( function(d) { 
+    //   if( _.isUndefined( d.value.dataset ) ) { return null; }      
+    //   return d.key.y;
+    // })
+    // .colors( d3.scale.category20() )
+    // // .colorAccessor( function(d) { 
+    // //   console.log("d=", d, "dset=", d.value.dataset);
+    // //   return d.value.dataset; } )
+    // .elasticY(true)
+    // .elasticX(true)
+    // .dimension( dimension )
+    // .group( reducedGroup )
+    // .xAxis().ticks(7).tickFormat( d3.format(".2s") );
+
+    // if( isPooled) {
+    //   scope.scatterplot.colors(['black']);
+    // }
+
+    // scope.scatterplot.render();
+
 
   };
 
