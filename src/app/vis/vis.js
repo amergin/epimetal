@@ -713,6 +713,7 @@ vis.directive('histogram', [ function(){
   .x(d3.scale.linear().domain(extent).range([0,noBins]))
   .xUnits( function() { return scope.xBarWidth; } )
   .margins({top: 15, right: 10, bottom: 20, left: 40});
+  //.xAxisLabel( variable );
 
   // set x axis format
   scope.histogram
@@ -733,7 +734,8 @@ vis.directive('histogram', [ function(){
   _.each( scope.datasetNames, function(name,ind) {
 
     var chart = dc.barChart( scope.histogram )
-    .centerBar(false)
+    .centerBar(true)
+    .barPadding(0.15)
     .dimension(dimension)
     .group(reducedGroup, name)
     .valueAccessor( function(d) {
@@ -825,9 +827,12 @@ vis.directive('scatterplot', [ function(){
   .x(d3.scale.linear().domain( xExtent ) )
   .colors( d3.scale.category20() )
   .shareColors(true)
+  .xAxisLabel( variableX )
+  .yAxisLabel( variableY )
   .brushOn(false)
   .elasticY(true)
   .margins({top: 15, right: 10, bottom: 20, left: 40});
+
 
   // set x axis format
   scope.scatterplot
@@ -858,8 +863,6 @@ vis.directive('scatterplot', [ function(){
       }
       return d.value.counts[name];
     })
-    .xAxisLabel( variableX )
-    .yAxisLabel( variableY )
     .keyAccessor( function(d) { 
       if( _.isUndefined( d.value.dataset ) ) { return null; }
       return d.key.x;
