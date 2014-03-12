@@ -1,5 +1,5 @@
 /*!
- * Packery PACKAGED v1.1.2
+ * Packery PACKAGED v1.2.2
  * bin-packing layout library
  * http://packery.metafizzy.co
  *
@@ -10,6 +10,145 @@
  *
  * Copyright 2013 Metafizzy
  */
+
+
+/**
+ * Bridget makes jQuery widgets
+ * v1.0.1
+ */
+
+( function( window ) {
+
+
+
+// -------------------------- utils -------------------------- //
+
+var slice = Array.prototype.slice;
+
+function noop() {}
+
+// -------------------------- definition -------------------------- //
+
+function defineBridget( $ ) {
+
+// bail if no jQuery
+if ( !$ ) {
+  return;
+}
+
+// -------------------------- addOptionMethod -------------------------- //
+
+/**
+ * adds option method -> $().plugin('option', {...})
+ * @param {Function} PluginClass - constructor class
+ */
+function addOptionMethod( PluginClass ) {
+  // don't overwrite original option method
+  if ( PluginClass.prototype.option ) {
+    return;
+  }
+
+  // option setter
+  PluginClass.prototype.option = function( opts ) {
+    // bail out if not an object
+    if ( !$.isPlainObject( opts ) ){
+      return;
+    }
+    this.options = $.extend( true, this.options, opts );
+  };
+}
+
+
+// -------------------------- plugin bridge -------------------------- //
+
+// helper function for logging errors
+// $.error breaks jQuery chaining
+var logError = typeof console === 'undefined' ? noop :
+  function( message ) {
+    console.error( message );
+  };
+
+/**
+ * jQuery plugin bridge, access methods like $elem.plugin('method')
+ * @param {String} namespace - plugin name
+ * @param {Function} PluginClass - constructor class
+ */
+function bridge( namespace, PluginClass ) {
+  // add to jQuery fn namespace
+  $.fn[ namespace ] = function( options ) {
+    if ( typeof options === 'string' ) {
+      // call plugin method when first argument is a string
+      // get arguments for method
+      var args = slice.call( arguments, 1 );
+
+      for ( var i=0, len = this.length; i < len; i++ ) {
+        var elem = this[i];
+        var instance = $.data( elem, namespace );
+        if ( !instance ) {
+          logError( "cannot call methods on " + namespace + " prior to initialization; " +
+            "attempted to call '" + options + "'" );
+          continue;
+        }
+        if ( !$.isFunction( instance[options] ) || options.charAt(0) === '_' ) {
+          logError( "no such method '" + options + "' for " + namespace + " instance" );
+          continue;
+        }
+
+        // trigger method with arguments
+        var returnValue = instance[ options ].apply( instance, args );
+
+        // break look and return first value if provided
+        if ( returnValue !== undefined ) {
+          return returnValue;
+        }
+      }
+      // return this if no return value
+      return this;
+    } else {
+      return this.each( function() {
+        var instance = $.data( this, namespace );
+        if ( instance ) {
+          // apply options & init
+          instance.option( options );
+          instance._init();
+        } else {
+          // initialize new instance
+          instance = new PluginClass( this, options );
+          $.data( this, namespace, instance );
+        }
+      });
+    }
+  };
+
+}
+
+// -------------------------- bridget -------------------------- //
+
+/**
+ * converts a Prototypical class into a proper jQuery plugin
+ *   the class must have a ._init method
+ * @param {String} namespace - plugin name, used in $().pluginName
+ * @param {Function} PluginClass - constructor class
+ */
+$.bridget = function( namespace, PluginClass ) {
+  addOptionMethod( PluginClass );
+  bridge( namespace, PluginClass );
+};
+
+return $.bridget;
+
+}
+
+// transport
+if ( typeof define === 'function' && define.amd ) {
+  // AMD
+  define( 'jquery-bridget/jquery.bridget',[ 'jquery' ], defineBridget );
+} else {
+  // get jquery from browser global
+  defineBridget( window.jQuery );
+}
+
+})( window );
 
 /*!
  * classie - class helper functions
@@ -26,7 +165,7 @@
 
 ( function( window ) {
 
-'use strict';
+
 
 // class helper functions from bonzo https://github.com/ded/bonzo
 
@@ -84,7 +223,7 @@ var classie = {
 // transport
 if ( typeof define === 'function' && define.amd ) {
   // AMD
-  define( classie );
+  define( 'classie/classie',classie );
 } else {
   // browser global
   window.classie = classie;
@@ -93,16 +232,17 @@ if ( typeof define === 'function' && define.amd ) {
 })( window );
 
 /*!
- * getStyleProperty by kangax
+ * getStyleProperty v1.0.3
+ * original by kangax
  * http://perfectionkills.com/feature-testing-css-properties/
  */
 
 /*jshint browser: true, strict: true, undef: true */
-/*globals define: false */
+/*global define: false, exports: false, module: false */
 
 ( function( window ) {
 
-'use strict';
+
 
 var prefixes = 'Webkit Moz ms Ms O'.split(' ');
 var docElemStyle = document.documentElement.style;
@@ -133,9 +273,12 @@ function getStyleProperty( propName ) {
 // transport
 if ( typeof define === 'function' && define.amd ) {
   // AMD
-  define( function() {
+  define( 'get-style-property/get-style-property',[],function() {
     return getStyleProperty;
   });
+} else if ( typeof exports === 'object' ) {
+  // CommonJS for Component
+  module.exports = getStyleProperty;
 } else {
   // browser global
   window.getStyleProperty = getStyleProperty;
@@ -144,24 +287,23 @@ if ( typeof define === 'function' && define.amd ) {
 })( window );
 
 /**
- * getSize v1.1.4
+ * getSize v1.1.7
  * measure size of elements
  */
 
 /*jshint browser: true, strict: true, undef: true, unused: true */
-/*global define: false */
+/*global define: false, exports: false, require: false, module: false */
 
 ( function( window, undefined ) {
 
-'use strict';
+
 
 // -------------------------- helpers -------------------------- //
 
-var defView = document.defaultView;
-
-var getStyle = defView && defView.getComputedStyle ?
+var getComputedStyle = window.getComputedStyle;
+var getStyle = getComputedStyle ?
   function( elem ) {
-    return defView.getComputedStyle( elem, null );
+    return getComputedStyle( elem, null );
   } :
   function( elem ) {
     return elem.currentStyle;
@@ -273,6 +415,7 @@ function getSize( elem ) {
   for ( var i=0, len = measurements.length; i < len; i++ ) {
     var measurement = measurements[i];
     var value = style[ measurement ];
+    value = mungeNonPixel( elem, value );
     var num = parseFloat( value );
     // any 'auto', 'medium' value will be 0
     size[ measurement ] = !isNaN( num ) ? num : 0;
@@ -311,14 +454,46 @@ function getSize( elem ) {
   return size;
 }
 
+// IE8 returns percent values, not pixels
+// taken from jQuery's curCSS
+function mungeNonPixel( elem, value ) {
+  // IE8 and has percent value
+  if ( getComputedStyle || value.indexOf('%') === -1 ) {
+    return value;
+  }
+  var style = elem.style;
+  // Remember the original values
+  var left = style.left;
+  var rs = elem.runtimeStyle;
+  var rsLeft = rs && rs.left;
+
+  // Put in the new values to get a computed value out
+  if ( rsLeft ) {
+    rs.left = elem.currentStyle.left;
+  }
+  style.left = value;
+  value = style.pixelLeft;
+
+  // Revert the changed values
+  style.left = left;
+  if ( rsLeft ) {
+    rs.left = rsLeft;
+  }
+
+  return value;
+}
+
 return getSize;
 
 }
 
 // transport
 if ( typeof define === 'function' && define.amd ) {
-  // AMD
-  define( [ 'get-style-property/get-style-property' ], defineGetSize );
+  // AMD for RequireJS
+  define( 'get-size/get-size',[ 'get-style-property/get-style-property' ], defineGetSize );
+} else if ( typeof exports === 'object' ) {
+  // CommonJS for Component
+  module.exports = defineGetSize( require('get-style-property') );
 } else {
   // browser global
   window.getSize = defineGetSize( window.getStyleProperty );
@@ -327,22 +502,30 @@ if ( typeof define === 'function' && define.amd ) {
 })( window );
 
 /*!
- * eventie v1.0.3
+ * eventie v1.0.5
  * event binding helper
  *   eventie.bind( elem, 'click', myFn )
  *   eventie.unbind( elem, 'click', myFn )
+ * MIT license
  */
 
 /*jshint browser: true, undef: true, unused: true */
-/*global define: false */
+/*global define: false, module: false */
 
 ( function( window ) {
 
-'use strict';
+
 
 var docElem = document.documentElement;
 
 var bind = function() {};
+
+function getIEEvent( obj ) {
+  var event = window.event;
+  // add event.target
+  event.target = event.target || event.srcElement || obj;
+  return event;
+}
 
 if ( docElem.addEventListener ) {
   bind = function( obj, type, fn ) {
@@ -352,15 +535,11 @@ if ( docElem.addEventListener ) {
   bind = function( obj, type, fn ) {
     obj[ type + fn ] = fn.handleEvent ?
       function() {
-        var event = window.event;
-        // add event.target
-        event.target = event.target || event.srcElement;
+        var event = getIEEvent( obj );
         fn.handleEvent.call( fn, event );
       } :
       function() {
-        var event = window.event;
-        // add event.target
-        event.target = event.target || event.srcElement;
+        var event = getIEEvent( obj );
         fn.call( obj, event );
       };
     obj.attachEvent( "on" + type, obj[ type + fn ] );
@@ -390,10 +569,14 @@ var eventie = {
   unbind: unbind
 };
 
-// transport
+// ----- module definition ----- //
+
 if ( typeof define === 'function' && define.amd ) {
   // AMD
-  define( eventie );
+  define( 'eventie/eventie',eventie );
+} else if ( typeof exports === 'object' ) {
+  // CommonJS
+  module.exports = eventie;
 } else {
   // browser global
   window.eventie = eventie;
@@ -411,7 +594,7 @@ if ( typeof define === 'function' && define.amd ) {
 
 ( function( window ) {
 
-'use strict';
+
 
 var document = window.document;
 // collection of functions to be triggered on ready
@@ -463,7 +646,7 @@ if ( typeof define === 'function' && define.amd ) {
   // AMD
   // if RequireJS, then doc is already ready
   docReady.isReady = typeof requirejs === 'function';
-  define( [ 'eventie/eventie' ], defineDocReady );
+  define( 'doc-ready/doc-ready',[ 'eventie/eventie' ], defineDocReady );
 } else {
   // browser global
   window.docReady = defineDocReady( window.eventie );
@@ -472,14 +655,14 @@ if ( typeof define === 'function' && define.amd ) {
 })( this );
 
 /*!
- * EventEmitter v4.2.4 - git.io/ee
+ * EventEmitter v4.2.7 - git.io/ee
  * Oliver Caldwell
  * MIT license
  * @preserve
  */
 
 (function () {
-	'use strict';
+	
 
 	/**
 	 * Class for managing events.
@@ -490,9 +673,9 @@ if ( typeof define === 'function' && define.amd ) {
 	function EventEmitter() {}
 
 	// Shortcuts to improve speed and size
-
-	// Easy access to the prototype
 	var proto = EventEmitter.prototype;
+	var exports = this;
+	var originalGlobalValue = exports.EventEmitter;
 
 	/**
 	 * Finds the index of the listener for the event in it's storage array.
@@ -542,7 +725,7 @@ if ( typeof define === 'function' && define.amd ) {
 
 		// Return a concatenated array of all matching events if
 		// the selector is a regular expression.
-		if (typeof evt === 'object') {
+		if (evt instanceof RegExp) {
 			response = {};
 			for (key in events) {
 				if (events.hasOwnProperty(key) && evt.test(key)) {
@@ -795,7 +978,7 @@ if ( typeof define === 'function' && define.amd ) {
 			// Remove all listeners for the specified event
 			delete events[evt];
 		}
-		else if (type === 'object') {
+		else if (evt instanceof RegExp) {
 			// Remove all events matching the regex.
 			for (key in events) {
 				if (events.hasOwnProperty(key) && evt.test(key)) {
@@ -920,9 +1103,19 @@ if ( typeof define === 'function' && define.amd ) {
 		return this._events || (this._events = {});
 	};
 
+	/**
+	 * Reverts the global {@link EventEmitter} to its previous value and returns a reference to this version.
+	 *
+	 * @return {Function} Non conflicting EventEmitter class.
+	 */
+	EventEmitter.noConflict = function noConflict() {
+		exports.EventEmitter = originalGlobalValue;
+		return EventEmitter;
+	};
+
 	// Expose the class either via AMD, CommonJS or the global object
 	if (typeof define === 'function' && define.amd) {
-		define(function () {
+		define('eventEmitter/EventEmitter',[],function () {
 			return EventEmitter;
 		});
 	}
@@ -933,142 +1126,6 @@ if ( typeof define === 'function' && define.amd ) {
 		this.EventEmitter = EventEmitter;
 	}
 }.call(this));
-
-/**
- * Bridget makes jQuery widgets
- * v1.0.0
- */
-
-( function( window ) {
-
-'use strict';
-
-// -------------------------- utils -------------------------- //
-
-var slice = Array.prototype.slice;
-
-function noop() {}
-
-// -------------------------- definition -------------------------- //
-
-function defineBridget( $ ) {
-
-// bail if no jQuery
-if ( !$ ) {
-  return;
-}
-
-// -------------------------- addOptionMethod -------------------------- //
-
-/**
- * adds option method -> $().plugin('option', {...})
- * @param {Function} PluginClass - constructor class
- */
-function addOptionMethod( PluginClass ) {
-  // don't overwrite original option method
-  if ( PluginClass.prototype.option ) {
-    return;
-  }
-
-  // option setter
-  PluginClass.prototype.option = function( opts ) {
-    // bail out if not an object
-    if ( !$.isPlainObject( opts ) ){
-      return;
-    }
-    this.options = $.extend( true, this.options, opts );
-  };
-}
-
-
-// -------------------------- plugin bridge -------------------------- //
-
-// helper function for logging errors
-// $.error breaks jQuery chaining
-var logError = typeof console === 'undefined' ? noop :
-  function( message ) {
-    console.error( message );
-  };
-
-/**
- * jQuery plugin bridge, access methods like $elem.plugin('method')
- * @param {String} namespace - plugin name
- * @param {Function} PluginClass - constructor class
- */
-function bridge( namespace, PluginClass ) {
-  // add to jQuery fn namespace
-  $.fn[ namespace ] = function( options ) {
-    if ( typeof options === 'string' ) {
-      // call plugin method when first argument is a string
-      // get arguments for method
-      var args = slice.call( arguments, 1 );
-
-      for ( var i=0, len = this.length; i < len; i++ ) {
-        var elem = this[i];
-        var instance = $.data( elem, namespace );
-        if ( !instance ) {
-          logError( "cannot call methods on " + namespace + " prior to initialization; " +
-            "attempted to call '" + options + "'" );
-          continue;
-        }
-        if ( !$.isFunction( instance[options] ) || options.charAt(0) === '_' ) {
-          logError( "no such method '" + options + "' for " + namespace + " instance" );
-          continue;
-        }
-
-        // trigger method with arguments
-        var returnValue = instance[ options ].apply( instance, args );
-
-        // break look and return first value if provided
-        if ( returnValue !== undefined ) {
-          return returnValue;
-        }
-      }
-      // return this if no return value
-      return this;
-    } else {
-      return this.each( function() {
-        var instance = $.data( this, namespace );
-        if ( instance ) {
-          // apply options & init
-          instance.option( options );
-          instance._init();
-        } else {
-          // initialize new instance
-          instance = new PluginClass( this, options );
-          $.data( this, namespace, instance );
-        }
-      });
-    }
-  };
-
-}
-
-// -------------------------- bridget -------------------------- //
-
-/**
- * converts a Prototypical class into a proper jQuery plugin
- *   the class must have a ._init method
- * @param {String} namespace - plugin name, used in $().pluginName
- * @param {Function} PluginClass - constructor class
- */
-$.bridget = function( namespace, PluginClass ) {
-  addOptionMethod( PluginClass );
-  bridge( namespace, PluginClass );
-};
-
-}
-
-// transport
-if ( typeof define === 'function' && define.amd ) {
-  // AMD
-  define( [ 'jquery' ], defineBridget );
-} else {
-  // get jquery from browser global
-  defineBridget( window.jQuery );
-}
-
-})( window );
 
 /**
  * matchesSelector helper v1.0.1
@@ -1083,7 +1140,7 @@ if ( typeof define === 'function' && define.amd ) {
 
 ( function( global, ElemProto ) {
 
-  'use strict';
+  
 
   var matchesMethod = ( function() {
     // check un-prefixed
@@ -1163,7 +1220,7 @@ if ( typeof define === 'function' && define.amd ) {
   // transport
   if ( typeof define === 'function' && define.amd ) {
     // AMD
-    define( function() {
+    define( 'matches-selector/matches-selector',[],function() {
       return matchesSelector;
     });
   } else {
@@ -1175,11 +1232,11 @@ if ( typeof define === 'function' && define.amd ) {
 
 /**
  * Outlayer Item
-**/
+ */
 
 ( function( window ) {
 
-'use strict';
+
 
 // ----- get style ----- //
 
@@ -1279,7 +1336,7 @@ extend( Item.prototype, EventEmitter.prototype );
 
 Item.prototype._create = function() {
   // transition objects
-  this._transition = {
+  this._transn = {
     ingProperties: {},
     clean: {},
     onEnd: {}
@@ -1460,7 +1517,7 @@ Item.prototype._transition = function( args ) {
     return;
   }
 
-  var _transition = this._transition;
+  var _transition = this._transn;
   // keep track of onTransitionEnd callback by css property
   for ( var prop in args.onTransitionEnd ) {
     _transition.onEnd[ prop ] = args.onTransitionEnd[ prop ];
@@ -1543,7 +1600,7 @@ Item.prototype.ontransitionend = function( event ) {
   if ( event.target !== this.element ) {
     return;
   }
-  var _transition = this._transition;
+  var _transition = this._transn;
   // get property name of transitioned property, convert to prefix-free
   var propertyName = dashedVendorProperties[ event.propertyName ] || event.propertyName;
 
@@ -1650,7 +1707,11 @@ Item.prototype.hide = function() {
     isCleaning: true,
     onTransitionEnd: {
       opacity: function() {
-        this.css({ display: 'none' });
+        // check if still hidden
+        // during transition, item may have been un-hidden
+        if ( this.isHidden ) {
+          this.css({ display: 'none' });
+        }
       }
     }
   });
@@ -1676,7 +1737,7 @@ return Item;
 
 if ( typeof define === 'function' && define.amd ) {
   // AMD
-  define( [
+  define( 'outlayer/item',[
       'eventEmitter/EventEmitter',
       'get-size/get-size',
       'get-style-property/get-style-property'
@@ -1695,13 +1756,14 @@ if ( typeof define === 'function' && define.amd ) {
 })( window );
 
 /*!
- * Outlayer v1.1.8
+ * Outlayer v1.1.10
  * the brains and guts of a layout library
+ * MIT license
  */
 
 ( function( window ) {
 
-'use strict';
+
 
 // ----- vars ----- //
 
@@ -1806,7 +1868,7 @@ function Outlayer( element, options ) {
   // bail out if not proper element
   if ( !element || !isElement( element ) ) {
     if ( console ) {
-      console.error( 'Bad ' + this.settings.namespace + ' element: ' + element );
+      console.error( 'Bad ' + this.constructor.namespace + ' element: ' + element );
     }
     return;
   }
@@ -1831,10 +1893,8 @@ function Outlayer( element, options ) {
 }
 
 // settings are for internal use only
-Outlayer.prototype.settings = {
-  namespace: 'outlayer',
-  item: Item
-};
+Outlayer.namespace = 'outlayer';
+Outlayer.Item = Item;
 
 // default options
 Outlayer.prototype.options = {
@@ -1898,7 +1958,7 @@ Outlayer.prototype.reloadItems = function() {
 Outlayer.prototype._itemize = function( elems ) {
 
   var itemElems = this._filterFindItemElements( elems );
-  var Item = this.settings.item;
+  var Item = this.constructor.Item;
 
   // create new Outlayer Items for collection
   var items = [];
@@ -2010,6 +2070,7 @@ Outlayer.prototype._getMeasurement = function( measurement, size ) {
     // default to 0
     this[ measurement ] = 0;
   } else {
+    // use option as an element
     if ( typeof option === 'string' ) {
       elem = this.element.querySelector( option );
     } else if ( isElement( option ) ) {
@@ -2055,16 +2116,19 @@ Outlayer.prototype._getItemsForLayout = function( items ) {
  * @param {Boolean} isInstant
  */
 Outlayer.prototype._layoutItems = function( items, isInstant ) {
+  var _this = this;
+  function onItemsLayout() {
+    _this.emitEvent( 'layoutComplete', [ _this, items ] );
+  }
+
   if ( !items || !items.length ) {
     // no items, emit event with empty array
-    this.emitEvent( 'layoutComplete', [ this, items ] );
+    onItemsLayout();
     return;
   }
 
   // emit layoutComplete when done
-  this._itemsOn( items, 'layout', function onItemsLayout() {
-    this.emitEvent( 'layoutComplete', [ this, items ] );
-  });
+  this._itemsOn( items, 'layout', onItemsLayout );
 
   var queue = [];
 
@@ -2074,7 +2138,7 @@ Outlayer.prototype._layoutItems = function( items, isInstant ) {
     var position = this._getItemLayoutPosition( item );
     // enqueue
     position.item = item;
-    position.isInstant = isInstant;
+    position.isInstant = isInstant || item.isLayoutInstant;
     queue.push( position );
   }
 
@@ -2438,10 +2502,11 @@ Outlayer.prototype.prepended = function( elems ) {
  * @param {Array of Outlayer.Items} items
  */
 Outlayer.prototype.reveal = function( items ) {
-  if ( !items || !items.length ) {
+  var len = items && items.length;
+  if ( !len ) {
     return;
   }
-  for ( var i=0, len = items.length; i < len; i++ ) {
+  for ( var i=0; i < len; i++ ) {
     var item = items[i];
     item.reveal();
   }
@@ -2452,10 +2517,11 @@ Outlayer.prototype.reveal = function( items ) {
  * @param {Array of Outlayer.Items} items
  */
 Outlayer.prototype.hide = function( items ) {
-  if ( !items || !items.length ) {
+  var len = items && items.length;
+  if ( !len ) {
     return;
   }
-  for ( var i=0, len = items.length; i < len; i++ ) {
+  for ( var i=0; i < len; i++ ) {
     var item = items[i];
     item.hide();
   }
@@ -2544,7 +2610,7 @@ Outlayer.prototype.destroy = function() {
   delete this.element.outlayerGUID;
   // remove data for jQuery
   if ( jQuery ) {
-    jQuery.removeData( this.element, this.settings.namespace );
+    jQuery.removeData( this.element, this.constructor.namespace );
   }
 
 };
@@ -2563,8 +2629,7 @@ Outlayer.data = function( elem ) {
 
 // --------------------------  -------------------------- //
 
-// copy an object on the Outlayer prototype
-// used in options and settings
+// copy an object on the Outlayer prototype to new object
 function copyOutlayerProto( obj, property ) {
   obj.prototype[ property ] = extend( {}, Outlayer.prototype[ property ] );
 }
@@ -2580,15 +2645,21 @@ Outlayer.create = function( namespace, options ) {
   function Layout() {
     Outlayer.apply( this, arguments );
   }
+  // inherit Outlayer prototype, use Object.create if there
+  if ( Object.create ) {
+    Layout.prototype = Object.create( Outlayer.prototype );
+  } else {
+    extend( Layout.prototype, Outlayer.prototype );
+  }
+  // set contructor, used for namespace and Item
+  Layout.prototype.constructor = Layout;
 
-  extend( Layout.prototype, Outlayer.prototype );
-
+  // copy default options so Outlayer.options don't get touched
   copyOutlayerProto( Layout, 'options' );
-  copyOutlayerProto( Layout, 'settings' );
-
+  // apply new options
   extend( Layout.prototype.options, options );
 
-  Layout.prototype.settings.namespace = namespace;
+  Layout.namespace = namespace;
 
   Layout.data = Outlayer.data;
 
@@ -2598,8 +2669,6 @@ Outlayer.create = function( namespace, options ) {
   };
 
   Layout.Item.prototype = new Item();
-
-  Layout.prototype.settings.item = Layout.Item;
 
   // -------------------------- declarative -------------------------- //
 
@@ -2659,7 +2728,7 @@ return Outlayer;
 
 if ( typeof define === 'function' && define.amd ) {
   // AMD
-  define( [
+  define( 'outlayer/outlayer',[
       'eventie/eventie',
       'doc-ready/doc-ready',
       'eventEmitter/EventEmitter',
@@ -2689,7 +2758,7 @@ if ( typeof define === 'function' && define.amd ) {
 
 ( function( window ) {
 
-"use strict";
+
 
 // -------------------------- Packery -------------------------- //
 
@@ -2833,7 +2902,7 @@ return Rect;
 
 if ( typeof define === 'function' && define.amd ) {
   // AMD
-  define( rectDefinition );
+  define( 'packery/js/rect',rectDefinition );
 } else {
   // browser global
   window.Packery = window.Packery || {};
@@ -2842,17 +2911,29 @@ if ( typeof define === 'function' && define.amd ) {
 
 })( window );
 
+/**
+ * Packer
+ * bin-packing algorithm
+ */
+
 ( function( window ) {
 
-'use strict';
+
 
 // -------------------------- Packer -------------------------- //
 
 function packerDefinition( Rect ) {
 
-function Packer( width, height ) {
+/**
+ * @param {Number} width
+ * @param {Number} height
+ * @param {String} sortDirection
+ *   topLeft for vertical, leftTop for horizontal
+ */
+function Packer( width, height, sortDirection ) {
   this.width = width || 0;
   this.height = height || 0;
+  this.sortDirection = sortDirection || 'downwardLeftToRight';
 
   this.reset();
 }
@@ -2869,6 +2950,8 @@ Packer.prototype.reset = function() {
   });
 
   this.spaces.push( initialSpace );
+  // set sorter
+  this.sorter = sorters[ this.sortDirection ] || sorters.downwardLeftToRight;
 };
 
 // change x and y of rect to fit with in Packer's available spaces
@@ -2910,7 +2993,7 @@ Packer.prototype.placed = function( rect ) {
   // remove redundant spaces
   Packer.mergeRects( this.spaces );
 
-  this.spaces.sort( Packer.spaceSorterTopLeft );
+  this.spaces.sort( this.sorter );
 };
 
 // -------------------------- utility functions -------------------------- //
@@ -2950,15 +3033,23 @@ Packer.mergeRects = function( rects ) {
   return rects;
 };
 
-// top down, then left to right
-Packer.spaceSorterTopLeft = function( a, b ) {
-  return a.y - b.y || a.x - b.x;
+
+// -------------------------- sorters -------------------------- //
+
+// functions for sorting rects in order
+var sorters = {
+  // top down, then left to right
+  downwardLeftToRight: function( a, b ) {
+    return a.y - b.y || a.x - b.x;
+  },
+  // left to right, then top down
+  rightwardTopToBottom: function( a, b ) {
+    return a.x - b.x || a.y - b.y;
+  }
 };
 
-// left to right, then top down
-Packer.spaceSorterLeftTop = function( a, b ) {
-  return a.x - b.x || a.y - b.y;
-};
+
+// --------------------------  -------------------------- //
 
 return Packer;
 
@@ -2968,7 +3059,7 @@ return Packer;
 
 if ( typeof define === 'function' && define.amd ) {
   // AMD
-  define( [ './rect' ], packerDefinition );
+  define( 'packery/js/packer',[ './rect' ], packerDefinition );
 } else {
   // browser global
   var Packery = window.Packery = window.Packery || {};
@@ -2983,7 +3074,7 @@ if ( typeof define === 'function' && define.amd ) {
 
 ( function( window ) {
 
-'use strict';
+
 
 // -------------------------- Item -------------------------- //
 
@@ -3093,8 +3184,14 @@ Item.prototype.getPlaceRectCoord = function( coord, isX, isMaxOpen ) {
     // snap to closest segment
     coord = Math.round( coord / segment );
     // contain to outer bound
-    // x values must be contained, y values can grow box by 1
-    var maxSegments = Math[ isX ? 'floor' : 'ceil' ]( parentSize / segment );
+    // contain non-growing bound, allow growing bound to grow
+    var mathMethod;
+    if ( this.layout.options.isHorizontal ) {
+      mathMethod = !isX ? 'floor' : 'ceil';
+    } else {
+      mathMethod = isX ? 'floor' : 'ceil';
+    }
+    var maxSegments = Math[ mathMethod ]( parentSize / segment );
     maxSegments -= Math.ceil( size / segment );
     max = maxSegments;
   } else {
@@ -3120,7 +3217,7 @@ return Item;
 
 if ( typeof define === 'function' && define.amd ) {
   // AMD
-  define( [
+  define( 'packery/js/item',[
       'get-style-property/get-style-property',
       'outlayer/outlayer',
       './rect'
@@ -3138,7 +3235,7 @@ if ( typeof define === 'function' && define.amd ) {
 })( window );
 
 /*!
- * Packery v1.1.2
+ * Packery v1.2.2
  * bin-packing layout library
  * http://packery.metafizzy.co
  *
@@ -3152,7 +3249,7 @@ if ( typeof define === 'function' && define.amd ) {
 
 ( function( window ) {
 
-'use strict';
+
 
 // -------------------------- Packery -------------------------- //
 
@@ -3161,7 +3258,7 @@ function packeryDefinition( classie, getSize, Outlayer, Rect, Packer, Item ) {
 
 // create an Outlayer layout class
 var Packery = Outlayer.create('packery');
-Packery.Item = Packery.prototype.settings.item = Item;
+Packery.Item = Item;
 
 Packery.prototype._create = function() {
   // call super
@@ -3213,12 +3310,23 @@ Packery.prototype._resetLayout = function() {
   this._getMeasurements();
 
   // reset packer
-  this.packer.width = this.size.innerWidth + this.gutter;
-  this.packer.height = Number.POSITIVE_INFINITY;
-  this.packer.reset();
+  var packer = this.packer;
+  // packer settings, if horizontal or vertical
+  if ( this.options.isHorizontal ) {
+    packer.width = Number.POSITIVE_INFINITY;
+    packer.height = this.size.innerHeight + this.gutter;
+    packer.sortDirection = 'rightwardTopToBottom';
+  } else {
+    packer.width = this.size.innerWidth + this.gutter;
+    packer.height = Number.POSITIVE_INFINITY;
+    packer.sortDirection = 'downwardLeftToRight';
+  }
+
+  packer.reset();
 
   // layout
   this.maxY = 0;
+  this.maxX = 0;
 };
 
 /**
@@ -3245,15 +3353,16 @@ Packery.prototype._packItem = function( item ) {
   this._setRectSize( item.element, item.rect );
   // pack the rect in the packer
   this.packer.pack( item.rect );
-  this._setMaxY( item.rect );
+  this._setMaxXY( item.rect );
 };
 
 /**
- * set max Y value, for height of container
+ * set max X and Y value, for size of container
  * @param {Packery.Rect} rect
  * @private
  */
-Packery.prototype._setMaxY = function( rect ) {
+Packery.prototype._setMaxXY = function( rect ) {
+  this.maxX = Math.max( rect.x + rect.width, this.maxX );
   this.maxY = Math.max( rect.y + rect.height, this.maxY );
 };
 
@@ -3277,9 +3386,15 @@ Packery.prototype._setRectSize = function( elem, rect ) {
 };
 
 Packery.prototype._getContainerSize = function() {
-  return {
-    height: this.maxY - this.gutter
-  };
+  if ( this.options.isHorizontal ) {
+    return {
+      width: this.maxX - this.gutter
+    };
+  } else {
+    return {
+      height: this.maxY - this.gutter
+    };
+  }
 };
 
 
@@ -3306,16 +3421,22 @@ Packery.prototype._manageStamp = function( elem ) {
   this._setRectSize( elem, rect );
   // save its space in the packer
   this.packer.placed( rect );
-  this._setMaxY( rect );
+  this._setMaxXY( rect );
 };
 
 // -------------------------- methods -------------------------- //
 
+function verticalSorter( a, b ) {
+  return a.position.y - b.position.y || a.position.x - b.position.x;
+}
+
+function horizontalSorter( a, b ) {
+  return a.position.x - b.position.x || a.position.y - b.position.y;
+}
 
 Packery.prototype.sortItemsByPosition = function() {
-  this.items.sort( function( a, b ) {
-    return a.position.y - b.position.y || a.position.x - b.position.x;
-  });
+  var sorter = this.options.isHorizontal ? horizontalSorter : verticalSorter;
+  this.items.sort( sorter );
 };
 
 /**
@@ -3390,6 +3511,22 @@ Packery.prototype._bindFitEvents = function( item ) {
   });
 };
 
+// -------------------------- resize -------------------------- //
+
+// debounced, layout on resize
+Packery.prototype.resize = function() {
+  // don't trigger if size did not change
+  var size = getSize( this.element );
+  // check that this.size and size are there
+  // IE8 triggers resize on body size change, so they might not be
+  var hasSizes = this.size && size;
+  var innerSize = this.options.isHorizontal ? 'innerHeight' : 'innerWidth';
+  if ( hasSizes && size[ innerSize ] === this.size[ innerSize ] ) {
+    return;
+  }
+
+  this.layout();
+};
 
 // -------------------------- drag -------------------------- //
 
@@ -3548,9 +3685,9 @@ if ( typeof define === 'function' && define.amd ) {
       'classie/classie',
       'get-size/get-size',
       'outlayer/outlayer',
-      './rect',
-      './packer',
-      './item'
+      'packery/js/rect',
+      'packery/js/packer',
+      'packery/js/item'
     ],
     packeryDefinition );
 } else {

@@ -14,7 +14,7 @@
  */
 
  var vis = 
- angular.module( 'plotter.vis', [ 'ui.state', 'services' ] );
+ angular.module( 'plotter.vis', [ 'ui.router.state', 'services.dataset' ] );
 
 /**
  * Each section or module of the site can also have its own routes. AngularJS

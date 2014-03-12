@@ -1,8 +1,10 @@
 /*!
- * Draggabilly PACKAGED v1.0.7
+ * Draggabilly PACKAGED v1.1.0
  * Make that shiz draggable
  * http://draggabilly.desandro.com
+ * MIT license
  */
+
 
 /*!
  * classie - class helper functions
@@ -19,7 +21,7 @@
 
 ( function( window ) {
 
-'use strict';
+
 
 // class helper functions from bonzo https://github.com/ded/bonzo
 
@@ -77,7 +79,7 @@ var classie = {
 // transport
 if ( typeof define === 'function' && define.amd ) {
   // AMD
-  define( classie );
+  define( 'classie/classie',classie );
 } else {
   // browser global
   window.classie = classie;
@@ -86,89 +88,14 @@ if ( typeof define === 'function' && define.amd ) {
 })( window );
 
 /*!
- * eventie v1.0.3
- * event binding helper
- *   eventie.bind( elem, 'click', myFn )
- *   eventie.unbind( elem, 'click', myFn )
- */
-
-/*jshint browser: true, undef: true, unused: true */
-/*global define: false */
-
-( function( window ) {
-
-'use strict';
-
-var docElem = document.documentElement;
-
-var bind = function() {};
-
-if ( docElem.addEventListener ) {
-  bind = function( obj, type, fn ) {
-    obj.addEventListener( type, fn, false );
-  };
-} else if ( docElem.attachEvent ) {
-  bind = function( obj, type, fn ) {
-    obj[ type + fn ] = fn.handleEvent ?
-      function() {
-        var event = window.event;
-        // add event.target
-        event.target = event.target || event.srcElement;
-        fn.handleEvent.call( fn, event );
-      } :
-      function() {
-        var event = window.event;
-        // add event.target
-        event.target = event.target || event.srcElement;
-        fn.call( obj, event );
-      };
-    obj.attachEvent( "on" + type, obj[ type + fn ] );
-  };
-}
-
-var unbind = function() {};
-
-if ( docElem.removeEventListener ) {
-  unbind = function( obj, type, fn ) {
-    obj.removeEventListener( type, fn, false );
-  };
-} else if ( docElem.detachEvent ) {
-  unbind = function( obj, type, fn ) {
-    obj.detachEvent( "on" + type, obj[ type + fn ] );
-    try {
-      delete obj[ type + fn ];
-    } catch ( err ) {
-      // can't delete window object properties
-      obj[ type + fn ] = undefined;
-    }
-  };
-}
-
-var eventie = {
-  bind: bind,
-  unbind: unbind
-};
-
-// transport
-if ( typeof define === 'function' && define.amd ) {
-  // AMD
-  define( eventie );
-} else {
-  // browser global
-  window.eventie = eventie;
-}
-
-})( this );
-
-/*!
- * EventEmitter v4.2.2 - git.io/ee
+ * EventEmitter v4.2.7 - git.io/ee
  * Oliver Caldwell
  * MIT license
  * @preserve
  */
 
 (function () {
-	'use strict';
+	
 
 	/**
 	 * Class for managing events.
@@ -179,9 +106,9 @@ if ( typeof define === 'function' && define.amd ) {
 	function EventEmitter() {}
 
 	// Shortcuts to improve speed and size
-
-	// Easy access to the prototype
 	var proto = EventEmitter.prototype;
+	var exports = this;
+	var originalGlobalValue = exports.EventEmitter;
 
 	/**
 	 * Finds the index of the listener for the event in it's storage array.
@@ -231,7 +158,7 @@ if ( typeof define === 'function' && define.amd ) {
 
 		// Return a concatenated array of all matching events if
 		// the selector is a regular expression.
-		if (typeof evt === 'object') {
+		if (evt instanceof RegExp) {
 			response = {};
 			for (key in events) {
 				if (events.hasOwnProperty(key) && evt.test(key)) {
@@ -484,7 +411,7 @@ if ( typeof define === 'function' && define.amd ) {
 			// Remove all listeners for the specified event
 			delete events[evt];
 		}
-		else if (type === 'object') {
+		else if (evt instanceof RegExp) {
 			// Remove all events matching the regex.
 			for (key in events) {
 				if (events.hasOwnProperty(key) && evt.test(key)) {
@@ -499,6 +426,13 @@ if ( typeof define === 'function' && define.amd ) {
 
 		return this;
 	};
+
+	/**
+	 * Alias of removeEvent.
+	 *
+	 * Added to mirror the node API.
+	 */
+	proto.removeAllListeners = alias('removeEvent');
 
 	/**
 	 * Emits an event of your choice.
@@ -527,8 +461,14 @@ if ( typeof define === 'function' && define.amd ) {
 					// If the listener returns true then it shall be removed from the event
 					// The function is executed either with a basic call or an apply if there is an args array
 					listener = listeners[key][i];
+
+					if (listener.once === true) {
+						this.removeListener(evt, listener.listener);
+					}
+
 					response = listener.listener.apply(this, args || []);
-					if (response === this._getOnceReturnValue() || listener.once === true) {
+
+					if (response === this._getOnceReturnValue()) {
 						this.removeListener(evt, listener.listener);
 					}
 				}
@@ -596,9 +536,19 @@ if ( typeof define === 'function' && define.amd ) {
 		return this._events || (this._events = {});
 	};
 
+	/**
+	 * Reverts the global {@link EventEmitter} to its previous value and returns a reference to this version.
+	 *
+	 * @return {Function} Non conflicting EventEmitter class.
+	 */
+	EventEmitter.noConflict = function noConflict() {
+		exports.EventEmitter = originalGlobalValue;
+		return EventEmitter;
+	};
+
 	// Expose the class either via AMD, CommonJS or the global object
 	if (typeof define === 'function' && define.amd) {
-		define(function () {
+		define('eventEmitter/EventEmitter',[],function () {
 			return EventEmitter;
 		});
 	}
@@ -611,16 +561,100 @@ if ( typeof define === 'function' && define.amd ) {
 }.call(this));
 
 /*!
- * getStyleProperty by kangax
+ * eventie v1.0.5
+ * event binding helper
+ *   eventie.bind( elem, 'click', myFn )
+ *   eventie.unbind( elem, 'click', myFn )
+ * MIT license
+ */
+
+/*jshint browser: true, undef: true, unused: true */
+/*global define: false, module: false */
+
+( function( window ) {
+
+
+
+var docElem = document.documentElement;
+
+var bind = function() {};
+
+function getIEEvent( obj ) {
+  var event = window.event;
+  // add event.target
+  event.target = event.target || event.srcElement || obj;
+  return event;
+}
+
+if ( docElem.addEventListener ) {
+  bind = function( obj, type, fn ) {
+    obj.addEventListener( type, fn, false );
+  };
+} else if ( docElem.attachEvent ) {
+  bind = function( obj, type, fn ) {
+    obj[ type + fn ] = fn.handleEvent ?
+      function() {
+        var event = getIEEvent( obj );
+        fn.handleEvent.call( fn, event );
+      } :
+      function() {
+        var event = getIEEvent( obj );
+        fn.call( obj, event );
+      };
+    obj.attachEvent( "on" + type, obj[ type + fn ] );
+  };
+}
+
+var unbind = function() {};
+
+if ( docElem.removeEventListener ) {
+  unbind = function( obj, type, fn ) {
+    obj.removeEventListener( type, fn, false );
+  };
+} else if ( docElem.detachEvent ) {
+  unbind = function( obj, type, fn ) {
+    obj.detachEvent( "on" + type, obj[ type + fn ] );
+    try {
+      delete obj[ type + fn ];
+    } catch ( err ) {
+      // can't delete window object properties
+      obj[ type + fn ] = undefined;
+    }
+  };
+}
+
+var eventie = {
+  bind: bind,
+  unbind: unbind
+};
+
+// ----- module definition ----- //
+
+if ( typeof define === 'function' && define.amd ) {
+  // AMD
+  define( 'eventie/eventie',eventie );
+} else if ( typeof exports === 'object' ) {
+  // CommonJS
+  module.exports = eventie;
+} else {
+  // browser global
+  window.eventie = eventie;
+}
+
+})( this );
+
+/*!
+ * getStyleProperty v1.0.3
+ * original by kangax
  * http://perfectionkills.com/feature-testing-css-properties/
  */
 
 /*jshint browser: true, strict: true, undef: true */
-/*globals define: false */
+/*global define: false, exports: false, module: false */
 
 ( function( window ) {
 
-'use strict';
+
 
 var prefixes = 'Webkit Moz ms Ms O'.split(' ');
 var docElemStyle = document.documentElement.style;
@@ -651,9 +685,12 @@ function getStyleProperty( propName ) {
 // transport
 if ( typeof define === 'function' && define.amd ) {
   // AMD
-  define( function() {
+  define( 'get-style-property/get-style-property',[],function() {
     return getStyleProperty;
   });
+} else if ( typeof exports === 'object' ) {
+  // CommonJS for Component
+  module.exports = getStyleProperty;
 } else {
   // browser global
   window.getStyleProperty = getStyleProperty;
@@ -662,24 +699,23 @@ if ( typeof define === 'function' && define.amd ) {
 })( window );
 
 /**
- * getSize v1.1.4
+ * getSize v1.1.7
  * measure size of elements
  */
 
 /*jshint browser: true, strict: true, undef: true, unused: true */
-/*global define: false */
+/*global define: false, exports: false, require: false, module: false */
 
 ( function( window, undefined ) {
 
-'use strict';
+
 
 // -------------------------- helpers -------------------------- //
 
-var defView = document.defaultView;
-
-var getStyle = defView && defView.getComputedStyle ?
+var getComputedStyle = window.getComputedStyle;
+var getStyle = getComputedStyle ?
   function( elem ) {
-    return defView.getComputedStyle( elem, null );
+    return getComputedStyle( elem, null );
   } :
   function( elem ) {
     return elem.currentStyle;
@@ -791,6 +827,7 @@ function getSize( elem ) {
   for ( var i=0, len = measurements.length; i < len; i++ ) {
     var measurement = measurements[i];
     var value = style[ measurement ];
+    value = mungeNonPixel( elem, value );
     var num = parseFloat( value );
     // any 'auto', 'medium' value will be 0
     size[ measurement ] = !isNaN( num ) ? num : 0;
@@ -829,14 +866,46 @@ function getSize( elem ) {
   return size;
 }
 
+// IE8 returns percent values, not pixels
+// taken from jQuery's curCSS
+function mungeNonPixel( elem, value ) {
+  // IE8 and has percent value
+  if ( getComputedStyle || value.indexOf('%') === -1 ) {
+    return value;
+  }
+  var style = elem.style;
+  // Remember the original values
+  var left = style.left;
+  var rs = elem.runtimeStyle;
+  var rsLeft = rs && rs.left;
+
+  // Put in the new values to get a computed value out
+  if ( rsLeft ) {
+    rs.left = elem.currentStyle.left;
+  }
+  style.left = value;
+  value = style.pixelLeft;
+
+  // Revert the changed values
+  style.left = left;
+  if ( rsLeft ) {
+    rs.left = rsLeft;
+  }
+
+  return value;
+}
+
 return getSize;
 
 }
 
 // transport
 if ( typeof define === 'function' && define.amd ) {
-  // AMD
-  define( [ 'get-style-property/get-style-property' ], defineGetSize );
+  // AMD for RequireJS
+  define( 'get-size/get-size',[ 'get-style-property/get-style-property' ], defineGetSize );
+} else if ( typeof exports === 'object' ) {
+  // CommonJS for Component
+  module.exports = defineGetSize( require('get-style-property') );
 } else {
   // browser global
   window.getSize = defineGetSize( window.getStyleProperty );
@@ -845,14 +914,15 @@ if ( typeof define === 'function' && define.amd ) {
 })( window );
 
 /*!
- * Draggabilly v1.0.7
+ * Draggabilly v1.1.0
  * Make that shiz draggable
  * http://draggabilly.desandro.com
+ * MIT license
  */
 
 ( function( window ) {
 
-'use strict';
+
 
 // vars
 var document = window.document;
@@ -943,13 +1013,14 @@ var is3d = !!getStyleProperty('perspective');
 // --------------------------  -------------------------- //
 
 function Draggabilly( element, options ) {
-  this.element = element;
+  // querySelector if string
+  this.element = typeof element === 'string' ?
+    document.querySelector( element ) : element;
 
   this.options = extend( {}, this.options );
   extend( this.options, options );
 
   this._create();
-
 }
 
 // inherit EventEmitter methods
@@ -990,11 +1061,23 @@ Draggabilly.prototype.setHandles = function() {
   for ( var i=0, len = this.handles.length; i < len; i++ ) {
     var handle = this.handles[i];
     // bind pointer start event
-    // listen for both, for devices like Chrome Pixel
-    //   which has touch and mouse events
-    eventie.bind( handle, 'mousedown', this );
-    eventie.bind( handle, 'touchstart', this );
-    disableImgOndragstart( handle );
+    if ( window.navigator.pointerEnabled ) {
+      // W3C Pointer Events, IE11. See https://coderwall.com/p/mfreca
+      eventie.bind( handle, 'pointerdown', this );
+      // disable scrolling on the element
+      handle.style.touchAction = 'none';
+    } else if ( window.navigator.msPointerEnabled ) {
+      // IE10 Pointer Events
+      eventie.bind( handle, 'MSPointerDown', this );
+      // disable scrolling on the element
+      handle.style.msTouchAction = 'none';
+    } else {
+      // listen for both, for devices like Chrome Pixel
+      //   which has touch and mouse events
+      eventie.bind( handle, 'mousedown', this );
+      eventie.bind( handle, 'touchstart', this );
+      disableImgOndragstart( handle );
+    }
   }
 };
 
@@ -1099,10 +1182,28 @@ Draggabilly.prototype.ontouchstart = function( event ) {
   this.dragStart( event, event.changedTouches[0] );
 };
 
+Draggabilly.prototype.onMSPointerDown =
+Draggabilly.prototype.onpointerdown = function( event ) {
+  // disregard additional touches
+  if ( this.isDragging ) {
+    return;
+  }
+
+  this.dragStart( event, event );
+};
+
 function setPointerPoint( point, pointer ) {
   point.x = pointer.pageX !== undefined ? pointer.pageX : pointer.clientX;
   point.y = pointer.pageY !== undefined ? pointer.pageY : pointer.clientY;
 }
+
+// hash of events to be bound after start event
+var postStartEvents = {
+  mousedown: [ 'mousemove', 'mouseup' ],
+  touchstart: [ 'touchmove', 'touchend', 'touchcancel' ],
+  pointerdown: [ 'pointermove', 'pointerup', 'pointercancel' ],
+  MSPointerDown: [ 'MSPointerMove', 'MSPointerUp', 'MSPointerCancel' ]
+};
 
 /**
  * drag start
@@ -1120,10 +1221,10 @@ Draggabilly.prototype.dragStart = function( event, pointer ) {
     event.returnValue = false;
   }
 
-  var isTouch = event.type === 'touchstart';
-
   // save pointer identifier to match up touch events
-  this.pointerIdentifier = pointer.identifier;
+  this.pointerIdentifier = pointer.pointerId !== undefined ?
+    // pointerId for pointer events, touch.indentifier for touch events
+    pointer.pointerId : pointer.identifier;
 
   this._getPosition();
 
@@ -1143,8 +1244,8 @@ Draggabilly.prototype.dragStart = function( event, pointer ) {
 
   // bind move and end events
   this._bindEvents({
-    events: isTouch ? [ 'touchmove', 'touchend', 'touchcancel' ] :
-      [ 'mousemove', 'mouseup' ],
+    // get proper events to match start event
+    events: postStartEvents[ event.type ],
     // IE8 needs to be bound to document
     node: event.preventDefault ? window : document
   });
@@ -1214,6 +1315,13 @@ Draggabilly.prototype.onmousemove = function( event ) {
   this.dragMove( event, event );
 };
 
+Draggabilly.prototype.onMSPointerMove =
+Draggabilly.prototype.onpointermove = function( event ) {
+  if ( event.pointerId === this.pointerIdentifier ) {
+    this.dragMove( event, event );
+  }
+};
+
 Draggabilly.prototype.ontouchmove = function( event ) {
   var touch = this.getTouch( event.changedTouches );
   if ( touch ) {
@@ -1229,29 +1337,61 @@ Draggabilly.prototype.ontouchmove = function( event ) {
 Draggabilly.prototype.dragMove = function( event, pointer ) {
 
   setPointerPoint( this.dragPoint, pointer );
-  this.dragPoint.x -= this.startPoint.x;
-  this.dragPoint.y -= this.startPoint.y;
+  var dragX = this.dragPoint.x - this.startPoint.x;
+  var dragY = this.dragPoint.y - this.startPoint.y;
 
-  if ( this.options.containment ) {
-    var relX = this.relativeStartPosition.x;
-    var relY = this.relativeStartPosition.y;
-    this.dragPoint.x = Math.max( this.dragPoint.x, -relX );
-    this.dragPoint.y = Math.max( this.dragPoint.y, -relY );
-    this.dragPoint.x = Math.min( this.dragPoint.x, this.containerSize.width - relX - this.size.width );
-    this.dragPoint.y = Math.min( this.dragPoint.y, this.containerSize.height - relY - this.size.height );
-  }
+  var grid = this.options.grid;
+  var gridX = grid && grid[0];
+  var gridY = grid && grid[1];
 
-  this.position.x = this.startPosition.x + this.dragPoint.x;
-  this.position.y = this.startPosition.y + this.dragPoint.y;
+  dragX = applyGrid( dragX, gridX );
+  dragY = applyGrid( dragY, gridY );
+
+  dragX = this.containDrag( 'x', dragX, gridX );
+  dragY = this.containDrag( 'y', dragY, gridY );
+
+  // constrain to axis
+  dragX = this.options.axis === 'y' ? 0 : dragX;
+  dragY = this.options.axis === 'x' ? 0 : dragY;
+
+  this.position.x = this.startPosition.x + dragX;
+  this.position.y = this.startPosition.y + dragY;
+  // set dragPoint properties
+  this.dragPoint.x = dragX;
+  this.dragPoint.y = dragY;
 
   this.emitEvent( 'dragMove', [ this, event, pointer ] );
 };
 
+function applyGrid( value, grid, method ) {
+  method = method || 'round';
+  return grid ? Math[ method ]( value / grid ) * grid : value;
+}
+
+Draggabilly.prototype.containDrag = function( axis, drag, grid ) {
+  if ( !this.options.containment ) {
+    return drag;
+  }
+  var measure = axis === 'x' ? 'width' : 'height';
+
+  var rel = this.relativeStartPosition[ axis ];
+  var min = applyGrid( -rel, grid, 'ceil' );
+  var max = this.containerSize[ measure ] - rel - this.size[ measure ];
+  max = applyGrid( max, grid, 'floor' );
+  return  Math.min( max, Math.max( min, drag ) );
+};
 
 // ----- end event ----- //
 
 Draggabilly.prototype.onmouseup = function( event ) {
   this.dragEnd( event, event );
+};
+
+Draggabilly.prototype.onMSPointerUp =
+Draggabilly.prototype.onpointerup = function( event ) {
+  if ( event.pointerId === this.pointerIdentifier ) {
+    this.dragEnd( event, event );
+  }
 };
 
 Draggabilly.prototype.ontouchend = function( event ) {
@@ -1289,6 +1429,14 @@ Draggabilly.prototype.dragEnd = function( event, pointer ) {
 // ----- cancel event ----- //
 
 // coerce to end event
+
+Draggabilly.prototype.onMSPointerCancel =
+Draggabilly.prototype.onpointercancel = function( event ) {
+  if ( event.pointerId === this.pointerIdentifier ) {
+    this.dragEnd( event, event );
+  }
+};
+
 Draggabilly.prototype.ontouchcancel = function( event ) {
   var touch = this.getTouch( event.changedTouches );
   this.dragEnd( event, touch );

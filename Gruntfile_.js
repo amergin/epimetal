@@ -14,7 +14,7 @@ module.exports = function ( grunt ) {
   grunt.loadNpmTasks('grunt-conventional-changelog');
   grunt.loadNpmTasks('grunt-bump');
   grunt.loadNpmTasks('grunt-coffeelint');
-  grunt.loadNpmTasks('grunt-contrib-less');
+  grunt.loadNpmTasks('grunt-recess');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-ngmin');
   grunt.loadNpmTasks('grunt-html2js');
@@ -162,9 +162,9 @@ module.exports = function ( grunt ) {
       build_css: {
         src: [
           '<%= vendor_files.css %>',
-          '<%= build_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.css'
+          '<%= recess.build.dest %>'
         ],
-        dest: '<%= build_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.css'
+        dest: '<%= recess.build.dest %>'
       },
       /**
        * The `compile_js` target is the concatenation of our application source
@@ -238,23 +238,31 @@ module.exports = function ( grunt ) {
     },
 
     /**
-     * `grunt-contrib-less` handles our LESS compilation and uglification automatically.
+     * `recess` handles our LESS compilation and uglification automatically.
      * Only our `main.less` file is included in compilation; all other files
-     * must be imported from this file. For further options see https://github.com/gruntjs/grunt-contrib-less
+     * must be imported from this file.
      */
-    less: {
+    recess: {
       build: {
-        files: {
-          '<%= build_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.css': '<%= app_files.less %>'
+        src: [ '<%= app_files.less %>' ],
+        dest: '<%= build_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.css',
+        options: {
+          compile: true,
+          compress: false,
+          noUnderscores: false,
+          noIDs: false,
+          zeroUnits: false
         }
       },
       compile: {
+        src: [ '<%= recess.build.dest %>' ],
+        dest: '<%= recess.build.dest %>',
         options: {
-          cleancss: true,
-          compress: true
-        },
-        files: {
-          '<%= build_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.css': '<%= app_files.less %>'
+          compile: true,
+          compress: true,
+          noUnderscores: false,
+          noIDs: false,
+          zeroUnits: false
         }
       }
     },
@@ -373,7 +381,7 @@ module.exports = function ( grunt ) {
           '<%= html2js.common.dest %>',
           '<%= html2js.app.dest %>',
           '<%= vendor_files.css %>',
-          '<%= build_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.css'
+          '<%= recess.build.dest %>'
         ]
       },
 
@@ -387,7 +395,7 @@ module.exports = function ( grunt ) {
         src: [
           '<%= concat.compile_js.dest %>',
           '<%= vendor_files.css %>',
-          '<%= build_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.css'
+          '<%= recess.compile.dest %>'
         ]
       }
     },
@@ -498,7 +506,7 @@ module.exports = function ( grunt ) {
        */
       less: {
         files: [ 'src/**/*.less' ],
-        tasks: [ 'less:build' ]
+        tasks: [ 'recess:build' ]
       },
 
       /**
@@ -552,7 +560,7 @@ module.exports = function ( grunt ) {
    * The `build` task gets your app ready to run for development and testing.
    */
   grunt.registerTask( 'build', [
-    'clean', 'html2js', 'jshint', 'coffeelint', 'coffee', 'less:build',
+    'clean', 'html2js', 'jshint', 'coffeelint', 'coffee', 'recess:build',
     'concat:build_css', 'copy:build_app_assets', 'copy:build_vendor_assets',
     'copy:build_appjs', 'copy:build_vendorjs', 'index:build', 'karmaconfig',
     'karma:continuous' 
@@ -563,7 +571,7 @@ module.exports = function ( grunt ) {
    * minifying your code.
    */
   grunt.registerTask( 'compile', [
-    'less:compile', 'copy:compile_assets', 'ngmin', 'concat:compile_js', 'uglify', 'index:compile'
+    'recess:compile', 'copy:compile_assets', 'ngmin', 'concat:compile_js', 'uglify', 'index:compile'
   ]);
 
   /**
@@ -576,8 +584,7 @@ module.exports = function ( grunt ) {
   }
 
   /**
-   * A utility function to get all app CSS sources. Except only files that contain
-   * '.css' substring and do not contain 'vendor' substring
+   * A utility function to get all app CSS sources.
    */
   function filterForCSS ( files ) {
     return files.filter( function ( file ) {

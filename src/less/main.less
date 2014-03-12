@@ -11,17 +11,23 @@
  */
 
 @import '../../vendor/bootstrap/less/mixins.less';
-@import '../../vendor/bootstrap/less/reset.less';
+@import '../../vendor/bootstrap/less/navbar.less';
 @import '../../vendor/bootstrap/less/utilities.less';
 @import '../../vendor/bootstrap/less/scaffolding.less';
 @import '../../vendor/bootstrap/less/type.less';
 @import '../../vendor/bootstrap/less/grid.less';
-@import '../../vendor/bootstrap/less/layouts.less';
 @import '../../vendor/bootstrap/less/navs.less';
-@import '../../vendor/bootstrap/less/navbar.less';
 @import '../../vendor/bootstrap/less/buttons.less';
 @import '../../vendor/bootstrap/less/button-groups.less';
 @import '../../vendor/bootstrap/less/dropdowns.less';
+@import '../../vendor/bootstrap/less/alerts.less';
+@import '../../vendor/bootstrap/less/close.less';
+
+/* 
+@import '../../vendor/bootstrap/less/reset.less'; 
+@import '../../vendor/bootstrap/less/layouts.less';
+*/
+
 
 
 /* These are actually needed */
@@ -87,41 +93,6 @@
         border: 0;
       }
 
-
-/**
- * Footer
- */
-
-.footer {
-  margin-top: 80px;
-
-  .footer-inner {
-    padding: 40px 0;
-    border-top: 1px solid #DDD;
-  }
-
-  .social {
-    float: right;
-    margin: 0;
-    list-style: none;
-
-    li {
-      float: left;
-      margin-left: 20px;
-
-      a, a:visited {
-        color: @grayLight;
-        text-decoration: none;
-        font-size: 40px;
-        .transition( 250ms ease-in-out );
-
-        &:hover {
-          color: @gray;
-        }
-      }
-    }
-  }
-}
 
 
 /**

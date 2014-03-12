@@ -63,6 +63,9 @@ module.exports = {
   vendor_files: {
     js: [
       'vendor/angular/angular.js',
+      'vendor/angular-sanitize/angular-sanitize.js',
+      'vendor/angular-growl/build/angular-growl.js',
+      'vendor/angular-animate/angular-animate.js',
       'vendor/angular-bootstrap/ui-bootstrap-tpls.min.js',
       'vendor/placeholders/angular-placeholders-0.0.1-SNAPSHOT.min.js',
       'vendor/angular-ui-router/release/angular-ui-router.js',
@@ -77,7 +80,8 @@ module.exports = {
       'vendor/angular-cookies/angular-cookies.js'
     ],
     css: [
-      'vendor/dcjs/dc.css'
+      'vendor/dcjs/dc.css',
+      'vendor/angular-growl/build/angular-growl.min.css'
     ],
     assets: [
     ]

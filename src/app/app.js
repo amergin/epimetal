@@ -2,47 +2,42 @@ var App = angular.module('plotter', [
   'templates-app',
   'templates-common',
   'plotter.vis',
-  'ui.state',
-  'ui.route'
+  'ui.router.state',
+  'ui.router',
+  'angular-growl',
+  'ngSanitize',
+  'ngAnimate',
+  'services.notify'
 ]);
 
-App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider',
-  function ($stateProvider, $urlRouterProvider, $httpProvider) {
+App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvider',
+  function ($stateProvider, $urlRouterProvider, $httpProvider, growlProvider) {
 
     // default route
     $urlRouterProvider.otherwise('/vis');
+
+
+    // allow HTML markup in notify messages:
+    growlProvider.globalEnableHtml(true);
 
     // introduce response interceptor: logic for accepting/rejecting
     // promises app-wide. This is used to redirect to login when
     // unauth'd usage of the api occurs.
     // see http://arthur.gonigberg.com/2013/06/29/angularjs-role-based-auth/
-    var errorInterceptor = function ($q, $location) {
+    var errorInterceptor = function ($q, $location, NotifyService) {
       var successFn = function (response) {
-
-        // notice that partial templates are fetched using this as well!
-        // if (response.status === 200) {
-        //   if ( !_.isUndefined(response.data.success) ) {
-        //     var successFlag = response.data.success.toLowerCase();
-        //     if (successFlag === 'false') {
-        //       $location.path('/login');
-        //       // $state.go('login', {} );
-        //       return $q.reject(response);
-        //     }
-        //   }
-        // }
-        // all is good
         return response;
       };
 
       var errorFn = function (response) {
         if( response.status === 403 ) {
-          $location.path('/login');
-          return $q.reject(response);
+          NotifyService.addLoginNeeded();
+          // $location.path('/login');
         }
-        else {
-          return $q.reject(response);
-        }
+        return $q.reject(response);
       };
+
+      errorFn.$inject = ['NotifyService'];
 
       // return the success/error functions
       return function (promise) {
@@ -55,31 +50,31 @@ App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider',
 
   }
 ])
-  .run(['$rootScope', '$state', '$stateParams', 'AuthenticationService', '$location',
-    function ($rootScope, $state, $stateParams, AuthenticationService, $location) {
+  .run(['$rootScope', '$state', '$stateParams', '$location',
+    function ($rootScope, $state, $stateParams, $location) {
       $rootScope.$state = $state;
       $rootScope.$stateParams = $stateParams;
       $state.transitionTo('vis');
 
-      // auth & login stuff:
-      // enumerate routes that don't need authentication
-      var routesThatDontRequireAuth = ['/login'];
+      // // auth & login stuff:
+      // // enumerate routes that don't need authentication
+      // var routesThatDontRequireAuth = ['/login'];
 
-      // check if current location matches route  
-      var routeClean = function (route) {
-        return _.find(routesThatDontRequireAuth,
-          function (noAuthRoute) {
-            return _.str.startsWith(route, noAuthRoute);
-          });
-      };
+      // // check if current location matches route  
+      // var routeClean = function (route) {
+      //   return _.find(routesThatDontRequireAuth,
+      //     function (noAuthRoute) {
+      //       return _.str.startsWith(route, noAuthRoute);
+      //     });
+      // };
 
-      $rootScope.$on('$stateChangeStart', function (ev, to, toParams, from, fromParams) {
-        // if route requires auth and user is not logged in
-        if (!routeClean($location.url()) && !AuthenticationService.isLoggedIn()) {
-          // redirect back to login
-          $location.path('/login');
-        }
-      });
+      // $rootScope.$on('$stateChangeStart', function (ev, to, toParams, from, fromParams) {
+      //   // if route requires auth and user is not logged in
+      //   if (!routeClean($location.url()) && !AuthenticationService.isLoggedIn()) {
+      //     // redirect back to login
+      //     $location.path('/login');
+      //   }
+      // });
 
 
 
