@@ -1,2 +1,29 @@
-<div class="packery">
-</div>
+<div class="row-fluid">
+	<div class="span3" id="sidebar">
+
+		<div class="dataset">
+		</div>
+
+		<div class="well well-small">
+			<h4>Plots</h4>
+
+			<!-- Scatterplot -->
+			<div class="scatterplot-form" ng-controller="ScatterplotFormController">
+			</div>
+
+			<!-- Histogram -->
+			<div class="histogram-form" ng-controller="HistogramFormController">
+			</div>
+
+		</div>
+
+	</div>
+
+
+	<div class="span9 container" ui-view>
+      	<div class="packery">
+      	</div>		
+
+	</div>
+
+

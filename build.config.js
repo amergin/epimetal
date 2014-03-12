@@ -73,6 +73,8 @@ module.exports = {
       'vendor/packery/packery.pkgd.js',
       'vendor/draggabilly/draggabilly.pkgd.js',
       'vendor/underscore/underscore.js',
+      'vendor/underscore.string/lib/underscore.string.js',
+      'vendor/angular-cookies/angular-cookies.js'
     ],
     css: [
       'vendor/dcjs/dc.css'

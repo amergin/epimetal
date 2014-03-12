@@ -14,14 +14,14 @@
  */
 
  var vis = 
- angular.module( 'plotter.vis', [ 'ui.state' ]);
+ angular.module( 'plotter.vis', [ 'ui.state', 'services' ] );
 
 /**
  * Each section or module of the site can also have its own routes. AngularJS
  * will handle ensuring they are all available at run-time, but splitting it
  * this way makes each module more "self-contained".
  */
- vis.config(function config( $stateProvider ) {
+ vis.config(['$stateProvider', function ( $stateProvider ) {
 
   var visState = {
     name: 'vis',
@@ -29,31 +29,34 @@
     abstract: false,
     controller: 'VisCtrl',
     templateUrl: 'vis/vis.tpl.html',
-    data: { pageTitle: 'Visualization' }
+    data: { pageTitle: 'Visualization' },
+
+    // important: the app will NOT change state to 'vis' until
+    // these object promises have been resolved. Failure is generally indication
+    // that the user is not logged in -> redirect to 'login' state.
+    resolve: {
+      // test: helloWorldProvider.sayHello()
+      //test: DatasetProvider.testFn()
+      variables: function(DatasetFactory) {
+        return DatasetFactory.getVariables();
+      },
+      datasets: function(DatasetFactory) {
+        return DatasetFactory.getDatasets();
+      }
+    }
   };
 
   $stateProvider.state(visState);
 
 
-
-  // $stateProvider.state( 'vis', {
-  //   url: '/vis',
-  //   views: {
-  //     "main": {
-  //       controller: 'VisCtrl',
-  //       templateUrl: 'vis/vis.tpl.html'
-  //     }
-  //   },
-  //   data:{ pageTitle: 'Visualization' }
-  // });
-});
+}]);
 
 
 /**
  * And of course we define a controller for our route.
  */
- vis.controller( 'VisCtrl', ['$scope','DatasetService', 
-  function VisController( $scope, DatasetService) {
+ vis.controller( 'VisCtrl', ['$scope','DatasetService',
+  function VisController( $scope, DatasetService ) {
 
   }]);
 
@@ -708,6 +711,8 @@ vis.directive('histogram', [ function(){
   .width(scope.width)
   .height(scope.height)
   .shareColors(true)
+  // .dimension(dimension)
+  // .group(reducedGroup)
   .brushOn(true)
   .elasticY(true)
   .x(d3.scale.linear().domain(extent).range([0,noBins]))
@@ -738,10 +743,15 @@ vis.directive('histogram', [ function(){
     .barPadding(0.15)
     .dimension(dimension)
     .group(reducedGroup, name)
+    // .data(function(group) {
+    //     return group.all().filter(function(d) {
+    //       console.log("D=",d); 
+    //       return _.isUndefined( d.value.dataset ); });
+    // })
     .valueAccessor( function(d) {
-      if( _.isUndefined( d.value.dataset ) ) {
-        return 0;
-      }
+      // if( _.isUndefined( d.value.dataset ) ) {
+      //   return 0;
+      // }
       return d.value.counts[name];
     });
 
@@ -788,8 +798,8 @@ vis.directive('histogram', [ function(){
 
 
 
-vis.controller('ScatterPlotController', ['$scope', '$rootScope', 'DatasetService', 
-  function($scope, $rootScope, DatasetService) {
+vis.controller('ScatterPlotController', ['$scope', '$rootScope', 'DatasetService', 'testservice',
+  function($scope, $rootScope, DatasetService, testservice) {
 
     $scope.dimension = DatasetService.getDimension( $scope.window.variables.x, $scope.window.variables.y );
     $scope.reduced = DatasetService.getReduceScatterplot( $scope.dimension.group() );
@@ -857,6 +867,9 @@ vis.directive('scatterplot', [ function(){
     .symbolSize(5)
     .brushOn(true)
     .highlightedSize(6)
+    .data(function(group) {
+        return group.all().filter(function(d) { return !_.isUndefined( d.value.dataset ); });
+    })
     .valueAccessor( function(d) {
       if( _.isUndefined( d.value.dataset ) ) {
         return 0;
@@ -864,11 +877,11 @@ vis.directive('scatterplot', [ function(){
       return d.value.counts[name];
     })
     .keyAccessor( function(d) { 
-      if( _.isUndefined( d.value.dataset ) ) { return null; }
+      //if( _.isUndefined( d.value.dataset ) ) { return null; }
       return d.key.x;
     })
     .valueAccessor( function(d) { 
-      if( _.isUndefined( d.value.dataset ) ) { return null; }      
+      //if( _.isUndefined( d.value.dataset ) ) { return null; }      
       return d.key.y;
     });
 

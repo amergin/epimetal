@@ -10,10 +10,13 @@
     "angular-ui-utils": "~0.0.3",
     "dcjs": "52b1410bd54d483975ba302161055137c3713dfd",
     "crossfilter": "~1.3.7",
-    "underscore": "~1.5.2"
+    "underscore": "~1.5.2",
+    "underscore.string": "~2.3.3",
+    "angular-cookies": "~1.2.14"
   },
   "dependencies": {},
   "resolutions": {
-    "crossfilter": "~1.3.7"
+    "crossfilter": "~1.3.7",
+    "angular": "~1.0.7"
   }
 }
