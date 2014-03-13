@@ -28,16 +28,49 @@ serv.factory('DatasetFactory', [ '$http', '$q',
 
       var name = dsetName;
       var color = col;
+
       // key: variable name, val: map of samples
+      // loaded samples from the api
       var samples = {};
+
       var active = false;
 
       // --------------------------------------
       // functions
       // --------------------------------------
 
-      this.setSamples = function (samp) {
-        samples = samp;
+      // this.setSamples = function (samp) {
+      //   samples = samp;
+      // };
+
+      // returns a map for the variables asked for,
+      // fetches them from api if necessary
+      this.getVarSamples = function(variable) {
+        // need to get that from api
+
+        // only for active sets
+        if( !active ) { return {}; }
+
+        var deferred = $q.defer();
+        // check if needed to fetch
+        if( _.isUndefined( samples[variable] ) ) {
+        $http.get( config.variableURLPrefix + variable + "/in/" + name )
+          .success(function (response) {
+            samples[variable] = response.result.values;
+            console.log("dset returning", _.size(samples[variable]) );
+            deferred.resolve(samples[variable]);
+          })
+          .error(function (response) {
+            console.log("dset returning empty");
+            deferred.resolve({});
+            //growl...
+          });
+        }
+        else {
+          // already available, fetched
+          deferred.resolve(samples[variable]);
+        }
+        return deferred.promise;
       };
 
       this.getColor = function () {
@@ -63,7 +96,6 @@ serv.factory('DatasetFactory', [ '$http', '$q',
 
     service.getVariables = function() {
       var deferred = $q.defer();
-      //debugger;
       $http.get(that.config.variablesURL)
         .success(function (response) {
           console.log("Load variable list");
@@ -103,6 +135,32 @@ serv.factory('DatasetFactory', [ '$http', '$q',
       return that.variables;
     };
 
+    // returns the variable data for the active datasets 
+    // and fetches it beforehand from the API if necessary
+    service.getVariableData = function(variable) {
+      var sets = service.activeSets();
+
+      var defer = $q.defer();
+      var promises = [];
+
+      _.each( sets, function(set) {
+        // returns a promise
+        promises.push( set.getVarSamples(variable) );
+        // extend the current result set with the ones found from
+        //_.extend( result, set.getVarSamples(variable) );
+      });
+
+      $q.all(promises).then( function(resArray) {
+        var result = {};
+        _.each( resArray, function(varMap) {
+          _.extend( result, varMap );
+        });
+        defer.resolve(result); 
+      } );
+      // returns a deferred object
+      return defer.promise;
+    };
+
     service.getSets = function() {
       return that.sets;
     };
@@ -111,12 +169,12 @@ serv.factory('DatasetFactory', [ '$http', '$q',
       that.sets[name].toggle();
     };
 
-    service.isActive = function(name) {
-      return that.sets[name].active();
-    };
-
     service.activeSets = function() {
       return _.filter( that.sets, function(set) { return set.isActive(); } );
+    };
+
+    service.isActive = function(name) {
+      return that.sets[name].active();
     };
 
 

@@ -1,0 +1,17 @@
+<div>
+	<div class="handle"></div>
+	<i class="icon-remove-sign icon-large ctrl-delete" ng-click="remove(window.number,element)" alt="close plot window"></i>
+	<a class="btn btn-mini ctrl-filter" ng-click="resetFilter()">reset filter</a>
+	<div class="text-center plot-title" ng-switch on="window.type"> 
+		{{window.type }} of
+		<strong ng-switch-when="histogram">
+			{{window.variables.x}}
+		</strong>
+		<strong ng-switch-when="scatterplot">
+			{{window.variables.x}}, {{window.variables.y}}
+		</strong>
+		<strong ng-switch-default>
+			default
+		</strong>
+	</div>
+</div>

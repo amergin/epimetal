@@ -3,12 +3,14 @@ var App = angular.module('plotter', [
   'templates-common',
   'plotter.vis',
   'plotter.vis.sidebar',
+  'plotter.vis.windowing',
   'ui.router.state',
   'ui.router',
   'angular-growl',
   'ngSanitize',
   'ngAnimate',
-  'services.notify'
+  'services.notify',
+  'services.dimensions'
 ]);
 
 App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvider',
@@ -94,19 +96,19 @@ App.controller('AppCtrl', ['$scope', '$location',
 ]);
 
 
-// // see http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
-// App.config(['$provide', function($provide){
-//   $provide.decorator('$rootScope', ['$delegate', function($delegate){
+// see http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
+App.config(['$provide', function($provide){
+  $provide.decorator('$rootScope', ['$delegate', function($delegate){
 
-//     Object.defineProperty($delegate.constructor.prototype, '$onRootScope', {
-//       value: function(name, listener){
-//         var unsubscribe = $delegate.$on(name, listener);
-//         this.$on('$destroy', unsubscribe);
-//       },
-//       enumerable: false
-//     });
+    Object.defineProperty($delegate.constructor.prototype, '$onRootScope', {
+      value: function(name, listener){
+        var unsubscribe = $delegate.$on(name, listener);
+        this.$on('$destroy', unsubscribe);
+      },
+      enumerable: false
+    });
 
 
-//     return $delegate;
-//   }]);
-// }]);
+    return $delegate;
+  }]);
+}]);
