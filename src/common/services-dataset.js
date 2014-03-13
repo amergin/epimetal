@@ -6,16 +6,17 @@ serv.factory('DatasetFactory', [ '$http', '$q',
     // privates
     var that = this;
     that.sets = {};
-    that.variables = {};
+    that.variables = [];
     that.config = {
       datasetsURL: '/API/datasets',
       variablesURL: '/API/headers/NMR_results'
     };
+    that.colors = d3.scale.category20();
 
 
     // --------------------------------------
     // class for defining a single dataset
-    function Dataset(dsetName) {
+    function Dataset(dsetName, col) {
 
       // --------------------------------------
       // privates:
@@ -26,10 +27,10 @@ serv.factory('DatasetFactory', [ '$http', '$q',
       };
 
       var name = dsetName;
-      var color = null;
+      var color = col;
       // key: variable name, val: map of samples
       var samples = {};
-
+      var active = false;
 
       // --------------------------------------
       // functions
@@ -43,6 +44,18 @@ serv.factory('DatasetFactory', [ '$http', '$q',
         return color;
       };
 
+      this.toggle = function() {
+        active = !active;
+      };
+
+      this.isActive = function() {
+        return active;
+      };
+
+      this.getName = function() { return name; };
+      this.getSize = function() { return _.size( samples ); };
+
+
     } // Dataset class ends
 
 
@@ -54,11 +67,16 @@ serv.factory('DatasetFactory', [ '$http', '$q',
       $http.get(that.config.variablesURL)
         .success(function (response) {
           console.log("Load variable list");
-          that.variables = response.data;
-          deferred.resolve(response.data);
+          // empty just in case it's not empty
+          that.variables = [];
+          _.each( response.result, function(varNameObj) {
+            that.variables.push(varNameObj.name);
+          });
+          that.variables = _.sortBy( that.variables, function(name) { return name.toLowerCase(); } );
+          deferred.resolve(that.variables);
         })
         .error(function (response) {
-          deferred.resolve(response.data);
+          deferred.resolve(response.result);
           //deferred.reject('Error in fetching variable list');
         });
       return deferred.promise;      
@@ -69,8 +87,9 @@ serv.factory('DatasetFactory', [ '$http', '$q',
       $http.get(that.config.datasetsURL)
         .success(function (response) {
           console.log("load dataset names");
-          _.each(response.data, function (name) {
-            that.sets.push(new Dataset(name));
+          _.each(response.result, function (nameObj) {
+            // create a dataset stub
+            that.sets[nameObj.name] = new Dataset(nameObj.name, that.colors(nameObj.name));
           });
           deferred.resolve(that.sets);
         })
@@ -79,6 +98,28 @@ serv.factory('DatasetFactory', [ '$http', '$q',
         });
       return deferred.promise;
     };
+
+    service.variables = function() {
+      return that.variables;
+    };
+
+    service.getSets = function() {
+      return that.sets;
+    };
+
+    service.toggle = function(name) {
+      that.sets[name].toggle();
+    };
+
+    service.isActive = function(name) {
+      return that.sets[name].active();
+    };
+
+    service.activeSets = function() {
+      return _.filter( that.sets, function(set) { return set.isActive(); } );
+    };
+
+
 
     return service;
   }

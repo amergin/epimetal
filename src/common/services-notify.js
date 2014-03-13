@@ -24,7 +24,7 @@ serv.factory('NotifyService', [ 'growl', function NotifyService(growl) {
     },
     addLoginNeeded: function() {
       growl.addErrorMessage('Seems that you have not logged in. ' +
-        'Please <a href="/API/twoauth.php" target="_blank">log in</a> and refresh this application afterwards.', {enableHtml: true});
+        'Please <a href="/API/twofactor.php" target="_blank">log in</a> and refresh this application afterwards.', {enableHtml: true});
     }
   }; 
 }]);

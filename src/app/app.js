@@ -2,6 +2,7 @@ var App = angular.module('plotter', [
   'templates-app',
   'templates-common',
   'plotter.vis',
+  'plotter.vis.sidebar',
   'ui.router.state',
   'ui.router',
   'angular-growl',

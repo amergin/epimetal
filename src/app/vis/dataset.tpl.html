@@ -1,7 +1,7 @@
 <div class="well well-small">
   <h4>Datasets</h4>
   <div id="tablewrapper">
-    <table class="table" id="dataset">
+    <table class="table table-hover" id="dataset">
       <thead>
         <tr>
           <th>Select</th>
@@ -10,10 +10,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr ng-repeat="dset in datasets" ng-style="{ 'background-color': getBgColor($index) }">
-          <td class="dataset-select"><input type="checkbox" ng-click="toggle($index)" ng-checked="isActive($index)"></td>
-          <td class="dataset-name">{{dset.name}}</td>
-          <td class="dataset-size">{{dset.sampleCount}}</td>
+        <tr ng-repeat="set in sets" ng-style="{ 'background-color': set.getColor() }" ng-click="set.toggle()">
+          {{set}}
+          <td class="dataset-select"><input type="checkbox" ng-click="set.toggle()" ng-checked="set.isActive()"></td>
+          <td class="dataset-name">{{set.getName()}}</td>
+          <td class="dataset-size">{{set.getSize()}}</td>
         </tr>
       </tbody>
     </table>

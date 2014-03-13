@@ -1,27 +1,30 @@
 <div class="well-small well">
 	<h4>New scatterplot</h4>
-	<form class="form-horizontal" name="plot" novalidate>
+	<form class="form-horizontal" role="form" name="plot" novalidate>
 		<fieldset>
-			<div class="control-group">
-				<label class="control-label" for="xcoord-scatter">X coordinate</label>
-				<div class="controls">
-					<select id="xcoord-scatter" ng-model="selection.x" ng-options="item as item for item in variables" required ng-disabled="!canEdit()">
-					</select>
+			<div class="form-group">
+				<label class="col-sm-3 control-label" for="xcoord-scatter">X coordinate</label>
+				<div class="col-sm-7">
+					<select class="form-control" id="xcoord-scatter" ng-model="selection.x" ng-options="var for var in variables" required ng-disabled="!canEdit()"></select>
 				</div>
 			</div>
-			<div class="control-group">
-				<label class="control-label" for="ycoord-scatter">Y coordinate</label>
-				<div class="controls">
-					<select id="ycoord-scatter" ng-model="selection.y" ng-options="item as item for item in variables" required ng-disabled="!canEdit()">
+			<div class="form-group">
+				<label class="control-label col-sm-3" for="ycoord-scatter">Y coordinate</label>
+				<div class="col-sm-7">
+					<select class="form-control" id="ycoord-scatter" ng-model="selection.y" ng-options="var for var in variables" required ng-disabled="!canEdit()">
 					</select>
 				</div>
 			</div>
 
-			<div class="control-group">
-				<div class="controls">
-					<label class="checkbox">
-						<input type="checkbox" ng-model="selection.pooled" ng-disabled="!canEdit()"> Pool datasets
-					</label>
+			<div class="form-group">
+				<div class="col-sm-offset-3 col-sm-7">
+			        <label>
+			          <input type="checkbox" ng-model="selection.pooled" ng-disabled="!canEdit()"> Pool datasets
+			        </label>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-3 col-sm-7">
 					<button type="submit" class="btn btn-primary" ng-disabled="!canSubmit()" ng-click="add(selection)">Add plot</button>
 				</div>
 			</div>
