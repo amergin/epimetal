@@ -14,7 +14,7 @@
  */
 
  var vis = 
- angular.module( 'plotter.vis', [ 'ui.router.state', 'services.dataset' ] );
+ angular.module( 'plotter.vis', [ 'ui.router.state', 'services.dataset', 'plotter.vis.windowing'] );
 
 /**
  * Each section or module of the site can also have its own routes. AngularJS
@@ -25,7 +25,7 @@
 
   var visState = {
     name: 'vis',
-    url: '/vis',
+    url: '/vis/',
     abstract: false,
     controller: 'VisCtrl',
     templateUrl: 'vis/vis.tpl.html',

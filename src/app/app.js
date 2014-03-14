@@ -3,21 +3,19 @@ var App = angular.module('plotter', [
   'templates-common',
   'plotter.vis',
   'plotter.vis.sidebar',
-  'plotter.vis.windowing',
   'ui.router.state',
   'ui.router',
   'angular-growl',
   'ngSanitize',
   'ngAnimate',
-  'services.notify',
-  'services.dimensions'
+  'services.notify'
 ]);
 
 App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvider',
   function ($stateProvider, $urlRouterProvider, $httpProvider, growlProvider) {
 
     // default route
-    $urlRouterProvider.otherwise('/vis');
+    $urlRouterProvider.otherwise('/vis/');
 
 
     // allow HTML markup in notify messages:
@@ -57,7 +55,6 @@ App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvi
     function ($rootScope, $state, $stateParams, $location) {
       $rootScope.$state = $state;
       $rootScope.$stateParams = $stateParams;
-      $state.transitionTo('vis');
 
       // // auth & login stuff:
       // // enumerate routes that don't need authentication
@@ -88,6 +85,7 @@ App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvi
 App.controller('AppCtrl', ['$scope', '$location',
   function AppCtrl($scope, $location) {
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
+      console.log("change route from", fromState, "-", toState);
       if (angular.isDefined(toState.data.pageTitle)) {
         $scope.pageTitle = toState.data.pageTitle + ' | Plotter';
       }

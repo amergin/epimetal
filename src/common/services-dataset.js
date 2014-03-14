@@ -1,7 +1,7 @@
-var serv = angular.module('services.dataset', []);
+var serv = angular.module('services.dataset', ['services.notify']);
 
-serv.factory('DatasetFactory', [ '$http', '$q',
-  function ($http, $q) {
+serv.factory('DatasetFactory', [ '$http', '$q', '$injector',
+  function ($http, $q, $injector) {
 
     // privates
     var that = this;
@@ -29,7 +29,6 @@ serv.factory('DatasetFactory', [ '$http', '$q',
       var name = dsetName;
       var color = col;
 
-      // key: variable name, val: map of samples
       // loaded samples from the api
       var samples = {};
 
@@ -39,9 +38,15 @@ serv.factory('DatasetFactory', [ '$http', '$q',
       // functions
       // --------------------------------------
 
-      // this.setSamples = function (samp) {
-      //   samples = samp;
-      // };
+      var _restructureSamples = function(samples, variable) {
+        var res = {};
+        _.each( samples, function(val, sampId) {
+          res[sampId] = { dataset: name };
+          res[sampId][variable] = val;
+          res[sampId]['id'] = sampId;
+        });
+        return res;
+      };
 
       // returns a map for the variables asked for,
       // fetches them from api if necessary
@@ -57,18 +62,19 @@ serv.factory('DatasetFactory', [ '$http', '$q',
         $http.get( config.variableURLPrefix + variable + "/in/" + name )
           .success(function (response) {
             samples[variable] = response.result.values;
-            console.log("dset returning", _.size(samples[variable]) );
-            deferred.resolve(samples[variable]);
+            //console.log("dset returning", _.size(samples[variable]) );
+            deferred.resolve( _restructureSamples( samples[variable], variable ) );
           })
-          .error(function (response) {
-            console.log("dset returning empty");
+          .error(function (response, status, headers, config) {
+            //console.log("dset returning empty");
             deferred.resolve({});
-            //growl...
+            var NotifyService = $injector.get('NotifyService');
+            NotifyService.addSticky('Error receiving data at ' + config.url, 'error' );
           });
         }
         else {
           // already available, fetched
-          deferred.resolve(samples[variable]);
+          deferred.resolve( _restructureSamples( samples[variable], variable ) );
         }
         return deferred.promise;
       };
@@ -108,8 +114,7 @@ serv.factory('DatasetFactory', [ '$http', '$q',
           deferred.resolve(that.variables);
         })
         .error(function (response) {
-          deferred.resolve(response.result);
-          //deferred.reject('Error in fetching variable list');
+          deferred.reject('Error in fetching variable list');
         });
       return deferred.promise;      
     };
@@ -137,32 +142,86 @@ serv.factory('DatasetFactory', [ '$http', '$q',
 
     // returns the variable data for the active datasets 
     // and fetches it beforehand from the API if necessary
-    service.getVariableData = function(variable) {
-      var sets = service.activeSets();
+    service.getVariableData = function(variableX, variableY) {
 
-      var defer = $q.defer();
-      var promises = [];
+      // for x & y selection this is called twice with different
+      // parameters
+      var getCoordPromise = function(selection) {
+        var defer = $q.defer();
+        var promises = [];
+        var sets = service.activeSets();
 
-      _.each( sets, function(set) {
-        // returns a promise
-        promises.push( set.getVarSamples(variable) );
-        // extend the current result set with the ones found from
-        //_.extend( result, set.getVarSamples(variable) );
-      });
+        _.each( sets, function(set) {
+          // returns a promise
+          promises.push( set.getVarSamples(selection) );
+        });
 
       $q.all(promises).then( function(resArray) {
         var result = {};
+
+        // combine the results
         _.each( resArray, function(varMap) {
           _.extend( result, varMap );
         });
+
+        // resolve the whole function
         defer.resolve(result); 
       } );
-      // returns a deferred object
+      // return the promise, the receiver can then decide
+      // what to do when it's filled
       return defer.promise;
+      };
+
+
+      var combinedDefer = $q.defer();
+      var DimensionService = $injector.get('DimensionService');
+      var xPromise = getCoordPromise( variableX );
+      if( !_.isUndefined( variableX ) && !_.isUndefined( variableY ) )
+      {
+        // x & y
+        var yPromise = getCoordPromise( variableY );
+
+        $q.all([xPromise, yPromise]).then( function(resArray) {
+
+          // pass the new data to dimensionService:
+          // IMPORTANT: this priv function passes the variables of getVariableData
+          // to DimensionService so that the samples are re-added with the new variables
+          DimensionService.addVariableData( variableX, resArray[0] );
+          DimensionService.addVariableData( variableX, resArray[1] );
+          DimensionService.rebuildInstance();
+
+          // resolve this this outer function promise only when both x&y are fetched
+          combinedDefer.resolve([
+          { coord: 'x', samples: resArray[0] },
+          { coord: 'y', samples: resArray[1] } 
+          ]);
+        });
+      }
+      else if( !_.isUndefined( variableX ) )
+      {
+        // only x
+        xPromise.then( function(res) {
+          DimensionService.addVariableData( variableX, res );
+          DimensionService.rebuildInstance();
+
+          combinedDefer.resolve([
+          { coord: 'x', samples: res }
+          ]);
+        });
+      }
+      return combinedDefer.promise;
     };
 
+    // assumes getDatasets is called and therefore the service is initialized
     service.getSets = function() {
       return that.sets;
+    };
+
+    // get all dset names, whether active or not
+    service.getSetNames = function() {
+      return _.map( service.getSets(), function(set) {
+        return set.getName();
+      });
     };
 
     service.toggle = function(name) {
@@ -182,11 +241,3 @@ serv.factory('DatasetFactory', [ '$http', '$q',
     return service;
   }
 ]);
-
-
-
-
-
-
-
-

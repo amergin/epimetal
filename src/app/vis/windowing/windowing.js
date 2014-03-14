@@ -2,7 +2,7 @@ var win = angular.module('plotter.vis.windowing', []);
 
 // controller for Packery windowing system
 win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', function($scope,$rootScope, $timeout) {
-
+  console.log("packery controller");
   $scope.$onRootScope('packery.add', function(event,selection,type) {
     $scope.add( selection,type );
   });
@@ -47,7 +47,7 @@ win.directive('packery', function() {
     link: function(scope, elm, attrs, controller) {
 
 
-      console.log("postlink");
+      console.log("postlink packery");
           // create a new empty grid system
           scope.packery = new Packery( elm[0], 
           { 
@@ -67,7 +67,7 @@ win.directive('packery', function() {
 
 
 // Directive for individual Window in Packery windowing system
-win.directive('window', ['$compile', function($compile){
+win.directive('window', ['$compile', '$injector', function($compile, $injector){
   return {
     scope: false,
     // must be within packery directive
@@ -106,8 +106,8 @@ win.directive('window', ['$compile', function($compile){
 
       // catch window destroys
       $scope.$on('$destroy', function() {
-        // go and check if the var dimension is still needed
-        //DatasetService.checkDimension( $scope.window.variables );
+        var DimensionService = $injector.get('DimensionService');
+        DimensionService.checkDimension( $scope.window.variables );
       });
     }
   };
