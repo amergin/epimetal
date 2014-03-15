@@ -6,9 +6,9 @@ var vis =
   return {
     restrict: 'C',
     templateUrl : 'vis/sidebar/dataset.tpl.html',
-
     replace: true,
     controller: 'DatasetTableController',
+    scope: {},
     link: function(scope, elm, attrs) {
       console.log("Dataset table directive linker");
     }
@@ -29,7 +29,7 @@ vis.controller('DatasetTableController', ['$scope', 'DatasetFactory',
  vis.directive('scatterplotForm', function() {
   return {
     restrict: 'C',
-    transclude: true,
+    scope: true,
     replace: true,
     controller: 'ScatterplotFormController',
     templateUrl : 'vis/sidebar/scatterplot.tpl.html',
@@ -88,7 +88,7 @@ vis.controller('DatasetTableController', ['$scope', 'DatasetFactory',
  vis.directive('histogramForm', function() {
   return {
     restrict: 'C',
-    transclude: true,
+    scope: true,
     replace: true,
     controller: 'HistogramFormController',
     templateUrl : 'vis/sidebar/histogram.tpl.html',

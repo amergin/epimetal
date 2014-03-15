@@ -35,91 +35,23 @@ visu.service('PlotService', ['$injector', 'DimensionService', function($injector
 
   };
 
-  this.createSVG = function(element) {
-
-      var DatasetFactory = $injector.get('DatasetFactory');
-      var dsetNames = DatasetFactory.getSetNames();
-
-      // collect charts here
-      var charts = [];
-
-      // 1. create composite chart
-      _histogram = dc.compositeChart( element[0] )
-      .width(config.width)
-      .height(config.height)
-      .shareColors(true)
-      .brushOn(true)
-      .elasticY(true)
-      .x(d3.scale.linear().domain(extent).range([0, vars.noBins]))
-      .xUnits( function() { return vars.xBarWidth; } )
-      .margins({top: 15, right: 10, bottom: 20, left: 40});
-      //.xAxisLabel( variable );
-
-      // set x axis format
-      _histogram
-      .xAxis().ticks(7).tickFormat( d3.format(".2s") );
-
-      // set colors
-      if( vars.pooled ) {
-        scope.histogram.linearColors(['black']);
-      }
-      else {
-        _histogram.colors( d3.scale.category20() );
-      }
-
-
-      // 2. for each of the additional stacks, create a child chart
-      _.each( dsetNames, function(name,ind) {
-
-        var chart = dc.barChart( _histogram )
-        .centerBar(true)
-        .barPadding(0.15)
-        .dimension( vars.dim )
-        .group(vars.reduGroup, name)
-        .valueAccessor( function(d) {
-          if( _.isUndefined( d.value.dataset ) ) {
-            return 0;
-          }
-          return d.value.counts[name];
-        });
-
-        charts.push( chart );
-
-      });
-
-      // 3. compose & render the composite chart
-      _histogram.compose( charts );
-      _histogram.render();
-
-      // if pooling is in place, override global css opacity rules for these
-      // stacks
-      if( vars.pooled ) {
-        d3.select(_histogram.g()[0][0])
-        .selectAll("g.stack > rect.bar")
-        .each( function(d) { 
-          d3.select(this).style('opacity', 1); 
-        });
-      }
-
-    };
-
 
 }]);
 
 
 visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory',
-  function($scope, $rootScope, DimensionService) {
+  function HistogramPlotController($scope, $rootScope, DimensionService) {
 
     //$scope.data = DatasetService.getActives( [$scope.window.variables.x.set] )[0];
-    $scope.dimension = DimensionService.getDimension( $scope.window.variables.x );
+    // $scope.dimension = DimensionService.getDimension( $scope.window.variables.x );
 
-    $scope.extent = d3.extent( $scope.dimension.group().all(), function(sample) { return sample.key; } );
-    $scope.noBins = _.max( [ _.min( [ Math.floor( $scope.dimension.group().all().length / 20 ), 50 ] ), 20 ] );
-    $scope.binWidth = ($scope.extent[1] - $scope.extent[0]) / $scope.noBins;
-    $scope.group = $scope.dimension.group(function(d){return Math.floor(d / $scope.binWidth) * $scope.binWidth;});
-    $scope.reduced = DimensionService.getReducedGroupHisto( $scope.group, $scope.window.variables.x );
-    $scope.datasetNames = DatasetFactory.getSetNames();
-    $scope.pooled = $scope.window.variables.pooled || false;
+    // $scope.extent = d3.extent( $scope.dimension.group().all(), function(sample) { return sample.key; } );
+    // $scope.noBins = _.max( [ _.min( [ Math.floor( $scope.dimension.group().all().length / 20 ), 50 ] ), 20 ] );
+    // $scope.binWidth = ($scope.extent[1] - $scope.extent[0]) / $scope.noBins;
+    // $scope.group = $scope.dimension.group(function(d){return Math.floor(d / $scope.binWidth) * $scope.binWidth;});
+    // $scope.reduced = DimensionService.getReducedGroupHisto( $scope.group, $scope.window.variables.x );
+    // $scope.datasetNames = DatasetFactory.getSetNames();
+    // $scope.pooled = $scope.window.variables.pooled || false;
 
     //$scope.colorScale = DatasetService.getColorScale();
 
@@ -196,7 +128,7 @@ visu.directive('histogram', [ function(){
 
   // if pooling is in place, override global css opacity rules for these
   // stacks
-  if( isPooled ) {
+  if( config.pooled ) {
     d3.select($scope.histogram.g()[0][0])
     .selectAll("g.stack > rect.bar")
     .each( function(d) { 

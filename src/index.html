@@ -19,34 +19,6 @@
 
   <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
   <script type="text/javascript" src="<%= file %>"></script><% }); %>
-
-  <script type="text/javascript">
-  (function() {
-    var compositeChart = dc.compositeChart;
-    dc.compositeChart = function(parent, chartGroup) {
-      var _chart = compositeChart(parent, chartGroup);
-
-      _chart._brushing = function () {
-        var extent = _chart.extendBrush();
-        var rangedFilter = null;
-        if(!_chart.brushIsEmpty(extent)) {
-          rangedFilter = dc.filters.RangedFilter(extent[0], extent[1]);
-        }
-
-        dc.events.trigger(function () {
-          if (!rangedFilter) {
-            _chart.filter(null);
-          } else {
-            _chart.replaceFilter(rangedFilter);
-          }
-          _chart.redrawGroup();
-        }, dc.constants.EVENT_DELAY);
-      };
-
-      return _chart;
-    };
-  })();
-  </script>
 </head>
 
 <body>

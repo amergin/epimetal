@@ -27,7 +27,7 @@
     name: 'vis',
     url: '/vis/',
     abstract: false,
-    controller: 'VisCtrl',
+    //controller: 'VisCtrl',
     templateUrl: 'vis/vis.tpl.html',
     data: { pageTitle: 'Visualization' },
 
@@ -53,10 +53,11 @@
 /**
  * And of course we define a controller for our route.
  */
- vis.controller( 'VisCtrl', ['$scope',
-  function VisController( $scope ) {
-
-  }]);
+ // vis.controller( 'VisCtrl', ['$scope',
+ //  function VisController( $scope ) {
+ //    $scope.visController = "visController";
+ //    console.log("viscontroller");
+ //  }]);
 
 
 

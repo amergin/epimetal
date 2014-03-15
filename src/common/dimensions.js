@@ -1,7 +1,7 @@
-var dim = angular.module('services.dimensions', ['services.dataset'] );
+var dimMod = angular.module('services.dimensions', ['services.dataset'] );
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-dim.service('DimensionService', ['$injector', function($injector) {
+dimMod.service('DimensionService', ['$injector', function($injector) {
 
   // dimensions created in this tool
   var dimensions = {};
@@ -16,16 +16,12 @@ dim.service('DimensionService', ['$injector', function($injector) {
   // { 'SAMPID': {date: "2011-11-14T16:17:54Z", quantity: 2, total: 190, tip: 100, type: "tab"} }
   var currSamples = {};
 
-  // $scope.$onRootScope('packery.add', function(event,selection,type) {
-  //   $scope.add( selection,type );
-  // });
-
   // called whenever a plot is drawn
   // selection can be x&y or just x
   this.getDimension = function(selection) {
 
+    console.log("getDimension for ", selection);
     var dim;
-    var reducedGroup;
 
     // x & y
     if( !_.isUndefined( selection.x ) && !_.isUndefined( selection.y ) ) {
