@@ -8,7 +8,7 @@
     "angular-bootstrap": "~0.10.0",
     "angular-ui-router": "~0.2",
     "angular-ui-utils": "~0.1",
-    "dcjs": "52b1410bd54d483975ba302161055137c3713dfd",
+    "dcjs": "86d54a18bbc81a0659c4297ff9d7761e8d4aa34d",
     "crossfilter": "~1.3.7",
     "underscore": "~1.5.2",
     "underscore.string": "~2.3.3",

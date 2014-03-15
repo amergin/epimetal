@@ -7,8 +7,7 @@ var vis =
     restrict: 'C',
     templateUrl : 'vis/sidebar/dataset.tpl.html',
     replace: true,
-    controller: 'DatasetTableController',
-    scope: {},
+    //controller: 'DatasetTableController',
     link: function(scope, elm, attrs) {
       console.log("Dataset table directive linker");
     }
@@ -60,22 +59,9 @@ vis.controller('DatasetTableController', ['$scope', 'DatasetFactory',
       var plottingDataPromise = DatasetFactory.getVariableData(selection.x, selection.y);
 
       plottingDataPromise.then( function(res) {
-        // get the dimension / grouping
-
-        var DimensionService = $injector.get('DimensionService');
-        // var dimAndGroup = DimensionService.getDimensionAndGroup(selection);
-
-        // var VisService = $injector.get('VisService');
-
-        // // draw the figure
-        // VisService.drawScatter({ 
-        //   dimension: dimAndGroup.dimension, 
-        //   reducedGroup: dimAndGroup.group,
-        //   varX: selection.x,
-        //   varY: selection.y,
-        //   pooled: ( $scope.pooled || false )
-        // });
-
+        // draw the figure
+        var PlotService = $injector.get('PlotService');
+        PlotService.drawScatter( selection );
       });
 
 
@@ -120,14 +106,9 @@ vis.controller('DatasetTableController', ['$scope', 'DatasetFactory',
       var plottingDataPromise = DatasetFactory.getVariableData(selection.x);
 
       plottingDataPromise.then( function(res) {
-        var PlotService = $injector.get('PlotService');
-
         // draw the figure
-        PlotService.drawHistogram({ 
-          varX: selection.x,
-          pooled: ( $scope.pooled || false )
-        });
-
+        var PlotService = $injector.get('PlotService');
+        PlotService.drawHistogram( selection ); //{ 
       });
 
     };

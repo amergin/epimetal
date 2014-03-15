@@ -42,7 +42,8 @@ serv.factory('DatasetFactory', [ '$http', '$q', '$injector',
         var res = {};
         _.each( samples, function(val, sampId) {
           res[sampId] = { dataset: name };
-          res[sampId][variable] = val;
+          res[sampId].variables = {};
+          res[sampId].variables[variable] = val;
           res[sampId]['id'] = sampId;
         });
         return res;
@@ -99,6 +100,10 @@ serv.factory('DatasetFactory', [ '$http', '$q', '$injector',
 
 
     var service = {};
+
+    service.getColorScale = function() {
+      return that.colors;
+    };
 
     service.getVariables = function() {
       var deferred = $q.defer();
@@ -187,7 +192,7 @@ serv.factory('DatasetFactory', [ '$http', '$q', '$injector',
           // IMPORTANT: this priv function passes the variables of getVariableData
           // to DimensionService so that the samples are re-added with the new variables
           DimensionService.addVariableData( variableX, resArray[0] );
-          DimensionService.addVariableData( variableX, resArray[1] );
+          DimensionService.addVariableData( variableY, resArray[1] );
           DimensionService.rebuildInstance();
 
           // resolve this this outer function promise only when both x&y are fetched
