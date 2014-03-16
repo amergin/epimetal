@@ -3,6 +3,7 @@ var App = angular.module('plotter', [
   'templates-common',
   'plotter.vis',
   'plotter.vis.sidebar',
+  'plotter.login',
   'ui.router.state',
   'ui.router',
   'angular-growl',
@@ -11,8 +12,8 @@ var App = angular.module('plotter', [
   'services.notify'
 ]);
 
-App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvider',
-  function ($stateProvider, $urlRouterProvider, $httpProvider, growlProvider) {
+App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvider', '$injector',
+  function ($stateProvider, $urlRouterProvider, $httpProvider, growlProvider, $injector) {
 
     // default route
     $urlRouterProvider.otherwise('/vis/');
@@ -31,14 +32,19 @@ App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvi
       };
 
       var errorFn = function (response) {
+        // var NotifyService = $injector.get('NotifyService');
+        // var $state = $injector.get('$state');
         if (response.status === 403) {
-          NotifyService.addLoginNeeded();
-          // $location.path('/login');
+          //NotifyService.addLoginNeeded();
+          $location.path('/login/');
+          // $injector.invoke( function($state) {
+          //   $state.go('/login/');
+          // });
         }
         return $q.reject(response);
       };
 
-      errorFn.$inject = ['NotifyService'];
+      //errorFn.$inject = ['NotifyService', '$state'];
 
       // return the success/error functions
       return function (promise) {
@@ -87,7 +93,7 @@ App.controller('AppCtrl', ['$scope', '$location',
 
     $scope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
       if (toState.resolve) {
-        $scope.showSpinner();
+        $scope.loading.spinner = true;
       }
     });
 
@@ -98,11 +104,11 @@ App.controller('AppCtrl', ['$scope', '$location',
       }
 
       if (toState.resolve) {
-        $scope.hideSpinner();
+        $scope.loading.spinner = false;
       }
     });
 
-    $scope.spinner = true;
+    $scope.loading = { spinner: true };
 
 
 
