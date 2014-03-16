@@ -23,13 +23,13 @@ loginMod.config(['$stateProvider',
   }
 ]);
 
-loginMod.controller('LoginCtrl', ['$scope', 'NotifyService', '$state', '$rootScope', function($scope, NotifyService, $modal, $state, $rootScope) {
+loginMod.controller('LoginCtrl', ['$scope', 'NotifyService', '$state', function($scope, NotifyService, $state) {
 
   $scope.open = function () {
 
     var modalInstance = NotifyService.addClosableModal('login/modal.tpl.html');
 
-    modalInstance.result.then(function successFn(selectedItem) {
+    modalInstance.result.then(function successFn() {
       $state.go('vis');
     }, function errFn() {
       $state.go('vis');
