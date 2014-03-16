@@ -60,6 +60,7 @@ visu.directive('histogram', [ function(){
   .height(_height)
   .shareColors(true)
   .brushOn(true)
+  .mouseZoomable(true)
   .elasticY(true)
   .x(d3.scale.linear().domain(config.extent).range([0,config.noBins]))
   .xUnits( function() { return _xBarWidth; } )

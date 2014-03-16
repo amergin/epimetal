@@ -1,5 +1,5 @@
 var loginMod = angular.module('plotter.login', [
-  'ui.bootstrap',
+  'services.notify',
   'ui.router.state',
   'ui.router'
   ]);
@@ -23,38 +23,22 @@ loginMod.config(['$stateProvider',
   }
 ]);
 
-loginMod.controller('LoginCtrl', ['$scope', '$modal', '$state', '$rootScope', function($scope, $modal, $state, $rootScope) {
+loginMod.controller('LoginCtrl', ['$scope', 'NotifyService', '$state', '$rootScope', function($scope, NotifyService, $modal, $state, $rootScope) {
 
   $scope.open = function () {
 
-    modalInstance = $modal.open({
-      templateUrl: 'login/modal.tpl.html',
-      keyboard: false,
-      backdrop: 'static',
-      controller: ModalInstanceCtrl,
-      scope: $rootScope.$new(true),
-      windowClass: 'login-modal'
-      });
+    var modalInstance = NotifyService.addClosableModal('login/modal.tpl.html');
 
-    modalInstance.result.then(function (selectedItem) {
+    modalInstance.result.then(function successFn(selectedItem) {
       $state.go('vis');
-    }, function () {
+    }, function errFn() {
       $state.go('vis');
     });
+
   };
 
   // open on instantiation
   $scope.open();
 
 }]);
-
-var ModalInstanceCtrl = function($scope, $modalInstance) {
-  $scope.ok = function () {
-    $modalInstance.close();
-  };
-
-  $scope.cancel = function () {
-    $modalInstance.dismiss('cancel');
-  };
-};
 

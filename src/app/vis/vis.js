@@ -14,7 +14,7 @@
  */
 
  var vis = 
- angular.module( 'plotter.vis', [ 'ui.router.state', 'services.dataset', 'plotter.vis.windowing'] );
+ angular.module( 'plotter.vis', [ 'ui.router.state', 'services.dataset', 'services.notify', 'plotter.vis.windowing'] );
 
 /**
  * Each section or module of the site can also have its own routes. AngularJS
@@ -49,14 +49,12 @@
 
 }]);
 
-
-/**
- * And of course we define a controller for our route.
- */
- // vis.controller( 'VisCtrl', ['$scope',
- //  function VisController( $scope ) {
+ // vis.controller( 'VisCtrl', ['$scope', 'NotifyService',
+ //  function VisController( $scope, NotifyService) {
+    
  //    $scope.visController = "visController";
  //    console.log("viscontroller");
+
  //  }]);
 
 

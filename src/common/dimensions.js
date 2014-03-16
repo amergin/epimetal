@@ -162,7 +162,8 @@ dimMod.service('DimensionService', ['$injector', function($injector) {
   // receives new variable data
   this.addVariableData = function(variable, samples) {
 
-    // no dummy work
+    // no dummy work, just in case the function is called for already
+    // added variable
     if( !_.isUndefined( usedVariables[variable] ) ) { return; }
 
     usedVariables[variable] = true;
@@ -185,12 +186,22 @@ dimMod.service('DimensionService', ['$injector', function($injector) {
 
   // rebuilds crossfilter instance (called after adding new variable data)
   this.rebuildInstance = function() {
-    crossfilterInst = crossfilter( _.values(currSamples) );
 
-    // create dataset dimension
-    dimensions['dataset'] = crossfilterInst.dimension( function(d) { 
-      return d.dataset;
-    });
+    // called for the first time, create instance
+    if( crossfilterInst === null ) {
+      crossfilterInst = crossfilter( _.values(currSamples) );
+    }
+    else {
+      // already defined, just need to reboot it
+      crossfilterInst.remove();
+      crossfilterInst.add( _.values(currSamples) );
+    }
+    // redraw
+    dc.redrawAll();
+  };
+
+  // called whenever a dataset 
+  this.filterDataset = function() {
 
   };
 

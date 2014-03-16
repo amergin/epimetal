@@ -1,6 +1,6 @@
 <div>
 	<div class="handle"></div>
-	<i class="icon-remove-sign icon-large ctrl-delete" ng-click="remove(window.number,element)" alt="close plot window"></i>
+	<button type="button" class="close ctrl-close" ng-click="remove(window.number,element)" aria-hidden="true">×</button>
 	<a class="btn btn-default btn-xs ctrl-filter" ng-click="resetFilter()">reset filter</a>
 	<div class="text-center plot-title" ng-switch on="window.type"> 
 		{{window.type }} of
