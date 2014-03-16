@@ -67,7 +67,7 @@ module.exports = {
       'vendor/angular-growl/build/angular-growl.js',
       'vendor/angular-animate/angular-animate.js',
       'vendor/angular-bootstrap/ui-bootstrap-tpls.min.js',
-      'vendor/placeholders/angular-placeholders-0.0.1-SNAPSHOT.min.js',
+      //'vendor/placeholders/angular-placeholders-0.0.1-SNAPSHOT.min.js',
       'vendor/angular-ui-router/release/angular-ui-router.js',
       'vendor/angular-ui-utils/modules/route/route.js',
       'vendor/crossfilter/crossfilter.js',
@@ -76,14 +76,15 @@ module.exports = {
       'vendor/packery/packery.pkgd.js',
       'vendor/draggabilly/draggabilly.pkgd.js',
       'vendor/underscore/underscore.js',
-      'vendor/underscore.string/lib/underscore.string.js',
-      'vendor/angular-cookies/angular-cookies.js'
+      'vendor/underscore.string/lib/underscore.string.js'
+      //'vendor/angular-cookies/angular-cookies.js'
     ],
     css: [
       'vendor/dcjs/dc.css',
       'vendor/angular-growl/build/angular-growl.min.css'
     ],
     assets: [
+      'vendor/font-awesome/fonts/*'
     ]
   },
 };

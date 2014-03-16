@@ -11,9 +11,6 @@
   <meta property="og:image" content="https://a248.e.akamai.net/assets.github.com/images/modules/logos_page/Octocat.png" />
   <meta property="og:description" content="Plotter tool.">
 
-  <!-- font awesome from BootstrapCDN -->
-  <link href="http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
-
   <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
   <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
 
@@ -22,6 +19,7 @@
 </head>
 
 <body>
+<br><br><br>
 
   <div class="container-fluid">
 
@@ -38,6 +36,9 @@
 
       <!-- Inject route here -->
       <div ui-view>
+        <div class="text-center">
+          <i class="fa fa-spinner fa-5x fa-spin" ng-show="spinner">Loading...</i>
+        </div>
       </div>
 
 

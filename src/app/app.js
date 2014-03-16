@@ -31,7 +31,7 @@ App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvi
       };
 
       var errorFn = function (response) {
-        if( response.status === 403 ) {
+        if (response.status === 403) {
           NotifyService.addLoginNeeded();
           // $location.path('/login');
         }
@@ -84,29 +84,49 @@ App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvi
 
 App.controller('AppCtrl', ['$scope', '$location',
   function AppCtrl($scope, $location) {
+
+    $scope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
+      if (toState.resolve) {
+        $scope.showSpinner();
+      }
+    });
+
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
       console.log("change route from", fromState, "-", toState);
       if (angular.isDefined(toState.data.pageTitle)) {
         $scope.pageTitle = toState.data.pageTitle + ' | Plotter';
       }
+
+      if (toState.resolve) {
+        $scope.hideSpinner();
+      }
     });
+
+    $scope.spinner = true;
+
+
+
   }
 ]);
 
 
 // see http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
-App.config(['$provide', function($provide){
-  $provide.decorator('$rootScope', ['$delegate', function($delegate){
+App.config(['$provide',
+  function ($provide) {
+    $provide.decorator('$rootScope', ['$delegate',
+      function ($delegate) {
 
-    Object.defineProperty($delegate.constructor.prototype, '$onRootScope', {
-      value: function(name, listener){
-        var unsubscribe = $delegate.$on(name, listener);
-        this.$on('$destroy', unsubscribe);
-      },
-      enumerable: false
-    });
+        Object.defineProperty($delegate.constructor.prototype, '$onRootScope', {
+          value: function (name, listener) {
+            var unsubscribe = $delegate.$on(name, listener);
+            this.$on('$destroy', unsubscribe);
+          },
+          enumerable: false
+        });
 
 
-    return $delegate;
-  }]);
-}]);
+        return $delegate;
+      }
+    ]);
+  }
+]);

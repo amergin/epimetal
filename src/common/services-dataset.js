@@ -68,9 +68,11 @@ serv.factory('DatasetFactory', [ '$http', '$q', '$injector',
           })
           .error(function (response, status, headers, config) {
             //console.log("dset returning empty");
-            deferred.resolve({});
-            var NotifyService = $injector.get('NotifyService');
-            NotifyService.addSticky('Error receiving data at ' + config.url, 'error' );
+            // var NotifyService = $injector.get('NotifyService');
+            // NotifyService.addSticky('Error receiving data at ' + config.url, 'error' );
+            var message = !_.isUndefined( response.result ) ? response.result.error : 
+            'Something went wrong while fetching the samples from server. Plotting window will not be drawn.';
+            deferred.reject(message);
           });
         }
         else {
@@ -171,6 +173,8 @@ serv.factory('DatasetFactory', [ '$http', '$q', '$injector',
 
         // resolve the whole function
         defer.resolve(result); 
+      }, function errorFn(res) {
+        defer.reject(res);
       } );
       // return the promise, the receiver can then decide
       // what to do when it's filled
@@ -200,7 +204,9 @@ serv.factory('DatasetFactory', [ '$http', '$q', '$injector',
           { coord: 'x', samples: resArray[0] },
           { coord: 'y', samples: resArray[1] } 
           ]);
-        });
+        }, function errorFn(res) {
+          combinedDefer.reject(res);
+        } );
       }
       else if( !_.isUndefined( variableX ) )
       {
@@ -212,6 +218,8 @@ serv.factory('DatasetFactory', [ '$http', '$q', '$injector',
           combinedDefer.resolve([
           { coord: 'x', samples: res }
           ]);
+        }, function errorFn(res) {
+          combinedDefer.reject(res);
         });
       }
       return combinedDefer.promise;

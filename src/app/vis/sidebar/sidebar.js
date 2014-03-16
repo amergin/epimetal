@@ -40,7 +40,7 @@ vis.controller('DatasetTableController', ['$scope', 'DatasetFactory',
 
 
 // scatter plot form controller
- vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'DatasetFactory', '$injector',
+ vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'DatasetFactory', '$injector', 'NotifyService',
   function($scope, $rootScope, $q, DatasetFactory, $injector) {
     console.log("scatter");
     $scope.variables = DatasetFactory.variables();
@@ -62,6 +62,8 @@ vis.controller('DatasetTableController', ['$scope', 'DatasetFactory',
         // draw the figure
         var PlotService = $injector.get('PlotService');
         PlotService.drawScatter( selection );
+      }, function errorFn(res) {
+        NotifyService.addTransient(res);
       });
 
 
@@ -86,8 +88,8 @@ vis.controller('DatasetTableController', ['$scope', 'DatasetFactory',
  
 
  // controller for the histogram form
- vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector',
-  function($scope, $rootScope, DatasetFactory, $injector) {
+ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService',
+  function($scope, $rootScope, DatasetFactory, $injector, NotifyService) {
     console.log("histo");
 
     $scope.variables = DatasetFactory.variables();
@@ -109,8 +111,11 @@ vis.controller('DatasetTableController', ['$scope', 'DatasetFactory',
         // draw the figure
         var PlotService = $injector.get('PlotService');
         PlotService.drawHistogram( selection ); //{ 
-      });
+      },
 
+      function errorFn(result) {
+        NotifyService.addTransient(result, 'error');   
+      });
     };
 
   }]);

@@ -14,7 +14,8 @@
     "underscore.string": "~2.3.3",
     "angular-growl": "~0.4.0",
     "angular-sanitize": "~1.2.14",
-    "angular-animate": "~1.2.14"
+    "angular-animate": "~1.2.14",
+    "font-awesome": "~4.0.3"
   },
   "dependencies": {},
   "resolutions": {
