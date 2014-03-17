@@ -38,6 +38,8 @@ serv.factory('NotifyService', ['$injector',
       };
     };
 
+    var _modalInstanceRef = null;
+
 
     return {
 
@@ -80,7 +82,8 @@ serv.factory('NotifyService', ['$injector',
         };
 
         // returns the modal instance
-        return $modal.open(config);
+        _modalInstanceRef = $modal.open(config);
+        return _modalInstanceRef;
       },
 
       addSpinnerModal: function (message) {
@@ -95,7 +98,15 @@ serv.factory('NotifyService', ['$injector',
         };
 
         // returns the modal instance
-        return $modal.open(config);
+        _modalInstanceRef=  $modal.open(config);
+        return _modalInstanceRef;
+      },
+
+      closeModal: function() {
+        //var modalInstance = $injector.get('$modalInstance');
+        _modalInstanceRef.close();
+        // modalInstance.close();
+
       }
     };
   }

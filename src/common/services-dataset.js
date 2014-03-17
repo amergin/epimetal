@@ -159,12 +159,18 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
 
       // nothing to add if disabled
       if (!set.isActive()) {
-        defer.resolve('Set was disabled');
+        defer.resolve('disabled');
       }
 
       var DimensionService = $injector.get('DimensionService');
       var activeVars = DimensionService.getActiveVariables();
       var dataWasAdded = false;
+
+      if( activeVars.length === 0 ) {
+        // this is the case when no windows are present but selections are made
+        // on the datasets. Just update the dimensionFilter...
+        defer.resolve('empty');
+      }
 
       _.each(activeVars, function (variable, ind) {
         var varPromise = set.getVarSamples(variable);
@@ -175,8 +181,10 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
           }
 
           if (ind === (activeVars.length - 1)) {
-            if( dataWasAdded ) { DimensionService.rebuildInstance(); }
-            defer.resolve("Enabled set", dataWasAdded);
+            if (dataWasAdded) {
+              DimensionService.rebuildInstance();
+            }
+            defer.resolve('enabled');
           }
 
         }, function errFn(res) {

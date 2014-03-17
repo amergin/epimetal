@@ -22,13 +22,20 @@ vis.controller('DatasetTableController', ['$scope', 'DatasetFactory', 'Dimension
     $scope.toggle = function(set) {
       set.toggle();
       DatasetFactory.checkActiveVariables(set).then( function succFn(res) {
-        // internally, this updates the dataset dimension 
-        // filter to include only the active ones
-        // Therefore, this is different from set.toggle() !!!
-        DatasetFactory.toggle(set);
 
-        // important!
-        dc.redrawAll();
+        if( res === 'enabled' || res === 'disabled' ) {
+          // internally, this updates the dataset dimension 
+          // filter to include only the active ones
+          // Therefore, this is different from set.toggle() !!!
+          DatasetFactory.toggle(set);
+
+          // important!
+          dc.redrawAll();          
+        }
+        else if( res === 'empty' ) {
+          DatasetFactory.toggle(set);
+        }
+
       }, function errFn(res) {
         NotifyService.addSticky(res, 'error');
       });
@@ -55,7 +62,7 @@ vis.directive('scatterplotForm', function () {
 
 // scatter plot form controller
 vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'DatasetFactory', '$injector', 'NotifyService',
-  function ($scope, $rootScope, $q, DatasetFactory, $injector) {
+  function ($scope, $rootScope, $q, DatasetFactory, $injector, NotifyService) {
     $scope.variables = DatasetFactory.variables();
     $scope.selection = {};
 
@@ -69,10 +76,12 @@ vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'Data
 
     $scope.add = function (selection) {
 
+      NotifyService.addSpinnerModal('Loading...');
       var plottingDataPromise = DatasetFactory.getVariableData([selection.x, selection.y]);
 
       plottingDataPromise.then(function (res) {
         // draw the figure
+        NotifyService.closeModal();
         var PlotService = $injector.get('PlotService');
         PlotService.drawScatter(selection);
       }, function errorFn(res) {
@@ -117,10 +126,11 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
 
     $scope.add = function (selection) {
 
+      NotifyService.addSpinnerModal('Loading...');
       var plottingDataPromise = DatasetFactory.getVariableData([selection.x]);
-
       plottingDataPromise.then(function successFn(res) {
           // draw the figure
+          NotifyService.closeModal();
           var PlotService = $injector.get('PlotService');
           PlotService.drawHistogram(selection);
         },

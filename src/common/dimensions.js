@@ -52,7 +52,7 @@ dimMod.service('DimensionService', ['$injector',
 
 
     this.getDatasetDimension = function() {
-      return dimensions['dataset'];
+      return dimensions['_dataset'];
     };
 
     // call this to get combined dimension for x-y scatterplots
@@ -206,10 +206,10 @@ dimMod.service('DimensionService', ['$injector',
     };
 
     var _createDatasetDimension = function () {
-      if (!_.isUndefined(dimensions['dataset'])) {
+      if (!_.isUndefined(dimensions['_dataset'])) {
         return;
       }
-      dimensions['dataset'] = crossfilterInst.dimension(function (s) {
+      dimensions['_dataset'] = crossfilterInst.dimension(function (s) {
         return s.dataset;
       });
     };
@@ -231,12 +231,12 @@ dimMod.service('DimensionService', ['$injector',
     };
 
     this.updateDatasetDimension = function () {
-      if( _.isUndefined( dimensions['dataset'] ) ) { return; }
+      if( _.isUndefined( dimensions['_dataset'] ) ) { return; }
 
       var DatasetFactory = $injector.get('DatasetFactory');
       var activeSets = DatasetFactory.activeSets();
 
-      dimensions['dataset'].filterFunction(function (dsetName) {
+      dimensions['_dataset'].filterFunction(function (dsetName) {
         return _.any(activeSets, function (set) { 
           return set.getName() === dsetName; 
         });
@@ -265,7 +265,7 @@ dimMod.service('DimensionService', ['$injector',
     };
 
     this.getActiveVariables = function() {
-      return _.without( _.keys(dimensions), 'dataset' );
+      return _.without( _.keys(dimensions), '_dataset' );
     };
 
 
