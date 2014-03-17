@@ -107,7 +107,16 @@ win.directive('window', ['$compile', '$injector', function($compile, $injector){
       // catch window destroys
       $scope.$on('$destroy', function() {
         var DimensionService = $injector.get('DimensionService');
-        DimensionService.checkDimension( $scope.window.variables );
+
+        var varX = $scope.window.variables.x;
+        var varY = $scope.window.variables.y;
+
+        if( !_.isUndefined( varX ) && !_.isUndefined( varY ) ) {
+          DimensionService.checkDimension([varX + '|' + varY]);
+        }
+        else {
+          DimensionService.checkDimension([varX]);
+        }
       });
     }
   };

@@ -14,7 +14,14 @@
  */
 
  var vis = 
- angular.module( 'plotter.vis', [ 'ui.router.state', 'services.dataset', 'services.notify', 'plotter.vis.windowing'] );
+ angular.module( 'plotter.vis', [ 
+  'ui.router.state', 
+  'services.dataset', 
+  'services.notify', 
+  'plotter.vis.windowing',
+  'plotter.vis.sidebar',
+  'plotter.vis.plotting'
+  ] );
 
 /**
  * Each section or module of the site can also have its own routes. AngularJS
@@ -27,7 +34,7 @@
     name: 'vis',
     url: '/vis/',
     abstract: false,
-    //controller: 'VisCtrl',
+    controller: 'VisCtrl',
     templateUrl: 'vis/vis.tpl.html',
     data: { pageTitle: 'Visualization' },
 
@@ -49,13 +56,14 @@
 
 }]);
 
- // vis.controller( 'VisCtrl', ['$scope', 'NotifyService',
- //  function VisController( $scope, NotifyService) {
+ vis.controller( 'VisCtrl', ['$scope', 'DimensionService',
+  function VisController( $scope, DimensionService) {
     
- //    $scope.visController = "visController";
- //    console.log("viscontroller");
-
- //  }]);
+    $scope.visController = "visController";
+    $scope.usedVariables = DimensionService.getUsedVariables();
+    $scope.activeVariables = DimensionService.getDimensions();
+    console.log("viscontroller");
+  }]);
 
 
 

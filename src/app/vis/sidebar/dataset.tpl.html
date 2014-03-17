@@ -10,8 +10,8 @@
         </tr>
       </thead>
       <tbody>
-        <tr ng-repeat="set in sets" ng-style="{ 'background-color': set.getColor() }" ng-click="set.toggle()">
-          <td class="dataset-select"><input type="checkbox" ng-click="set.obj.toggle()" ng-checked="set.isActive()"></td>
+        <tr ng-repeat="set in sets" ng-style="{ 'background-color': set.getColor() }" ng-click="toggle(set)">
+          <td class="dataset-select"><input type="checkbox" ng-click="set(toggle)" ng-checked="set.isActive()"></td>
           <td class="dataset-name">{{set.getName()}}</td>
           <td class="dataset-size">{{set.getSize()}}</td>
         </tr>

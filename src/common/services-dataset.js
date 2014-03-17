@@ -1,6 +1,6 @@
 var serv = angular.module('services.dataset', ['services.notify']);
 
-serv.factory('DatasetFactory', [ '$http', '$q', '$injector',
+serv.factory('DatasetFactory', ['$http', '$q', '$injector',
   function ($http, $q, $injector) {
 
     // privates
@@ -38,10 +38,12 @@ serv.factory('DatasetFactory', [ '$http', '$q', '$injector',
       // functions
       // --------------------------------------
 
-      var _restructureSamples = function(samples, variable) {
+      var _restructureSamples = function (samples, variable) {
         var res = {};
-        _.each( samples, function(val, sampId) {
-          res[sampId] = { dataset: name };
+        _.each(samples, function (val, sampId) {
+          res[sampId] = {
+            dataset: name
+          };
           res[sampId].variables = {};
           res[sampId].variables[variable] = val;
           res[sampId]['id'] = sampId;
@@ -51,33 +53,28 @@ serv.factory('DatasetFactory', [ '$http', '$q', '$injector',
 
       // returns a map for the variables asked for,
       // fetches them from api if necessary
-      this.getVarSamples = function(variable) {
-        // need to get that from api
-
-        // only for active sets
-        if( !active ) { return {}; }
-
+      this.getVarSamples = function (variable) {
         var deferred = $q.defer();
+
         // check if needed to fetch
-        if( _.isUndefined( samples[variable] ) ) {
-        $http.get( config.variableURLPrefix + variable + "/in/" + name )
-          .success(function (response) {
-            samples[variable] = response.result.values;
-            //console.log("dset returning", _.size(samples[variable]) );
-            deferred.resolve( _restructureSamples( samples[variable], variable ) );
-          })
-          .error(function (response, status, headers, config) {
-            //console.log("dset returning empty");
-            // var NotifyService = $injector.get('NotifyService');
-            // NotifyService.addSticky('Error receiving data at ' + config.url, 'error' );
-            var message = !_.isUndefined( response.result ) ? response.result.error : 
-            'Something went wrong while fetching the samples from server. Plotting window will not be drawn.';
-            deferred.reject(message);
-          });
-        }
-        else {
+        if (_.isUndefined(samples[variable])) {
+          $http.get(config.variableURLPrefix + variable + "/in/" + name)
+            .success(function (response) {
+              samples[variable] = response.result.values;
+              //console.log("dset returning", _.size(samples[variable]) );
+              deferred.resolve(_restructureSamples(samples[variable], variable));
+            })
+            .error(function (response, status, headers, config) {
+              //console.log("dset returning empty");
+              // var NotifyService = $injector.get('NotifyService');
+              // NotifyService.addSticky('Error receiving data at ' + config.url, 'error' );
+              var message = !_.isUndefined(response.result) ? response.result.error :
+                'Something went wrong while fetching the samples from server. Plotting window will not be drawn.';
+              deferred.reject(message);
+            });
+        } else {
           // already available, fetched
-          deferred.resolve( _restructureSamples( samples[variable], variable ) );
+          deferred.resolve(_restructureSamples(samples[variable], variable));
         }
         return deferred.promise;
       };
@@ -86,16 +83,20 @@ serv.factory('DatasetFactory', [ '$http', '$q', '$injector',
         return color;
       };
 
-      this.toggle = function() {
+      this.toggle = function () {
         active = !active;
       };
 
-      this.isActive = function() {
+      this.isActive = function () {
         return active;
       };
 
-      this.getName = function() { return name; };
-      this.getSize = function() { return _.size( samples ); };
+      this.getName = function () {
+        return name;
+      };
+      this.getSize = function () {
+        return _.size(samples);
+      };
 
 
     } // Dataset class ends
@@ -103,30 +104,32 @@ serv.factory('DatasetFactory', [ '$http', '$q', '$injector',
 
     var service = {};
 
-    service.getColorScale = function() {
+    service.getColorScale = function () {
       return that.colors;
     };
 
-    service.getVariables = function() {
+    service.getVariables = function () {
       var deferred = $q.defer();
       $http.get(that.config.variablesURL)
         .success(function (response) {
           console.log("Load variable list");
           // empty just in case it's not empty
           that.variables = [];
-          _.each( response.result, function(varNameObj) {
+          _.each(response.result, function (varNameObj) {
             that.variables.push(varNameObj.name);
           });
-          that.variables = _.sortBy( that.variables, function(name) { return name.toLowerCase(); } );
+          that.variables = _.sortBy(that.variables, function (name) {
+            return name.toLowerCase();
+          });
           deferred.resolve(that.variables);
         })
         .error(function (response) {
           deferred.reject('Error in fetching variable list');
         });
-      return deferred.promise;      
+      return deferred.promise;
     };
 
-    service.getDatasets = function() {
+    service.getDatasets = function () {
       var deferred = $q.defer();
       $http.get(that.config.datasetsURL)
         .success(function (response) {
@@ -143,113 +146,143 @@ serv.factory('DatasetFactory', [ '$http', '$q', '$injector',
       return deferred.promise;
     };
 
-    service.variables = function() {
+    service.variables = function () {
       return that.variables;
     };
 
-    // returns the variable data for the active datasets 
-    // and fetches it beforehand from the API if necessary
-    service.getVariableData = function(variableX, variableY) {
+    // this function checks if new variables need to be fetched
+    // for datasets that have not been previously selected
+    // Called on dataset toggling!
+    service.checkActiveVariables = function (set) {
 
-      // for x & y selection this is called twice with different
-      // parameters
-      var getCoordPromise = function(selection) {
-        var defer = $q.defer();
-        var promises = [];
-        var sets = service.activeSets();
+      var defer = $q.defer();
 
-        _.each( sets, function(set) {
-          // returns a promise
-          promises.push( set.getVarSamples(selection) );
+      // nothing to add if disabled
+      if (!set.isActive()) {
+        defer.resolve('Set was disabled');
+      }
+
+      var DimensionService = $injector.get('DimensionService');
+      var activeVars = DimensionService.getActiveVariables();
+      var dataWasAdded = false;
+
+      _.each(activeVars, function (variable, ind) {
+        var varPromise = set.getVarSamples(variable);
+        varPromise.then(function sucFn(samples) {
+          var dataAdded = DimensionService.addVariableData(variable, samples);
+          if (dataAdded) {
+            dataWasAdded = true;
+          }
+
+          if (ind === (activeVars.length - 1)) {
+            if( dataWasAdded ) { DimensionService.rebuildInstance(); }
+            defer.resolve("Enabled set", dataWasAdded);
+          }
+
+        }, function errFn(res) {
+          defer.reject(res);
         });
-
-      $q.all(promises).then( function(resArray) {
-        var result = {};
-
-        // combine the results
-        _.each( resArray, function(varMap) {
-          _.extend( result, varMap );
-        });
-
-        // resolve the whole function
-        defer.resolve(result); 
-      }, function errorFn(res) {
-        defer.reject(res);
-      } );
-      // return the promise, the receiver can then decide
-      // what to do when it's filled
+      });
       return defer.promise;
+    };
+
+
+    // this is called whenever a plot is drawn to check if variable data
+    // is to be fetched beforehand. 
+    // Example: 
+    // 1. select three datasets
+    // 2. select varA for histogram
+    // 3. plot -> this is called
+    service.getVariableData = function (variables) {
+
+      // checks all active datasets and gets the parameter var
+      // samples for that dataset. Response: { sampid: sample, ... }
+      var _getVarForDatasets = function (variable) {
+        var defer = $q.defer();
+
+        var varPromises = [];
+        var activeSets = service.activeSets();
+
+        // check every set
+        _.each(activeSets, function (set) {
+          varPromises.push(set.getVarSamples(variable));
+        });
+
+        $q.all(varPromises).then(function sucFn(resArray) {
+          var result = {};
+          _.each(resArray, function (varMap) {
+            _.extend(result, varMap);
+          });
+
+          defer.resolve({
+            variable: variable,
+            samples: result
+          });
+
+        }, function errFn(resArray) {
+          defer.reject(resArray);
+        });
+
+        return defer.promise;
       };
 
-
-      var combinedDefer = $q.defer();
+      var combDefer = $q.defer();
+      var combPromises = [];
       var DimensionService = $injector.get('DimensionService');
-      var xPromise = getCoordPromise( variableX );
-      if( !_.isUndefined( variableX ) && !_.isUndefined( variableY ) )
-      {
-        // x & y
-        var yPromise = getCoordPromise( variableY );
 
-        $q.all([xPromise, yPromise]).then( function(resArray) {
+      // for each inserted var, usually only x/y
+      _.each(variables, function (variable) {
+        combPromises.push(_getVarForDatasets(variable));
+      });
 
-          // pass the new data to dimensionService:
-          // IMPORTANT: this priv function passes the variables of getVariableData
-          // to DimensionService so that the samples are re-added with the new variables
-          DimensionService.addVariableData( variableX, resArray[0] );
-          DimensionService.addVariableData( variableY, resArray[1] );
-          DimensionService.rebuildInstance();
+      $q.all(combPromises).then(function succFn(res) {
 
-          // resolve this this outer function promise only when both x&y are fetched
-          combinedDefer.resolve([
-          { coord: 'x', samples: resArray[0] },
-          { coord: 'y', samples: resArray[1] } 
-          ]);
-        }, function errorFn(res) {
-          combinedDefer.reject(res);
-        } );
-      }
-      else if( !_.isUndefined( variableX ) )
-      {
-        // only x
-        xPromise.then( function(res) {
-          DimensionService.addVariableData( variableX, res );
-          DimensionService.rebuildInstance();
-
-          combinedDefer.resolve([
-          { coord: 'x', samples: res }
-          ]);
-        }, function errorFn(res) {
-          combinedDefer.reject(res);
+        var dataWasAdded = false;
+        _.each(res, function (varInSet) {
+          var dataAdded = DimensionService.addVariableData(varInSet.variable, varInSet.samples);
+          if (dataAdded) {
+            dataWasAdded = true;
+          }
         });
-      }
-      return combinedDefer.promise;
+
+        if (dataWasAdded) {
+          DimensionService.rebuildInstance();
+        }
+        combDefer.resolve(res);
+
+      }, function errFn(res) {
+        combDefer.reject(res);
+      });
+
+      return combDefer.promise;
     };
 
     // assumes getDatasets is called and therefore the service is initialized
-    service.getSets = function() {
+    service.getSets = function () {
       return that.sets;
     };
 
     // get all dset names, whether active or not
-    service.getSetNames = function() {
-      return _.map( service.getSets(), function(set) {
+    service.getSetNames = function () {
+      return _.map(service.getSets(), function (set) {
         return set.getName();
       });
     };
 
-    service.toggle = function(name) {
-      that.sets[name].toggle();
+    service.toggle = function (set) {
+      var DimensionService = $injector.get('DimensionService');
+      DimensionService.updateDatasetDimension();
     };
 
-    service.activeSets = function() {
-      return _.filter( that.sets, function(set) { return set.isActive(); } );
+    service.activeSets = function () {
+      return _.filter(that.sets, function (set) {
+        return set.isActive();
+      });
     };
 
-    service.isActive = function(name) {
+    service.isActive = function (name) {
       return that.sets[name].active();
     };
-
-
 
     return service;
   }

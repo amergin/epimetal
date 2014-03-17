@@ -2,7 +2,6 @@ var App = angular.module('plotter', [
   'templates-app',
   'templates-common',
   'plotter.vis',
-  'plotter.vis.sidebar',
   'plotter.login',
   'ui.router.state',
   'ui.router',
