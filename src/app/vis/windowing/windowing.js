@@ -37,7 +37,7 @@ win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
 }]);
 
 // directive for Packery windowing system
-win.directive('packery', function() {
+win.directive('packery', [ function() {
   return {
     restrict: 'C',
     templateUrl : 'vis/windowing/packery.tpl.html',
@@ -63,7 +63,7 @@ win.directive('packery', function() {
           window.packery = scope.packery;
         }
       };
-    });
+    }]);
 
 
 // Directive for individual Window in Packery windowing system

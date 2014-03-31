@@ -84,7 +84,8 @@ vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'Data
         NotifyService.closeModal();
         var PlotService = $injector.get('PlotService');
         PlotService.drawScatter(selection);
-      }, function errorFn(res) {
+      }, function errorFn(result) {
+        NotifyService.closeModal();
         NotifyService.addTransient(result, 'error');
       });
 
@@ -135,6 +136,7 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
           PlotService.drawHistogram(selection);
         },
         function errorFn(result) {
+          NotifyService.closeModal();
           NotifyService.addTransient(result, 'error');
         });
     };

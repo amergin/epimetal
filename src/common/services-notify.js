@@ -28,15 +28,17 @@ serv.factory('NotifyService', ['$injector',
     };
 
 
-    var _ModalInstanceCtrl = function ($scope, $modalInstance) {
-      $scope.ok = function () {
-        $modalInstance.close();
-      };
+    var _ModalInstanceCtrl = ['$scope', '$modalInstance',
+      function ($scope, $modalInstance) {
+        $scope.ok = function () {
+          $modalInstance.close();
+        };
 
-      $scope.cancel = function () {
-        $modalInstance.dismiss('cancel');
-      };
-    };
+        $scope.cancel = function () {
+          $modalInstance.dismiss('cancel');
+        };
+      }
+    ];
 
     var _modalInstanceRef = null;
 
@@ -98,11 +100,11 @@ serv.factory('NotifyService', ['$injector',
         };
 
         // returns the modal instance
-        _modalInstanceRef=  $modal.open(config);
+        _modalInstanceRef = $modal.open(config);
         return _modalInstanceRef;
       },
 
-      closeModal: function() {
+      closeModal: function () {
         //var modalInstance = $injector.get('$modalInstance');
         _modalInstanceRef.close();
         // modalInstance.close();

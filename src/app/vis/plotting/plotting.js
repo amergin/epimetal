@@ -161,6 +161,7 @@ visu.directive('histogram', [
       createSVG($scope, config);
 
     };
+    linkFn.$inject = ['$scope', 'ele', 'iAttrs'];
 
     return {
       scope: false,

@@ -51,6 +51,8 @@ App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvi
       };
 
     };
+    errorInterceptor.$inject = ['$q', '$location', 'NotifyService'];
+
 
     $httpProvider.responseInterceptors.push(errorInterceptor);
 
@@ -116,8 +118,7 @@ App.controller('AppCtrl', ['$scope', '$location',
 
 
 // see http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
-App.config(['$provide',
-  function ($provide) {
+App.config(['$provide', function ($provide) {
     $provide.decorator('$rootScope', ['$delegate',
       function ($delegate) {
 

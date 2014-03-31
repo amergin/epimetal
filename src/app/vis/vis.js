@@ -42,12 +42,12 @@
     // these object promises have been resolved. Failure is generally indication
     // that the user is not logged in -> redirect to 'login' state.
     resolve: {
-      variables: function(DatasetFactory) {
+      variables: ['DatasetFactory', function(DatasetFactory) {
         return DatasetFactory.getVariables();
-      },
-      datasets: function(DatasetFactory) {
+      }],
+      datasets: ['DatasetFactory', function(DatasetFactory) {
         return DatasetFactory.getDatasets();
-      }
+      }]
     }
   };
 

@@ -12,7 +12,7 @@ loginMod.config(['$stateProvider',
       url: '/login/',
       abstract: false,
       controller: 'LoginCtrl',
-      template: '<div class="row"><div class="col-md-2 col-md-offset-5"><h3>Please log in to proceed.</h3> <a ng-click="open()">Reopen login form</a></div></div>',
+      template: '<div class="row"><div class="col-md-2 col-md-offset-5"><h3>Please log in to proceed.</h3> <a href="#/login" ng-click="open()">Reopen login form</a></div></div>',
       // templateUrl: 'vis/.tpl.html',
       data: {
         pageTitle: 'Please login to continue'
