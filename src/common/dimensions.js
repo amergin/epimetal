@@ -241,6 +241,8 @@ dimMod.service('DimensionService', ['$injector',
           return set.getName() === dsetName; 
         });
       });
+
+      dc.redrawAll();
     };
 
     this.deleteDimension = function(variable) {

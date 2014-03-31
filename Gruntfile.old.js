@@ -563,7 +563,7 @@ module.exports = function ( grunt ) {
    * minifying your code.
    */
   grunt.registerTask( 'compile', [
-    'less:compile', 'concat:build_css', 'copy:compile_assets', 'ngmin', 'concat:compile_js', 'uglify', 'index:compile'
+    'less:compile', 'copy:compile_assets', 'ngmin', 'concat:compile_js', 'uglify', 'index:compile'
   ]);
 
   /**
@@ -576,7 +576,7 @@ module.exports = function ( grunt ) {
   }
 
   /**
-   * A utility function to get all app CSS sources. Accept only files that contain
+   * A utility function to get all app CSS sources. Except only files that contain
    * '.css' substring and do not contain 'vendor' substring
    */
   function filterForCSS ( files ) {

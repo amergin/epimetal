@@ -80,7 +80,7 @@ module.exports = {
       //'vendor/angular-cookies/angular-cookies.js'
     ],
     css: [
-      'vendor/dcjs/dc.css',
+      'vendor/dcjs/dc.min.css',
       'vendor/angular-growl/build/angular-growl.min.css'
     ],
     assets: [

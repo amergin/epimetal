@@ -40,6 +40,15 @@ vis.controller('DatasetTableController', ['$scope', 'DatasetFactory', 'Dimension
         NotifyService.addSticky(res, 'error');
       });
     };
+
+    // clears all selections
+    $scope.clear = function() {
+
+      _.each( $scope.sets, function(set) {
+        set.disable();
+      });
+      DimensionService.updateDatasetDimension();
+    };
   }
 ]);
 

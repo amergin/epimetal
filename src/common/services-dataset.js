@@ -87,6 +87,10 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
         active = !active;
       };
 
+      this.disable = function() {
+        active = false;
+      };
+
       this.isActive = function () {
         return active;
       };
