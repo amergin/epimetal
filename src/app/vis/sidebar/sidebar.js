@@ -154,3 +154,49 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
 
   }
 ]);
+
+// controller for the histogram form
+vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService',
+  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService) {
+    $scope.variables = DatasetFactory.variables();
+    $scope.selection = {};
+
+    $scope.canEdit = function () {
+      return DatasetFactory.activeSets().length > 0;
+    };
+
+    $scope.canSubmit = function () {
+      return $scope.canEdit() && !_.isEmpty($scope.selection);
+    };
+
+    $scope.add = function (selection) {
+      // NotifyService.addSpinnerModal('Loading...');
+      // var plottingDataPromise = DatasetFactory.getVariableData([selection.x]);
+      // plottingDataPromise.then(function successFn(res) {
+      //     // draw the figure
+      //     NotifyService.closeModal();
+      //     var PlotService = $injector.get('PlotService');
+      //     PlotService.drawHistogram(selection);
+      //   },
+      //   function errorFn(result) {
+      //     NotifyService.closeModal();
+      //     NotifyService.addTransient(result, 'error');
+      //   });
+    };
+
+  }
+]);
+
+// directive for histogram form
+vis.directive('somForm', function () {
+  return {
+    restrict: 'C',
+    scope: true,
+    replace: true,
+    controller: 'SOMFormController',
+    templateUrl: 'vis/sidebar/som.tpl.html',
+    link: function (scope, elm, attrs) {
+
+    }
+  };
+});
