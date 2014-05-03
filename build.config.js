@@ -62,7 +62,10 @@ module.exports = {
    */
   vendor_files: {
     js: [
+      // notice the order: jquery before angular!
+      'vendor/jquery/dist/jquery.js',
       'vendor/angular/angular.js',
+      'vendor/chosen/chosen.jquery.js',
       'vendor/angular-sanitize/angular-sanitize.js',
       'vendor/angular-growl/build/angular-growl.js',
       'vendor/angular-animate/angular-animate.js',
@@ -76,15 +79,18 @@ module.exports = {
       'vendor/packery/packery.pkgd.js',
       'vendor/draggabilly/draggabilly.pkgd.js',
       'vendor/underscore/underscore.js',
+      'vendor/angular-chosen-localytics/chosen.js',
       'vendor/underscore.string/lib/underscore.string.js'
       //'vendor/angular-cookies/angular-cookies.js'
     ],
     css: [
       'vendor/dcjs/dc.min.css',
       'vendor/angular-growl/build/angular-growl.min.css'
+      //'vendor/chosen/chosen.min.css'
     ],
     assets: [
-      'vendor/font-awesome/fonts/*'
+      'vendor/font-awesome/fonts/*',
+      'vendor/bootstrap-chosen/chosen-sprite*'
     ]
   },
 };

@@ -1,5 +1,7 @@
 var vis =
-  angular.module('plotter.vis.sidebar', ['plotter.vis.plotting', 'services.dataset', 'services.notify', 'services.dimensions']);
+  angular.module('plotter.vis.sidebar', 
+    ['plotter.vis.plotting', 'services.dataset', 
+    'services.notify', 'services.dimensions', 'localytics.directives']);
 
 // directive for displaying the dataset table on sidebar
 vis.directive('dataset', function () {
