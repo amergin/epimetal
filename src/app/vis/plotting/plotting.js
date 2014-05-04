@@ -293,7 +293,7 @@ visu.directive('scatterplot', [
 
       // select svg canvas
       // top-right-bottom-left
-      var m = [10, 10, 45, 45], // margins
+      var m = [10, 10, 55, 45], // margins
         w = 490, // width
         h = 345, // height
         dimensions = [], // quantitative dimensions
@@ -305,25 +305,27 @@ visu.directive('scatterplot', [
         xscale = d3.scale.linear(), // x scale
         yscale = d3.scale.linear(); // yscale
 
+      var X_TICK_FORMAT = d3.format(".2s");
+      var Y_TICK_FORMAT = d3.format(".2s");
+
+
       // create canvas element
       var c = document.createElement('canvas');
-      c.setAttribute('id', 'chart');//zIndex + "canvas");
+      c.setAttribute('id', 'chart');
       $(element).append(c);
 
       // adjust canvas size
-      var canvas = d3.select( element[0] ).select('canvas') //'#chart')//'#' + zIndex + "canvas")
+      var canvas = d3.select( element[0] ).select('canvas')
         .attr("width", w + "px")
         .attr("height", h + "px")
         .style('z-index', zIndex);
 
       // rendering context
       ctx = canvas[0][0].getContext('2d');
-      ctx.strokeStyle = "rgba(0,0,0,0.8)";
+      // set opacity for the canvas
+      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+      //ctx.strokeStyle = "rgba(0,0,0,0.8)";
       ctx.lineWidth = "1.5";
-
-      // add legend
-      addLegends();
-
 
       // extents for each dimension
       var xExtent = d3.extent(data, function(d) {
@@ -334,9 +336,16 @@ visu.directive('scatterplot', [
         return d.key.y;
       });
 
+      var xRange = [m[3], w - m[1]];
+      var yRange = [h - m[2], m[0]];
+      console.log("extents:", xExtent, yExtent);
+
       // create scales
-      xscale.domain(xExtent).range([m[3], w - m[1]]);
-      yscale.domain(yExtent).range([h - m[2], m[0]]);
+      xscale.domain(xExtent).range(xRange);
+      yscale.domain(yExtent).range(yRange);
+      var yscale2 = d3.scale.linear().domain(yExtent).range([ yRange[1], yRange[0] ]);
+
+      addLegends();
 
       // render initial data points
       last = data.map(position);
@@ -357,7 +366,7 @@ visu.directive('scatterplot', [
           ctx.stroke();
         }
 
-        function addText(text, start, trans, rotate, align) {
+        function addLabelText(text, start, trans, rotate, align) {
           ctx.textAlign = "center";
           ctx.textBaseline = align;
           ctx.save();
@@ -369,29 +378,84 @@ visu.directive('scatterplot', [
           ctx.restore();
         }
 
+        function addVerticalAxisTicks(origin) {
+            function addTickText(coord, text) {
+              console.log("received", text, coord);
+              ctx.fillStyle = "black";
+              ctx.font = "9px sans-serif";
+              ctx.fillText(text, coord.x, coord.y);
+            }
+
+
+            var NUM_VERTICAL_TICKS = 8;
+            var TICK_WIDTH = 5;
+            var TICK_TEXT_SPACING = 12;
+            var VERTICAL_TICK_SPACING = (yRange[0] - yRange[1]) / NUM_VERTICAL_TICKS;
+
+            for (var i=1; i <= NUM_VERTICAL_TICKS; ++i) {
+              console.log(i, "draw to", origin.x - TICK_WIDTH/2, origin.y - i * VERTICAL_TICK_SPACING);
+              ctx.beginPath();
+              ctx.moveTo(origin.x - TICK_WIDTH/2, origin.y - i * VERTICAL_TICK_SPACING);
+              ctx.lineTo(origin.x + TICK_WIDTH/2, origin.y - i * VERTICAL_TICK_SPACING);
+              ctx.stroke();
+              console.log("range", origin.y - i * VERTICAL_TICK_SPACING );// * yRange[0]);
+              addTickText(
+                { x : origin.x - TICK_WIDTH/2 - TICK_TEXT_SPACING, 
+                  y: origin.y - i * VERTICAL_TICK_SPACING },
+                  Y_TICK_FORMAT( yscale.invert( origin.y - i * VERTICAL_TICK_SPACING ) )
+                  );
+            }
+        }
+
+        function addHorizontalAxisTicks(origin) {
+            function addTickText(coord, text) {
+              console.log("received", text, coord);
+              ctx.fillStyle = "black";
+              ctx.font = "9px sans-serif";
+              ctx.fillText(text, coord.x, coord.y);
+            }
+
+            var NUM_HORIZONTAL_TICKS = 7;
+            var TICK_WIDTH = 5;
+            var HORIZONTAL_TICK_SPACING = (xRange[1] - xRange[0]) / NUM_HORIZONTAL_TICKS;
+            var TICK_TEXT_SPACING = 8;
+
+            for (var i=1; i <= NUM_HORIZONTAL_TICKS; ++i) {
+              ctx.beginPath();
+              ctx.moveTo(origin.x + i * HORIZONTAL_TICK_SPACING, origin.y - TICK_WIDTH/2);
+              ctx.lineTo(origin.x + i * HORIZONTAL_TICK_SPACING, origin.y + TICK_WIDTH/2);
+              ctx.stroke();          
+              addTickText(
+                { x : origin.x + i * HORIZONTAL_TICK_SPACING,
+                  y: origin.y - TICK_WIDTH/2 + TICK_TEXT_SPACING },
+                  X_TICK_FORMAT( xscale.invert( origin.x + i * HORIZONTAL_TICK_SPACING ) )
+                  );
+            }
+        }
+
+        var origin = { x: d3.round(0.75 * m[3]), y: h - d3.round(0.75 * m[2]) };
+
         // y axis
-        // var x = d3.round(m[3]/2);
-        // var y = h - d3.round(m[2]/2);
         drawLine(
-          { x: d3.round(m[3]/2), y: d3.round(m[0]/2)}, 
-          { x: d3.round(m[3]/2), y: h - d3.round(m[2]/2)}
+          { x: d3.round(0.75 * m[3]), y: d3.round(0.75 * m[0])}, 
+          { x: d3.round(0.75 * m[3]), y: h - d3.round(0.75 * m[2])}
         );
-        // y label
-        addText( varY, 
+        addLabelText( varY, 
           { x: 0, y: 0 },
-          { x: d3.round(m[3]/2) - 3, y: (h - d3.round(m[0]/2) - d3.round(m[2]/2))/2 }, 
-          -Math.PI/2, "bottom" );
+          { x: d3.round(m[3]/2), y: (h - d3.round(m[0]/2) - d3.round(m[2]/2))/2 }, 
+          -Math.PI/2, "middle" );
+        addVerticalAxisTicks(origin);
 
         // x axis
         drawLine(
-          { x: d3.round(m[3]/2), y: h - d3.round(m[2]/2)}, 
-          { x: w - d3.round(m[1]/2), y: h - d3.round(m[2]/2)}
+          { x: d3.round(0.75 * m[3]), y: h - d3.round(0.75 * m[2])}, 
+          { x: w - d3.round(0.75 * m[1]), y: h - d3.round(0.75 * m[2])}
         );
-        // x label
-        addText( varX, 
-          { x: 0, y: 0 },
-          { x: (w - d3.round(m[1]/2) - d3.round(m[3]/2))/2, y: h - d3.round(m[2]/2) + 3 },
+        addLabelText( varX, 
+          { x: 0, y: 7 },
+          { x: (w - d3.round(m[1]/2) - d3.round(m[3]/2))/2, y: h - d3.round(m[2]/2) },
           0, "top" );
+        addHorizontalAxisTicks(origin);
       }
 
       // from data point, return [x,y,color]
@@ -406,7 +470,7 @@ visu.directive('scatterplot', [
         ctx.fillStyle = pos[2];
         ctx.beginPath();
         ctx.arc(pos[0], pos[1], 2, 0, 2 * Math.PI);
-        ctx.stroke();
+        //ctx.stroke();
         ctx.fill();
       }
 
