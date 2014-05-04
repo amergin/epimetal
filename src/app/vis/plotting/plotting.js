@@ -293,7 +293,7 @@ visu.directive('scatterplot', [
 
       // select svg canvas
       // top-right-bottom-left
-      var m = [10, 10, 55, 45], // margins
+      var m = [10, 10, 45, 65], // margins
         w = 490, // width
         h = 345, // height
         dimensions = [], // quantitative dimensions
@@ -380,7 +380,6 @@ visu.directive('scatterplot', [
 
         function addVerticalAxisTicks(origin) {
             function addTickText(coord, text) {
-              console.log("received", text, coord);
               ctx.fillStyle = "black";
               ctx.font = "9px sans-serif";
               ctx.fillText(text, coord.x, coord.y);
@@ -393,12 +392,10 @@ visu.directive('scatterplot', [
             var VERTICAL_TICK_SPACING = (yRange[0] - yRange[1]) / NUM_VERTICAL_TICKS;
 
             for (var i=1; i <= NUM_VERTICAL_TICKS; ++i) {
-              console.log(i, "draw to", origin.x - TICK_WIDTH/2, origin.y - i * VERTICAL_TICK_SPACING);
               ctx.beginPath();
               ctx.moveTo(origin.x - TICK_WIDTH/2, origin.y - i * VERTICAL_TICK_SPACING);
               ctx.lineTo(origin.x + TICK_WIDTH/2, origin.y - i * VERTICAL_TICK_SPACING);
               ctx.stroke();
-              console.log("range", origin.y - i * VERTICAL_TICK_SPACING );// * yRange[0]);
               addTickText(
                 { x : origin.x - TICK_WIDTH/2 - TICK_TEXT_SPACING, 
                   y: origin.y - i * VERTICAL_TICK_SPACING },
@@ -409,7 +406,6 @@ visu.directive('scatterplot', [
 
         function addHorizontalAxisTicks(origin) {
             function addTickText(coord, text) {
-              console.log("received", text, coord);
               ctx.fillStyle = "black";
               ctx.font = "9px sans-serif";
               ctx.fillText(text, coord.x, coord.y);
@@ -442,8 +438,8 @@ visu.directive('scatterplot', [
         );
         addLabelText( varY, 
           { x: 0, y: 0 },
-          { x: d3.round(m[3]/2), y: (h - d3.round(m[0]/2) - d3.round(m[2]/2))/2 }, 
-          -Math.PI/2, "middle" );
+          { x: d3.round(m[3]/2) - 12, y: (h - d3.round(m[0]/2) - d3.round(m[2]/2))/2 }, 
+          -Math.PI/2, "bottom" );
         addVerticalAxisTicks(origin);
 
         // x axis
