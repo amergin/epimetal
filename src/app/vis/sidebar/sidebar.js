@@ -17,8 +17,8 @@ vis.directive('dataset', function () {
 });
 
 // dataset table controller
-vis.controller('DatasetTableController', ['$scope', 'DatasetFactory', 'DimensionService', 'NotifyService',
-  function DatasetTableController($scope, DatasetFactory, DimensionService, NotifyService) {
+vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService',
+  function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService) {
     $scope.sets = DatasetFactory.getSets();
 
     $scope.toggle = function(set) {
@@ -32,7 +32,8 @@ vis.controller('DatasetTableController', ['$scope', 'DatasetFactory', 'Dimension
           DatasetFactory.toggle(set);
 
           // important!
-          dc.redrawAll();          
+          dc.redrawAll();
+          $rootScope.$emit('scatterplot.redraw', set, res);
         }
         else if( res === 'empty' ) {
           DatasetFactory.toggle(set);
@@ -44,13 +45,14 @@ vis.controller('DatasetTableController', ['$scope', 'DatasetFactory', 'Dimension
     };
 
     // clears all selections
-    $scope.clear = function() {
+    // $scope.clear = function() {
 
-      _.each( $scope.sets, function(set) {
-        set.disable();
-      });
-      DimensionService.updateDatasetDimension();
-    };
+    //   _.each( $scope.sets, function(set) {
+    //     set.disable();
+    //     $rootScope.$emit('scatterplot.redraw', set, 'disabled');
+    //   });
+    //   DimensionService.updateDatasetDimension();
+    // };
   }
 ]);
 

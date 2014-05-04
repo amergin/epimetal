@@ -267,7 +267,10 @@ dimMod.service('DimensionService', ['$injector',
     };
 
     this.getActiveVariables = function() {
-      return _.without( _.keys(dimensions), '_dataset' );
+      // ensure xy-dimensions are split to two variables on return
+      var flat = _.flatten( _.map( dimensions, function(value,key) { return key.split("|"); } ) );
+      return _.without( flat, '_dataset' );
+      //return _.without( _.keys(dimensions), '_dataset' );
     };
 
 

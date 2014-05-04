@@ -98,11 +98,18 @@ visu.directive('histogram', [
       // 2. for each of the additional stacks, create a child chart
       _.each(config.datasetNames, function(name, ind) {
 
+        // var filteredFunction = {
+        //   all: function() {
+        //     return config.reducedGroup.top(Infinity).filter( function(d) { return d.value.dataset === name; } );
+        //   }
+        // };
+
         var chart = dc.barChart($scope.histogram)
           .centerBar(true)
           .barPadding(0.15)
           .dimension(config.dimension)
-          .group(config.reducedGroup, name)
+          //.group( filteredFunction, name )
+          .group( config.reducedGroup, name )
         // .data( function(group) { 
         //   return group.top(5);
         //   // return group.all().filter( function(kv) { 
@@ -183,139 +190,112 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
     $scope.dimension = DimensionService.getXYDimension($scope.window.variables);
     $scope.reduced = DimensionService.getReduceScatterplot($scope.dimension.group());
-    $scope.datasetNames = DatasetFactory.getSetNames();
-    $scope.xExtent = d3.extent($scope.reduced.top(Infinity), function(d) {
-      return d.key.x;
-    });
-    $scope.colorScale = DatasetFactory.getColorScale();
+    // $scope.datasetNames = DatasetFactory.getSetNames();
+    // $scope.xExtent = d3.extent($scope.reduced.top(Infinity), function(d) {
+    //   return d.key.x;
+    // });
+    // $scope.colorScale = DatasetFactory.getColorScale();
 
     $scope.resetFilter = function() {
       $scope.scatterplot.filterAll();
       dc.redrawAll();
     };
 
+    var _calcCanvasAttributes = function() {
+      $scope.sets = DatasetFactory.activeSets();
+      // min&max for all active datasets
+      $scope.xExtent = d3.extent($scope.reduced.top(Infinity), function(d) {
+        return d.key.x;
+      });
+      $scope.yExtent = d3.extent($scope.reduced.top(Infinity), function(d) {
+        return d.key.y;
+      });    
+
+      $scope.xRange = [ $scope.margins[3], $scope.width - $scope.margins[1] ];
+      $scope.yRange = [ $scope.height - $scope.margins[2], $scope.margins[0] ];
+      console.log("extents:", $scope.xExtent, $scope.yExtent);
+    };
+
+    $scope._createCanvas = function(set, zIndex) {
+        var name = set.getName();
+        var data = $scope.reduced.all().filter( function(d) { return d.value.dataset === name; } );
+        var color = $scope.window.variables.pooled ? 'black' : set.getColor();
+        var canvas = $scope.createCanvas( 
+          $scope.element,
+          $scope.width,
+          $scope.height,
+          $scope.margins,
+          $scope.xExtent,
+          $scope.yExtent,
+          $scope.xRange,
+          $scope.yRange,
+          zIndex,
+          $scope.window.variables.x,
+          $scope.window.variables.y,
+          data,
+          //$scope.reduced.top(Infinity),
+          name, 
+          color
+          );
+        $scope.canvases[set.getName()] = { 'zindex': zIndex, 'canvas': canvas };
+    };
+
     $scope.canvases = {};
 
-
-  }
-]);
-
-
-
-visu.directive('scatterplot', [
-
-  function() {
-
-    var createSVG = function($scope, config) {
-
-      // check css window rules before touching these
-      var _width = 470;
-      var _height = 345;
-      var _poolingColor = 'black';
-
-      // collect charts here
-      var charts = [];
+    $scope.margins = [10, 10, 45, 55];
+    $scope.width = 490;
+    $scope.height = 345;
+    $scope.zIndexCount = 0;
+    _calcCanvasAttributes();
 
 
-      // 1. create composite chart
-      $scope.scatterplot = dc.compositeChart(config.element[0])
-        .width(_width)
-        .height(_height)
-        .brushOn(true)
-        .x(d3.scale.linear().domain(config.xExtent))
-        .colors(d3.scale.category20())
-        .shareColors(true)
-        .xAxisLabel(config.variableX)
-        .yAxisLabel(config.variableY)
-        .brushOn(false)
-        .elasticY(true)
-        .margins({
-          top: 15,
-          right: 10,
-          bottom: 45,
-          left: 50
-        });
-
-
-      // set x axis format
-      $scope.scatterplot
-        .xAxis().ticks(7).tickFormat(d3.format(".2s"));
-
-      // set colors
-      if (config.pooled) {
-        $scope.scatterplot.linearColors([_poolingColor]);
-      } else {
-        $scope.scatterplot.colors(config.colorScale);
+    $scope.$onRootScope('scatterplot.redraw', function(event, dset, action) {
+      if( action === 'disabled' ) {
+        $scope.disable(dset);
       }
+      else if( action === 'enabled' ) {
+
+        var canvas = $scope.canvases[dset.getName()];
+        if( _.isUndefined( canvas ) ) {
+          // new, not drawn before
+
+          // refresh calculations
+          _calcCanvasAttributes();
+          // add canvas as 'layer'
+          $scope._createCanvas(dset, ++$scope.zIndexCount);
+        }
+        else {
+          $scope.enable(dset);
+        }
+
+      }
+    });
+
+    $scope.disable = function(set) {
+      var ctx = $scope.canvases[set.getName()].canvas;
+      ctx.canvas.style.display = 'none';
+    };
+
+    $scope.enable = function(set) {
+      var ctx = $scope.canvases[set.getName()].canvas;
+      ctx.canvas.style.display = '';
+    };
 
 
-      // 2. for each of the additional stacks, create a child chart
-      _.each(config.datasetNames, function(name, ind) {
-
-        var chart = dc.scatterPlot($scope.scatterplot)
-          .dimension(config.dimension)
-          .group(config.reducedGroup, name)
-          .symbol(d3.svg.symbol().type('circle'))
-          .symbolSize(2)
-          .highlightedSize(4)
-          .brushOn(false)
-          .data(function(group) {
-            return group.all().filter(function(d) {
-              return !_.isUndefined(d.value.dataset);
-            });
-          })
-          .valueAccessor(function(d) {
-            if (_.isUndefined(d.value.dataset)) {
-              return 0;
-            }
-            return d.value.counts[name];
-          })
-          .keyAccessor(function(d) {
-            //if( _.isUndefined( d.value.dataset ) ) { return null; }
-            return d.key.x;
-          })
-          .valueAccessor(function(d) {
-            //if( _.isUndefined( d.value.dataset ) ) { return null; }      
-            return d.key.y;
-          });
-
-        charts.push(chart);
-      });
-
-      // 3. compose & render the composite chart
-      $scope.scatterplot.compose(charts);
-      $scope.scatterplot.render();
-
-    }; // createSVG
-
-
-    var createCanvas = function(element, zIndex, varX, varY, data, dataset, datasetColor, $scope) {
-
-      // select svg canvas
-      // top-right-bottom-left
-      var m = [10, 10, 45, 65], // margins
-        w = 490, // width
-        h = 345, // height
-        dimensions = [], // quantitative dimensions
-        //xcol = 0, // active x column
-        //ycol = 1, // active y column
-        last = [], // last [x,y,color] pairs
-
-        //transition_count = 0, // used to cancel old transitions
-        xscale = d3.scale.linear(), // x scale
+    $scope.createAxisCanvas = function(element, w, h, m, xExtent, yExtent, xRange, yRange, zIndex, varX, varY) {
+      var xscale = d3.scale.linear(), // x scale
         yscale = d3.scale.linear(); // yscale
 
       var X_TICK_FORMAT = d3.format(".2s");
       var Y_TICK_FORMAT = d3.format(".2s");
 
-
       // create canvas element
       var c = document.createElement('canvas');
-      c.setAttribute('id', 'chart');
+      c.setAttribute('id', 'axes');
       $(element).append(c);
 
       // adjust canvas size
-      var canvas = d3.select( element[0] ).select('canvas')
+      var canvas = d3.select( element[0] ).select( "#axes" )
         .attr("width", w + "px")
         .attr("height", h + "px")
         .style('z-index', zIndex);
@@ -323,41 +303,20 @@ visu.directive('scatterplot', [
       // rendering context
       ctx = canvas[0][0].getContext('2d');
       // set opacity for the canvas
-      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
       //ctx.strokeStyle = "rgba(0,0,0,0.8)";
       ctx.lineWidth = "1.5";
 
-      // extents for each dimension
-      var xExtent = d3.extent(data, function(d) {
-        return d.key.x;
-      });
-
-      var yExtent = d3.extent(data, function(d) {
-        return d.key.y;
-      });
-
-      var xRange = [m[3], w - m[1]];
-      var yRange = [h - m[2], m[0]];
       console.log("extents:", xExtent, yExtent);
 
       // create scales
       xscale.domain(xExtent).range(xRange);
       yscale.domain(yExtent).range(yRange);
-      var yscale2 = d3.scale.linear().domain(yExtent).range([ yRange[1], yRange[0] ]);
 
-      addLegends();
+      addAxes();
+      return ctx;
 
-      // render initial data points
-      last = data.map(position);
-      // add circle points for this dataset grouping
-      last.forEach(circle);
-
-      // clear canvas
-      function clear() {
-        ctx.clearRect(0, 0, w, h);
-      }
-
-      function addLegends() {
+      function addAxes() {
         function drawLine(start, end) {
           ctx.moveTo(start.x, start.y);
           ctx.lineTo(end.x, end.y);
@@ -381,6 +340,7 @@ visu.directive('scatterplot', [
         function addVerticalAxisTicks(origin) {
             function addTickText(coord, text) {
               ctx.fillStyle = "black";
+              ctx.textBaseline = "middle";
               ctx.font = "9px sans-serif";
               ctx.fillText(text, coord.x, coord.y);
             }
@@ -429,29 +389,69 @@ visu.directive('scatterplot', [
             }
         }
 
-        var origin = { x: d3.round(0.75 * m[3]), y: h - d3.round(0.75 * m[2]) };
+        var origin = { x: d3.round(0.9 * m[3]), y: h - d3.round(0.9 * m[2]) };
 
-        // y axis
+        // draw y axis / label / ticks
         drawLine(
-          { x: d3.round(0.75 * m[3]), y: d3.round(0.75 * m[0])}, 
-          { x: d3.round(0.75 * m[3]), y: h - d3.round(0.75 * m[2])}
+          { x: origin.x, y: d3.round(0.75 * m[0])}, 
+          { x: origin.x, y: origin.y }
         );
         addLabelText( varY, 
           { x: 0, y: 0 },
-          { x: d3.round(m[3]/2) - 12, y: (h - d3.round(m[0]/2) - d3.round(m[2]/2))/2 }, 
+          { x: d3.round(m[3]/2) - 8, y: (h - d3.round(m[0]/2) - d3.round(m[2]/2))/2 }, 
           -Math.PI/2, "bottom" );
         addVerticalAxisTicks(origin);
 
-        // x axis
+        // x axis / label / ticks
         drawLine(
-          { x: d3.round(0.75 * m[3]), y: h - d3.round(0.75 * m[2])}, 
-          { x: w - d3.round(0.75 * m[1]), y: h - d3.round(0.75 * m[2])}
+          { x: origin.x, y: origin.y },//h - d3.round(0.75 * m[2])}, 
+          { x: w - d3.round(0.5 * m[1]), y: origin.y }//y: h - d3.round(0.75 * m[2])}
         );
         addLabelText( varX, 
-          { x: 0, y: 7 },
+          { x: 0, y: 4 },
           { x: (w - d3.round(m[1]/2) - d3.round(m[3]/2))/2, y: h - d3.round(m[2]/2) },
           0, "top" );
         addHorizontalAxisTicks(origin);
+      }
+    };
+
+    $scope.createCanvas = function(element, w, h, m, xExtent, yExtent, xRange, yRange, zIndex, varX, varY, data, dataset, datasetColor) {
+      // top-right-bottom-left
+      var last = [], // last [x,y,color] pairs
+        xscale = d3.scale.linear(), // x scale
+        yscale = d3.scale.linear(); // yscale
+
+      // create canvas element
+      var c = document.createElement('canvas');
+      c.setAttribute('id', dataset);
+      $(element).append(c);
+
+      // adjust canvas size
+      var canvas = d3.select( element[0] ).select( "#" + dataset ) //'canvas')
+        .attr("width", w + "px")
+        .attr("height", h + "px")
+        .style('z-index', zIndex);
+
+      // rendering context
+      ctx = canvas[0][0].getContext('2d');
+      // set opacity for the canvas
+      ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+      //ctx.strokeStyle = "rgba(0,0,0,0.8)";
+      ctx.lineWidth = "1.5";
+
+      // create scales
+      xscale.domain(xExtent).range(xRange);
+      yscale.domain(yExtent).range(yRange);
+
+      // render initial data points
+      last = data.map(position);
+      // add circle points for this dataset grouping
+      last.forEach(circle);
+      return ctx;
+
+      // clear canvas
+      function clear() {
+        ctx.clearRect(0, 0, w, h);
       }
 
       // from data point, return [x,y,color]
@@ -469,35 +469,43 @@ visu.directive('scatterplot', [
         //ctx.stroke();
         ctx.fill();
       }
-
-      $scope.canvases[zIndex] = ctx;
-
     };
+
+
+
+
+
+  }
+
+]);
+
+
+
+visu.directive('scatterplot', [
+
+  function() {
 
     var linkFn = function($scope, ele, iAttrs) {
 
-      var config = {
-        dimension: $scope.dimension,
-        element: ele,
-        variableX: $scope.window.variables.x,
-        variableY: $scope.window.variables.y,
-        xExtent: $scope.xExtent,
-        datasetNames: $scope.datasetNames,
-        colorScale: $scope.colorScale,
-        reducedGroup: $scope.reduced,
-        pooled: $scope.window.variables.pooled || false
-      };
-      //createSVG($scope, config);
-      //element, zIndex, varX, varY, data, dataset, datasetColor, $scope) {
-      createCanvas( 
+      _.each( $scope.sets, function(set, ind) {
+        $scope._createCanvas( set, ind );
+      });
+
+      // create the axes last and place them on top of other canvases
+      var axesCanvas = $scope.createAxisCanvas( 
         ele,
-        1,
+        $scope.width,
+        $scope.height,
+        $scope.margins,
+        $scope.xExtent,
+        $scope.yExtent,
+        $scope.xRange,
+        $scope.yRange,
+        100,
         $scope.window.variables.x,
-        $scope.window.variables.y,
-        $scope.reduced.top(Infinity),
-        'ALSPACM1',
-        '#e377c2',
-        $scope);
+        $scope.window.variables.y
+        );
+      $scope.canvases['axes'] = { 'zindex': 100, 'canvas': axesCanvas };
 
     };
 
