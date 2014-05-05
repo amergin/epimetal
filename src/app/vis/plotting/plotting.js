@@ -73,12 +73,12 @@ visu.directive('histogram', [
 
       // 1. create composite chart
       $scope.histogram = dc.compositeChart(config.element[0])
+        .dimension(config.dimension)
         .width(_width)
         .height(_height)
-        .title("test")
         .shareColors(true)
         .brushOn(true)
-        .mouseZoomable(true)
+        //.mouseZoomable(true)
         .elasticY(true)
         .x(d3.scale.linear().domain(config.extent).range([0, config.noBins]))
         .xUnits(function() {
@@ -90,7 +90,15 @@ visu.directive('histogram', [
           bottom: 30,
           left: 40
         })
-        .xAxisLabel(config.variableX);
+        .xAxisLabel(config.variableX)
+        .renderlet(function(chart){
+            // smooth the rendering through event throttling
+            dc.events.trigger(function(){
+                // focus some other chart to the range selected by user on this chart
+                console.log("filter trigger", this);
+                $rootScope.$emit('scatterplot.redrawAll');
+            });
+        });
 
       // set x axis format
       $scope.histogram
@@ -183,12 +191,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
   function($scope, DatasetFactory, DimensionService) {
 
     $scope.dimension = DimensionService.getXYDimension($scope.window.variables);
-    $scope.reduced = DimensionService.getReduceScatterplot($scope.dimension.group());
-    // $scope.datasetNames = DatasetFactory.getSetNames();
-    // $scope.xExtent = d3.extent($scope.reduced.top(Infinity), function(d) {
-    //   return d.key.x;
-    // });
-    // $scope.colorScale = DatasetFactory.getColorScale();
+    //$scope.reduced = DimensionService.getReduceScatterplot($scope.dimension.group());
 
     $scope.resetFilter = function() {
       $scope.scatterplot.filterAll();
@@ -196,6 +199,8 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
     };
 
     var _calcCanvasAttributes = function() {
+      $scope.reduced = DimensionService.getReduceScatterplot($scope.dimension.group());
+
       $scope.sets = DatasetFactory.activeSets();
       // min&max for all active datasets
       $scope.xExtent = d3.extent($scope.reduced.top(Infinity), function(d) {
@@ -234,6 +239,31 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
         $scope.canvases[set.getName()] = { 'zindex': zIndex, 'canvas': canvas };
     };
 
+    $scope.redrawAll = function() {
+      console.log("redraw scatter plot");
+      _calcCanvasAttributes();
+
+      _.each( $scope.sets, function(set, ind) {
+        $scope._createCanvas( set, ind );
+      });
+
+      // create the axes last and place them on top of other canvases
+      var axesCanvas = $scope.createAxisCanvas( 
+        $scope.element,
+        $scope.width,
+        $scope.height,
+        $scope.margins,
+        $scope.xExtent,
+        $scope.yExtent,
+        $scope.xRange,
+        $scope.yRange,
+        100,
+        $scope.window.variables.x,
+        $scope.window.variables.y
+        );
+      $scope.canvases['axes'] = { 'zindex': 100, 'canvas': axesCanvas };
+    };
+
     $scope.canvases = {};
 
     $scope.margins = [10, 10, 45, 55];
@@ -264,6 +294,12 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
       }
     });
+
+    $scope.$onRootScope('scatterplot.redrawAll', function(event) {
+      $scope.redrawAll();
+    });
+
+
 
     $scope.disable = function(set) {
       var ctx = $scope.canvases[set.getName()].canvas;
@@ -480,27 +516,7 @@ visu.directive('scatterplot', [
   function() {
 
     var linkFn = function($scope, ele, iAttrs) {
-
-      _.each( $scope.sets, function(set, ind) {
-        $scope._createCanvas( set, ind );
-      });
-
-      // create the axes last and place them on top of other canvases
-      var axesCanvas = $scope.createAxisCanvas( 
-        ele,
-        $scope.width,
-        $scope.height,
-        $scope.margins,
-        $scope.xExtent,
-        $scope.yExtent,
-        $scope.xRange,
-        $scope.yRange,
-        100,
-        $scope.window.variables.x,
-        $scope.window.variables.y
-        );
-      $scope.canvases['axes'] = { 'zindex': 100, 'canvas': axesCanvas };
-
+      $scope.redrawAll();
     };
 
     return {
