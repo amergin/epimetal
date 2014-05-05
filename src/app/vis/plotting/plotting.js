@@ -45,6 +45,15 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       dc.redrawAll();
     };
 
+    var _createDsetGroups = function() {
+      $scope.groups = {};
+      _.each( $scope.datasetNames, function(name) {
+        $scope.groups[name] = DimensionService.getReducedGroupHisto($scope.group, $scope.window.variables.x);
+      });
+    };
+
+    _createDsetGroups();
+
   }
 ]);
 
@@ -52,7 +61,6 @@ visu.directive('histogram', [
 
   function() {
 
-    // var config = { dimension: sth, bins: sth, binWidth: sth, reducedGroup: sth, datasetNames: sth, colorScale: sth, pooled: true|false }
     var createSVG = function($scope, config) {
       // check css window rules before touching these
       var _width = 470;
@@ -95,43 +103,28 @@ visu.directive('histogram', [
         $scope.histogram.colors(config.colorScale);
       }
 
+      var filterOnSet = function(group, name) {
+        return {
+          'all': function() {
+            return group.all().filter( function(d) {
+              return d.value.counts[name] > 0;
+            });
+          }
+        };
+      };
+
       // 2. for each of the additional stacks, create a child chart
       _.each(config.datasetNames, function(name, ind) {
 
-        // var filteredFunction = {
-        //   all: function() {
-        //     return config.reducedGroup.top(Infinity).filter( function(d) { return d.value.dataset === name; } );
-        //   }
-        // };
-
+        var grp = $scope.groups[name];
         var chart = dc.barChart($scope.histogram)
           .centerBar(true)
           .barPadding(0.15)
           .dimension(config.dimension)
-          //.group( filteredFunction, name )
-          .group( config.reducedGroup, name )
-        // .data( function(group) { 
-        //   return group.top(5);
-        //   // return group.all().filter( function(kv) { 
-        //   //   // drop the 0-group == NaN from plot
-        //   //   ++window._counter;
-        //   //   console.log("kv=", kv);
-        //   //   return true;
-        //   //   //return kv.key > 0 || true;
-        //   // });
-        // })
-        // .keyAccessor( function(d) {
-        //   if( name !== d.value.dataset ) { 
-        //     return undefined; 
-        //   }
-        //   return d.key;
-        // })
-        .valueAccessor(function(d) { // is y direction
-          // if( name !== d.value.dataset ) { 
-          //   return 0; 
-          // }
-          return d.value.counts[name];
-        });
+          .group( filterOnSet(grp, name), name )
+          .valueAccessor(function(d) { // is y direction
+            return d.value.counts[name];
+          });
 
         charts.push(chart);
 
@@ -161,7 +154,8 @@ visu.directive('histogram', [
         bins: $scope.noBins,
         extent: $scope.extent,
         binWidth: $scope.binWidth,
-        reducedGroup: $scope.reduced,
+        groups: $scope.groups,
+        //reducedGroup: $scope.reduced,
         datasetNames: $scope.datasetNames,
         colorScale: $scope.colorScale,
         pooled: $scope.window.variables.pooled || false
