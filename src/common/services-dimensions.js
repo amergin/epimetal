@@ -14,7 +14,6 @@ dimMod.service('DimensionService', ['$injector',
     var crossfilterInst = null;
 
     // current samples, formatted for crossfilter
-    // { 'SAMPID': {date: "2011-11-14T16:17:54Z", quantity: 2, total: 190, tip: 100, type: "tab"} }
     var currSamples = {};
 
     // return one dimension. This is used for 
@@ -28,7 +27,7 @@ dimMod.service('DimensionService', ['$injector',
           console.log("Dimension for ", variable, " created");
           retDimension = crossfilterInst.dimension(function (d) {
             // a little checking to make sure NaN's are not returned
-            return +d.variables[variable] || 0;
+            return +d.variables[variable] || -1000;
           });
           dimensions[variable] = {
             count: 1,

@@ -28,9 +28,11 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
 
     $scope.dimension = DimensionService.getDimension($scope.window.variables);
 
-    $scope.extent = d3.extent($scope.dimension.group().all(), function(sample) {
-      return sample.key;
-    });
+    // $scope.extent = d3.extent($scope.dimension.group().all(), function(sample) {
+    //   return sample.key;
+    // });
+    $scope.extent = [0, d3.max( $scope.dimension.group().all(), function(sample) { return sample.key; } )];
+
     $scope.noBins = _.max([_.min([Math.floor($scope.dimension.group().all().length / 20), 50]), 20]);
     $scope.binWidth = ($scope.extent[1] - $scope.extent[0]) / $scope.noBins;
     $scope.group = $scope.dimension.group(function(d) {
@@ -80,6 +82,7 @@ visu.directive('histogram', [
         .brushOn(true)
         //.mouseZoomable(true)
         .elasticY(true)
+        //.elasticX(true)
         .x(d3.scale.linear().domain(config.extent).range([0, config.noBins]))
         .xUnits(function() {
           return _xBarWidth;
@@ -91,14 +94,18 @@ visu.directive('histogram', [
           left: 40
         })
         .xAxisLabel(config.variableX)
-        .renderlet(function(chart){
-            // smooth the rendering through event throttling
-            dc.events.trigger(function(){
-                // focus some other chart to the range selected by user on this chart
-                console.log("filter trigger", this);
-                $rootScope.$emit('scatterplot.redrawAll');
-            });
-        });
+        .on("filtered", function(chart, filter) {
+          console.log("filter trigger", chart, filter);
+          $rootScope.$emit('scatterplot.redrawAll');
+        });        
+        // .renderlet(function(chart){
+        //     // smooth the rendering through event throttling
+        //     dc.events.trigger(function(){
+        //         // focus some other chart to the range selected by user on this chart
+        //         console.log("filter trigger", this);
+        //         $rootScope.$emit('scatterplot.redrawAll');
+        //     });
+        // });
 
       // set x axis format
       $scope.histogram
@@ -159,7 +166,7 @@ visu.directive('histogram', [
         dimension: $scope.dimension,
         element: ele,
         variableX: $scope.window.variables.x,
-        bins: $scope.noBins,
+        noBins: $scope.noBins,
         extent: $scope.extent,
         binWidth: $scope.binWidth,
         groups: $scope.groups,
@@ -191,7 +198,6 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
   function($scope, DatasetFactory, DimensionService) {
 
     $scope.dimension = DimensionService.getXYDimension($scope.window.variables);
-    //$scope.reduced = DimensionService.getReduceScatterplot($scope.dimension.group());
 
     $scope.resetFilter = function() {
       $scope.scatterplot.filterAll();

@@ -1,7 +1,7 @@
 var win = angular.module('plotter.vis.windowing', []);
 
 // controller for Packery windowing system
-win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', function($scope,$rootScope, $timeout) {
+win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', function($scope, $rootScope, $timeout) {
   console.log("packery controller");
   $scope.$onRootScope('packery.add', function(event,selection,type) {
     $scope.add( selection,type );
@@ -54,10 +54,11 @@ win.directive('packery', [ function() {
           // columnWidth: 220, 
           // gutter: 10,
           // see https://github.com/metafizzy/packery/issues/7
-          rowHeight: 420,
+          rowHeight: 410,
           itemSelector: '.window',
           gutter: '.gutter-sizer',
-          columnWidth: '.grid-sizer'
+          columnWidth: 500
+          //columnWidth: '.grid-sizer'
         } );
 
           window.packery = scope.packery;
