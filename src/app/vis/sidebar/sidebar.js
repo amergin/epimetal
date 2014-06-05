@@ -34,6 +34,7 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
           // important!
           dc.redrawAll();
           $rootScope.$emit('scatterplot.redraw', set, res);
+          $rootScope.$emit('histogram.redraw', set, res);
         }
         else if( res === 'empty' ) {
           DatasetFactory.toggle(set);

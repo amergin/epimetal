@@ -11,6 +11,11 @@ var App = angular.module('plotter', [
   'services.notify'
 ]);
 
+App.constant('constants', {
+  nanValue: -1000,
+  legalMinValue: 0
+});
+
 App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvider', '$injector',
   function ($stateProvider, $urlRouterProvider, $httpProvider, growlProvider, $injector) {
 

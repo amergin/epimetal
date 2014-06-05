@@ -1,7 +1,9 @@
 <div>
-	<div class="handle"></div>
-	<button type="button" class="close ctrl-close" ng-click="remove(window.number,element)" aria-hidden="true">×</button>
-	<a class="btn btn-default btn-xs ctrl-filter" ng-click="resetFilter()">reset filter</a>
+	<div class="handle text-center">
+		<button type="button" class="close ctrl-close" ng-click="remove(window.number,element)" aria-hidden="true">×</button>
+		<a class="btn btn-default btn-xs ctrl-filter" ng-click="resetFilter()">reset filter</a>
+		<!-- <a class="btn btn-default btn-xs ctrl-filter" ng-show=" window.type == 'histogram' " ng-click="toggleBrush()">toggle brush</a> -->
+	</div>
 	<div class="text-center plot-title" ng-switch on="window.type"> 
 		{{window.type }} of
 		<strong ng-switch-when="histogram">

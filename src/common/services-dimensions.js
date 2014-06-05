@@ -1,8 +1,8 @@
 var dimMod = angular.module('services.dimensions', ['services.dataset']);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-dimMod.service('DimensionService', ['$injector',
-  function ($injector) {
+dimMod.service('DimensionService', ['$injector', 'constants', 
+  function ($injector, constants) {
 
     // dimensions created in this tool
     var dimensions = {};
@@ -27,7 +27,7 @@ dimMod.service('DimensionService', ['$injector',
           console.log("Dimension for ", variable, " created");
           retDimension = crossfilterInst.dimension(function (d) {
             // a little checking to make sure NaN's are not returned
-            return +d.variables[variable] || -1000;
+            return +d.variables[variable] || constants.nanValue;
           });
           dimensions[variable] = {
             count: 1,
@@ -59,6 +59,9 @@ dimMod.service('DimensionService', ['$injector',
       var varComb = selection.x + "|" + selection.y;
       var _dim;
 
+      var indVal = 200;
+      window.output = [];
+
       // dimension does not exist, create one
       if (_.isUndefined(dimensions[varComb])) {
         _dim = crossfilterInst.dimension(function (d) {
@@ -67,7 +70,9 @@ dimMod.service('DimensionService', ['$injector',
             y: +d.variables[selection.y],
             // override prototype function to ensure the object is naturally ordered
             valueOf: function () {
-              return (+this.x) + (+this.y);
+              // the value is not important, only the resulting ordering is. 
+              // NaNs screw up ordering which will foil crossfilter instance!
+              return (+this.x) + (+this.y) || constants.nanValue;
             }
           };
         });
@@ -141,7 +146,7 @@ dimMod.service('DimensionService', ['$injector',
         // p.sums.total = p.sums.total + v.variables[variable];
 
         p.dataset = v.dataset;
-        p.sampleid = v.sampleid;
+        //p.sampleid = v.sampleid;
         return p;
       };
 
@@ -152,7 +157,7 @@ dimMod.service('DimensionService', ['$injector',
         // p.sums.total = p.sums.total - v.variables[variable];
 
         p.dataset = v.dataset;
-        p.sampleid = v.sampleid;
+        //p.sampleid = v.sampleid;
         return p;
       };
 
