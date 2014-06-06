@@ -173,18 +173,6 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
     };
 
     $scope.add = function (selection) {
-      // NotifyService.addSpinnerModal('Loading...');
-      // var plottingDataPromise = DatasetFactory.getVariableData([selection.x]);
-      // plottingDataPromise.then(function successFn(res) {
-      //     // draw the figure
-      //     NotifyService.closeModal();
-      //     var PlotService = $injector.get('PlotService');
-      //     PlotService.drawHistogram(selection);
-      //   },
-      //   function errorFn(result) {
-      //     NotifyService.closeModal();
-      //     NotifyService.addTransient(result, 'error');
-      //   });
     };
 
   }
@@ -198,6 +186,42 @@ vis.directive('somForm', function () {
     replace: true,
     controller: 'SOMFormController',
     templateUrl: 'vis/sidebar/som.tpl.html',
+    link: function (scope, elm, attrs) {
+
+    }
+  };
+});
+
+
+// controller for the histogram form
+vis.controller('HeatmapFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'PlotService',
+  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService) {
+    $scope.variables = DatasetFactory.variables();
+    $scope.selection = {};
+
+    $scope.canEdit = function () {
+      return DatasetFactory.activeSets().length > 0;
+    };
+
+    $scope.canSubmit = function () {
+      return $scope.canEdit() && !_.isEmpty($scope.selection);
+    };
+
+    $scope.add = function (selection) {
+      PlotService.drawHeatmap(selection);
+    };
+
+  }
+]);
+
+// directive for histogram form
+vis.directive('heatmapForm', function () {
+  return {
+    restrict: 'C',
+    scope: true,
+    replace: true,
+    controller: 'HeatmapFormController',
+    templateUrl: 'vis/sidebar/heatmap.tpl.html',
     link: function (scope, elm, attrs) {
 
     }

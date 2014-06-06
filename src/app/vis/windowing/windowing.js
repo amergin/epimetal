@@ -95,6 +95,9 @@ win.directive('window', ['$compile', '$injector', function($compile, $injector){
       else if( $scope.window.type === 'scatterplot' ) {
         elName = 'scatterplot';
       }
+      else if( $scope.window.type === 'heatmap' ) {
+        elName = 'heatmap';
+      }
       else {
         throw new Error("unknown plot type");
       }

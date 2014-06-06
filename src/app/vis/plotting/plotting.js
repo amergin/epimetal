@@ -18,6 +18,13 @@ visu.service('PlotService', ['$injector', 'DimensionService',
       $rootScope.$emit('packery.add', config, 'histogram');
     };
 
+    this.drawHeatmap = function(config) {
+      // emit signal to create a new window:
+      $rootScope = $injector.get('$rootScope');
+      $rootScope.$emit('packery.add', config, 'heatmap');
+    };
+
+
   }
 ]);
 
@@ -566,6 +573,138 @@ visu.directive('scatterplot', [
       require: '^?window',
       replace: true,
       controller: 'ScatterPlotController',
+      transclude: true,
+      link: linkFn
+    };
+  }
+]);
+
+
+visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService',
+  function($scope, DatasetFactory, DimensionService) {
+
+    $scope.drawHeatmap = function(element, dimension, group) {
+      $scope.heatmap = dc.heatMap(element[0]);
+      var width = 470;
+      var height = 345;
+      // var noRows = Math.floor( height / variables.length );
+      // var noCols = Math.floor( width / variables.length );
+
+      var colorScale = d3.scale.linear()
+      .domain([-1, 0, 1])
+      .range(['blue', 'white', 'red']);
+      //.range(['#0000FF', '#FFFFFF', '#FF0000']);
+
+      $scope.heatmap
+      .width( width )
+      .height( height )
+      .margins({
+        top: 15,
+        right: 10,
+        bottom: 30,
+        left: 40
+      })
+      .dimension( dimension )
+      .group( group )
+      .keyAccessor( function(d) { return d.key[0]; } )
+      .valueAccessor( function(d) { return d.key[1]; } )
+      .colorAccessor( function(d) { 
+        console.log("color", d);
+        return d.value; } )
+      .colors( colorScale ); //['#FF0000','#FFFFFF','#0000FF'])   //['#0000FF', '#FFFFFF', '#FF0000'])
+      //.calculateColorDomain();
+
+      $scope.heatmap.render();
+    };
+
+    // $scope.stDeviation = function(array) {
+    //   var mean = Math.mean(array);
+    //   var dev = array.map(function(itm){return (itm-mean)*(itm-mean);});
+    //   return {
+    //     'mean': mean,
+    //     'stdev': Math.sqrt(dev.reduce(function(a, b){return a+b;})/array.length)
+    //   };
+
+    // };
+
+    var stDeviation = function(array, mean, variable) {
+      var dev = array.map( function(item) { 
+        var val = +item.variables[variable];
+        return (val-mean)*(val-mean);
+      });
+
+      return Math.sqrt( dev.reduce( function(a,b) { return a+b; } )/array.length );
+    };
+
+    var sampleCorrelation = function(samples, varA, meanA, stdA, varB, meanB, stdB) {
+      var val = 0;
+      console.log("stdA", stdA, "stdB", stdB);
+      _.each( samples, function(samp) {
+        val += ( samp.variables[varA] - meanA ) * ( samp.variables[varB] - meanB );
+      });
+      return val/( stdA * stdB * ( samples.length - 1 ) );
+    };
+
+    // calculate coordinates
+    var coordinates = [];
+    // var noVariables = $scope.window.variables.x.length;
+    // _.each( 
+    //   _.range( noVariables ), function(a) { 
+    //     _.each( _.range( noVariables ), function(b) { 
+    //       coordinates.push( { x: a, y: b } );
+    //     }); 
+    //   });
+
+    $scope.dimension = DimensionService.getSampleDimension();
+    $scope.samples = $scope.dimension.top(Infinity);
+
+    _.each( $scope.window.variables.x, function(varA, indX) {
+      _.each( $scope.window.variables.x, function(varB, indY) {
+        var coord = { x: varA, y: varB };
+        if( varA == varB ) { 
+          // diagonal -> always 1
+          coord['corr'] = 1;
+        }
+        else {
+          // compute mean and st. deviation for varA & varB
+          var meanA = d3.mean( $scope.samples, function(d) { return +d.variables[varA]; } );
+          var stdA = stDeviation( $scope.samples, meanA, varA );
+          var meanB = d3.mean( $scope.samples, function(d) { return +d.variables[varB]; } );
+          var stdB = stDeviation( $scope.samples, meanB, varB );
+          // compute correlation
+          coord['corr'] = sampleCorrelation( $scope.samples, varA, meanA, stdA, varB, meanB, stdB );
+        }
+        coordinates.push(coord);
+      });
+    });
+
+    // create a tiny crossfilt. instance for heatmap
+    $scope.crossfilter = crossfilter( coordinates );
+    $scope.coordDim = $scope.crossfilter.dimension( function(d) { return [ d.x, d.y ]; } );
+    $scope.coordGroup = $scope.coordDim.group().reduceSum( function(d) { return d.corr; } );
+
+    $scope.drawHeatmap( $scope.element, $scope.coordDim, $scope.coordGroup );
+
+  }]);
+
+
+
+
+visu.directive('heatmap', [
+
+  function() {
+
+    var linkFn = function($scope, ele, iAttrs) {
+      $scope.element = ele;
+    };
+
+    return {
+      scope: false,
+      // scope: {},
+      restrict: 'C',
+      require: '^?window',
+      replace: true,
+      controller: 'HeatmapController',
       transclude: true,
       link: linkFn
     };

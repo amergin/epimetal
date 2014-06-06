@@ -54,6 +54,20 @@ dimMod.service('DimensionService', ['$injector', 'constants',
       return dimensions['_dataset'];
     };
 
+    this.getSampleDimension = function() {
+
+      if( _.isUndefined( dimensions['_samples'] ) ) {
+        dimensions['_samples'] = {
+          count: 1,
+          dimension: crossfilterInst.dimension( function(d) { return d.dataset + "|" + d.id; } )
+        };
+      }
+      else {
+        ++dimensions['_samples'].count;
+      }
+      return dimensions['_samples'].dimension;
+    };
+
     // call this to get combined dimension for x-y scatterplots
     this.getXYDimension = function (selection) {
       var varComb = selection.x + "|" + selection.y;
@@ -136,6 +150,27 @@ dimMod.service('DimensionService', ['$injector', 'constants',
 
       return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
     };
+
+    // this.getReduceHeatmap = function(dimensionGroup) {
+    //   var reduceAdd = function (p, v) {
+    //     p.dataset = v.dataset;
+    //     p.sampleid = v.sampleid;
+    //     return p;
+    //   };
+
+    //   var reduceRemove = function (p, v) {
+    //     p.dataset = v.dataset;
+    //     p.sampleid = v.sampleid;
+    //     return p;
+    //   };
+
+    //   var reduceInitial = function () {
+    //     var p = {};
+    //     return p;
+    //   };
+
+    //   return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
+    // };
 
     this.getReducedGroupHisto = function (dimensionGroup, variable) {
 
@@ -273,8 +308,7 @@ dimMod.service('DimensionService', ['$injector', 'constants',
     this.getActiveVariables = function() {
       // ensure xy-dimensions are split to two variables on return
       var flat = _.flatten( _.map( dimensions, function(value,key) { return key.split("|"); } ) );
-      return _.without( flat, '_dataset' );
-      //return _.without( _.keys(dimensions), '_dataset' );
+      return _.without( flat, '_dataset', '_samples' );
     };
 
 
