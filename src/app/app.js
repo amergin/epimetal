@@ -14,7 +14,12 @@ var App = angular.module('plotter', [
 App.constant('constants', {
   nanValue: -1000,
   legalMinValue: 0,
-  tickFormat: d3.format(".2s")
+  tickFormat: d3.format(".2s"),
+  groups: {
+    heatmap: 'ext',
+    scatterplot: 'main',
+    histogram: 'main'
+  }
 });
 
 App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvider', '$injector',

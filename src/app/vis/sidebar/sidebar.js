@@ -17,8 +17,8 @@ vis.directive('dataset', function () {
 });
 
 // dataset table controller
-vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService',
-  function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService) {
+vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService', 'constants',
+  function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService, constants) {
     $scope.sets = DatasetFactory.getSets();
 
     $scope.toggle = function(set) {
@@ -36,7 +36,8 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
           $rootScope.$emit('scatterplot.redraw', set, res);
           $rootScope.$emit('histogram.redraw', set, res);
           $rootScope.$emit('heatmap.redraw', set, res);
-          dc.redrawAll();
+          dc.redrawAll(constants.groups.scatterplot);
+          dc.redrawAll(constants.groups.heatmap);
         }
         else if( res === 'empty' ) {
           DatasetFactory.toggle(set);

@@ -258,7 +258,7 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
         crossfilterInst.add(_.values(currSamples));
       }
       // redraw
-      dc.redrawAll();
+      //dc.redrawAll();
     };
 
     this.updateDatasetDimension = function () {
@@ -273,7 +273,7 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
         });
       });
 
-      dc.redrawAll();
+      //dc.redrawAll();
     };
 
     this.deleteDimension = function(variable) {

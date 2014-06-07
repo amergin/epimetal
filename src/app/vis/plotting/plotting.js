@@ -83,7 +83,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
 
     $scope.resetFilter = function() {
       $scope.histogram.filterAll();
-      dc.redrawAll();
+      dc.redrawAll(constants.groups.histogram);
     };
 
     // $scope.toggleBrush = function() {
@@ -123,7 +123,7 @@ visu.directive('histogram', ['constants',
       //var tickFormat = d3.format(".2s");
 
       // 1. create composite chart
-      $scope.histogram = dc.compositeChart(config.element[0])
+      $scope.histogram = dc.compositeChart(config.element[0], constants.groups.histogram)
         .dimension(config.dimension)
         .width(_width)
         .height(_height)
@@ -170,7 +170,7 @@ visu.directive('histogram', ['constants',
       // 2. for each of the additional stacks, create a child chart
       _.each(config.datasetNames, function(name, ind) {
 
-        var chart = dc.barChart($scope.histogram)
+        var chart = dc.barChart($scope.histogram)//, constants.groups.histogram)
           .centerBar(true)
           .barPadding(0.15)
           .brushOn(true)
@@ -241,7 +241,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
     $scope.resetFilter = function() {
       $scope.scatterplot.filterAll();
-      dc.redrawAll();
+      //dc.redrawAll();
     };
 
     $scope.headerText = $scope.window.variables.x + ", " + $scope.window.variables.y;
@@ -616,18 +616,23 @@ visu.directive('scatterplot', [
 ]);
 
 
-visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants',
-  function($scope, DatasetFactory, DimensionService, constants) {
+visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector',
+  function($scope, DatasetFactory, DimensionService, constants, $injector) {
 
     $scope.resetFilter = function() {
       $scope.heatmap.filterAll();
-      dc.redrawAll();
+      dc.redrawAll(constants.groups.heatmap);
     };
 
     $scope.headerText = $scope.window.variables.x.length + " variables";
 
+    $scope.test = function() {
+      $injector.get('PlotService').drawScatter({ x: 'Alb', y: 'Ala' });
+    };
+
+
     $scope.drawHeatmap = function(element, dimension, group) {
-      $scope.heatmap = dc.heatMap(element[0]);
+      $scope.heatmap = dc.heatMap(element[0], constants.groups.heatmap);
       var width = 470;
       var height = 345;
       // var noRows = Math.floor( height / variables.length );
@@ -646,6 +651,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
           bottom: 30,
           left: 40
         })
+        .turnOffControls()
         .dimension(dimension)
         .group(group)
         .keyAccessor(function(d) {
@@ -665,7 +671,14 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
           //console.log("color", d);
           return d.value;
         })
-        .colors(colorScale);
+        .colors(colorScale)
+        .on('filtered', function(chart, filter) {
+          // reset button clicked or selection is removed
+          if( _.isNull(filter) || _.isNull(chart.filter()) ) { return; }
+
+          $injector.get('PlotService').drawScatter({ x: filter[0], y: filter[1] });
+          $rootScope.$apply();
+        });
 
       $scope.heatmap.render();
     };
@@ -683,8 +696,8 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       // console.log("testvars:", tmeanA, tmeanB, tstdA, tstdB, corr); // corr should be 1.0
 
 
-      $scope.dimension = DimensionService.getSampleDimension();
-      $scope.samples = $scope.dimension.top(Infinity);
+      $scope.sampDimension = DimensionService.getSampleDimension();
+      $scope.samples = $scope.sampDimension.top(Infinity);
 
       var variables = $scope.window.variables.x;
       var correlations = {};
@@ -766,8 +779,11 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       $scope.computeVariables();
 
       // update the chart and redraw
-      $scope.heatmap.dimension( $scope.dimension );
+      $scope.heatmap.dimension( $scope.coordDim );
       $scope.heatmap.group( $scope.coordGroup );
+
+      // remember to clear any filters that may have been applied
+      $scope.heatmap.filterAll();
       $scope.heatmap.render();
 
     });
