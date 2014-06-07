@@ -1,8 +1,8 @@
-var visu = angular.module('plotter.vis.plotting', ['services.dimensions']);
+var visu = angular.module('plotter.vis.plotting', ['services.dimensions', 'services.dataset']);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-visu.service('PlotService', ['$injector', 'DimensionService',
-  function($injector, DimensionService) {
+visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory',
+  function($injector, DimensionService, DatasetFactory) {
 
     // var config = { dimension: sth, reducedGroup: sth, varX: sth, varY: sth, pooled: false|true };
     this.drawScatter = function(config) {
@@ -20,6 +20,7 @@ visu.service('PlotService', ['$injector', 'DimensionService',
 
     this.drawHeatmap = function(config) {
       // emit signal to create a new window:
+      console.log(config);
       $rootScope = $injector.get('$rootScope');
       $rootScope.$emit('packery.add', config, 'heatmap');
     };
@@ -41,6 +42,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
 
     });
 
+    $scope.headerText = $scope.window.variables.x;
 
     $scope.computeExtent = function() {
       // var allValues = $scope.dimension.group().all();
@@ -48,8 +50,12 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       //   allValues = allValues.slice(1);
       // }
       // $scope.extent = d3.extent( allValues, function(d) { return d.key; } );
-      var allValues = $scope.dimension.group().all().filter( function(d) { return d.value > 0 && d.key != constants.nanValue; } );
-      $scope.extent = d3.extent( allValues, function(d) { return d.key; } );
+      var allValues = $scope.dimension.group().all().filter(function(d) {
+        return d.value > 0 && d.key != constants.nanValue;
+      });
+      $scope.extent = d3.extent(allValues, function(d) {
+        return d.key;
+      });
 
       $scope.noBins = _.max([_.min([Math.floor($scope.dimension.group().all().length / 20), 50]), 20]);
       $scope.binWidth = ($scope.extent[1] - $scope.extent[0]) / $scope.noBins;
@@ -60,8 +66,8 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       $scope.reduced = DimensionService.getReducedGroupHisto($scope.group, $scope.window.variables.x);
 
       // update individual charts to the newest info about the bins
-      _.each( $scope.barCharts, function(chart, name) {
-        chart.group( $scope.filterOnSet( $scope.reduced, name ), name );
+      _.each($scope.barCharts, function(chart, name) {
+        chart.group($scope.filterOnSet($scope.reduced, name), name);
       });
 
       console.log("histogram extent is ", $scope.extent);
@@ -90,7 +96,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     $scope.filterOnSet = function(group, name) {
       return {
         'all': function() {
-          return group.all().filter( function(d) {
+          return group.all().filter(function(d) {
             return (d.value.counts[name] > 0) && (d.key >= constants.legalMinValue);
           });
         }
@@ -100,7 +106,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
   }
 ]);
 
-visu.directive('histogram', [ 'constants',
+visu.directive('histogram', ['constants',
 
   function(constants) {
 
@@ -114,7 +120,7 @@ visu.directive('histogram', [ 'constants',
       // collect charts here
       var charts = [];
 
-      var tickFormat = d3.format(".2s");
+      //var tickFormat = d3.format(".2s");
 
       // 1. create composite chart
       $scope.histogram = dc.compositeChart(config.element[0])
@@ -125,13 +131,13 @@ visu.directive('histogram', [ 'constants',
         .elasticY(true)
         .elasticX(false)
         .renderTitle(false)
-        .title( function(d) { 
-          return 'Value: ' + tickFormat(d.key) + 
-          "\n" + 
-          "Dataset: " + d.value.dataset + 
-          "\n" +
-          "Count: " + d.value.counts[d.value.dataset];
-        } )
+        .title(function(d) {
+          return 'Value: ' + constants.tickFormat(d.key) +
+            "\n" +
+            "Dataset: " + d.value.dataset +
+            "\n" +
+            "Count: " + d.value.counts[d.value.dataset];
+        })
         .x(d3.scale.linear().domain(config.extent).range([0, config.noBins]))
         .xUnits(function() {
           return _xBarWidth;
@@ -146,11 +152,11 @@ visu.directive('histogram', [ 'constants',
         .on("filtered", function(chart, filter) {
           //console.log("filter trigger", chart, filter);
           $rootScope.$emit('scatterplot.redrawAll');
-        });        
+        });
 
       // set x axis format
       $scope.histogram
-        .xAxis().ticks(7).tickFormat(tickFormat);
+        .xAxis().ticks(7).tickFormat(constants.tickFormat);
 
       // set colors
       if (config.pooled) {
@@ -169,7 +175,7 @@ visu.directive('histogram', [ 'constants',
           .barPadding(0.15)
           .brushOn(true)
           .dimension(config.dimension)
-          .group( config.filter( config.reduced, name), name )
+          .group(config.filter(config.reduced, name), name)
           .valueAccessor(function(d) { // is y direction
             return d.value.counts[name];
           });
@@ -228,8 +234,8 @@ visu.directive('histogram', [ 'constants',
 
 
 
-visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService',
-  function($scope, DatasetFactory, DimensionService) {
+visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants',
+  function($scope, DatasetFactory, DimensionService, constants) {
 
     $scope.dimension = DimensionService.getXYDimension($scope.window.variables);
 
@@ -237,6 +243,8 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       $scope.scatterplot.filterAll();
       dc.redrawAll();
     };
+
+    $scope.headerText = $scope.window.variables.x + ", " + $scope.window.variables.y;
 
     var _calcCanvasAttributes = function() {
       $scope.reduced = DimensionService.getReduceScatterplot($scope.dimension.group());
@@ -248,47 +256,52 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       });
       $scope.yExtent = d3.extent($scope.reduced.top(Infinity), function(d) {
         return d.key.y;
-      });    
+      });
 
-      $scope.xRange = [ $scope.margins[3], $scope.width - $scope.margins[1] ];
-      $scope.yRange = [ $scope.height - $scope.margins[2], $scope.margins[0] ];
+      $scope.xRange = [$scope.margins[3], $scope.width - $scope.margins[1]];
+      $scope.yRange = [$scope.height - $scope.margins[2], $scope.margins[0]];
       console.log("extents:", $scope.xExtent, $scope.yExtent);
     };
 
     $scope._createCanvas = function(set, zIndex) {
-        var name = set.getName();
-        var data = $scope.reduced.all().filter( function(d) { return d.value.dataset === name; } );
-        var color = $scope.window.variables.pooled ? 'black' : set.getColor();
-        var canvas = $scope.createCanvas( 
-          $scope.element,
-          $scope.width,
-          $scope.height,
-          $scope.margins,
-          $scope.xExtent,
-          $scope.yExtent,
-          $scope.xRange,
-          $scope.yRange,
-          zIndex,
-          $scope.window.variables.x,
-          $scope.window.variables.y,
-          data,
-          //$scope.reduced.top(Infinity),
-          name, 
-          color
-          );
-        $scope.canvases[set.getName()] = { 'zindex': zIndex, 'canvas': canvas };
+      var name = set.getName();
+      var data = $scope.reduced.all().filter(function(d) {
+        return d.value.dataset === name;
+      });
+      var color = $scope.window.variables.pooled ? 'black' : set.getColor();
+      var canvas = $scope.createCanvas(
+        $scope.element,
+        $scope.width,
+        $scope.height,
+        $scope.margins,
+        $scope.xExtent,
+        $scope.yExtent,
+        $scope.xRange,
+        $scope.yRange,
+        zIndex,
+        $scope.window.variables.x,
+        $scope.window.variables.y,
+        data,
+        //$scope.reduced.top(Infinity),
+        name,
+        color
+      );
+      $scope.canvases[set.getName()] = {
+        'zindex': zIndex,
+        'canvas': canvas
+      };
     };
 
     $scope.redrawAll = function() {
       console.log("redraw scatter plot");
       _calcCanvasAttributes();
 
-      _.each( $scope.sets, function(set, ind) {
-        $scope._createCanvas( set, ind );
+      _.each($scope.sets, function(set, ind) {
+        $scope._createCanvas(set, ind);
       });
 
       // create the axes last and place them on top of other canvases
-      var axesCanvas = $scope.createAxisCanvas( 
+      var axesCanvas = $scope.createAxisCanvas(
         $scope.element,
         $scope.width,
         $scope.height,
@@ -300,8 +313,11 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
         100,
         $scope.window.variables.x,
         $scope.window.variables.y
-        );
-      $scope.canvases['axes'] = { 'zindex': 100, 'canvas': axesCanvas };
+      );
+      $scope.canvases['axes'] = {
+        'zindex': 100,
+        'canvas': axesCanvas
+      };
     };
 
     $scope.canvases = {};
@@ -314,21 +330,19 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
 
     $scope.$onRootScope('scatterplot.redraw', function(event, dset, action) {
-      if( action === 'disabled' ) {
+      if (action === 'disabled') {
         $scope.disable(dset);
-      }
-      else if( action === 'enabled' ) {
+      } else if (action === 'enabled') {
 
         var canvas = $scope.canvases[dset.getName()];
-        if( _.isUndefined( canvas ) ) {
+        if (_.isUndefined(canvas)) {
           // new, not drawn before
 
           // refresh calculations
           _calcCanvasAttributes();
           // add canvas as 'layer'
           $scope._createCanvas(dset, ++$scope.zIndexCount);
-        }
-        else {
+        } else {
           $scope.enable(dset);
         }
 
@@ -356,8 +370,8 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       var xscale = d3.scale.linear(), // x scale
         yscale = d3.scale.linear(); // yscale
 
-      var X_TICK_FORMAT = d3.format(".2s");
-      var Y_TICK_FORMAT = d3.format(".2s");
+      var X_TICK_FORMAT = constants.tickFormat; //d3.format(".2s");
+      var Y_TICK_FORMAT = constants.tickFormat; //d3.format(".2s");
 
       // create canvas element
       var c = document.createElement('canvas');
@@ -365,7 +379,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       $(element).append(c);
 
       // adjust canvas size
-      var canvas = d3.select( element[0] ).select( "#axes" )
+      var canvas = d3.select(element[0]).select("#axes")
         .attr("width", w + "px")
         .attr("height", h + "px")
         .style('z-index', zIndex);
@@ -399,7 +413,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
           ctx.textAlign = "center";
           ctx.textBaseline = align;
           ctx.save();
-          ctx.translate( trans.x, trans.y );
+          ctx.translate(trans.x, trans.y);
           ctx.rotate(rotate);
           ctx.fillStyle = "black";
           ctx.font = "12px sans-serif";
@@ -408,85 +422,105 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
         }
 
         function addVerticalAxisTicks(origin) {
-            function addTickText(coord, text) {
-              ctx.fillStyle = "black";
-              ctx.textBaseline = "middle";
-              ctx.font = "9px sans-serif";
-              ctx.fillText(text, coord.x, coord.y);
-            }
+          function addTickText(coord, text) {
+            ctx.fillStyle = "black";
+            ctx.textBaseline = "middle";
+            ctx.font = "9px sans-serif";
+            ctx.fillText(text, coord.x, coord.y);
+          }
 
 
-            var NUM_VERTICAL_TICKS = 8;
-            var TICK_WIDTH = 5;
-            var TICK_TEXT_SPACING = 12;
-            var VERTICAL_TICK_SPACING = (yRange[0] - yRange[1]) / NUM_VERTICAL_TICKS;
+          var NUM_VERTICAL_TICKS = 8;
+          var TICK_WIDTH = 5;
+          var TICK_TEXT_SPACING = 12;
+          var VERTICAL_TICK_SPACING = (yRange[0] - yRange[1]) / NUM_VERTICAL_TICKS;
 
-            for (var i=1; i <= NUM_VERTICAL_TICKS; ++i) {
-              ctx.beginPath();
-              ctx.moveTo(origin.x - TICK_WIDTH/2, origin.y - i * VERTICAL_TICK_SPACING);
-              ctx.lineTo(origin.x + TICK_WIDTH/2, origin.y - i * VERTICAL_TICK_SPACING);
-              ctx.stroke();
-              addTickText(
-                { x : origin.x - TICK_WIDTH/2 - TICK_TEXT_SPACING, 
-                  y: origin.y - i * VERTICAL_TICK_SPACING },
-                  Y_TICK_FORMAT( yscale.invert( origin.y - i * VERTICAL_TICK_SPACING ) )
-                  );
-            }
+          for (var i = 1; i <= NUM_VERTICAL_TICKS; ++i) {
+            ctx.beginPath();
+            ctx.moveTo(origin.x - TICK_WIDTH / 2, origin.y - i * VERTICAL_TICK_SPACING);
+            ctx.lineTo(origin.x + TICK_WIDTH / 2, origin.y - i * VERTICAL_TICK_SPACING);
+            ctx.stroke();
+            addTickText({
+                x: origin.x - TICK_WIDTH / 2 - TICK_TEXT_SPACING,
+                y: origin.y - i * VERTICAL_TICK_SPACING
+              },
+              Y_TICK_FORMAT(yscale.invert(origin.y - i * VERTICAL_TICK_SPACING))
+            );
+          }
         }
 
         function addHorizontalAxisTicks(origin) {
-            function addTickText(coord, text) {
-              ctx.fillStyle = "black";
-              ctx.font = "9px sans-serif";
-              ctx.fillText(text, coord.x, coord.y);
-            }
+          function addTickText(coord, text) {
+            ctx.fillStyle = "black";
+            ctx.font = "9px sans-serif";
+            ctx.fillText(text, coord.x, coord.y);
+          }
 
-            var NUM_HORIZONTAL_TICKS = 7;
-            var TICK_WIDTH = 5;
-            var HORIZONTAL_TICK_SPACING = (xRange[1] - xRange[0]) / NUM_HORIZONTAL_TICKS;
-            var TICK_TEXT_SPACING = 8;
+          var NUM_HORIZONTAL_TICKS = 7;
+          var TICK_WIDTH = 5;
+          var HORIZONTAL_TICK_SPACING = (xRange[1] - xRange[0]) / NUM_HORIZONTAL_TICKS;
+          var TICK_TEXT_SPACING = 8;
 
-            for (var i=1; i <= NUM_HORIZONTAL_TICKS; ++i) {
-              ctx.beginPath();
-              ctx.moveTo(origin.x + i * HORIZONTAL_TICK_SPACING, origin.y - TICK_WIDTH/2);
-              ctx.lineTo(origin.x + i * HORIZONTAL_TICK_SPACING, origin.y + TICK_WIDTH/2);
-              ctx.stroke();          
-              addTickText(
-                { x : origin.x + i * HORIZONTAL_TICK_SPACING,
-                  y: origin.y - TICK_WIDTH/2 + TICK_TEXT_SPACING },
-                  X_TICK_FORMAT( xscale.invert( origin.x + i * HORIZONTAL_TICK_SPACING ) )
-                  );
-            }
+          for (var i = 1; i <= NUM_HORIZONTAL_TICKS; ++i) {
+            ctx.beginPath();
+            ctx.moveTo(origin.x + i * HORIZONTAL_TICK_SPACING, origin.y - TICK_WIDTH / 2);
+            ctx.lineTo(origin.x + i * HORIZONTAL_TICK_SPACING, origin.y + TICK_WIDTH / 2);
+            ctx.stroke();
+            addTickText({
+                x: origin.x + i * HORIZONTAL_TICK_SPACING,
+                y: origin.y - TICK_WIDTH / 2 + TICK_TEXT_SPACING
+              },
+              X_TICK_FORMAT(xscale.invert(origin.x + i * HORIZONTAL_TICK_SPACING))
+            );
+          }
         }
 
-        var origin = { x: d3.round(0.9 * m[3]), y: h - d3.round(0.9 * m[2]) };
+        var origin = {
+          x: d3.round(0.9 * m[3]),
+          y: h - d3.round(0.9 * m[2])
+        };
 
         // draw y axis / label / ticks
-        drawLine(
-          { x: origin.x, y: d3.round(0.75 * m[0])}, 
-          { x: origin.x, y: origin.y }
-        );
-        addLabelText( varY, 
-          { x: 0, y: 0 },
-          { x: d3.round(m[3]/2) - 8, y: (h - d3.round(m[0]/2) - d3.round(m[2]/2))/2 }, 
-          -Math.PI/2, "bottom" );
+        drawLine({
+          x: origin.x,
+          y: d3.round(0.75 * m[0])
+        }, {
+          x: origin.x,
+          y: origin.y
+        });
+        addLabelText(varY, {
+          x: 0,
+          y: 0
+        }, {
+          x: d3.round(m[3] / 2) - 8,
+          y: (h - d3.round(m[0] / 2) - d3.round(m[2] / 2)) / 2
+        }, -Math.PI / 2, "bottom");
         addVerticalAxisTicks(origin);
 
         // x axis / label / ticks
-        drawLine(
-          { x: origin.x, y: origin.y },//h - d3.round(0.75 * m[2])}, 
-          { x: w - d3.round(0.5 * m[1]), y: origin.y }//y: h - d3.round(0.75 * m[2])}
+        drawLine({
+            x: origin.x,
+            y: origin.y
+          }, //h - d3.round(0.75 * m[2])}, 
+          {
+            x: w - d3.round(0.5 * m[1]),
+            y: origin.y
+          } //y: h - d3.round(0.75 * m[2])}
         );
-        addLabelText( varX, 
-          { x: 0, y: 4 },
-          { x: (w - d3.round(m[1]/2) - d3.round(m[3]/2))/2, y: h - d3.round(m[2]/2) },
-          0, "top" );
+        addLabelText(varX, {
+            x: 0,
+            y: 4
+          }, {
+            x: (w - d3.round(m[1] / 2) - d3.round(m[3] / 2)) / 2,
+            y: h - d3.round(m[2] / 2)
+          },
+          0, "top");
         addHorizontalAxisTicks(origin);
       }
     };
 
-    $scope.createCanvas = function(element, w, h, m, xExtent, 
-      yExtent, xRange, yRange, zIndex, varX, 
+    $scope.createCanvas = function(element, w, h, m, xExtent,
+      yExtent, xRange, yRange, zIndex, varX,
       varY, data, dataset, datasetColor) {
       // top-right-bottom-left
       var last = [], // last [x,y,color] pairs
@@ -499,8 +533,8 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       $(element).append(c);
 
       // adjust canvas size
-      var canvas = d3.select( element[0] ).select( "#" + dataset ) //'canvas')
-        .attr("width", w + "px")
+      var canvas = d3.select(element[0]).select("#" + dataset) //'canvas')
+      .attr("width", w + "px")
         .attr("height", h + "px")
         .style('z-index', zIndex);
 
@@ -532,13 +566,17 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
         var y = yscale(d.key.y);
 
         // what to do if there are NaN's:
-        if( _.isUndefined(x) || _.isUndefined(y) ) { return []; }
+        if (_.isUndefined(x) || _.isUndefined(y)) {
+          return [];
+        }
         return [x, y, datasetColor];
       }
 
       // render circle [x,y,color]
       function circle(pos) {
-        if( _.isEmpty( pos ) ){ return; }
+        if (_.isEmpty(pos)) {
+          return;
+        }
 
         ctx.fillStyle = pos[2];
         ctx.beginPath();
@@ -547,8 +585,6 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
         ctx.fill();
       }
     };
-
-
 
 
 
@@ -580,8 +616,15 @@ visu.directive('scatterplot', [
 ]);
 
 
-visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService',
-  function($scope, DatasetFactory, DimensionService) {
+visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants',
+  function($scope, DatasetFactory, DimensionService, constants) {
+
+    $scope.resetFilter = function() {
+      $scope.heatmap.filterAll();
+      dc.redrawAll();
+    };
+
+    $scope.headerText = $scope.window.variables.x.length + " variables";
 
     $scope.drawHeatmap = function(element, dimension, group) {
       $scope.heatmap = dc.heatMap(element[0]);
@@ -591,102 +634,147 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       // var noCols = Math.floor( width / variables.length );
 
       var colorScale = d3.scale.linear()
-      .domain([-1, 0, 1])
-      .range(['blue', 'white', 'red']);
-      //.range(['#0000FF', '#FFFFFF', '#FF0000']);
+        .domain([-1, 0, 1])
+        .range(['blue', 'white', 'red']);
 
       $scope.heatmap
-      .width( width )
-      .height( height )
-      .margins({
-        top: 15,
-        right: 10,
-        bottom: 30,
-        left: 40
-      })
-      .dimension( dimension )
-      .group( group )
-      .keyAccessor( function(d) { return d.key[0]; } )
-      .valueAccessor( function(d) { return d.key[1]; } )
-      .colorAccessor( function(d) { 
-        console.log("color", d);
-        return d.value; } )
-      .colors( colorScale ); //['#FF0000','#FFFFFF','#0000FF'])   //['#0000FF', '#FFFFFF', '#FF0000'])
-      //.calculateColorDomain();
+        .width(width)
+        .height(height)
+        .margins({
+          top: 15,
+          right: 10,
+          bottom: 30,
+          left: 40
+        })
+        .dimension(dimension)
+        .group(group)
+        .keyAccessor(function(d) {
+          return d.key[0];
+        })
+        .valueAccessor(function(d) {
+          return d.key[1];
+        })
+        .title(function(d) {
+          return "Horizontal variable:  " +
+            d.key[0] + "\n" +
+            "Vertical variable:  " +
+            d.key[1] + "\n" +
+            "Correlation:  " + constants.tickFormat(d.value);
+        })
+        .colorAccessor(function(d) {
+          //console.log("color", d);
+          return d.value;
+        })
+        .colors(colorScale);
 
       $scope.heatmap.render();
     };
 
-    // $scope.stDeviation = function(array) {
-    //   var mean = Math.mean(array);
-    //   var dev = array.map(function(itm){return (itm-mean)*(itm-mean);});
-    //   return {
-    //     'mean': mean,
-    //     'stdev': Math.sqrt(dev.reduce(function(a, b){return a+b;})/array.length)
-    //   };
+    $scope.computeVariables = function() {
+      // calculate coordinates
+      var coordinates = [];
 
-    // };
+      // var test = [{ variables: { 'a': 1, 'b': 4}}, { variables: { 'a': 2, 'b': 5}}, { variables: { 'a': 3, 'b': 6}}];
+      // var tmeanA = d3.mean( test, function(d) { return +d.variables['a']; } );
+      // var tmeanB = d3.mean( test, function(d) { return +d.variables['b']; } );
+      // var tstdA = stDeviation( test, tmeanA, 'a' );
+      // var tstdB = stDeviation( test, tmeanB, 'b' );
+      // var corr = sampleCorrelation( test, 'a', tmeanA, tstdA, 'b', tmeanB, tstdB );
+      // console.log("testvars:", tmeanA, tmeanB, tstdA, tstdB, corr); // corr should be 1.0
 
-    var stDeviation = function(array, mean, variable) {
-      var dev = array.map( function(item) { 
-        var val = +item.variables[variable];
-        return (val-mean)*(val-mean);
+
+      $scope.dimension = DimensionService.getSampleDimension();
+      $scope.samples = $scope.dimension.top(Infinity);
+
+      var variables = $scope.window.variables.x;
+      var correlations = {};
+
+      _.each(variables, function(varA, indX) {
+        _.each(variables, function(varB, indY) {
+          var coord = {
+            x: varA,
+            y: varB
+          };
+          if (varA == varB) {
+            // diagonal -> always 1
+            coord['corr'] = 1;
+          } else if (indX > indY) {
+            coordinates.push({
+              x: varA,
+              y: varB,
+              corr: correlations[[varB, varA]]
+            });
+            return;
+          } else {
+            // compute mean and st. deviation for varA & varB
+            var meanA = d3.mean($scope.samples, function(d) {
+              return +d.variables[varA];
+            });
+            var stdA = stDeviation($scope.samples, meanA, varA);
+            var meanB = d3.mean($scope.samples, function(d) {
+              return +d.variables[varB];
+            });
+            var stdB = stDeviation($scope.samples, meanB, varB);
+            // compute correlation
+            coord['corr'] = sampleCorrelation($scope.samples, varA, meanA, stdA, varB, meanB, stdB);
+            correlations[[varA, varB]] = coord['corr'];
+          }
+          coordinates.push(coord);
+        });
       });
 
-      return Math.sqrt( dev.reduce( function(a,b) { return a+b; } )/array.length );
+      // create a tiny crossfilt. instance for heatmap
+      $scope.crossfilter = crossfilter(coordinates);
+      $scope.coordDim = $scope.crossfilter.dimension(function(d) {
+        return [d.x, d.y];
+      });
+      $scope.coordGroup = $scope.coordDim.group().reduceSum(function(d) {
+        return d.corr;
+      });
+    };
+
+    var stDeviation = function(array, mean, variable) {
+      var dev = array.map(function(item) {
+        var val = +item.variables[variable];
+        return (val - mean) * (val - mean);
+      });
+
+      return Math.sqrt(dev.reduce(function(a, b) {
+        return a + b;
+      }) / (array.length - 1));
     };
 
     var sampleCorrelation = function(samples, varA, meanA, stdA, varB, meanB, stdB) {
       var val = 0;
-      console.log("stdA", stdA, "stdB", stdB);
-      _.each( samples, function(samp) {
-        val += ( samp.variables[varA] - meanA ) * ( samp.variables[varB] - meanB );
+      _.each(samples, function(samp) {
+        var valA = +samp.variables[varA];
+        var valB = +samp.variables[varB];
+        if (_.isUndefined(valA) || _.isUndefined(valB)) {
+          return;
+        }
+        val += (valA - meanA) * (valB - meanB);
       });
-      return val/( stdA * stdB * ( samples.length - 1 ) );
+      return val / (stdA * stdB * (samples.length - 1));
     };
 
-    // calculate coordinates
-    var coordinates = [];
-    // var noVariables = $scope.window.variables.x.length;
-    // _.each( 
-    //   _.range( noVariables ), function(a) { 
-    //     _.each( _.range( noVariables ), function(b) { 
-    //       coordinates.push( { x: a, y: b } );
-    //     }); 
-    //   });
+    $scope.computeVariables();
+    $scope.drawHeatmap($scope.element, $scope.coordDim, $scope.coordGroup);
 
-    $scope.dimension = DimensionService.getSampleDimension();
-    $scope.samples = $scope.dimension.top(Infinity);
 
-    _.each( $scope.window.variables.x, function(varA, indX) {
-      _.each( $scope.window.variables.x, function(varB, indY) {
-        var coord = { x: varA, y: varB };
-        if( varA == varB ) { 
-          // diagonal -> always 1
-          coord['corr'] = 1;
-        }
-        else {
-          // compute mean and st. deviation for varA & varB
-          var meanA = d3.mean( $scope.samples, function(d) { return +d.variables[varA]; } );
-          var stdA = stDeviation( $scope.samples, meanA, varA );
-          var meanB = d3.mean( $scope.samples, function(d) { return +d.variables[varB]; } );
-          var stdB = stDeviation( $scope.samples, meanB, varB );
-          // compute correlation
-          coord['corr'] = sampleCorrelation( $scope.samples, varA, meanA, stdA, varB, meanB, stdB );
-        }
-        coordinates.push(coord);
-      });
+    $scope.$onRootScope('heatmap.redraw', function(event, dset, action) {
+
+      $scope.computeVariables();
+
+      // update the chart and redraw
+      $scope.heatmap.dimension( $scope.dimension );
+      $scope.heatmap.group( $scope.coordGroup );
+      $scope.heatmap.render();
+
     });
 
-    // create a tiny crossfilt. instance for heatmap
-    $scope.crossfilter = crossfilter( coordinates );
-    $scope.coordDim = $scope.crossfilter.dimension( function(d) { return [ d.x, d.y ]; } );
-    $scope.coordGroup = $scope.coordDim.group().reduceSum( function(d) { return d.corr; } );
 
-    $scope.drawHeatmap( $scope.element, $scope.coordDim, $scope.coordGroup );
-
-  }]);
-
+  }
+]);
 
 
 

@@ -5,8 +5,11 @@
 		<!-- <a class="btn btn-default btn-xs ctrl-filter" ng-show=" window.type == 'histogram' " ng-click="toggleBrush()">toggle brush</a> -->
 	</div>
 	<div class="text-center plot-title" ng-switch on="window.type"> 
-		{{window.type }} of
-		<strong ng-switch-when="histogram">
+		{{window.type}} of
+		<strong>
+			{{headerText}}
+		</strong>
+<!-- 		<strong ng-switch-when="histogram">
 			{{window.variables.x}}
 		</strong>
 		<strong ng-switch-when="scatterplot">
@@ -15,5 +18,5 @@
 		<strong ng-switch-default>
 			default
 		</strong>
-	</div>
+ -->	</div>
 </div>

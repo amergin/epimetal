@@ -13,7 +13,8 @@ var App = angular.module('plotter', [
 
 App.constant('constants', {
   nanValue: -1000,
-  legalMinValue: 0
+  legalMinValue: 0,
+  tickFormat: d3.format(".2s")
 });
 
 App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvider', '$injector',

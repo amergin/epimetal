@@ -64,9 +64,3 @@
     $scope.activeVariables = DimensionService.getDimensions();
     console.log("viscontroller");
   }]);
-
-
-
-
-
-

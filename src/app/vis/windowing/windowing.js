@@ -5,6 +5,8 @@ win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
   console.log("packery controller");
   $scope.$onRootScope('packery.add', function(event,selection,type) {
     $scope.add( selection,type );
+
+    $rootScope.$emit('variable:add', type, selection);
   });
 
   $scope.windows = [];
@@ -88,39 +90,49 @@ win.directive('window', ['$compile', '$injector', function($compile, $injector){
       $scope.packery.layout();
 
       // append a new suitable div to execute its directive
-      var elName = '';
-      if( $scope.window.type === 'histogram' ) {
-        elName = 'histogram';
-      }
-      else if( $scope.window.type === 'scatterplot' ) {
-        elName = 'scatterplot';
-      }
-      else if( $scope.window.type === 'heatmap' ) {
-        elName = 'heatmap';
-      }
-      else {
-        throw new Error("unknown plot type");
-      }
+      // var elName = '';
+      // if( $scope.window.type === 'histogram' ) {
+      //   elName = 'histogram';
+      // }
+      // else if( $scope.window.type === 'scatterplot' ) {
+      //   elName = 'scatterplot';
+      // }
+      // else if( $scope.window.type === 'heatmap' ) {
+      //   elName = 'heatmap';
+      // }
+      // else {
+      //   throw new Error("unknown plot type");
+      // }
 
       var newEl = angular.element(
-        '<div class="' + elName + '"' + 
+        '<div class="' + $scope.window.type + '"' + 
         ' id="window' + $scope.window.number + '"></div>');
       $scope.element.append( newEl );
       $compile( newEl )($scope);
 
       // catch window destroys
       $scope.$on('$destroy', function() {
-        var DimensionService = $injector.get('DimensionService');
 
-        var varX = $scope.window.variables.x;
-        var varY = $scope.window.variables.y;
+        $rootScope.$emit('variable:remove', $scope.window.type, $scope.window.variables);
 
-        if( !_.isUndefined( varX ) && !_.isUndefined( varY ) ) {
-          DimensionService.checkDimension([varX + '|' + varY]);
-        }
-        else {
-          DimensionService.checkDimension([varX]);
-        }
+        // var DimensionService = $injector.get('DimensionService');
+
+        // var varX = $scope.window.variables.x;
+        // var varY = $scope.window.variables.y;
+        // var variables = [];
+
+        // if( !_.isUndefined( varX ) && !_.isUndefined( varY ) ) {
+        //   variables.push( varX + '|' + varY );
+        // }
+        // else {
+        //   if( _.isArray( varX ) ){
+        //     variables = varX;
+        //   }
+        //   else {
+        //     variables.push( varX );
+        //   }
+        // }
+        // DimensionService.checkDimension( variables );
       });
     }
   };

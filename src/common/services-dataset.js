@@ -13,6 +13,9 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
     };
     that.colors = d3.scale.category20();
 
+    // notice: these cannot be kept in DimensionService, since
+    // not all variables rely on crossfilter-dimension setup!
+    that.activeVariables = {};
 
     // --------------------------------------
     // class for defining a single dataset
@@ -167,7 +170,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
       }
 
       var DimensionService = $injector.get('DimensionService');
-      var activeVars = DimensionService.getActiveVariables();
+      var activeVars = service.getActiveVariables();
       var dataWasAdded = false;
 
       if( activeVars.length === 0 ) {
@@ -295,6 +298,38 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
     service.isActive = function (name) {
       return that.sets[name].active();
     };
+
+    service._addActiveVariable = function(variable) {
+      if( _.isUndefined( that.activeVariables[variable] ) ) {
+        that.activeVariables[variable] = { count: 1 };
+      }
+      else {
+        ++that.activeVariables[variable].count;
+      }
+    };
+
+    service._removeActiveVariable = function(variable) {
+      --that.activeVariables[variable].count;
+    };
+
+    service.getActiveVariables = function() {
+      return _.without( 
+        _.map( that.activeVariables, function(val,key) { if( val.count > 0 ) { return key; } } ), 
+        undefined );
+    };
+
+    var $rootScope = $injector.get('$rootScope');
+    $rootScope.$on('variable:add', function(event, type, selection) {
+      _.each( Utils.getVariables(type,selection), function(variable) {
+        service._addActiveVariable( variable );
+      });
+    });
+
+    $rootScope.$on('variable:remove', function(event, type, selection) {
+      _.each( Utils.getVariables(type,selection), function(variable) {
+        service._removeActiveVariable( variable );
+      });
+    });
 
     return service;
   }

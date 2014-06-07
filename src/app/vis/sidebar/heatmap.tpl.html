@@ -3,12 +3,13 @@
 	<form class="form-horizontal" role="form" name="plot" novalidate>
 		<fieldset>
 			<div class="form-group">
-				<label class="col-sm-3 control-label" for="xcoord-scatter">Input variables</label>
+				<label class="col-sm-3 control-label" for="vars-heatmap">Input variables</label>
 				<div class="col-sm-7">
+					<small class="pull-right" ng-show="selection.x"><a href="" ng-click="clear()">Clear selections</a></small>
 					<select
 					chosen
 					multiple
-					class="form-control" id="xcoord-heatmap"
+					class="form-control" id="vars-heatmap"
 					data-placeholder=" "
 					ng-model="selection.x"
 					ng-options="var for var in variables"

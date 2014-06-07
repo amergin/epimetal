@@ -11,7 +11,7 @@ vis.directive('dataset', function () {
     replace: true,
     //controller: 'DatasetTableController',
     link: function (scope, elm, attrs) {
-      console.log("Dataset table directive linker");
+      //console.log("Dataset table directive linker");
     }
   };
 });
@@ -23,6 +23,7 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
 
     $scope.toggle = function(set) {
       set.toggle();
+
       DatasetFactory.checkActiveVariables(set).then( function succFn(res) {
 
         if( res === 'enabled' || res === 'disabled' ) {
@@ -32,28 +33,19 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
           DatasetFactory.toggle(set);
 
           // important!
-          dc.redrawAll();
           $rootScope.$emit('scatterplot.redraw', set, res);
           $rootScope.$emit('histogram.redraw', set, res);
+          $rootScope.$emit('heatmap.redraw', set, res);
+          dc.redrawAll();
         }
         else if( res === 'empty' ) {
           DatasetFactory.toggle(set);
         }
 
       }, function errFn(res) {
-        NotifyService.addSticky(res, 'error');
+        NotifyService.addTransient(res, 'error');
       });
     };
-
-    // clears all selections
-    // $scope.clear = function() {
-
-    //   _.each( $scope.sets, function(set) {
-    //     set.disable();
-    //     $rootScope.$emit('scatterplot.redraw', set, 'disabled');
-    //   });
-    //   DimensionService.updateDatasetDimension();
-    // };
   }
 ]);
 
@@ -207,10 +199,23 @@ vis.controller('HeatmapFormController', ['$scope', '$rootScope', 'DatasetFactory
       return $scope.canEdit() && !_.isEmpty($scope.selection);
     };
 
-    $scope.add = function (selection) {
-      PlotService.drawHeatmap(selection);
+    $scope.clear = function() {
+      $scope.selection.x = [];
     };
 
+    $scope.add = function (selection) {
+      NotifyService.addSpinnerModal('Loading...');
+      var plottingDataPromise = DatasetFactory.getVariableData(selection.x);
+
+      plottingDataPromise.then(function (res) {
+        // draw the figure
+        NotifyService.closeModal();
+        PlotService.drawHeatmap(selection);
+      }, function errorFn(result) {
+        NotifyService.closeModal();
+        NotifyService.addTransient(result, 'error');
+      });
+    };
   }
 ]);
 

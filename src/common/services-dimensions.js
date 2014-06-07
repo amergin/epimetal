@@ -1,8 +1,8 @@
 var dimMod = angular.module('services.dimensions', ['services.dataset']);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-dimMod.service('DimensionService', ['$injector', 'constants', 
-  function ($injector, constants) {
+dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
+  function ($injector, constants, DatasetFactory) {
 
     // dimensions created in this tool
     var dimensions = {};
@@ -25,6 +25,7 @@ dimMod.service('DimensionService', ['$injector', 'constants',
         // dimension does not exist
         if (_.isUndefined(dimensions[variable])) {
           console.log("Dimension for ", variable, " created");
+
           retDimension = crossfilterInst.dimension(function (d) {
             // a little checking to make sure NaN's are not returned
             return +d.variables[variable] || constants.nanValue;
@@ -78,6 +79,7 @@ dimMod.service('DimensionService', ['$injector', 'constants',
 
       // dimension does not exist, create one
       if (_.isUndefined(dimensions[varComb])) {
+
         _dim = crossfilterInst.dimension(function (d) {
           return {
             x: +d.variables[selection.x],
@@ -102,17 +104,28 @@ dimMod.service('DimensionService', ['$injector', 'constants',
       return _dim;
     };
 
-    this.checkDimension = function (variables) {
-      _.each( variables, function(variable) {
-        --dimensions[variables].count;
-
-        if( dimensions[variables].count === 0 ) {
-          dimensions[variables].dimension.dispose();
-          console.log('Deleting dimension', variable);
-          delete dimensions[variables];
-        }
+    var $rootScope = $injector.get('$rootScope');
+    var that = this;
+    $rootScope.$on('variable:remove', function(event, type, selection) {
+      _.each( Utils.getVariables(type,selection, true), function(variable) {
+        that._checkDimension(variable);
       });
+    });
 
+    // Notice: 'variable:add' message is not noted on this service,
+    // since all necessary plotters will request a dimension anyway -> handled there
+
+    this._checkDimension = function (variable) {
+        if( _.isUndefined( dimensions[variable] ) ) {
+          return;
+        }
+        --dimensions[variable].count;
+
+        if( dimensions[variable].count === 0 ) {
+          dimensions[variable].dimension.dispose();
+          console.log('Deleting dimension', variable);
+          delete dimensions[variable];
+        }
     };
 
 
@@ -150,27 +163,6 @@ dimMod.service('DimensionService', ['$injector', 'constants',
 
       return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
     };
-
-    // this.getReduceHeatmap = function(dimensionGroup) {
-    //   var reduceAdd = function (p, v) {
-    //     p.dataset = v.dataset;
-    //     p.sampleid = v.sampleid;
-    //     return p;
-    //   };
-
-    //   var reduceRemove = function (p, v) {
-    //     p.dataset = v.dataset;
-    //     p.sampleid = v.sampleid;
-    //     return p;
-    //   };
-
-    //   var reduceInitial = function () {
-    //     var p = {};
-    //     return p;
-    //   };
-
-    //   return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
-    // };
 
     this.getReducedGroupHisto = function (dimensionGroup, variable) {
 
@@ -305,11 +297,11 @@ dimMod.service('DimensionService', ['$injector', 'constants',
       return dimensions;
     };
 
-    this.getActiveVariables = function() {
-      // ensure xy-dimensions are split to two variables on return
-      var flat = _.flatten( _.map( dimensions, function(value,key) { return key.split("|"); } ) );
-      return _.without( flat, '_dataset', '_samples' );
-    };
+    // this.getActiveVariables = function() {
+    //   // ensure xy-dimensions are split to two variables on return
+    //   var flat = _.flatten( _.map( dimensions, function(value,key) { return key.split("|"); } ) );
+    //   return _.without( flat, '_dataset', '_samples' );
+    // };
 
 
   // HELPER FUNCTIONS
