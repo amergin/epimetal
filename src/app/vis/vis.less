@@ -165,11 +165,15 @@ table#dataset {
 opacity: 0.60;
 }
 
-/* // heatmap legend divider
-.heatmap-legend {
-  border-left: 2px solid;
-  border-color: grey;
-} */
+// heatmap cell greyed out
+g.selected rect {
+  fill: darkgrey;
+}
+
+g.deselected rect {
+  fill: lightgrey;
+}
+
 
 .colorbar .axis line{
     fill: none;

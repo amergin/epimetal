@@ -669,7 +669,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         svg
         .attr("width", width)
         .attr("height", height)
-        .attr("class", "heatmap-legend pull-right")
+        //.attr("class", "heatmap-legend pull-right")
         .style('vertical-align', 'top')
         .style('padding-right', '10px');
         g = svg.append("g").attr("transform","translate(10,10)").classed("colorbar",true);
@@ -719,7 +719,6 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
             "Correlation:  " + constants.tickFormat(d.value);
         })
         .colorAccessor(function(d) {
-          //console.log("color", d);
           return d.value;
         })
         .colors(colorScale)
@@ -731,11 +730,25 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
           $rootScope.$apply();
         })
         .renderlet( function(chart) {
+          // float left so the legend fits on right
           chart.select("svg").style("float", "left");
+
+          // rotate labels
+          chart.selectAll('g.cols > text')
+          .attr('transform', function(d) { 
+            var ele = d3.select(this);
+            return 'rotate(-90,' + ele.attr('x') + "," + ele.attr('y') + ")";
+          })
+          .style("text-anchor", "end")
+          .attr("dy", function(d) { 
+            return +d3.select(this).attr('dy')/2;
+          });
+
+          // set background on mouseover
+          //chart.selectAll('rect').on("mouseover", function(d) { console.log("mouse", d, this); } )
         });
 
       $scope.heatmap.render();
-      //$scope.heatmap.svg().style("float", 'left');
       $scope.legend = _drawLegend2( element[0], colorScale );
 
     };
