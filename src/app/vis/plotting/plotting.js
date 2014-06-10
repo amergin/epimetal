@@ -626,42 +626,19 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
     $scope.headerText = $scope.window.variables.x.length + " variables";
 
+    // create anchor for heatmap
+    $scope.heatmapAnchor = d3.select( $scope.element[0] )
+    .append('div')
+    .attr('class', 'heatmap-chart-anchor')[0];
+
+    $scope.colorbarAnchor = d3.select( $scope.element[0] )
+    .append('div')
+    .attr('class', 'heatmap-legend-anchor')[0][0];
+
+
     $scope.drawHeatmap = function(element, dimension, group) {
 
       var _drawLegend = function(element, scale) {
-        var svg = d3.select( element ).append('svg');
-        svg
-        .attr("width", 60)
-        .attr("height", 345)
-        .attr("class", "heatmap-legend");
-
-        var legend = svg.selectAll(".legend")
-            .data(scale.ticks(10).reverse())
-          .enter().append("g")
-            .attr("class", "legend")
-            .attr("transform", function(d, i) { return "translate(" + (5) + "," + (25 + i * 25) + ")"; });
-
-        legend.append("rect")
-            .attr("width", 25)
-            .attr("height", 25)
-            .style("fill", scale);
-
-        legend.append("text")
-            .attr("x", 26)
-            .attr("y", 12.5)
-            .attr("dy", ".35em")
-            .text(String);
-
-        // svg.append("text")
-        //     .attr("class", "label")
-        //     .attr("x", width + 20)
-        //     .attr("y", 10)
-        //     .attr("dy", ".35em")
-        //     .text("Count");
-        return legend;
-      };
-
-      var _drawLegend2 = function(element, scale) {
         var svg = d3.select( element ).append('svg');
         var height = 320;
         var width = 60;
@@ -672,15 +649,15 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         //.attr("class", "heatmap-legend pull-right")
         .style('vertical-align', 'top')
         .style('padding-right', '10px');
-        g = svg.append("g").attr("transform","translate(10,10)").classed("colorbar",true);
-        cb = colorBar()
+        var g = svg.append("g").attr("transform","translate(10,10)").classed("colorbar",true);
+        var cb = colorBar()
         .color(scale)
         .size(height - 20)
         .lineWidth(width - 30)
         .precision(4);
         //.tickFormat(constants.tickFormat);
         g.call(cb);
-
+        return cb;
       };
 
       var width = 400;
@@ -730,9 +707,6 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
           $rootScope.$apply();
         })
         .renderlet( function(chart) {
-          // float left so the legend fits on right
-          chart.select("svg").style("float", "left");
-
           // rotate labels
           chart.selectAll('g.cols > text')
           .attr('transform', function(d) { 
@@ -746,10 +720,22 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
           // set background on mouseover
           //chart.selectAll('rect').on("mouseover", function(d) { console.log("mouse", d, this); } )
+
+          // remove rounded edges
+          chart.selectAll("g.box-group > rect")
+          .attr("rx", null)
+          .attr("ry", null);          
+        })
+        .on('preRender', function(chart) {
+          // try to hide flickering from renderlet
+          chart.transitionDuration(0);
+        })
+        .on('postRender', function(chart) {
+          chart.transitionDuration(500);
         });
 
       $scope.heatmap.render();
-      $scope.legend = _drawLegend2( element[0], colorScale );
+      $scope.legend = _drawLegend( $scope.colorbarAnchor, colorScale );//element[0], colorScale );
 
     };
 
@@ -793,13 +779,13 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
             var meanA = d3.mean($scope.samples, function(d) {
               return +d.variables[varA];
             });
-            var stdA = stDeviation($scope.samples, meanA, varA);
+            var stdA = Utils.stDeviation($scope.samples, meanA, varA);
             var meanB = d3.mean($scope.samples, function(d) {
               return +d.variables[varB];
             });
-            var stdB = stDeviation($scope.samples, meanB, varB);
+            var stdB = Utils.stDeviation($scope.samples, meanB, varB);
             // compute correlation
-            coord['corr'] = sampleCorrelation($scope.samples, varA, meanA, stdA, varB, meanB, stdB);
+            coord['corr'] = Utils.sampleCorrelation($scope.samples, varA, meanA, stdA, varB, meanB, stdB);
             correlations[[varA, varB]] = coord['corr'];
           }
           coordinates.push(coord);
@@ -816,32 +802,8 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       });
     };
 
-    var stDeviation = function(array, mean, variable) {
-      var dev = array.map(function(item) {
-        var val = +item.variables[variable];
-        return (val - mean) * (val - mean);
-      });
-
-      return Math.sqrt(dev.reduce(function(a, b) {
-        return a + b;
-      }) / (array.length - 1));
-    };
-
-    var sampleCorrelation = function(samples, varA, meanA, stdA, varB, meanB, stdB) {
-      var val = 0;
-      _.each(samples, function(samp) {
-        var valA = +samp.variables[varA];
-        var valB = +samp.variables[varB];
-        if (_.isUndefined(valA) || _.isUndefined(valB)) {
-          return;
-        }
-        val += (valA - meanA) * (valB - meanB);
-      });
-      return val / (stdA * stdB * (samples.length - 1));
-    };
-
     $scope.computeVariables();
-    $scope.drawHeatmap($scope.element, $scope.coordDim, $scope.coordGroup);
+    $scope.drawHeatmap($scope.heatmapAnchor, $scope.coordDim, $scope.coordGroup);
 
 
     $scope.$onRootScope('heatmap.redraw', function(event, dset, action) {
