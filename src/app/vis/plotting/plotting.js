@@ -626,15 +626,66 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
     $scope.headerText = $scope.window.variables.x.length + " variables";
 
-    $scope.test = function() {
-      $injector.get('PlotService').drawScatter({ x: 'Alb', y: 'Ala' });
-    };
-
-
     $scope.drawHeatmap = function(element, dimension, group) {
+
+      var _drawLegend = function(element, scale) {
+        var svg = d3.select( element ).append('svg');
+        svg
+        .attr("width", 60)
+        .attr("height", 345)
+        .attr("class", "heatmap-legend");
+
+        var legend = svg.selectAll(".legend")
+            .data(scale.ticks(10).reverse())
+          .enter().append("g")
+            .attr("class", "legend")
+            .attr("transform", function(d, i) { return "translate(" + (5) + "," + (25 + i * 25) + ")"; });
+
+        legend.append("rect")
+            .attr("width", 25)
+            .attr("height", 25)
+            .style("fill", scale);
+
+        legend.append("text")
+            .attr("x", 26)
+            .attr("y", 12.5)
+            .attr("dy", ".35em")
+            .text(String);
+
+        // svg.append("text")
+        //     .attr("class", "label")
+        //     .attr("x", width + 20)
+        //     .attr("y", 10)
+        //     .attr("dy", ".35em")
+        //     .text("Count");
+        return legend;
+      };
+
+      var _drawLegend2 = function(element, scale) {
+        var svg = d3.select( element ).append('svg');
+        var height = 320;
+        var width = 60;
+
+        svg
+        .attr("width", width)
+        .attr("height", height)
+        .attr("class", "heatmap-legend pull-right")
+        .style('vertical-align', 'top')
+        .style('padding-right', '10px');
+        g = svg.append("g").attr("transform","translate(10,10)").classed("colorbar",true);
+        cb = colorBar()
+        .color(scale)
+        .size(height - 20)
+        .lineWidth(width - 30)
+        .precision(4);
+        //.tickFormat(constants.tickFormat);
+        g.call(cb);
+
+      };
+
+      var width = 400;
+      var height = 325;
       $scope.heatmap = dc.heatMap(element[0], constants.groups.heatmap);
-      var width = 470;
-      var height = 345;
       // var noRows = Math.floor( height / variables.length );
       // var noCols = Math.floor( width / variables.length );
 
@@ -646,10 +697,10 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         .width(width)
         .height(height)
         .margins({
-          top: 15,
+          top: 10,
           right: 10,
-          bottom: 30,
-          left: 40
+          bottom: 60,
+          left: 80
         })
         .turnOffControls()
         .dimension(dimension)
@@ -678,9 +729,15 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
           $injector.get('PlotService').drawScatter({ x: filter[0], y: filter[1] });
           $rootScope.$apply();
+        })
+        .renderlet( function(chart) {
+          chart.select("svg").style("float", "left");
         });
 
       $scope.heatmap.render();
+      //$scope.heatmap.svg().style("float", 'left');
+      $scope.legend = _drawLegend2( element[0], colorScale );
+
     };
 
     $scope.computeVariables = function() {

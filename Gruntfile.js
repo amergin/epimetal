@@ -284,7 +284,9 @@ module.exports = function ( grunt ) {
         noarg: true,
         sub: true,
         boss: true,
-        eqnull: true
+        eqnull: true,
+        // for 3rd party d3 code
+        onevar: false
       },
       globals: {}
     },
