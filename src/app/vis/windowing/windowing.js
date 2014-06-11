@@ -3,8 +3,8 @@ var win = angular.module('plotter.vis.windowing', []);
 // controller for Packery windowing system
 win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', function($scope, $rootScope, $timeout) {
   console.log("packery controller");
-  $scope.$onRootScope('packery.add', function(event,selection,type) {
-    $scope.add( selection,type );
+  $scope.$onRootScope('packery.add', function(event, selection, type, size) {
+    $scope.add( selection, type, size);
 
     $rootScope.$emit('variable:add', type, selection);
   });
@@ -24,7 +24,7 @@ win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
   };
 
   // adds window to grid
-  $scope.add = function(selection, type) {
+  $scope.add = function(selection, type, size) {
 
     // always form a copy so that the form selection is not updated via reference to here.
     var selectionCopy = {};
@@ -32,7 +32,9 @@ win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
 
     $scope.windows.push({ 
       number : (++$scope.windowRunningNumber),
-      type: type, variables: selectionCopy 
+      type: type, 
+      variables: selectionCopy,
+      size: size
     });
   };
 
@@ -52,19 +54,20 @@ win.directive('packery', [ function() {
       console.log("postlink packery");
           // create a new empty grid system
           scope.packery = new Packery( elm[0], 
-          { 
+          {
+          // don't start layouting now
+          // isInitLayout: false,
+          isResizeBound: true,
           // columnWidth: 220, 
           // gutter: 10,
           // see https://github.com/metafizzy/packery/issues/7
-          rowHeight: 410,
+          // rowHeight: 400,
           itemSelector: '.window',
           gutter: '.gutter-sizer',
-          columnWidth: 500
-          //columnWidth: '.grid-sizer'
+          // columnWidth: 500
+          // columnWidth: '.grid-sizer'
         } );
-          scope.packery.bindResize();
-
-          window.packery = scope.packery;
+          // window.packery = scope.packery;
         }
       };
     }]);
@@ -84,12 +87,13 @@ win.directive('window', ['$compile', '$injector', function($compile, $injector){
       console.log('window linker');
       $scope.element = ele;
 
-      // create window and let Packery know
-      $scope.$parent.packery.bindDraggabillyEvents( 
-        new Draggabilly( $scope.element[0], { handle : '.handle' } ) );
+      if($scope.window.size == 'double') {
+        $scope.element.addClass('window-dbl');
+      }
 
-      $scope.packery.reloadItems();
-      $scope.packery.layout();
+      var draggable = new Draggabilly( $scope.element[0], { handle : '.handle' } );
+      // create window and let Packery know
+      $scope.packery.bindDraggabillyEvents( draggable );
 
       var newEl = angular.element(
         '<div class="' + $scope.window.type + '"' + 
@@ -97,9 +101,37 @@ win.directive('window', ['$compile', '$injector', function($compile, $injector){
       $scope.element.append( newEl );
       $compile( newEl )($scope);
 
+      $scope.packery.reloadItems();
+      $scope.packery.layout();
+      //$scope.packery.layoutItems( [draggable], false );
+
+      // tell about dragging events:
+      $scope.isDragging = false;
+      $scope.element.find('.handle').mousedown( function() {
+          $(window).mousemove(function() {
+              $scope.isDragging = true;
+              $(window).unbind("mousemove");
+          });
+      })
+      .mouseup(function() {
+          var wasDragging = $scope.isDragging;
+          $scope.isDragging = false;
+          $(window).unbind("mousemove");
+          if (!wasDragging) { //was clicking
+            return;
+          }
+          console.log("was dragging");
+          setTimeout( function() {
+            $scope.packery.reloadItems();
+            // $scope.packery.layout();
+          }, 900);
+      });
+
       // catch window destroys
       $scope.$on('$destroy', function() {
         $rootScope.$emit('variable:remove', $scope.window.type, $scope.window.variables);
+        $scope.packery.reloadItems();
+        // $scope.packery.layout();
       });
     }
   };
