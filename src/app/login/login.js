@@ -12,8 +12,7 @@ loginMod.config(['$stateProvider',
       url: '/login/',
       abstract: false,
       controller: 'LoginCtrl',
-      template: '<div class="row"><div class="col-md-2 col-md-offset-5"><h3>Please log in to proceed.</h3> <a href="" ng-click="open()">Reopen login form</a></div></div>',
-      // templateUrl: 'vis/.tpl.html',
+      templateUrl: 'login/login.tpl.html',
       data: {
         pageTitle: 'Please login to continue'
       }
@@ -30,9 +29,9 @@ loginMod.controller('LoginCtrl', ['$scope', 'NotifyService', '$state', function(
     var modalInstance = NotifyService.addClosableModal('login/modal.tpl.html');
 
     modalInstance.result.then(function successFn() {
-      $state.go('vis');
+      $state.go('vis.all');
     }, function errFn() {
-      $state.go('vis');
+      $state.go('vis.all');
     });
 
   };

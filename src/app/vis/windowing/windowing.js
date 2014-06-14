@@ -61,10 +61,10 @@ win.directive('packery', [ function() {
           // columnWidth: 220, 
           // gutter: 10,
           // see https://github.com/metafizzy/packery/issues/7
-          // rowHeight: 400,
+          rowHeight: 400,
           itemSelector: '.window',
           gutter: '.gutter-sizer',
-          // columnWidth: 500
+          columnWidth: 500
           // columnWidth: '.grid-sizer'
         } );
           // window.packery = scope.packery;

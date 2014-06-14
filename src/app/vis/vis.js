@@ -30,13 +30,13 @@
  */
  vis.config(['$stateProvider', function ( $stateProvider ) {
 
-  var visState = {
+  var vis = {
     name: 'vis',
     url: '/vis/',
-    abstract: false,
+    abstract: true,
+    data: { pageTitle: 'Visualization' },
     controller: 'VisCtrl',
     templateUrl: 'vis/vis.tpl.html',
-    data: { pageTitle: 'Visualization' },
 
     // important: the app will NOT change state to 'vis' until
     // these object promises have been resolved. Failure is generally indication
@@ -51,13 +51,37 @@
     }
   };
 
-  $stateProvider.state(visState);
+  // since parent is abstract and this one has the 
+  // same url, default is always redirected to this child
+  var all = {
+    name: 'vis.all',
+    url: '',
+    //controller: function() { console.log("sidebar"); },
+    // controller: ['$scope', '$stateParams', function($scope, $stateParams) { console.log($stateParams); }],
+    //templateUrl: 'vis/sidebar/sidebar.tpl.html',
+    data: { pageTitle: 'Visualization' },
+    views: {
+      'sidebar': {
+        templateUrl: 'vis/sidebar/vis.sidebar.tpl.html'
+      },
+      'dashboard': {
+        templateUrl: 'vis/vis.dashboard.tpl.html'
+      },
+      // notice absolute addressing -> to the root
+      'header@': {
+        templateUrl: 'vis/header.tpl.html'
+      }
+    }
+  };
+
+  $stateProvider.state(vis);
+  $stateProvider.state(all);
 
 
 }]);
 
- vis.controller( 'VisCtrl', ['$scope', 'DimensionService',
-  function VisController( $scope, DimensionService) {
+ vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams',
+  function VisController( $scope, DimensionService, $stateParams) {
     
     $scope.visController = "visController";
     $scope.usedVariables = DimensionService.getUsedVariables();

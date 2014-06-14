@@ -1,36 +1,6 @@
 <div class="row">
-	<div class="col-sm-12 col-md-5 col-lg-4" id="sidebar">
-
-		<div class="dataset"></div>
-
-		<div class="well well-small">
-			<h4>Plots</h4>
-
-			<!-- Scatterplot -->
-			<div class="scatterplot-form form-well">
-			</div>
-
-			<!-- Histogram -->
-			<div class="histogram-form form-well">
-			</div>
-
-			<!-- SOM -->
-			<div class="som-form form-well">
-			</div>
-
-			<!-- Heatmap -->
-			<div class="heatmap-form form-well">
-			</div>
-
-
-		</div>
-	</div>
-
-
-	<div class="col-sm-12 col-md-7 col-lg-8 container">
-      	<div class="packery">
-      	</div>
-	</div>
+	<div ui-view="sidebar"></div>
+	<div ui-view="dashboard"></div>
 </div>
 <pre>
 	Active variables: {{activeVariables}}

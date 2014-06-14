@@ -9,7 +9,7 @@ vis.directive('dataset', function () {
     restrict: 'C',
     templateUrl: 'vis/sidebar/dataset.tpl.html',
     replace: true,
-    //controller: 'DatasetTableController',
+    controller: 'DatasetTableController',
     link: function (scope, elm, attrs) {
       //console.log("Dataset table directive linker");
     }
