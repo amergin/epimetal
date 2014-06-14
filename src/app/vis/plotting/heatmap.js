@@ -8,6 +8,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
     };
 
     $scope.headerText = $scope.window.variables.x.length + " variables";
+    $scope.window.showResetBtn = false;
 
     // create anchor for heatmap
     $scope.heatmapAnchor = d3.select($scope.element[0])
@@ -97,13 +98,15 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         .on('filtered', function(chart, filter) {
           // reset button clicked or selection is removed
           if (_.isNull(filter) || _.isNull(chart.filter())) {
-            return;
+            $scope.window.showResetBtn = false;
           }
-
-          $injector.get('PlotService').drawScatter({
-            x: filter[0],
-            y: filter[1]
-          });
+          else {
+            $scope.window.showResetBtn = true;
+            $injector.get('PlotService').drawScatter({
+              x: filter[0],
+              y: filter[1]
+            });
+          }
           $rootScope.$apply();
         })
         .renderlet(function(chart) {

@@ -12,6 +12,8 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     });
 
     $scope.headerText = $scope.window.variables.x;
+    $scope.window.showResetBtn = false;
+
 
     $scope.computeExtent = function() {
       // var allValues = $scope.dimension.group().all();
@@ -54,11 +56,6 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       $scope.histogram.filterAll();
       dc.redrawAll(constants.groups.histogram);
     };
-
-    // $scope.toggleBrush = function() {
-    //   $scope.histogram.brushOn( !$scope.histogram.brushOn() );
-    //   $scope.histogram.render();
-    // };
 
     // see https://github.com/dc-js/dc.js/wiki/FAQ#filter-the-data-before-its-charted
     // this used to filter to only the one set & limit out NaN's
@@ -119,7 +116,13 @@ visu.directive('histogram', ['constants',
         })
         .xAxisLabel(config.variableX)
         .on("filtered", function(chart, filter) {
-          //console.log("filter trigger", chart, filter);
+          if (_.isNull(filter) || _.isNull(chart.filter())) {
+            $scope.window.showResetBtn = false;
+          }
+          else {
+            $scope.window.showResetBtn = true;
+          }
+          $rootScope.$apply();
           $rootScope.$emit('scatterplot.redrawAll');
         });
 

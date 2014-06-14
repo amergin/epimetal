@@ -9,6 +9,8 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       //dc.redrawAll();
     };
 
+    $scope.showResetBtn = false;
+
     $scope.headerText = $scope.window.variables.x + ", " + $scope.window.variables.y;
 
     var _calcCanvasAttributes = function() {

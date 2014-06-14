@@ -115,9 +115,7 @@ App.controller('AppCtrl', ['$scope', '$location',
         $scope.pageTitle = toState.data.pageTitle + ' | Plotter';
       }
 
-      if (toState.resolve) {
-        $scope.loading.spinner = false;
-      }
+      $scope.loading.spinner = false;
     });
 
     $scope.loading = { spinner: true };
