@@ -108,6 +108,8 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
     var that = this;
     $rootScope.$on('variable:remove', function(event, type, selection) {
       _.each( Utils.getVariables(type,selection, true), function(variable) {
+        // heatmaps don't have a dimension
+        if( type === 'heatmap' ) { return; }
         that._checkDimension(variable);
       });
     });
@@ -117,6 +119,7 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
 
     this._checkDimension = function (variable) {
         if( _.isUndefined( dimensions[variable] ) ) {
+          console.log("undefined dimension checked");
           return;
         }
         --dimensions[variable].count;

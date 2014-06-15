@@ -157,6 +157,15 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
       return that.variables;
     };
 
+    service.legalVariables = function(array) {
+      _.each(array, function(variable) {
+        if( that.variables.indexOf(variable) < 0 ) {
+          return false;
+        }
+      });
+      return true;
+    };
+
     // this function checks if new variables need to be fetched
     // for datasets that have not been previously selected
     // Called on dataset toggling!
@@ -275,6 +284,10 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
     // assumes getDatasets is called and therefore the service is initialized
     service.getSets = function () {
       return that.sets;
+    };
+
+    service.getSet = function(name) {
+      return that.sets[name];
     };
 
     // get all dset names, whether active or not

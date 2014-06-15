@@ -42,3 +42,18 @@ Utils.sampleCorrelation = function(samples, varA, meanA, stdA, varB, meanB, stdB
   });
   return val / (stdA * stdB * (samples.length - 1));
 };
+
+RegExp.prototype.execAll = function(string) {
+    var match = null;
+    var matches = [];//new Array();
+    while (match = this.exec(string)) {
+        var matchArray = [];
+        for (var i in match) {
+            if (parseInt(i) == i) {
+                matchArray.push(match[i]);
+            }
+        }
+        matches.push(matchArray);
+    }
+    return matches;
+};

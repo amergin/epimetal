@@ -109,6 +109,10 @@ App.controller('AppCtrl', ['$scope', '$location',
       }
     });
 
+    $scope.$on('$stateChangeError', function (event, toState, toParams, fromState, fromParams) {
+      console.log(toParams);
+    });
+
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
       console.log("change route from", fromState, "-", toState);
       if (angular.isDefined(toState.data.pageTitle)) {

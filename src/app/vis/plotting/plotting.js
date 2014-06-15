@@ -12,18 +12,17 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory',
     };
 
     // var config = { dimension: sth, reducedGroup: sth, varX: sth, pooled: false|true };
-    this.drawHistogram = function(config) {
+    this.drawHistogram = function(config, filter) {
       // emit signal to create a new window:
       $rootScope = $injector.get('$rootScope');
-      $rootScope.$emit('packery.add', config, 'histogram', 'normal');
+      $rootScope.$emit('packery.add', config, 'histogram', 'normal', filter);
     };
 
-    this.drawHeatmap = function(config) {
+    this.drawHeatmap = function(config, filter) {
       // emit signal to create a new window:
-      console.log(config);
       $rootScope = $injector.get('$rootScope');
       var windowSize = config.x.length > 10 ? 'double' : 'normal';
-      $rootScope.$emit('packery.add', config, 'heatmap', windowSize);
+      $rootScope.$emit('packery.add', config, 'heatmap', windowSize, filter);
     };
 
 

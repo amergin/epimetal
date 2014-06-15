@@ -72,9 +72,9 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
   }
 ]);
 
-visu.directive('histogram', ['constants',
+visu.directive('histogram', ['constants', '$timeout',
 
-  function(constants) {
+  function(constants, $timeout) {
 
     var createSVG = function($scope, config) {
       // check css window rules before touching these
@@ -116,14 +116,16 @@ visu.directive('histogram', ['constants',
         })
         .xAxisLabel(config.variableX)
         .on("filtered", function(chart, filter) {
-          if (_.isNull(filter) || _.isNull(chart.filter())) {
-            $scope.window.showResetBtn = false;
-          }
-          else {
-            $scope.window.showResetBtn = true;
-          }
-          $rootScope.$apply();
-          $rootScope.$emit('scatterplot.redrawAll');
+          $timeout( function() {
+            if (_.isNull(filter) || _.isNull(chart.filter())) {
+              $scope.window.showResetBtn = false;
+            }
+            else {
+              $scope.window.showResetBtn = true;
+            }
+            //$rootScope.$apply();
+            $rootScope.$emit('scatterplot.redrawAll');
+          });
         });
 
       // set x axis format
@@ -168,6 +170,30 @@ visu.directive('histogram', ['constants',
           .each(function(d) {
             d3.select(this).style('opacity', 1);
           });
+      }
+
+      window.histo = $scope.histogram;
+      window.dim = config.dimension;
+
+      if( !_.isUndefined( $scope.window.filter ) ) {
+        // _.delay( function() {
+        //   $scope.histogram.filter( $scope.extent );
+        //   $scope.histogram.redraw();
+        //   //$scope.histogram.filter( $scope.window.filter );
+        // }, 5200);
+        $timeout( function() {
+          $scope.histogram.filter( $scope.window.filter );
+          $scope.histogram.redraw();
+          //$rootScope.$apply();
+          $rootScope.$emit('scatterplot.redrawAll');
+          // _.delay( function() {
+          //   $scope.histogram.filter( $scope.window.filter );
+          //   $scope.histogram.redraw();
+          //   $rootScope.$apply();
+          //   $rootScope.$emit('scatterplot.redrawAll');
+          // }, 2500);
+
+        });
       }
 
     };

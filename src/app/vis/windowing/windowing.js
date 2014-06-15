@@ -3,8 +3,8 @@ var win = angular.module('plotter.vis.windowing', []);
 // controller for Packery windowing system
 win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', function($scope, $rootScope, $timeout) {
   console.log("packery controller");
-  $scope.$onRootScope('packery.add', function(event, selection, type, size) {
-    $scope.add( selection, type, size);
+  $scope.$onRootScope('packery.add', function(event, selection, type, size, filter) {
+    $scope.add( selection, type, size, filter);
 
     $rootScope.$emit('variable:add', type, selection);
   });
@@ -24,7 +24,7 @@ win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
   };
 
   // adds window to grid
-  $scope.add = function(selection, type, size) {
+  $scope.add = function(selection, type, size, filter) {
 
     // always form a copy so that the form selection is not updated via reference to here.
     var selectionCopy = {};
@@ -34,7 +34,8 @@ win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
       number : (++$scope.windowRunningNumber),
       type: type, 
       variables: selectionCopy,
-      size: size
+      size: size,
+      filter: filter
     });
   };
 

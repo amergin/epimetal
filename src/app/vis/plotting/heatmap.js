@@ -1,6 +1,6 @@
 var visu = angular.module('plotter.vis.plotting.heatmap', ['plotter.vis.plotting']);
-visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector',
-  function($scope, DatasetFactory, DimensionService, constants, $injector) {
+visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout) {
 
     $scope.resetFilter = function() {
       $scope.heatmap.filterAll();
@@ -96,18 +96,19 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         })
         .colors(colorScale)
         .on('filtered', function(chart, filter) {
-          // reset button clicked or selection is removed
-          if (_.isNull(filter) || _.isNull(chart.filter())) {
-            $scope.window.showResetBtn = false;
-          }
-          else {
-            $scope.window.showResetBtn = true;
-            $injector.get('PlotService').drawScatter({
-              x: filter[0],
-              y: filter[1]
-            });
-          }
-          $rootScope.$apply();
+          $timeout( function() { // reset button clicked or selection is removed
+              if (_.isNull(filter) || _.isNull(chart.filter())) {
+                $scope.window.showResetBtn = false;
+              }
+              else {
+                $scope.window.showResetBtn = true;
+                $injector.get('PlotService').drawScatter({
+                  x: filter[0],
+                  y: filter[1]
+                });
+              }
+              $rootScope.$apply();
+          });
         })
         .renderlet(function(chart) {
           // rotate labels
@@ -136,6 +137,8 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         .on('postRender', function(chart) {
           chart.transitionDuration(500);
         });
+
+      window.heat = $scope.heatmap;
 
       $scope.heatmap.render();
       $scope.legend = _drawLegend($scope.colorbarAnchor, colorScale, height);
