@@ -1,7 +1,8 @@
 var vis =
   angular.module('plotter.vis.sidebar', 
     ['plotter.vis.plotting', 'services.dataset', 
-    'services.notify', 'services.dimensions', 'localytics.directives']);
+    'services.notify', 'services.dimensions', 'localytics.directives',
+    'services.urlhandler']);
 
 // directive for displaying the dataset table on sidebar
 vis.directive('dataset', function () {
@@ -17,12 +18,14 @@ vis.directive('dataset', function () {
 });
 
 // dataset table controller
-vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService', 'constants',
-  function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService, constants) {
+vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService', 'constants', '$location', 'UrlHandler',
+  function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService, constants, $location, UrlHandler) {
     $scope.sets = DatasetFactory.getSets();
 
     $scope.toggle = function(set) {
       set.toggle();
+
+      UrlHandler.updateDataset();
 
       DatasetFactory.checkActiveVariables(set).then( function succFn(res) {
 

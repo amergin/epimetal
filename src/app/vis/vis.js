@@ -20,7 +20,8 @@
   'services.notify', 
   'plotter.vis.windowing',
   'plotter.vis.sidebar',
-  'plotter.vis.plotting'
+  'plotter.vis.plotting',
+  'services.urlhandler'
   ] );
 
 /**
@@ -38,6 +39,7 @@
     data: { pageTitle: 'Visualization' },
     controller: 'VisCtrl',
     templateUrl: 'vis/vis.tpl.html',
+    reloadOnSearch: false,
 
     // important: the app will NOT change state to 'vis' until
     // these object promises have been resolved. Failure is generally indication
@@ -60,8 +62,11 @@
     // controller: ['$scope', '$stateParams', function($scope, $stateParams) { console.log($stateParams); }],
     //templateUrl: 'vis/sidebar/sidebar.tpl.html',
     data: { pageTitle: 'Visualization' },
+    reloadOnSearch: false,
+
     views: {
       'sidebar': {
+        //controller: ['$location', function($location) { $location.url('/vis/'); }],
         templateUrl: 'vis/sidebar/vis.sidebar.tpl.html',
       },
       'dashboard': {
@@ -80,102 +85,106 @@
 
 }]);
 
- vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams', 'DatasetFactory', 'NotifyService', 'PlotService',
-  function VisController( $scope, DimensionService, $stateParams, DatasetFactory, NotifyService, PlotService) {
+ vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams', 'DatasetFactory', 'NotifyService', 'PlotService', 'UrlHandler',
+  function VisController( $scope, DimensionService, $stateParams, DatasetFactory, NotifyService, PlotService, UrlHandler) {
     
     $scope.visController = "visController";
     $scope.usedVariables = DimensionService.getUsedVariables();
     $scope.activeVariables = DimensionService.getDimensions();
     console.log("viscontroller");
 
+    UrlHandler.loadNewPageState( $stateParams.path, PlotService);
 
 
-    // regular expressions for url routing:
-    var regexpStrings = {
-      dataset: "(ds)(?:;set=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+))?\/",
-      scatter: "(?:(sca);var=([A-Za-z0-9_-]+),([A-Za-z0-9_-]+))",
-      heatmap: "(?:(hea);var=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+)(?:;f=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+))?)",
-      histogram: "(his);var=([A-Za-z0-9_-]+)(?:;f=(\\d+\\.?\\d*)-(\\d+\\.?\\d*))?"
-    };
 
-    var regexps = {
-      dataset: new RegExp( regexpStrings['dataset'], 'g' ),
-      scatter: new RegExp( regexpStrings['scatter'], 'g' ),
-      heatmap: new RegExp( regexpStrings['heatmap'], 'g' ),
-      histogram: new RegExp( regexpStrings['histogram'], 'g' )
-    };
 
-    var activeVariables = [];
-    var errorMessage = 'The URL you followed is invalid. Please re-check it.';
-    var windowsToCreate = [];
+    // var regexpStrings = {
+    //   dataset: "(ds)(?:;set=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+))?\/",
+    //   scatter: "(?:(sca);var=([A-Za-z0-9_-]+),([A-Za-z0-9_-]+))",
+    //   heatmap: "(?:(hea);var=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+)(?:;f=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+))?)",
+    //   histogram: "(his);var=([A-Za-z0-9_-]+)(?:;f=(\\d+\\.?\\d*)-(\\d+\\.?\\d*))?"
+    // };
 
-    _.each( regexps, function(regex, rname) {
-      _.each( regex.execAll( $stateParams.path ), function(result) {
-        console.log(result);
-        switch( result[1] ) {
-          case 'hea':
-            activeVariables.push( result[2].split(",") );
-            windowsToCreate.push({
-              type: 'heatmap',
-              variables: { x: result[2].split(",") },
-              filter: result[3].split(",")
-            });
-            break;
+    // var regexps = {
+    //   dataset: new RegExp( regexpStrings['dataset'], 'g' ),
+    //   scatter: new RegExp( regexpStrings['scatter'], 'g' ),
+    //   heatmap: new RegExp( regexpStrings['heatmap'], 'g' ),
+    //   histogram: new RegExp( regexpStrings['histogram'], 'g' )
+    // };
 
-          case 'ds':
-            var setNames = result[2].split(",");
-            _.each( setNames, function(set) { DatasetFactory.getSet(set).toggle(); } );
-            break;
+    // var activeVariables = [];
+    // var errorMessage = 'The URL you followed is invalid. Please re-check it.';
+    // var windowsToCreate = [];
 
-          case 'sca':
-            activeVariables.push( result[2], result[3] );
-            windowsToCreate.push({
-              type: 'scatterplot',
-              variables: { x: result[2], y: result[3] }
-            });         
-            break;
+    // _.each( regexps, function(regex, rname) {
+    //   _.each( regex.execAll( $stateParams.path ), function(result) {
+    //     console.log(result);
+    //     switch( result[1] ) {
+    //       case 'hea':
+    //         activeVariables.push( result[2].split(",") );
+    //         windowsToCreate.push({
+    //           type: 'heatmap',
+    //           variables: { x: result[2].split(",") } 
+    //         });
+    //         _.last( windowsToCreate )['filter'] = !_.isUndefined(result[3]) ? result[3].split(",") : null;
+    //         break;
 
-          case 'his':
-            activeVariables.push( result[2] );
-            windowsToCreate.push({
-              type: 'histogram',
-              variables: { x: result[2] },
-              filter: [ +result[3], +result[4] ]
-            });            
-            break;
-        }
-      });
-    });
+    //       case 'ds':
+    //         var setNames = result[2].split(",");
+    //         _.each( setNames, function(set) { DatasetFactory.getSet(set).toggle(); } );
+    //         break;
 
-    activeVariables = _.unique( _.flatten( activeVariables ) );
-    if( !DatasetFactory.legalVariables( activeVariables ) ) {
-      NotifyService.addTransient(errorMessage, 'error');
-      return;
-    }
+    //       case 'sca':
+    //         activeVariables.push( result[2], result[3] );
+    //         windowsToCreate.push({
+    //           type: 'scatterplot',
+    //           variables: { x: result[2], y: result[3] }
+    //         });         
+    //         break;
 
-    // load active variables:
-    DatasetFactory.getVariableData( activeVariables ).then( function success(res) {
-      console.log(res);
+    //       case 'his':
+    //         activeVariables.push( result[2] );
+    //         windowsToCreate.push({
+    //           type: 'histogram',
+    //           variables: { x: result[2] } 
+    //         });
+    //         _.last( windowsToCreate )['filter'] = !_.isUndefined(result[3]) ? [ +result[3], +result[4] ] : null;
+    //         break;
+    //     }
+    //   });
+    // });
 
-      _.each( windowsToCreate, function(win) {
-        switch(win.type) {
-          case 'scatterplot':
-            PlotService.drawScatter(win.variables);
-            break;
+    // activeVariables = _.unique( _.flatten( activeVariables ) );
+    // if( !DatasetFactory.legalVariables( activeVariables ) ) {
+    //   NotifyService.addTransient(errorMessage, 'error');
+    //   return;
+    // }
 
-          case 'heatmap':
-            PlotService.drawHeatmap(win.variables, win.filter);
-            break;
+    // // load active variables:
+    // DatasetFactory.getVariableData( activeVariables ).then( function success(res) {
+    //   console.log(res);
 
-          case 'histogram':
-            PlotService.drawHistogram(win.variables, win.filter);
-            break;
-        }
-      });
+    //   // clear current url since the windows will recreate it
 
-    }, function err(res) {
-      NotifyService.addTransient(errorMessage, 'error');
-    });
-    console.log(activeVariables);
+    //   _.each( windowsToCreate, function(win) {
+    //     switch(win.type) {
+    //       case 'scatterplot':
+    //         PlotService.drawScatter(win.variables);
+    //         break;
+
+    //       case 'heatmap':
+    //         PlotService.drawHeatmap(win.variables, win.filter);
+    //         break;
+
+    //       case 'histogram':
+    //         PlotService.drawHistogram(win.variables, win.filter);
+    //         break;
+    //     }
+    //   });
+
+    // }, function err(res) {
+    //   NotifyService.addTransient(errorMessage, 'error');
+    // });
+    // console.log(activeVariables);
 
   }]);

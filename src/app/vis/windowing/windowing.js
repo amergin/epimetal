@@ -1,4 +1,4 @@
-var win = angular.module('plotter.vis.windowing', []);
+var win = angular.module('plotter.vis.windowing', ['services.urlhandler']);
 
 // controller for Packery windowing system
 win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', function($scope, $rootScope, $timeout) {
@@ -131,6 +131,7 @@ win.directive('window', ['$compile', '$injector', function($compile, $injector){
       // catch window destroys
       $scope.$on('$destroy', function() {
         $rootScope.$emit('variable:remove', $scope.window.type, $scope.window.variables);
+        $injector.get('UrlHandler').removeWindow($scope.window.type, $scope.window.variables, $scope.window.filter);
         $scope.packery.reloadItems();
         // $scope.packery.layout();
       });

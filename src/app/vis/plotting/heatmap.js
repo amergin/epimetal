@@ -138,8 +138,6 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
           chart.transitionDuration(500);
         });
 
-      window.heat = $scope.heatmap;
-
       $scope.heatmap.render();
       $scope.legend = _drawLegend($scope.colorbarAnchor, colorScale, height);
 
