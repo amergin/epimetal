@@ -64,6 +64,11 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
       that.clear();
 
       var datasets = res[2].split(consts.varDelim);
+      if( _.first( datasets ) == 'null' ) { 
+        NotifyService.addTransient(errorMessage, 'error');
+        return;
+      }
+
       _.each(datasets, function(name) {
         DatasetFactory.getSet(name).toggle();
       });
