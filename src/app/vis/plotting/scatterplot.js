@@ -35,7 +35,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       var data = $scope.reduced.all().filter(function(d) {
         return d.value.dataset === name;
       });
-      var color = $scope.window.variables.pooled ? 'black' : set.getColor();
+      var color = $scope.window.pooled ? 'black' : set.getColor();
       var canvas = $scope.createCanvas(
         $scope.element,
         $scope.width,

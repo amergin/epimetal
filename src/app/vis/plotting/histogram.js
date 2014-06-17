@@ -16,11 +16,6 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
 
 
     $scope.computeExtent = function() {
-      // var allValues = $scope.dimension.group().all();
-      // if( _.first( allValues ).key === constants.nanValue  ) {
-      //   allValues = allValues.slice(1);
-      // }
-      // $scope.extent = d3.extent( allValues, function(d) { return d.key; } );
       var allValues = $scope.dimension.group().all().filter(function(d) {
         return d.value > 0 && d.key != constants.nanValue;
       });
@@ -81,7 +76,7 @@ visu.directive('histogram', ['constants', '$timeout',
       var _width = 470;
       var _height = 345;
       var _xBarWidth = 50;
-      var _poolingColor = 'black';
+      var _poolingColor = '#000000';
 
       // collect charts here
       var charts = [];
@@ -126,7 +121,15 @@ visu.directive('histogram', ['constants', '$timeout',
             //$rootScope.$apply();
             $rootScope.$emit('scatterplot.redrawAll');
           });
+        })
+        .renderlet( function(chart) {
+          if( config.pooled ) {
+            chart.selectAll('g.stack > rect.bar')
+            .attr("class", 'bar pooled')
+            .attr("fill", _poolingColor);
+          }
         });
+
 
       // set x axis format
       $scope.histogram
@@ -164,13 +167,13 @@ visu.directive('histogram', ['constants', '$timeout',
 
       // if pooling is in place, override global css opacity rules for these
       // stacks
-      if (config.pooled) {
-        d3.select($scope.histogram.g()[0][0])
-          .selectAll("g.stack > rect.bar")
-          .each(function(d) {
-            d3.select(this).style('opacity', 1);
-          });
-      }
+      // if (config.pooled) {
+      //   d3.select($scope.histogram.g()[0][0])
+      //     .selectAll("g.stack > rect.bar")
+      //     .each(function(d) {
+      //       d3.select(this).style('opacity', 1);
+      //     });
+      // }
 
       window.histo = $scope.histogram;
       window.dim = config.dimension;
@@ -210,7 +213,7 @@ visu.directive('histogram', ['constants', '$timeout',
         reduced: $scope.reduced,
         datasetNames: $scope.datasetNames,
         colorScale: $scope.colorScale,
-        pooled: $scope.window.variables.pooled || false,
+        pooled: $scope.window.pooled || false,
         filter: $scope.filterOnSet
       };
       createSVG($scope, config);

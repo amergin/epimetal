@@ -93,7 +93,7 @@ vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'Data
         // draw the figure
         NotifyService.closeModal();
         var PlotService = $injector.get('PlotService');
-        PlotService.drawScatter(selection);
+        PlotService.drawScatter({ variables: selection, pooled: selection.pooled});
       }, function errorFn(result) {
         NotifyService.closeModal();
         NotifyService.addTransient(result, 'error');
@@ -143,7 +143,7 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
           // draw the figure
           NotifyService.closeModal();
           var PlotService = $injector.get('PlotService');
-          PlotService.drawHistogram(selection);
+          PlotService.drawHistogram({variables: selection, pooled: selection.pooled });
         },
         function errorFn(result) {
           NotifyService.closeModal();
@@ -214,7 +214,7 @@ vis.controller('HeatmapFormController', ['$scope', '$rootScope', 'DatasetFactory
       plottingDataPromise.then(function (res) {
         // draw the figure
         NotifyService.closeModal();
-        PlotService.drawHeatmap(selection);
+        PlotService.drawHeatmap({variables: selection});
       }, function errorFn(result) {
         NotifyService.closeModal();
         NotifyService.addTransient(result, 'error');

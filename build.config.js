@@ -82,6 +82,8 @@ module.exports = {
       'vendor/angular-chosen-localytics/chosen.js',
       'vendor/underscore.string/lib/underscore.string.js'
       //'vendor/angular-cookies/angular-cookies.js'
+      // 'vendor/angular-strap/angular-strap.js',
+      // 'vendor/angular-strap/angular-strap.tpl.js'
     ],
     css: [
       'vendor/dcjs/dc.css',

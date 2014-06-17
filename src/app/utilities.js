@@ -1,5 +1,18 @@
 // Utilities
 var Utils = Utils || {};
+var module = angular.module('utilities', []);
+
+module.directive('selectOnClick', function () {
+  return {
+    restrict: 'A',
+    // Linker function
+    link: function (scope, element, attrs) {
+      element.bind('click', function () {
+        this.select();
+      });
+    }
+  };
+});
 
 Utils.getVariables = function(windowType, selection, splitScatter) {
   if( windowType === 'scatterplot' ) {

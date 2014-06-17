@@ -7,9 +7,9 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
     // regular expressions for url routing:
     var regexpStrings = {
       dataset: "(ds)(?:;set=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+))?\/",
-      scatterplot: "(?:(sca);var=([A-Za-z0-9_-]+),([A-Za-z0-9_-]+))\/",
+      scatterplot: "(?:(sca);var=([A-Za-z0-9_-]+),([A-Za-z0-9_-]+)(?:;p=(t|f))?)\/",
       heatmap: "(?:(hea);var=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+)(?:;f=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+))?)\/",
-      histogram: "(his);var=([A-Za-z0-9_-]+)(?:;f=(\\d+\\.?\\d*)-(\\d+\\.?\\d*))?\/"
+      histogram: "(his);var=([A-Za-z0-9_-]+)(?:;f=(\\d+\\.?\\d*)-(\\d+\\.?\\d*))?(?:;p=(t|f))?\/"
     };
 
     var regexps = {
@@ -35,17 +35,18 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
 
     this.loadNewPageState = function(path, PlotService) {
 
-      if (path === "") {
+      if(path === "" || _.isNull(path)) {
         return;
       }
 
-      var addWindow = function(arr, type, variables, filter) {
-        arr.push({
-          type: type,
-          variables: variables,
-          filter: filter
-        });
-      };
+      // var addWindow = function(arr, type, variables, filter, pooled) {
+      //   arr.push({
+      //     type: type,
+      //     variables: variables,
+      //     filter: filter,
+      //     pooled: pooled || false
+      //   });
+      // };
 
 
       var activeVariables = [];
@@ -85,9 +86,12 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
               if (!DatasetFactory.legalVariables([result[2]])) {
                 illegalVars = true;
               } else {
-                addWindow(windowsToCreate, 'histogram', {
-                  x: result[2]
-                }, !_.isUndefined(result[3]) ? [+result[3], +result[4]] : null);
+                windowsToCreate.push({
+                  type: 'histogram',
+                  variables: { x: result[2] },
+                  filter: !_.isUndefined(result[3]) ? [+result[3], +result[4]] : null,
+                  pooled: !_.isUndefined(result[5]) && ( result[5] == 't' ) ? true : false
+                });
                 activeVariables.push(result[2]);
               }
               break;
@@ -96,9 +100,10 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
               if (!DatasetFactory.legalVariables([result[2], result[3]])) {
                 illegalVars = true;
               } else {
-                addWindow(windowsToCreate, 'scatterplot', {
-                  x: result[2],
-                  y: result[3]
+                windowsToCreate.push({
+                  type: 'scatterplot',
+                  variables: { x: result[2], y: result[3] },
+                  pooled: !_.isUndefined(result[4]) && ( result[4] == 't' ) ? true : false
                 });
                 activeVariables.push(result[2], result[3]);
               }
@@ -109,9 +114,11 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
               if (!DatasetFactory.legalVariables(vars)) {
                 illegalVars = true;
               } else {
-                addWindow(windowsToCreate, 'heatmap', {
-                    x: vars
-                  }, !_.isUndefined(result[3]) ? result[3].split(consts.varDelim) : null);
+                windowsToCreate.push({
+                  type: 'heatmap',
+                  variables: {x: vars},
+                  filter: !_.isUndefined(result[3]) ? result[3].split(consts.varDelim) : null
+                });
                 activeVariables.push(vars);
               }
               break;
@@ -132,15 +139,15 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
         _.each(windowsToCreate, function(win) {
           switch (win.type) {
             case 'scatterplot':
-              PlotService.drawScatter(win.variables);
+              PlotService.drawScatter(win);
               break;
 
             case 'heatmap':
-              PlotService.drawHeatmap(win.variables, win.filter);
+              PlotService.drawHeatmap(win);
               break;
 
             case 'histogram':
-              PlotService.drawHistogram(win.variables, win.filter);
+              PlotService.drawHistogram(win);
               break;
           }
         });
@@ -174,18 +181,31 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
       $location.url(newUrl);
     };
 
-    this.createWindow = function(type, selection) {
+    this.createWindow = function(type, config) {
+      var str = '';
       switch (type) {
         case 'scatterplot':
-          $location.url($location.url() + 'sca;var=' + selection.x + "," + selection.y + "/");
+          str = $location.url() + 'sca;var=' + config.variables.x + "," + config.variables.y;
+          if( config.pooled ) {
+            str += ";p=t";
+          }
+          str += "/";
+          $location.url( str );
+          // $location.url($location.url() + 'sca;var=' + config.x + "," + config.y + "/");
           break;
 
         case 'histogram':
-          $location.url($location.url() + 'his;var=' + selection.x + "/");
+          str += $location.url() + 'his;var=' + config.variables.x;
+          if( config.pooled ) {
+            str += ";p=t";
+          }
+          str += "/";
+          $location.url( str );
+          // $location.url($location.url() + 'his;var=' + config.x + "/");
           break;
 
         case 'heatmap':
-          $location.url($location.url() + 'hea;var=' + selection.x.join() + "/");
+          $location.url($location.url() + 'hea;var=' + config.variables.x.join() + "/");
           break;
       }
     };

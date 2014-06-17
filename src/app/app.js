@@ -100,8 +100,8 @@ App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvi
 
   ]);
 
-App.controller('AppCtrl', ['$scope', '$location',
-  function AppCtrl($scope, $location) {
+App.controller('AppCtrl', ['$scope', '$location', '$templateCache',
+  function AppCtrl($scope, $location, $templateCache) {
 
     $scope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
       if (toState.resolve) {
@@ -123,9 +123,6 @@ App.controller('AppCtrl', ['$scope', '$location',
     });
 
     $scope.loading = { spinner: true };
-
-
-
   }
 ]);
 

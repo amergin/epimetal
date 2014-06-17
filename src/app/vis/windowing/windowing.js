@@ -3,10 +3,10 @@ var win = angular.module('plotter.vis.windowing', ['services.urlhandler']);
 // controller for Packery windowing system
 win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', function($scope, $rootScope, $timeout) {
   console.log("packery controller");
-  $scope.$onRootScope('packery.add', function(event, selection, type, size, filter) {
-    $scope.add( selection, type, size, filter);
+  $scope.$onRootScope('packery.add', function(event, config) { //selection, type, size, filter, pooled) {
+    $scope.add( config ); //, type, size, filter, pooled);
 
-    $rootScope.$emit('variable:add', type, selection);
+    $rootScope.$emit('variable:add', config.type, config.variables);
   });
 
   $scope.windows = [];
@@ -24,18 +24,19 @@ win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
   };
 
   // adds window to grid
-  $scope.add = function(selection, type, size, filter) {
+  $scope.add = function(config) { //selection, type, size, filter, pooled) {
 
     // always form a copy so that the form selection is not updated via reference to here.
-    var selectionCopy = {};
-    angular.copy(selection, selectionCopy);
+    var variablesCopy = {};
+    angular.copy(config.variables, variablesCopy);
 
     $scope.windows.push({ 
       number : (++$scope.windowRunningNumber),
-      type: type, 
-      variables: selectionCopy,
-      size: size,
-      filter: filter
+      type: config.type, 
+      variables: variablesCopy,
+      pooled: config.pooled,
+      size: config.size,
+      filter: config.filter
     });
   };
 

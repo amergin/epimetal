@@ -23,16 +23,18 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
     $scope.width = 420;
     $scope.height = 350;
     $scope.margins = {
-          top: 10,
-          right: 10,
-          bottom: 60,
-          left: 80
-        };
+      top: 10,
+      right: 10,
+      bottom: 60,
+      left: 80
+    };
 
-    if( $scope.window.size == 'double' ) {
+    if ($scope.window.size == 'double') {
       $scope.width = $scope.width * 2.2;
       $scope.height = $scope.height * 2;
-      _.object( _.map( $scope.margins, function(val,key) { return [key, val*2]; } ) );
+      _.object(_.map($scope.margins, function(val, key) {
+        return [key, val * 2];
+      }));
     }
 
     $scope.drawHeatmap = function(element, dimension, group, margins, width, height) {
@@ -96,18 +98,19 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         })
         .colors(colorScale)
         .on('filtered', function(chart, filter) {
-          $timeout( function() { // reset button clicked or selection is removed
-              if (_.isNull(filter) || _.isNull(chart.filter())) {
-                $scope.window.showResetBtn = false;
-              }
-              else {
-                $scope.window.showResetBtn = true;
-                $injector.get('PlotService').drawScatter({
+          $timeout(function() { // reset button clicked or selection is removed
+            if (_.isNull(filter) || _.isNull(chart.filter())) {
+              $scope.window.showResetBtn = false;
+            } else {
+              $scope.window.showResetBtn = true;
+              $injector.get('PlotService').drawScatter({
+                variables: {
                   x: filter[0],
                   y: filter[1]
-                });
-              }
+                }
+              });
               $rootScope.$apply();
+            }
           });
         })
         .renderlet(function(chart) {

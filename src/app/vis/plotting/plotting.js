@@ -5,30 +5,35 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
   function($injector, DimensionService, DatasetFactory, UrlHandler) {
 
     // var config = { dimension: sth, reducedGroup: sth, varX: sth, varY: sth, pooled: false|true };
-    this.drawScatter = function(config) {
+    this.drawScatter = function(config) { //, pooled) {
       // emit signal to create a new window:
       $rootScope = $injector.get('$rootScope');
       var type = 'scatterplot';
       UrlHandler.createWindow( type, config );
-      $rootScope.$emit('packery.add', config, type, 'normal');
+      config.size = 'normal';
+      config.type = 'scatterplot';
+      $rootScope.$emit('packery.add', config); //, type, 'normal', null, pooled);
     };
 
     // var config = { dimension: sth, reducedGroup: sth, varX: sth, pooled: false|true };
-    this.drawHistogram = function(config, filter) {
+    this.drawHistogram = function(config) { //, filter, pooled) {
       // emit signal to create a new window:
       $rootScope = $injector.get('$rootScope');
       var type = 'histogram';
       UrlHandler.createWindow( type, config );
-      $rootScope.$emit('packery.add', config, type, 'normal', filter);
+      config.size = 'normal';
+      config.type = type;
+      $rootScope.$emit('packery.add', config); //, type, 'normal', filter, pooled);
     };
 
-    this.drawHeatmap = function(config, filter) {
+    this.drawHeatmap = function(config) { //, filter) {
       // emit signal to create a new window:
       $rootScope = $injector.get('$rootScope');
       var type = 'heatmap';
-      var windowSize = config.x.length > 10 ? 'double' : 'normal';
+      config.size = config.variables.x.length > 10 ? 'double' : 'normal';
+      config.type = type;
       UrlHandler.createWindow( type, config );
-      $rootScope.$emit('packery.add', config, type, windowSize, filter);
+      $rootScope.$emit('packery.add', config); //, type, windowSize, filter;
     };
 
 
