@@ -66,10 +66,6 @@ module.exports = {
       'vendor/jquery/dist/jquery.js',
       'vendor/angular/angular.js',
       'vendor/chosen/chosen.jquery.js',
-      'vendor/angular-sanitize/angular-sanitize.js',
-      'vendor/angular-growl/build/angular-growl.js',
-      'vendor/angular-animate/angular-animate.js',
-      'vendor/angular-bootstrap/ui-bootstrap-tpls.js',
       //'vendor/placeholders/angular-placeholders-0.0.1-SNAPSHOT.min.js',
       'vendor/angular-ui-router/release/angular-ui-router.js',
       'vendor/angular-ui-utils/modules/route/route.js',
@@ -80,14 +76,15 @@ module.exports = {
       'vendor/draggabilly/draggabilly.pkgd.js',
       'vendor/underscore/underscore.js',
       'vendor/angular-chosen-localytics/chosen.js',
-      'vendor/underscore.string/lib/underscore.string.js',
+      // 'vendor/underscore.string/lib/underscore.string.js',
+      'vendor/angular-sanitize/angular-sanitize.js',
+      'vendor/angular-animate/angular-animate.js',
       'vendor/angular-strap/dist/angular-strap.js',
       'vendor/angular-strap/dist/angular-strap.tpl.js'
       //'vendor/angular-cookies/angular-cookies.js'
     ],
     css: [
       'vendor/dcjs/dc.css',
-      'vendor/angular-growl/build/angular-growl.min.css',
       'vendor/angular-motion/dist/angular-motion.min.css',
       'vendor/bootstrap-additions/dist/bootstrap-additions.min.css'
       //'vendor/chosen/chosen.min.css'

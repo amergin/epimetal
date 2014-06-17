@@ -1,114 +1,83 @@
-var serv = angular.module('services.notify', []);//['angular-growl', 'ngSanitize', 'ngAnimate', 'ui.bootstrap']);
+var serv = angular.module('services.notify', ['ngSanitize', 'ngAnimate', 'mgcrea.ngStrap.alert', 'mgcrea.ngStrap.popover', 'mgcrea.ngStrap.modal']);//['angular-growl', 'ngSanitize', 'ngAnimate', 'ui.bootstrap']);
 
 serv.factory('NotifyService', ['$injector',
   function NotifyService($injector) {
 
-    var _getGrowlCallFn = function (level) {
-    //   var fn;
-    //   var growl = $injector.get('growl');
-    //   switch (level) {
-    //   case 'warn':
-    //     fn = growl.addWarnMessage;
-    //     break;
-    //   case 'error':
-    //     fn = growl.addErrorMessage;
-    //     break;
-    //   case 'info':
-    //     fn = growl.addInfoMessage;
-    //     break;
-    //   case 'success':
-    //     fn = growl.addSuccessMessage;
-    //     break;
-    //   default:
-    //     fn = growl.addInfoMessage;
-    //     break;
-    //   }
-
-    //   return fn;
-    };
-
-
-    var _ModalInstanceCtrl = ['$scope', //'$modalInstance',
-      function ($scope){ //$modalInstance) {
-        $scope.ok = function () {
-          // $modalInstance.close();
-        };
-
-        $scope.cancel = function () {
-          // $modalInstance.dismiss('cancel');
-        };
-      }
-    ];
-
     var _modalInstanceRef = null;
-
 
     return {
 
-      /* THESE ARE FOR ANGULAR_GROWL NOTIFIER */
-      addSticky: function (message, level) {
-        // return _getGrowlCallFn(level)("<strong>" + message + "</strong>", {
-        //   enableHtml: true
-        // });
+      addSticky: function (title, message, level) {
+        var $alert = $injector.get('$alert');
+        var myAlert = $alert({
+          title: title,
+          content: message, 
+          placement: 'top-right', 
+          type: level,
+          show: true
+        });
       },
 
-      addTransient: function (message, level) {
-        // return _getGrowlCallFn(level)(message, {
-        //   ttl: 7000
-        // });
+      addTransient: function (title, message, level) {
+        var $alert = $injector.get('$alert');
+        var myAlert = $alert({
+          title: title,
+          content: message, 
+          placement: 'top-right', 
+          type: level,
+          show: true,
+          duration: 6
+        });
       },
-
-      addLoginNeeded: function () {
-        // var growl = $injector.get('growl');
-        // growl.addErrorMessage('Seems that you have not logged in. ' +
-        //   'Please <a href="/API/twofactor.php" target="_blank">log in</a> and refresh this application afterwards.', {
-        //     enableHtml: true
-        //   });
-      },
-
 
       /* THESE ARE FOR MODAL WINDOWS */
 
       addClosableModal: function (templateUrl) {
 
-        // var $rootScope = $injector.get('$rootScope');
-        // var $modal = $injector.get('$modal');
+        var $modal = $injector.get('$modal');
+        var $q = $injector.get('$q');
+        var deferred = $q.defer();
+        var $rootScope = $injector.get('$rootScope');
 
-        // var config = {
-        //   keyboard: false,
-        //   backdrop: 'static',
-        //   templateUrl: templateUrl,
-        //   controller: _ModalInstanceCtrl,
-        //   scope: $rootScope.$new(true),
-        //   windowClass: 'closable-modal'
-        // };
+        $rootScope.$on('modal.hide', function() {
+          deferred.resolve();
+        });
 
-        // // returns the modal instance
-        // _modalInstanceRef = $modal.open(config);
-        // return _modalInstanceRef;
+        _modalInstanceRef = $modal({
+          contentTemplate: templateUrl,
+          show: true,
+          backdrop: 'static',
+          keyboard: false,
+          placement: 'center',
+          animation: 'am-fade-and-scale'
+        });
+        return deferred.promise;
       },
 
       addSpinnerModal: function (message) {
-        // var $rootScope = $injector.get('$rootScope');
-        // var $modal = $injector.get('$modal');
-        // var config = {
-        //   keyboard: false,
-        //   backdrop: 'static',
-        //   template: '<div class="modal-body text-center"><i class="fa fa-spinner fa-5x fa-spin"></i><br/><h3>' + message + '</h3></div>',
-        //   scope: $rootScope.$new(true),
-        //   windowClass: 'spinner-modal'
-        // };
 
-        // // returns the modal instance
-        // _modalInstanceRef = $modal.open(config);
-        // return _modalInstanceRef;
+        var $modal = $injector.get('$modal');
+
+        var $scope = $injector.get('$rootScope').$new({ isolate: true });
+        $scope.message = message;
+
+        // Pre-fetch an external template populated with a custom scope
+        _modalInstanceRef = $modal({
+          scope: $scope,
+          //html: true,
+          contentTemplate: 'notify.modal.spinner.tpl.html',
+          show: false,
+          backdrop: 'static',
+          keyboard: false,
+          placement: 'center',
+          animation: 'am-fade-and-scale'
+        });
+
+        _modalInstanceRef.$promise.then(_modalInstanceRef.show);
       },
 
       closeModal: function () {
-        // //var modalInstance = $injector.get('$modalInstance');
-        // _modalInstanceRef.close();
-        // // modalInstance.close();
-
+        _modalInstanceRef.$promise.then(_modalInstanceRef.hide);
       }
     };
   }

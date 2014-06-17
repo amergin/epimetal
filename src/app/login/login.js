@@ -28,7 +28,7 @@ loginMod.controller('LoginCtrl', ['$scope', 'NotifyService', '$state', function(
 
     var modalInstance = NotifyService.addClosableModal('login/modal.tpl.html');
 
-    modalInstance.result.then(function successFn() {
+    modalInstance.then(function successFn() {
       $state.go('vis.all');
     }, function errFn() {
       $state.go('vis.all');

@@ -4,11 +4,7 @@ var App = angular.module('plotter', [
   'plotter.vis',
   'plotter.login',
   'ui.router.state',
-  'ui.router',
-  'angular-growl',
-  'ngSanitize',
-  'ngAnimate',
-  'services.notify'
+  'ui.router'
 ]);
 
 App.constant('constants', {
@@ -22,15 +18,13 @@ App.constant('constants', {
   }
 });
 
-App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'growlProvider', '$injector',
-  function ($stateProvider, $urlRouterProvider, $httpProvider, growlProvider, $injector) {
+App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', '$injector',
+  function ($stateProvider, $urlRouterProvider, $httpProvider, $injector) {
 
     // default route
     $urlRouterProvider.otherwise('/vis/');
 
 
-    // allow HTML markup in notify messages:
-    growlProvider.globalEnableHtml(true);
 
     // introduce response interceptor: logic for accepting/rejecting
     // promises app-wide. This is used to redirect to login when

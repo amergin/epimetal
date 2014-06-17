@@ -22,9 +22,7 @@
   'plotter.vis.sidebar',
   'plotter.vis.plotting',
   'services.urlhandler',
-  'plotter.vis.linkcreator',
-  // 'ui.bootstrap',
-  'mgcrea.ngStrap'
+  'plotter.vis.linkcreator'
   ] );
 
 /**
@@ -36,8 +34,7 @@
 
   var vis = {
     name: 'vis',
-    //'(?:/[^/]+)?'
-    url: '/vis/{path:.*}', //'/vis/ds{(?:/)?(?:)}',
+    url: '/vis/{path:.*}',
     abstract: true,
     data: { pageTitle: 'Visualization' },
     controller: 'VisCtrl',
@@ -88,8 +85,8 @@
 
 }]);
 
- vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams', 'DatasetFactory', 'NotifyService', 'PlotService', 'UrlHandler',
-  function VisController( $scope, DimensionService, $stateParams, DatasetFactory, NotifyService, PlotService, UrlHandler) {
+ vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams', 'PlotService', 'UrlHandler',
+  function VisController( $scope, DimensionService, $stateParams, PlotService, UrlHandler) {
     
     $scope.visController = "visController";
     $scope.usedVariables = DimensionService.getUsedVariables();

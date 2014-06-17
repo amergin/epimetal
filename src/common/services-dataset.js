@@ -68,12 +68,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
               deferred.resolve(_restructureSamples(samples[variable], variable));
             })
             .error(function (response, status, headers, config) {
-              //console.log("dset returning empty");
-              // var NotifyService = $injector.get('NotifyService');
-              // NotifyService.addSticky('Error receiving data at ' + config.url, 'error' );
-              var message = !_.isUndefined(response.result) ? response.result.error :
-                'Something went wrong while fetching the samples from server. Plotting window will not be drawn.';
-              deferred.reject(message);
+              deferred.reject(variable);
             });
         } else {
           // already available, fetched
@@ -203,8 +198,8 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
             defer.resolve('enabled');
           }
 
-        }, function errFn(res) {
-          defer.reject(res);
+        }, function errFn(errVar) {
+          defer.reject(errVar);
         });
       });
       return defer.promise;
@@ -243,8 +238,8 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
             samples: result
           });
 
-        }, function errFn(resArray) {
-          defer.reject(resArray);
+        }, function errFn(errVar) {
+          defer.reject(errVar);
         });
 
         return defer.promise;

@@ -46,8 +46,12 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
           DatasetFactory.toggle(set);
         }
 
-      }, function errFn(res) {
-        NotifyService.addTransient(res, 'error');
+      }, function errFn(variable) {
+        var title = 'Error fetching variable ' + variable,
+        message = 'Something went wrong while fetching samples with the given combination.',
+        level = 'danger';
+        console.log(title,message,level);
+        NotifyService.addTransient(title, message, level);
       });
     };
   }
@@ -94,9 +98,13 @@ vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'Data
         NotifyService.closeModal();
         var PlotService = $injector.get('PlotService');
         PlotService.drawScatter({ variables: selection, pooled: selection.pooled});
-      }, function errorFn(result) {
+      }, function errorFn(variable) {
         NotifyService.closeModal();
-        NotifyService.addTransient(result, 'error');
+
+        var title = 'Variable ' + variable + ' could not be loaded\n',
+        message = 'Please check the selected combination is valid for the selected datasets.',
+        level = 'danger';
+        NotifyService.addTransient(title, message, level);
       });
 
 
@@ -145,9 +153,13 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
           var PlotService = $injector.get('PlotService');
           PlotService.drawHistogram({variables: selection, pooled: selection.pooled });
         },
-        function errorFn(result) {
+        function errorFn(variable) {
           NotifyService.closeModal();
-          NotifyService.addTransient(result, 'error');
+
+          var title = 'Variable ' + variable + ' could not be loaded\n',
+          message = 'Please check the selected combination is valid for the selected datasets.',
+          level = 'danger';
+          NotifyService.addTransient(title, message, level);
         });
     };
 
@@ -200,7 +212,7 @@ vis.controller('HeatmapFormController', ['$scope', '$rootScope', 'DatasetFactory
     };
 
     $scope.canSubmit = function () {
-      return $scope.canEdit() && !_.isEmpty($scope.selection);
+      return $scope.canEdit() && !_.isEmpty($scope.selection.x);
     };
 
     $scope.clear = function() {
@@ -215,9 +227,12 @@ vis.controller('HeatmapFormController', ['$scope', '$rootScope', 'DatasetFactory
         // draw the figure
         NotifyService.closeModal();
         PlotService.drawHeatmap({variables: selection});
-      }, function errorFn(result) {
+      }, function errorFn(variable) {
         NotifyService.closeModal();
-        NotifyService.addTransient(result, 'error');
+        var title = 'Variable ' + variable + ' could not be loaded\n',
+        message = 'Please check the selected combination is valid for the selected datasets.',
+        level = 'danger';
+        NotifyService.addTransient(title, message, level);
       });
     };
   }

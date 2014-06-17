@@ -1,8 +1,8 @@
 var dimMod = angular.module('services.urlhandler', ['services.dataset', 'ui.router']);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFactory', '$state', 'NotifyService',
-  function($injector, constants, $location, DatasetFactory, $state, NotifyService) {
+dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFactory', '$state',
+  function($injector, constants, $location, DatasetFactory, $state) {
 
     // regular expressions for url routing:
     var regexpStrings = {
@@ -21,11 +21,19 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
 
     var consts = {
       varDelim: ',',
-      separator: ';'
+      separator: ';',
+      error: {
+        title: 'Invalid URL',
+        message: 'The URL you followed is invalid. Please re-check the URL.'
+      }
     };
 
-    var errorMessage = 'The URL you followed is invalid. Please re-check the URL.';
     var that = this;
+
+    this._createError = function() {
+      var NotifyService = $injector.get('NotifyService');
+      NotifyService.addTransient(consts.error.title, consts.error.message, 'danger');      
+    };
 
     this._activeDsetNames = function() {
       return _.map(DatasetFactory.activeSets(), function(set) {
@@ -56,7 +64,7 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
       // 1. check/update the dataset info
       var res = regexps['dataset'].exec(path);
       if (_.isNull(res)) {
-        NotifyService.addTransient(errorMessage, 'error');
+        this._createError();
         that.clear();
         return;
       }
@@ -66,7 +74,7 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
 
       var datasets = res[2].split(consts.varDelim);
       if( _.first( datasets ) == 'null' ) { 
-        NotifyService.addTransient(errorMessage, 'error');
+        this._createError();
         return;
       }
 
@@ -127,7 +135,7 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
       });
 
       if (illegalVars) {
-        NotifyService.addTransient(errorMessage, 'error');
+        this._createError();
         return;
       }
 
@@ -153,7 +161,7 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
         });
 
       }, function err(res) {
-        NotifyService.addTransient(errorMessage, 'error');
+        this._createError();
         that.clear();
       });
     };
@@ -211,10 +219,8 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
     };
 
     this.removeWindow = function(type, selection, filter) {
-      console.log("remove", type, selection);
       var removed = false;
       var newUrl = decodeURIComponent($location.url()).replace(regexps[type], function(a, b, c, d) {
-        console.log(a, b, c, d);
         switch (b) {
           case 'his':
             if (c == selection.x && !removed) {
