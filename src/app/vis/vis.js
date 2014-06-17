@@ -22,8 +22,9 @@
   'plotter.vis.sidebar',
   'plotter.vis.plotting',
   'services.urlhandler',
-  'plotter.vis.linkcreator'
-  //'ui.bootstrap'
+  'plotter.vis.linkcreator',
+  // 'ui.bootstrap',
+  'mgcrea.ngStrap'
   ] );
 
 /**

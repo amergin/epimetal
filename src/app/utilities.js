@@ -2,6 +2,7 @@
 var Utils = Utils || {};
 var module = angular.module('utilities', []);
 
+// selects all text for example in a input/text area when applied
 module.directive('selectOnClick', function () {
   return {
     restrict: 'A',

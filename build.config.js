@@ -80,14 +80,16 @@ module.exports = {
       'vendor/draggabilly/draggabilly.pkgd.js',
       'vendor/underscore/underscore.js',
       'vendor/angular-chosen-localytics/chosen.js',
-      'vendor/underscore.string/lib/underscore.string.js'
+      'vendor/underscore.string/lib/underscore.string.js',
+      'vendor/angular-strap/dist/angular-strap.js',
+      'vendor/angular-strap/dist/angular-strap.tpl.js'
       //'vendor/angular-cookies/angular-cookies.js'
-      // 'vendor/angular-strap/angular-strap.js',
-      // 'vendor/angular-strap/angular-strap.tpl.js'
     ],
     css: [
       'vendor/dcjs/dc.css',
-      'vendor/angular-growl/build/angular-growl.min.css'
+      'vendor/angular-growl/build/angular-growl.min.css',
+      'vendor/angular-motion/dist/angular-motion.min.css',
+      'vendor/bootstrap-additions/dist/bootstrap-additions.min.css'
       //'vendor/chosen/chosen.min.css'
     ],
     assets: [
