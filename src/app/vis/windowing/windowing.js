@@ -138,8 +138,8 @@ win.directive('window', ['$compile', '$injector', function($compile, $injector){
       $scope.$on('$destroy', function() {
         $rootScope.$emit('variable:remove', $scope.window.type, $scope.window.variables);
         $injector.get('UrlHandler').removeWindow($scope.window.type, $scope.window.variables, $scope.window.filter);
-        $scope.packery.reloadItems();
-        // $scope.packery.layout();
+        // $scope.packery.reloadItems();
+        $scope.packery.layout();
       });
     }
   };

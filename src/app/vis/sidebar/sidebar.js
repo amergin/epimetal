@@ -52,6 +52,7 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
         level = 'danger';
         console.log(title,message,level);
         NotifyService.addTransient(title, message, level);
+      }).finally( function() {
       });
     };
   }

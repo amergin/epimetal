@@ -77,7 +77,10 @@ serv.factory('NotifyService', ['$injector',
       },
 
       closeModal: function () {
-        _modalInstanceRef.$promise.then(_modalInstanceRef.hide);
+        _modalInstanceRef.$promise.then( 
+          function() { _modalInstanceRef.hide(); }, 
+          function() { _modalInstanceRef.hide(); } 
+        );
       }
     };
   }

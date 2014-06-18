@@ -28,6 +28,8 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
       }
     };
 
+    var _loadingNewState = false;
+
     var that = this;
 
     this._createError = function() {
@@ -47,15 +49,7 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
         return;
       }
 
-      // var addWindow = function(arr, type, variables, filter, pooled) {
-      //   arr.push({
-      //     type: type,
-      //     variables: variables,
-      //     filter: filter,
-      //     pooled: pooled || false
-      //   });
-      // };
-
+      that._loadingNewState = true;
 
       var activeVariables = [];
       var windowsToCreate = [];
@@ -70,7 +64,7 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
       }
 
       // clear previous url
-      that.clear();
+      //that.clear();
 
       var datasets = res[2].split(consts.varDelim);
       if( _.first( datasets ) == 'null' ) { 
@@ -143,7 +137,7 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
 
       // load active variables:
       var NotifyService = $injector.get('NotifyService');
-      NotifyService.addSpinnerModal('Loading variables and drawing figures...');
+      NotifyService.addSpinnerModal('Loading samples and drawing figures...');
       DatasetFactory.getVariableData(activeVariables).then(function success(res) {
 
         _.each(windowsToCreate, function(win) {
@@ -167,10 +161,15 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
         NotifyService.closeModal();
         this._createError();
         that.clear();
+      })
+      .finally( function() {
+        that._loadingNewState = false;
       });
-    };
+
+    }; // function
 
     this.clear = function() {
+      _loadingNewState = false;
       $location.url( '/vis/' );
     };
 
@@ -194,6 +193,9 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
     };
 
     this.createWindow = function(type, config) {
+
+      if( that._loadingNewState ) { return; }
+
       var str = '';
       switch (type) {
         case 'scatterplot':
