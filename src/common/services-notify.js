@@ -54,7 +54,7 @@ serv.factory('NotifyService', ['$injector',
         return deferred.promise;
       },
 
-      addSpinnerModal: function (message) {
+      addSpinnerModal: function (message, callback) {
 
         var $modal = $injector.get('$modal');
 
@@ -73,14 +73,14 @@ serv.factory('NotifyService', ['$injector',
           animation: 'am-fade-and-scale'
         });
 
-        _modalInstanceRef.$promise.then(_modalInstanceRef.show);
+        _modalInstanceRef.$promise.then( _modalInstanceRef.show )
+        .finally( function() {
+          if( !_.isUndefined( callback ) ) { callback(); }
+        });
       },
 
       closeModal: function () {
-        _modalInstanceRef.$promise.then( 
-          function() { _modalInstanceRef.hide(); }, 
-          function() { _modalInstanceRef.hide(); } 
-        );
+        _modalInstanceRef.hide();
       }
     };
   }
