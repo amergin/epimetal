@@ -20,39 +20,30 @@
 
 <body>
   <div class="container-fluid">
-    <div ui-view="header">
+    <div class="row">
+      <div ui-view="header"></div>
     </div>
-    <div class="content">
 
-      <!-- Growl notify system -->
-      <div growl>
-        <div class="growl"></div>
-      </div>
-
-      <!-- Inject route here -->
-      <div ui-view>
-      </div>
-      <div class="text-center" ng-show="loading.spinner">
-        <i class="fa fa-spinner fa-5x fa-spin"></i>
-        <h3>Loading...</h3>
-      </div>
-
-
+    <div class="row content">
+          <!-- Inject route here -->
+          <div ui-view/>
+          <div class="text-center" ng-show="loading.spinner">
+            <i class="fa fa-spinner fa-5x fa-spin"></i>
+            <h3>Loading...</h3>
+          </div>
     </div>
-    <!-- end row-fluid -->
+
+
   </div> 
   <!-- end container -->
 
   <footer>
     <p>Footer</p>
+    <pre>
+      $state = {{$state.current.name}}
+      $stateParams = {{$stateParams}}
+    </pre>
   </footer>
-
-  <pre>
-    $state = {{$state.current.name}}
-    $stateParams = {{$stateParams}}
-  </pre>
-
-</div> <!-- /container -->
 
 </body>
 

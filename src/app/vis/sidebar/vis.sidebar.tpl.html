@@ -1,25 +1,30 @@
-	<div class="col-sm-12 col-md-5 col-lg-4" id="sidebar">
-		<div class="dataset"></div>
+<div class="sidebar-anim col-sm-12 col-md-5 col-lg-4" id="sidebar" ng-show="showSidebar" ng-animate="{ show: 'am-slide-left', hide: 'am-slide-right' }" ng-mouseenter="hover = true" ng-mouseleave="hover = false">
 
-		<div class="well well-small">
-			<h4>Plots</h4>
+	<button class="btn btn-secondary pull-right am-fade" ng-show="hover" ng-animation="{ show: 'am-fade', hide: 'am-fade' }" ng-click="toggleSidebar()" title="{{sidebarInfo()}}">
+		<i ng-class="{ true: 'fa fa-arrow-left', false: 'fa fa-arrow-right'}[showSidebar]"></i> {{sidebarInfo()}}
+	</button>
 
-			<!-- Scatterplot -->
-			<div class="scatterplot-form form-well">
-			</div>
+	<div class="dataset"></div>
 
-			<!-- Histogram -->
-			<div class="histogram-form form-well">
-			</div>
+	<div class="well well-small">
+		<h4>Plots</h4>
 
-			<!-- SOM -->
-			<div class="som-form form-well">
-			</div>
-
-			<!-- Heatmap -->
-			<div class="heatmap-form form-well">
-			</div>
-
-
+		<!-- Scatterplot -->
+		<div class="scatterplot-form form-well">
 		</div>
+
+		<!-- Histogram -->
+		<div class="histogram-form form-well">
+		</div>
+
+		<!-- SOM -->
+		<div class="som-form form-well">
+		</div>
+
+		<!-- Heatmap -->
+		<div class="heatmap-form form-well">
+		</div>
+
+
 	</div>
+</div>

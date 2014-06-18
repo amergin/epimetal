@@ -122,9 +122,10 @@ visu.directive('histogram', ['constants', '$timeout',
             $rootScope.$emit('scatterplot.redrawAll');
           });
         })
+        // .on("postRender", function(chart) {
         .renderlet( function(chart) {
           if( config.pooled ) {
-            chart.selectAll('g.stack > rect.bar')
+            d3.selectAll( $($scope.element).find('rect.bar:not(.deselected)') )
             .attr("class", 'bar pooled')
             .attr("fill", _poolingColor);
           }
@@ -164,19 +165,6 @@ visu.directive('histogram', ['constants', '$timeout',
       // 3. compose & render the composite chart
       $scope.histogram.compose(charts);
       $scope.histogram.render();
-
-      // if pooling is in place, override global css opacity rules for these
-      // stacks
-      // if (config.pooled) {
-      //   d3.select($scope.histogram.g()[0][0])
-      //     .selectAll("g.stack > rect.bar")
-      //     .each(function(d) {
-      //       d3.select(this).style('opacity', 1);
-      //     });
-      // }
-
-      window.histo = $scope.histogram;
-      window.dim = config.dimension;
 
       if( !_.isUndefined( $scope.window.filter ) ) {
         // _.delay( function() {

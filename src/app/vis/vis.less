@@ -168,7 +168,6 @@ opacity: 0.60;
 
 .dc-chart rect.bar.pooled {
   opacity: 1;
-  /* fill: yelllow; */
 } 
 
 
@@ -214,4 +213,36 @@ g.deselected rect {
 
 .alert {
   width: 300px;
+}
+
+/* TESTIII */
+
+
+#sidebar {
+  transition: 0.5s all ease-out;
+  -webkit-animation-duration: 0.5s;
+  animation-duration: 0.5s;
+  -webkit-animation-timing-function: ease-in-out;
+  animation-timing-function: ease-in-out;
+  -webkit-animation-fill-mode: backwards;
+  animation-fill-mode: backwards;
+}
+
+.sidebar-anim.ng-hide-add, .sidebar-anim.ng-hide-remove
+{
+  display: block !important; 
+}
+
+.sidebar-anim.ng-hide-remove, .sidebar-anim.ng-hide-add.ng-hide-add-active{
+  /* margin-left: -800px; */
+    -webkit-transform: translateX(-100%);
+    transform: translateX(-100%);  
+  //opacity: 0;
+}
+
+.sidebar-anim.ng-hide-remove.ng-hide-remove-active, .sidebar-anim.ng-hide-add{
+  /* margin-left: 0; */
+    -webkit-transform: translateX(0%);
+    transform: translateX(0%);  
+  opacity: 1;
 }

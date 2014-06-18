@@ -9,6 +9,11 @@ win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
     $rootScope.$emit('variable:add', config.type, config.variables);
   });
 
+  $scope.$onRootScope('packery.layout', function() {
+    console.log("packery layout triggered");
+    $scope.packery.layout();
+  });
+
   $scope.windows = [];
   $scope.windowRunningNumber = 0;
 
@@ -69,7 +74,7 @@ win.directive('packery', [ function() {
           columnWidth: 500
           // columnWidth: '.grid-sizer'
         } );
-          // window.packery = scope.packery;
+          window.packery = scope.packery;
         }
       };
     }]);

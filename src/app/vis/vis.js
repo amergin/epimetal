@@ -22,7 +22,8 @@
   'plotter.vis.sidebar',
   'plotter.vis.plotting',
   'services.urlhandler',
-  'plotter.vis.linkcreator'
+  'plotter.vis.linkcreator',
+  'ngAnimate'
   ] );
 
 /**
@@ -85,15 +86,32 @@
 
 }]);
 
- vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams', 'PlotService', 'UrlHandler',
-  function VisController( $scope, DimensionService, $stateParams, PlotService, UrlHandler) {
+ vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams', 'PlotService', 'UrlHandler', '$animate', '$injector',
+  function VisController( $scope, DimensionService, $stateParams, PlotService, UrlHandler, $animate, $injector) {
     
     $scope.visController = "visController";
+    console.log("viscontroller");
+
     $scope.usedVariables = DimensionService.getUsedVariables();
     $scope.activeVariables = DimensionService.getDimensions();
-    console.log("viscontroller");
 
     // populate the view from current url 
     UrlHandler.loadNewPageState( $stateParams.path, PlotService );
+
+    $scope.showSidebar = true;
+    var $rootScope = $injector.get('$rootScope');
+
+    $scope.toggleSidebar = function() {
+      $scope.showSidebar = !$scope.showSidebar;
+      var $timeout = $injector.get('$timeout');
+      $timeout( function() {
+        $rootScope.$emit('packery.layout');
+      });
+    };
+
+    $scope.sidebarInfo = function() {
+      //  {{ (showSidebar) && 'Hide' || 'Show' }} sidebar
+      return ( $scope.showSidebar ? 'Hide' : "Show" ) + " sidebar";
+    };
 
   }]);

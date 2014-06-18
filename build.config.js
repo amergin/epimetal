@@ -76,12 +76,10 @@ module.exports = {
       'vendor/draggabilly/draggabilly.pkgd.js',
       'vendor/underscore/underscore.js',
       'vendor/angular-chosen-localytics/chosen.js',
-      // 'vendor/underscore.string/lib/underscore.string.js',
       'vendor/angular-sanitize/angular-sanitize.js',
       'vendor/angular-animate/angular-animate.js',
       'vendor/angular-strap/dist/angular-strap.js',
       'vendor/angular-strap/dist/angular-strap.tpl.js'
-      //'vendor/angular-cookies/angular-cookies.js'
     ],
     css: [
       'vendor/dcjs/dc.css',

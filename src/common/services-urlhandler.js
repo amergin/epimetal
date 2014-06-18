@@ -142,6 +142,8 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
       activeVariables = _.unique(_.flatten(activeVariables));
 
       // load active variables:
+      var NotifyService = $injector.get('NotifyService');
+      NotifyService.addSpinnerModal('Loading variables and drawing figures...');
       DatasetFactory.getVariableData(activeVariables).then(function success(res) {
 
         _.each(windowsToCreate, function(win) {
@@ -159,8 +161,10 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
               break;
           }
         });
+        NotifyService.closeModal();
 
       }, function err(res) {
+        NotifyService.closeModal();
         this._createError();
         that.clear();
       });
