@@ -6,3 +6,6 @@ node_modules/
 vendor/*
 vendor/packery/
 vendor/draggabilly/
+python-api/*
+python-api/requirements.txt
+python-api/install.sh
