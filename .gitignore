@@ -7,5 +7,7 @@ vendor/*
 vendor/packery/
 vendor/draggabilly/
 python-api/*
-python-api/requirements.txt
-python-api/install.sh
+!python-api/requirements.txt
+!python-api/*.sh
+!python-api/*.config
+!python-api/*.py
