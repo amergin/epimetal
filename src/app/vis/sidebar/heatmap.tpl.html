@@ -12,7 +12,7 @@
 					class="form-control" id="vars-heatmap"
 					data-placeholder=" "
 					ng-model="selection.x"
-					ng-options="var for var in variables"
+					ng-options="o.name as o.name group by o.group for o in variables | orderBy:['group','name']"
 					required ng-disabled="!canEdit()">
 					<option value=""></option>
 				</select>

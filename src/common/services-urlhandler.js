@@ -68,7 +68,7 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
 
       var datasets = res[2].split(consts.varDelim);
       if( _.first( datasets ) == 'null' ) { 
-        this._createError();
+        that.clear();
         return;
       }
 
@@ -169,7 +169,7 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
     }; // function
 
     this.clear = function() {
-      _loadingNewState = false;
+      that._loadingNewState = false;
       $location.url( '/vis/' );
     };
 

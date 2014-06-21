@@ -7,6 +7,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
     var that = this;
     that.sets = {};
     that.variables = [];
+    that.variablesLookup = {};
     that.config = {
       datasetsURL: '/API/datasets',
       variablesURL: '/API/headers/NMR_results'
@@ -19,7 +20,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
 
     // --------------------------------------
     // class for defining a single dataset
-    function Dataset(dsetName, col) {
+    function Dataset(dsetName, col, noSamples) {
 
       // --------------------------------------
       // privates:
@@ -36,6 +37,8 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
       var samples = {};
 
       var active = false;
+
+      var size = null || noSamples;
 
       // --------------------------------------
       // functions
@@ -64,7 +67,6 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
           $http.get(config.variableURLPrefix + variable + "/in/" + name)
             .success(function (response) {
               samples[variable] = response.result.values;
-              //console.log("dset returning", _.size(samples[variable]) );
               deferred.resolve(_restructureSamples(samples[variable], variable));
             })
             .error(function (response, status, headers, config) {
@@ -97,7 +99,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
         return name;
       };
       this.getSize = function () {
-        return _.size(samples);
+        return size || _.size(samples);
       };
 
 
@@ -117,11 +119,12 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
           console.log("Load variable list");
           // empty just in case it's not empty
           that.variables = [];
-          _.each(response.result, function (varNameObj) {
-            that.variables.push(varNameObj.name);
+          _.each(response.result, function (varNameObj, ind) {
+            that.variables.push(varNameObj);
+            that.variablesLookup[varNameObj.name] = ind;
           });
-          that.variables = _.sortBy(that.variables, function (name) {
-            return name.toLowerCase();
+          that.variables = _.sortBy(that.variables, function (obj) {
+            return obj.desc || obj.name;
           });
           deferred.resolve(that.variables);
         })
@@ -138,7 +141,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
           console.log("load dataset names");
           _.each(response.result, function (nameObj) {
             // create a dataset stub
-            that.sets[nameObj.name] = new Dataset(nameObj.name, that.colors(nameObj.name));
+            that.sets[nameObj.name] = new Dataset(nameObj.name, that.colors(nameObj.name), nameObj.size);
           });
           deferred.resolve(that.sets);
         })
@@ -154,7 +157,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
 
     service.legalVariables = function(array) {
       _.each(array, function(variable) {
-        if( that.variables.indexOf(variable) < 0 ) {
+        if( _.isUndefined( that.variablesLookup[variable] ) ) {
           return false;
         }
       });

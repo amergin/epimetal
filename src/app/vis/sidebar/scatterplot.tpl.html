@@ -11,7 +11,7 @@
 					allow-single-deselect="true"
 					data-placeholder=" "
 					ng-model="selection.x"
-					ng-options="var for var in variables"
+					ng-options="o.name as o.name group by o.group for o in variables | orderBy:['group','name']"
 					required ng-disabled="!canEdit()">
 					<option value=""></option>
 				</select>
@@ -27,7 +27,7 @@
 				class="form-control" id="ycoord-scatter" 
 				data-placeholder=" "
 				ng-model="selection.y"
-				ng-options="var for var in variables"
+				ng-options="o.name as o.name group by o.group for o in variables | orderBy:['group','name']"
 				required ng-disabled="!canEdit()">
 				<option value=""></option>
 			</select>

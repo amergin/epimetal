@@ -143,7 +143,7 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
     };
 
     $scope.canSubmit = function () {
-      return $scope.canEdit() && !_.isEmpty($scope.selection);
+      return $scope.canEdit() && !_.isUndefined($scope.selection.x);
     };
 
     $scope.add = function (selection) {

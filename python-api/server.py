@@ -11,10 +11,13 @@ from mongoengine.fields import StringField, ListField
 from orm_models import Sample, Header
 import json
 
+from flask_sockets import Sockets
 
-PREFIX = '/api/'
+
+PREFIX = '/API/'
 
 app = Flask('plotter-api')
+sockets = Sockets(app)
 
 @app.route( PREFIX + 'headers/NMR_results', methods=['GET'])
 def headers():
@@ -40,9 +43,9 @@ def datasets():
 		return { 'size': Sample.objects.filter(dataset=name).count(), 'name': name }
 	#print [method for method in dir(Sample.objects) if callable(getattr(Sample.objects, method))]
 	uniqueDatasets = Sample.objects.distinct('dataset')
-	response = { 'success': 'true', 'query': request.path }
+	response = { 'success': 'true', 'query': request.path, 'result': []}
 	for dset in uniqueDatasets:
-		response[dset] = _getDatasetDetails(dset)
+		response['result'].append( _getDatasetDetails(dset) )
 	response = flask.jsonify(response)
 	response.status_code = 200
 	return response
@@ -71,16 +74,24 @@ def variable(variable, dataset):
 	results = Sample.objects.filter(dataset=dataset).only('sampleid', 'variables.'+variable)
 	
 	d = dict()
-	for res in results:
-		print res.variables
-		d[res.sampleid] = res.variables[variable]
-	response = flask.jsonify({
-		'success': 'true',
-		'query': request.path,
-		'result': d
-	})
-	response.status_code = 200
-	return response
+	try:
+		for res in results:
+			d[res.sampleid] = res.variables[variable]
+		response = flask.jsonify({
+			'success': 'true',
+			'query': request.path,
+			'result': { 'values': d }
+		})
+		response.status_code = 200
+		return response
+	except:
+		response = flask.jsonify({
+			'success': 'false',
+			'query': request.path,
+			'result': { 'error': 'Unexpected error.' }
+		})
+		response.status_code = 400
+		return response
 
 if __name__ == '__main__':
 	config = Config('setup.config')

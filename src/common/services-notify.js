@@ -80,7 +80,10 @@ serv.factory('NotifyService', ['$injector',
       },
 
       closeModal: function () {
-        _modalInstanceRef.hide();
+        var $timeout = $injector.get('$timeout');
+        $timeout( function() {
+          _modalInstanceRef.hide();
+        }, 100);
       }
     };
   }
