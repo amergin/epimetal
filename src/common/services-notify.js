@@ -21,12 +21,12 @@ serv.factory('NotifyService', ['$injector',
       addTransient: function (title, message, level) {
         var $alert = $injector.get('$alert');
         var myAlert = $alert({
-          title: title,
+          title: title + "\n",
           content: message, 
           placement: 'top-right', 
           type: level,
           show: true,
-          duration: 6
+          duration: 7
         });
       },
 

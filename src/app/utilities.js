@@ -28,6 +28,9 @@ Utils.getVariables = function(windowType, selection, splitScatter) {
   else if( windowType === 'heatmap' ) {
     return selection.x;
   }
+  else if( windowType === 'som' ) {
+    return selection.x;
+  }
   else {
     console.log("Undefined type!");
   }

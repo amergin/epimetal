@@ -79,7 +79,8 @@ module.exports = {
       'vendor/angular-sanitize/angular-sanitize.js',
       'vendor/angular-animate/angular-animate.js',
       'vendor/angular-strap/dist/angular-strap.js',
-      'vendor/angular-strap/dist/angular-strap.tpl.js'
+      'vendor/angular-strap/dist/angular-strap.tpl.js',
+      'vendor/d3-plugins/hexbin/hexbin.js'
     ],
     css: [
       'vendor/dcjs/dc.css',

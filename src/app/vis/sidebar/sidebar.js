@@ -173,8 +173,8 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
 ]);
 
 // controller for the histogram form
-vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'constants',
-  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, constants) {
+vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'constants', '$timeout',
+  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, constants, $timeout) {
     $scope.variables = DatasetFactory.variables();
     $scope.selection = {};
 
@@ -186,25 +186,103 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
       return $scope.canEdit() && !_.isEmpty($scope.selection.x);
     };
 
-    $scope.add = function (selection) {
+    $scope.close = function(somId) {
+      delete $scope.SOMs[somId];
+    };
 
-      var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
-      var datasets = _.map( DatasetFactory.activeSets() ,function(set) { return set.getName(); } );
+    $scope.canSubmitPlane = function(som) {
+      return som.state == 'ready' && !_.isUndefined(som.tinput);
+    };
+
+    $scope.addPlane = function(som) {
+      var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.plane);
        ws.onopen = function() {
-          console.log(constants.som.websocket.url + constants.som.websocket.api.som);
-          console.log("open");
-          ws.send(JSON.stringify({
-            'datasets': datasets,
-            'variables': $scope.selection.x
-          }));
+          $timeout( function() {
+            var datasets = _.map( DatasetFactory.activeSets(),function(set) { return set.getName(); } );
+            ws._id = som.id;
+            var planeId = _.uniqueId('plane');
+            ws._planeid = planeId;
+            ws.send(JSON.stringify({
+              'somid': som.som,
+              'datasets': datasets,
+              'variables': {
+                'test': som.tinput,
+                'input': som.variables
+              }
+            }));
+
+            $scope.SOMs[som.id].planes[planeId] = {
+              'state': 'loading'
+            };
+          });
        };
        ws.onclose = function(evt) {
           console.log("closed", evt);
        };
 
        ws.onmessage = function(evt) {
-        console.log("message received:", evt.data);
-        $scope.SOMs.push( { id: JSON.parse(evt.data).id, datasets: datasets, variables: angular.copy($scope.selection.x) } );
+
+        $timeout( function() {
+          var result = JSON.parse(evt.data);
+          var som = $scope.SOMs[evt.currentTarget._id];
+          _.extend( som.planes[evt.currentTarget._planeid], {
+            'id': result.id,
+            'plane': result.data.plane
+          });
+          NotifyService.addTransient('SOM Plane computation ready', 'The submitted SOM Plane computation is ready.', 'success');
+          var PlotService = $injector.get('PlotService');
+          PlotService.drawSOM({variables: $scope.selection, plane: result.data.plane });          
+          console.log("message received:", evt.data);
+        });
+
+       };
+
+
+    };
+
+    $scope.add = function (selection) {
+
+      // NotifyService.addTransient('Computing a Self-organizing map', 
+      //   'Please be patient, SOM computations may take up to several minutes depending on the amount of samples and variables selected.',
+      //   'info');
+
+      var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
+       ws.onopen = function() {
+          $timeout( function() {
+            var datasets = _.map( DatasetFactory.activeSets(),function(set) { return set.getName(); } );
+            var id = _.uniqueId('som');
+            ws._id = id;
+            ws.send(JSON.stringify({
+              'datasets': datasets,
+              'variables': $scope.selection.x,
+            }));
+
+            $scope.SOMs[id] = {
+              'id': id,
+              'state': 'loading',
+              'variables': angular.copy($scope.selection.x),
+              'datasets': datasets,
+              'planes': {}
+            };
+          });
+       };
+       ws.onclose = function(evt) {
+          console.log("closed", evt);
+       };
+
+       ws.onmessage = function(evt) {
+
+        $timeout( function() {
+          var result = JSON.parse(evt.data);
+          $scope.SOMs[evt.currentTarget._id].state = 'ready';
+          _.extend( $scope.SOMs[evt.currentTarget._id], {
+            som: result.id,
+          });
+
+          NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
+          console.log("message received:", evt.data);
+        });
+
        };
 
     };
@@ -213,7 +291,7 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
       $scope.selection.x = [];
     };
 
-    $scope.SOMs = [];
+    $scope.SOMs = {};
 
   }
 ]);

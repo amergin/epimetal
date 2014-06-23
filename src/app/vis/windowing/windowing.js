@@ -35,14 +35,20 @@ win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
     var variablesCopy = {};
     angular.copy(config.variables, variablesCopy);
 
-    $scope.windows.push({ 
-      number : (++$scope.windowRunningNumber),
-      type: config.type, 
-      variables: variablesCopy,
-      pooled: config.pooled,
-      size: config.size,
-      filter: config.filter
-    });
+    var win = {
+      number: ++$scope.windowRunningNumber
+    };
+    angular.extend(win, config);
+
+    // $scope.windows.push({ 
+    //   number : (++$scope.windowRunningNumber),
+    //   type: config.type, 
+    //   variables: variablesCopy,
+    //   pooled: config.pooled,
+    //   size: config.size,
+    //   filter: config.filter
+    // });
+    $scope.windows.push(win);
   };
 
 }]);
@@ -96,6 +102,9 @@ win.directive('window', ['$compile', '$injector', function($compile, $injector){
 
       if($scope.window.size == 'double') {
         $scope.element.addClass('window-dbl');
+      }
+      else if($scope.window.size == 'double-normal') {
+        $scope.element.addClass('window-dbl-norm');
       }
 
       var draggable = new Draggabilly( $scope.element[0], { handle : '.handle' } );
