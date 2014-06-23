@@ -15,6 +15,15 @@ App.constant('constants', {
     heatmap: 'ext',
     scatterplot: 'main',
     histogram: 'main'
+  },
+  som: {
+    websocket: {
+      api: {
+        som: '/API/som/create',
+        plane: '/API/som/plane'
+      },
+      url: 'ws://localhost:6565'
+    }
   }
 });
 

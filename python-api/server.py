@@ -1,25 +1,53 @@
 import os
-from mongoengine import connect, Document, DynamicDocument
-from mongoengine.fields import StringField, ListField
+#from mongoengine import connect, Document, DynamicDocument
+#from mongoengine.fields import StringField, ListField
 import sys
 from config import Config
 import flask
 from flask import Flask, Request, request
 
-from mongoengine import connect, Document, DynamicDocument
-from mongoengine.fields import StringField, ListField
-from orm_models import Sample, Header
+from flask.ext.mongoengine import MongoEngine
 import json
 
+from orm_models import Sample, Header 
 from flask_sockets import Sockets
 
-
-PREFIX = '/API/'
-
-app = Flask('plotter-api')
+app = Flask(__name__)
+config = Config('setup.config')
+app.config.update(
+	DEBUG=True,
+	SECRET_KEY=os.urandom(24),
+	MONGODB_SETTINGS= {
+	'DB': config.getMongoVar('db'),
+	'HOST': config.getMongoVar('host'),
+	'PORT': int( config.getMongoVar('port') )
+	}
+)
+db = MongoEngine(app)
+#app.secret_key = '\x88\xd5\x1f\xbf\xffF\x98\xcbH\xfcy\xa0zD\xa0\x86\xd5l#\xa2g\x1b\x9cW'
 sockets = Sockets(app)
 
-@app.route( PREFIX + 'headers/NMR_results', methods=['GET'])
+'''class Sample(db.DynamicDocument):
+	dataset = db.StringField()
+	sampleid = db.StringField()
+	variables = db.DictField()
+	#'variables' will be added dynamically later on
+
+	meta = {
+	'indexes': [ 
+		{'fields': ('dataset', 'sampleid'), 'unique': True},
+		{'fields': ['dataset'] }
+	] }
+
+class Header(db.Document):
+	variables = db.DictField()
+	
+	meta = {
+	'indexes': [ 
+		{'fields': ['variables'] }
+	] }'''
+
+@app.route( config.getFlaskVar('prefix') + 'headers/NMR_results', methods=['GET'])
 def headers():
 	headerObj = Header.objects.first()
 	retDict = { 'query': request.path }
@@ -37,7 +65,7 @@ def headers():
 		response.status_code = 200
 		return response
 
-@app.route( PREFIX + 'datasets', methods=['GET'] )
+@app.route( config.getFlaskVar('prefix') + 'datasets', methods=['GET'] )
 def datasets():
 	def _getDatasetDetails(name):
 		return { 'size': Sample.objects.filter(dataset=name).count(), 'name': name }
@@ -51,7 +79,7 @@ def datasets():
 	return response
 
 
-@app.route( PREFIX + 'list/<variable>/in/<dataset>' )
+@app.route( config.getFlaskVar('prefix') + 'list/<variable>/in/<dataset>' )
 def variable(variable, dataset):
 	if not Header.objects.first().variables.get(variable):
 		response = flask.jsonify({
@@ -95,5 +123,6 @@ def variable(variable, dataset):
 
 if __name__ == '__main__':
 	config = Config('setup.config')
-	connect( db=config.getMongoVar('db'), host=config.getMongoVar('host'), port=int(config.getMongoVar('port')) )
+	#connect()
+	#connect( db=config.getMongoVar('db'), host=config.getMongoVar('host'), port=int(config.getMongoVar('port')) )
 	app.run(host=config.getFlaskVar('host'), port=int(config.getFlaskVar('port')), debug=True)

@@ -173,8 +173,8 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
 ]);
 
 // controller for the histogram form
-vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService',
-  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService) {
+vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'constants',
+  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, constants) {
     $scope.variables = DatasetFactory.variables();
     $scope.selection = {};
 
@@ -183,11 +183,37 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
     };
 
     $scope.canSubmit = function () {
-      return $scope.canEdit() && !_.isEmpty($scope.selection);
+      return $scope.canEdit() && !_.isEmpty($scope.selection.x);
     };
 
     $scope.add = function (selection) {
+
+      var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
+      var datasets = _.map( DatasetFactory.activeSets() ,function(set) { return set.getName(); } );
+       ws.onopen = function() {
+          console.log(constants.som.websocket.url + constants.som.websocket.api.som);
+          console.log("open");
+          ws.send(JSON.stringify({
+            'datasets': datasets,
+            'variables': $scope.selection.x
+          }));
+       };
+       ws.onclose = function(evt) {
+          console.log("closed", evt);
+       };
+
+       ws.onmessage = function(evt) {
+        console.log("message received:", evt.data);
+        $scope.SOMs.push( { id: JSON.parse(evt.data).id, datasets: datasets, variables: angular.copy($scope.selection.x) } );
+       };
+
     };
+
+    $scope.clear = function() {
+      $scope.selection.x = [];
+    };
+
+    $scope.SOMs = [];
 
   }
 ]);

@@ -1,5 +1,6 @@
 from mongoengine import Document, DynamicDocument
 from mongoengine.fields import StringField, ListField, DictField
+# notice that this needs to be kept in sync with server.py models (flask-mongoengine)
 
 class Sample(DynamicDocument):
 	dataset = StringField()

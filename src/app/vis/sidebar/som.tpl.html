@@ -5,16 +5,16 @@
 			<div class="form-group">
 				<label class="col-sm-3 control-label" for="vars-som">Input variables</label>
 				<div class="col-sm-7">
+					<small class="pull-right" ng-show="selection.x"><a href="" ng-click="clear()">Clear selection</a></small>
 					<select
 					chosen
 					multiple
 					class="form-control" id="vars-som"
 					data-placeholder=" "
 					ng-model="selection.x"
-					ng-options="var for var in variables"
+					ng-options="o.name as o.name group by o.group for o in variables | orderBy:['group','name']"
 					required ng-disabled="!canEdit()">
-					<option value=""></option>
-				</select>
+					</select>
 				
 				</div>
 			</div>
@@ -26,4 +26,17 @@
 		</div>
 	</fieldset>
 	</form>
+
+	<div ng-repeat="som in SOMs">
+		<div class="panel panel-default">
+		  <div class="panel-heading">
+		    <h3 class="panel-title">Computed SOM #{{$index+1}}<span class="badge pull-right" title="{{som.variables.length}} variables in {{som.datasets.length}} dataset(s)">{{som.variables.length}} variables</span></h3>
+		  </div>
+		  <div class="panel-body">
+		    <p>Variables</p>: {{som.variables}}</p>
+		    <p>Datasets</p>: {{som.datasets}}</p>
+		    Compute a plane using a test variable:
+		  </div>
+		</div>
+	</div>
 </div>
