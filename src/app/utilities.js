@@ -29,7 +29,7 @@ Utils.getVariables = function(windowType, selection, splitScatter) {
     return selection.x;
   }
   else if( windowType === 'som' ) {
-    return selection.x;
+    return [];
   }
   else {
     console.log("Undefined type!");

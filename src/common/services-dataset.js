@@ -1,7 +1,7 @@
 var serv = angular.module('services.dataset', ['services.notify']);
 
-serv.factory('DatasetFactory', ['$http', '$q', '$injector',
-  function ($http, $q, $injector) {
+serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
+  function ($http, $q, $injector, constants) {
 
     // privates
     var that = this;
@@ -16,7 +16,12 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
 
     // notice: these cannot be kept in DimensionService, since
     // not all variables rely on crossfilter-dimension setup!
+    // SOM variables are not added here since they do not require
+    // API loading.
     that.activeVariables = {};
+
+    that.SOMs = {};
+    that.SOMPlanes = {};
 
     // --------------------------------------
     // class for defining a single dataset
@@ -208,6 +213,107 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
       return defer.promise;
     };
 
+    var _findSOM = function(selection, datasets) {
+      for(var key in that.SOMs) {
+        var som = that.SOMs[key];
+        if( _.isEqual( som.variables, selection ) && _.isEqual( som.datasets, datasets ) ) {
+          return som;
+        }
+      }
+    };
+
+    var _findPlane = function(som) {
+      for(var key in that.SOMPlanes) {
+        var plane = that.SOMPlanes[key];
+        if( _.isEqual( plane.som_id, som.som ) && _.isEqual( plane.variable, som.tinput ) ) {
+          return plane;
+        }
+      }
+    };
+
+    service.getSOM = function(selection) {
+      var defer = $q.defer();
+
+      var datasets = _.map( service.activeSets(),function(set) { return set.getName(); });
+      var cachedSom = _findSOM(selection,datasets);
+      if( cachedSom ) {
+        defer.resolve( cachedSom );
+        return;
+      }
+
+      var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
+       ws.onopen = function() {
+          ws.send(JSON.stringify({
+            'datasets': datasets,
+            'variables': selection
+          }));
+       };
+       ws.onclose = function(evt) {
+          console.log("closed", evt);
+       };
+
+       ws.onmessage = function(evt) {
+          var result = JSON.parse(evt.data);
+          if( result.result.code == 'error' ) {
+            defer.reject(result.result.message);
+            return;
+          }
+          that.SOMs[result.data.id] = result.data;
+          defer.resolve(result.data);
+       };
+      return defer.promise;
+
+    };
+
+    service.getPlane = function(som) {
+
+      var defer = $q.defer();
+
+      var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.plane);
+      var cachedPlane = _findPlane(som);
+      if( cachedPlane ) {
+        defer.resolve( cachedPlane );
+      }
+
+      if( som.planeid ) {
+        ws.onopen = function() {
+          ws.send(JSON.stringify({
+            'planeid': som.planeid
+          }));
+        };
+      }
+      else {
+         ws.onopen = function() {
+            ws.send(JSON.stringify({
+              'somid': som.som,
+              'datasets': som.datasets,
+              'variables': {
+                'test': som.tinput,
+                'input': som.variables
+              }
+            }));
+         };
+      }
+
+       ws.onclose = function(evt) {
+          console.log("closed", evt);
+       };
+
+       ws.onmessage = function(evt) {
+          var result = JSON.parse(evt.data);
+          if( result.result.code == 'error' ) {
+            defer.reject(result.result.message);
+            return;
+          }
+          that.SOMPlanes[result.id] = result.data;
+          defer.resolve(result.data);
+       };
+
+       return defer.promise;
+
+    };
+
+
 
     // this is called whenever a plot is drawn to check if variable data
     // is to be fetched beforehand. 
@@ -309,6 +415,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector',
     service.isActive = function (name) {
       return that.sets[name].active();
     };
+
 
     service._addActiveVariable = function(variable) {
       if( _.isUndefined( that.activeVariables[variable] ) ) {

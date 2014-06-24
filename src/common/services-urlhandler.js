@@ -9,14 +9,16 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
       dataset: "(ds)(?:;set=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+))?\/",
       scatterplot: "(?:(sca);var=([A-Za-z0-9_-]+),([A-Za-z0-9_-]+)(?:;p=(t|f))?)\/",
       heatmap: "(?:(hea);var=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+)(?:;f=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+))?)\/",
-      histogram: "(his);var=([A-Za-z0-9_-]+)(?:;f=(\\d+\\.?\\d*)-(\\d+\\.?\\d*))?(?:;p=(t|f))?\/"
+      histogram: "(his);var=([A-Za-z0-9_-]+)(?:;f=(\\d+\\.?\\d*)-(\\d+\\.?\\d*))?(?:;p=(t|f))?\/",
+      som: "(som);id=([0-9a-fA-F]{24})\/"
     };
 
     var regexps = {
       dataset: new RegExp(regexpStrings['dataset']),
       scatterplot: new RegExp(regexpStrings['scatterplot'], 'g'),
       heatmap: new RegExp(regexpStrings['heatmap'], 'g'),
-      histogram: new RegExp(regexpStrings['histogram'], 'g')
+      histogram: new RegExp(regexpStrings['histogram'], 'g'),
+      som: new RegExp(regexpStrings['som'], 'g')
     };
 
     var consts = {
@@ -83,6 +85,7 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
           return;
         }
         _.each(regex.execAll(path), function(result) {
+          console.log("res", result[1]);
           switch (result[1]) {
             case 'his':
               if (!DatasetFactory.legalVariables([result[2]])) {
@@ -124,6 +127,13 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
                 activeVariables.push(vars);
               }
               break;
+
+            case 'som':
+              windowsToCreate.push({
+                'type': 'som',
+                'planeid': result[2]
+              });
+              break;
           }
         });
       });
@@ -153,6 +163,17 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
             case 'histogram':
               PlotService.drawHistogram(win);
               break;
+
+            case 'som':
+              DatasetFactory.getPlane(win).then( function succFn(res) {
+                console.log("success", res);
+                that._loadingNewState = true;
+                PlotService.drawSOM(res);
+              }, function errFn(res) {
+                console.log("failed", res);
+              }).finally( function() {
+                that._loadingNewState = false;
+              });
           }
         });
         NotifyService.closeModal();
@@ -221,6 +242,9 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
         case 'heatmap':
           $location.url($location.url() + 'hea;var=' + config.variables.x.join() + "/");
           break;
+
+        case 'som':
+          $location.url($location.url() + 'som;id=' + config.id + "/");
       }
     };
 
@@ -244,6 +268,13 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
             var orig = _.sortBy(c.split(","));
             var selec = _.sortBy(selection.x);
             if ((_.difference(orig, selec).length === 0) && !removed) {
+              removed = true;
+              return "";
+            }
+            return a;
+
+          case 'som':
+            if( !removed && _.isEqual(selection,c) ) {
               removed = true;
               return "";
             }

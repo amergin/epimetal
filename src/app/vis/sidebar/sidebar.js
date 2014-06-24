@@ -195,95 +195,52 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
     };
 
     $scope.addPlane = function(som) {
-      var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.plane);
-       ws.onopen = function() {
-          $timeout( function() {
-            var datasets = _.map( DatasetFactory.activeSets(),function(set) { return set.getName(); } );
-            ws._id = som.id;
-            var planeId = _.uniqueId('plane');
-            ws._planeid = planeId;
-            ws.send(JSON.stringify({
-              'somid': som.som,
-              'datasets': datasets,
-              'variables': {
-                'test': som.tinput,
-                'input': som.variables
-              }
-            }));
 
-            $scope.SOMs[som.id].planes[planeId] = {
-              'state': 'loading'
-            };
-          });
-       };
-       ws.onclose = function(evt) {
-          console.log("closed", evt);
-       };
+      DatasetFactory.getPlane(som).then( 
+        function succFn(res) {
+          console.log("success", som);
 
-       ws.onmessage = function(evt) {
-
-        $timeout( function() {
-          var result = JSON.parse(evt.data);
-          var som = $scope.SOMs[evt.currentTarget._id];
-          _.extend( som.planes[evt.currentTarget._planeid], {
-            'id': result.id,
-            'plane': result.data.plane
-          });
-          NotifyService.addTransient('SOM Plane computation ready', 'The submitted SOM Plane computation is ready.', 'success');
+          $scope.SOMs[som.id].state = 'ready';
+          $scope.SOMs[som.id].planes[res.id] = {
+            id: res.id,
+            plane: res.plane
+          };
+          NotifyService.addTransient('SOM plane ready', 'The submitted SOM plane computation is ready', 'success');
           var PlotService = $injector.get('PlotService');
-          PlotService.drawSOM({variables: $scope.selection, plane: result.data.plane });          
-          console.log("message received:", evt.data);
-        });
+          PlotService.drawSOM(res);
 
-       };
-
+      }, function errFn(res) {
+        NotifyService.addTransient('Plane computation failed', res, 'danger');
+        console.log("som failed", res);
+      });
 
     };
 
     $scope.add = function (selection) {
 
-      // NotifyService.addTransient('Computing a Self-organizing map', 
-      //   'Please be patient, SOM computations may take up to several minutes depending on the amount of samples and variables selected.',
-      //   'info');
+      var id = _.uniqueId('som');
 
-      var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
-       ws.onopen = function() {
-          $timeout( function() {
-            var datasets = _.map( DatasetFactory.activeSets(),function(set) { return set.getName(); } );
-            var id = _.uniqueId('som');
-            ws._id = id;
-            ws.send(JSON.stringify({
-              'datasets': datasets,
-              'variables': $scope.selection.x,
-            }));
+      $scope.SOMs[id] = {
+        'id': id,
+        'state': 'loading',
+        'variables': angular.copy($scope.selection.x),
+        'datasets':  _.map( DatasetFactory.activeSets(),function(set) { return set.getName(); } ),
+        'planes': {}
+      };
 
-            $scope.SOMs[id] = {
-              'id': id,
-              'state': 'loading',
-              'variables': angular.copy($scope.selection.x),
-              'datasets': datasets,
-              'planes': {}
-            };
+      DatasetFactory.getSOM(selection.x).then( 
+        function succFn(som) {
+          console.log("success", som);
+
+          $scope.SOMs[id].state = 'ready';
+          angular.extend( $scope.SOMs[id], {
+            som: som.id
           });
-       };
-       ws.onclose = function(evt) {
-          console.log("closed", evt);
-       };
-
-       ws.onmessage = function(evt) {
-
-        $timeout( function() {
-          var result = JSON.parse(evt.data);
-          $scope.SOMs[evt.currentTarget._id].state = 'ready';
-          _.extend( $scope.SOMs[evt.currentTarget._id], {
-            som: result.id,
-          });
-
           NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
-          console.log("message received:", evt.data);
-        });
-
-       };
+      }, function errFn(res) {
+        NotifyService.addTransient('SOM computation failed', res, 'danger');
+        console.log("som failed", res);
+      });
 
     };
 

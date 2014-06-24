@@ -7,7 +7,10 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       // dc.redrawAll(constants.groups.heatmap);
     };
 
-    $scope.headerText = $scope.window.variables.x.length + " variables";
+    $scope.headerText = $scope.window.variable;
+
+    // needed later on for removing the url
+    $scope.window.variables = $scope.window.id;
     $scope.window.showResetBtn = false;
 
     $scope.width = 455;

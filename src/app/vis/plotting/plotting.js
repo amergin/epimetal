@@ -46,7 +46,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
       $rootScope = $injector.get('$rootScope');
       config.size = 'double-normal';
       config.type = 'som';
-      //UrlHandler.createWindow( type, config );
+      UrlHandler.createWindow( 'som', config );
       $rootScope.$emit('packery.add', config);
     };    
 

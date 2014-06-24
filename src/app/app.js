@@ -19,8 +19,8 @@ App.constant('constants', {
   som: {
     websocket: {
       api: {
-        som: '/API/som/create',
-        plane: '/API/som/plane'
+        som: '/API/ws/som',
+        plane: '/API/ws/plane'
       },
       url: 'ws://localhost:6565'
     }

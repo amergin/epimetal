@@ -64,14 +64,14 @@ def _getFormattedSamples(samples, variables):
 			retSamples[var].append( float(samp.variables[var]) )
 	return retSamples
 
-@sockets.route( config.getFlaskVar('prefix') + 'create/som' )
+@sockets.route( config.getFlaskVar('prefix') + 'ws/som' )
 def createSOM(ws):
 	rawMessage = ws.receive()
 	response = None
 	message = { 'datasets': [], 'variables': [] }
 	try:
 		message = json.loads(rawMessage)
-	except ValueError:
+	except ValueError, TypeError:
 		response = { "result": { 'code': 'error', 'message': 'Incorrect parameters' }, 'data': [] }
 		ws.send(json.dumps(response))
 
@@ -87,23 +87,26 @@ def createSOM(ws):
 
 	ws.send(json.dumps(response))
 
-@sockets.route( config.getFlaskVar('prefix') + 'get/plane' )
-def getPlane(ws):
-	pass
-
-
-@sockets.route( config.getFlaskVar('prefix') + 'create/plane' )
+@sockets.route( config.getFlaskVar('prefix') + 'ws/plane' )
 def createPlane(ws):
 	rawMessage = ws.receive()
 	response = None
 	try:
 		message = json.loads(rawMessage)
+		planeid = message.get('planeid')
+		if planeid:
+			zmqSocketPlane.connect('tcp://127.0.0.1:5679')
+			zmqSocketPlane.send_json({ 'planeid': planeid })
+			response = json.dumps(zmqSocketPlane.recv_json())
+			ws.send(response)
+
 		variables = message.get('variables')
 		testVariable = variables.get('test')
 		inputVariables = variables.get('input')
 		inputDatasets = message.get('datasets')
 		somId = message.get('somid')
 		if not( somId and variables and inputDatasets ) \
+		or not isinstance( inputVariables, list) \
 		or not _checkVariables(inputVariables + [testVariable]) \
 		or not _checkDatasets( inputDatasets ):
 			response = json.dumps({ 'result': { 'code': 'error', 'message': 'Invalid parameters sent.' } })
@@ -117,9 +120,8 @@ def createPlane(ws):
 				'samples': _getFormattedSamples( samples, uniqueVars )
 			})
 			response = json.dumps(zmqSocketPlane.recv_json())
-		ws.send(response)#(json.dumps(response))
+		ws.send(response)
 	except ValueError, AttributeError:
-		print "err2"
 		response = { 'result': { 'code': 'error', 'message': 'Invalid parameters sent.' } }
 		ws.send(json.dumps(response))
 
