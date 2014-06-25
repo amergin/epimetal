@@ -1,3 +1,3 @@
 #!/bin/bash
-virtualenv --no-site-packages --distribute python-api && source python-api/bin/activate && pip freeze > python-api/requirements.txt
+virtualenv --no-site-packages --distribute python-api && source bin/activate && pip freeze > requirements.txt
 deactivate

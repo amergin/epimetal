@@ -238,31 +238,31 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
       var cachedSom = _findSOM(selection,datasets);
       if( cachedSom ) {
         defer.resolve( cachedSom );
-        return;
       }
+      else {
+        var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
+         ws.onopen = function() {
+            ws.send(JSON.stringify({
+              'datasets': datasets,
+              'variables': selection
+            }));
+         };
+         ws.onclose = function(evt) {
+            console.log("closed", evt);
+         };
 
-      var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
-       ws.onopen = function() {
-          ws.send(JSON.stringify({
-            'datasets': datasets,
-            'variables': selection
-          }));
-       };
-       ws.onclose = function(evt) {
-          console.log("closed", evt);
-       };
-
-       ws.onmessage = function(evt) {
-          var result = JSON.parse(evt.data);
-          if( result.result.code == 'error' ) {
-            defer.reject(result.result.message);
-            return;
-          }
-          that.SOMs[result.data.id] = result.data;
-          defer.resolve(result.data);
-       };
+         ws.onmessage = function(evt) {
+            var result = JSON.parse(evt.data);
+            if( result.result.code == 'error' ) {
+              defer.reject(result.result.message);
+            }
+            else {
+              that.SOMs[result.data.id] = result.data;
+              defer.resolve(result.data);
+            }
+         };
+      }
       return defer.promise;
-
     };
 
     service.getPlane = function(som) {
@@ -274,43 +274,43 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
       if( cachedPlane ) {
         defer.resolve( cachedPlane );
       }
-
-      if( som.planeid ) {
-        ws.onopen = function() {
-          ws.send(JSON.stringify({
-            'planeid': som.planeid
-          }));
-        };
-      }
       else {
-         ws.onopen = function() {
+        if( som.planeid ) {
+          ws.onopen = function() {
             ws.send(JSON.stringify({
-              'somid': som.som,
-              'datasets': som.datasets,
-              'variables': {
-                'test': som.tinput,
-                'input': som.variables
-              }
+              'planeid': som.planeid
             }));
+          };
+        }
+        else {
+           ws.onopen = function() {
+              ws.send(JSON.stringify({
+                'somid': som.som,
+                'datasets': som.datasets,
+                'variables': {
+                  'test': som.tinput,
+                  'input': som.variables
+                }
+              }));
+           };
+        }
+
+         ws.onclose = function(evt) {
+            console.log("closed", evt);
          };
+
+         ws.onmessage = function(evt) {
+            var result = JSON.parse(evt.data);
+            if( result.result.code == 'error' ) {
+              defer.reject(result.result.message);
+            }
+            else {
+              that.SOMPlanes[result.id] = result.data;
+              defer.resolve(result.data);
+            }
+         };
+         return defer.promise;
       }
-
-       ws.onclose = function(evt) {
-          console.log("closed", evt);
-       };
-
-       ws.onmessage = function(evt) {
-          var result = JSON.parse(evt.data);
-          if( result.result.code == 'error' ) {
-            defer.reject(result.result.message);
-            return;
-          }
-          that.SOMPlanes[result.id] = result.data;
-          defer.resolve(result.data);
-       };
-
-       return defer.promise;
-
     };
 
 

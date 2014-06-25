@@ -23,6 +23,8 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
     $scope.drawSOMPlane = function(plane, element, width, height) {
 
+      var labelFormat = d3.format('.3f');
+
       ///////////////////////////////////////////////////////////////////////////
       ////////////// Initiate SVG and create hexagon centers ////////////////////
       ///////////////////////////////////////////////////////////////////////////
@@ -154,7 +156,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           return (d.y-1) * hexRadius * 1.5;
         })
         .style("fill", function(d) { return d.color; })
-        .text( function(d) { return d.label; });
+        .text( function(d) { return labelFormat( +d.label ); });
 
     };
 
