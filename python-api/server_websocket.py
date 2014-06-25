@@ -99,6 +99,7 @@ def createPlane(ws):
 			zmqSocketPlane.send_json({ 'planeid': planeid })
 			response = json.dumps(zmqSocketPlane.recv_json())
 			ws.send(response)
+			return
 
 		variables = message.get('variables')
 		testVariable = variables.get('test')

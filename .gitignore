@@ -12,4 +12,4 @@ python-api/*
 !python-api/*.config
 !python-api/*.py
 !python-api/*.json
-python-api/melikerion-controller/
+!python-api/melikerion-controller/

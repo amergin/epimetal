@@ -196,6 +196,7 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
 
     $scope.addPlane = function(som) {
 
+      NotifyService.addTransient('Plane computation started', 'Please be patient, as the computation may take several minutes.', 'info');
       DatasetFactory.getPlane(som).then( 
         function succFn(res) {
           console.log("success", som);

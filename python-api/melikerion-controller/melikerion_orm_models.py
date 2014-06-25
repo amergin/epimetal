@@ -44,14 +44,14 @@ class SOMTask(Document):
 
 class PlaneTask(Document):
 	created = DateTimeField(required=True, default=datetime.now)
-	som = ReferenceField('SOM', required=True, reverse_delete_rule=NULLIFY, unique_with='tvariable')
-	tvariable= StringField(required=True)
+	som = ReferenceField('SOM', required=True, reverse_delete_rule=NULLIFY, unique_with='variable')
+	variable= StringField(required=True)
 
 	meta = {
 	'indexes': [ 
 		# not supported:
-		{'fields': ('som', 'tvariable'), 'unique': True },
+		{'fields': ('som', 'variable'), 'unique': True },
 		{'fields': ['created'], 'expireAfterSeconds': 600},
 		{'fields': ['som'] },
-		{'fields': ['tvariable'] }
+		{'fields': ['variable'] }
 	] }

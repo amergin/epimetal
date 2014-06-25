@@ -309,8 +309,8 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
               defer.resolve(result.data);
             }
          };
-         return defer.promise;
       }
+      return defer.promise;
     };
 
 
