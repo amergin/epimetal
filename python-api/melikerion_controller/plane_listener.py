@@ -12,6 +12,8 @@ import shlex
 
 import threading
 
+from time import time, sleep
+
 # from other custom python class files
 from run_config import Config
 from mongoengine import connect
@@ -36,15 +38,9 @@ MELIKERION_TSAMPLES_FILENAME = 'input_tsamples.txt'
 
 # exit statuses
 EXIT_SUCCESS = 0
-EXIT_ERR_UNDETERMINED = -1
-EXIT_ERR_PARAMS = -10
-EXIT_ERR_CONFIG = -20
-
-EXIT_ERR_MONGO_CONNECTION = -100
-EXIT_ERR_MONGO_DETAILS = -110
-
 EXIT_ERR_MELIKERION_ERROR = -300
 
+CONCURRENCY_WAIT_TIME = 240
 
 #-------------------------------------------------------------
 
@@ -61,6 +57,8 @@ class PlaneProcessHandler( object ):
 		self.path = None
 		self.id = None
 		self.planeDoc = None
+
+		self.successExitStatus = None
 
 	def _createTaskDirectory(self):
 		if not os.path.exists(self.path):
@@ -114,6 +112,9 @@ class PlaneProcessHandler( object ):
 	def getPlaneDoc(self):
 		return self.planeDoc
 
+	def resultIsSuccess(self):
+		return self.successExitStatus
+
 	def _execMelikerion(self):
 		config = self.cfg
 		self.path = config.getCtrlVar('task_file_path') + "/" + str(self.id)
@@ -137,6 +138,7 @@ class PlaneProcessHandler( object ):
 		if process is not 0:
 			# Melikerion execution failed
 			print "[Info] Melikerion execution failed"
+			self.successExitStatus = False
 			return EXIT_ERR_MELIKERION_ERROR
 
 		# read the resulting plane json file
@@ -149,6 +151,8 @@ class PlaneProcessHandler( object ):
 
 		# Save output files to database
 		self.planeDoc = createPlane(self.somDoc, self.testVar, plane)
+
+		self.successExitStatus = True
 		return process
 
 #------------------------------------------------------------------
@@ -206,13 +210,15 @@ class PlaneWorker( object ):
 
 			if tooManyTasks(self.cfg):
 				print "[Info] Too many tasks, reject"
-				#message here
+				self.socket.send_json( getErrorResponse('Too many other computations on the server. Please wait a while and resubmit.') )
 				continue
 
+			# 
 			planeDocId = message.get('planeid')
 			if planeDocId:
 				planeDoc = getPlane( planeDocId )
 				if not planeDoc:
+					self.socket.send_json( getErrorResponse('Invalid plane objectId provided') )
 					continue
 				self.socket.send_json( getSuccessResponse({ 
 					'plane': planeDoc.plane, 
@@ -232,9 +238,12 @@ class PlaneWorker( object ):
 				variable = message.get('variables').get('test')
 
 				if taskExists( somDocId, variable ):
-					# wait here
-					print "[Info] Task exists."
-					continue
+					print "[Info] Task exists, wait."
+					startTime = time()
+					waitTime = 0
+					while taskExists( somDocId, variable ) and waitTime < CONCURRENCY_WAIT_TIME:
+						sleep(5)
+						waitTime = time() - startTime
 
 				planeDoc = findPlane( somDocId, variable )
 				if planeDoc:
@@ -258,12 +267,15 @@ class PlaneWorker( object ):
 				# wait thread to complete
 				thread.join()
 
-				planeDoc = handler.getPlaneDoc()
-				self.socket.send_json( getSuccessResponse({ 
-					'plane': planeDoc.plane,
-					'variable': planeDoc.variable,
-					'id': str(planeDoc.id),
-					'som_id': somDocId }) )
+				if not handler.resultIsSuccess():
+					self.socket.send_json( getErrorResponse('Internal error while executing Melikerion software.') )
+				else:
+					planeDoc = handler.getPlaneDoc()
+					self.socket.send_json( getSuccessResponse({ 
+						'plane': planeDoc.plane,
+						'variable': planeDoc.variable,
+						'id': str(planeDoc.id),
+						'som_id': somDocId }) )
 
 
 #---------------------------------------------------------------

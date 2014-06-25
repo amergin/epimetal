@@ -13,6 +13,8 @@ import shlex
 import zmq
 import threading
 
+from time import time, sleep
+
 # from other custom python class files
 from run_config import Config
 from zmq_controller import ZMQController
@@ -42,6 +44,7 @@ EXIT_ERR_CONFIG = -20
 
 EXIT_ERR_MELIKERION_ERROR = -300
 
+CONCURRENCY_WAIT_TIME = 240
 
 # --------------------------------------------------------
 
@@ -57,6 +60,10 @@ class SOMProcessHandler( object ):
 		self.path = None
 		self.id = None
 		self.somDoc = None
+		self.successExitStatus = None
+
+	def resultIsSuccess(self):
+		return self.successExitStatus
 
 	def getDocument(self):
 		return self.somDoc
@@ -79,19 +86,15 @@ class SOMProcessHandler( object ):
 	def start(self):
 		resultId = ''
 
-		self.id = str(createTask(self.variables, self.datasets).id)
-
 		try:
+			self.task = createTask(self.datasets, self.variables)
+			self.id = str(self.task.id)
 			resultId = self._execMelikerion()
 		except:
 			pass
 		finally:
-			deleteTask(self.id)
+			self.task.delete()
 
-		# Delete the task document since it is completed
-		deleteTask(self.id)
-
-		return resultId
 
 	def _execMelikerion(self):
 		config = self.cfg
@@ -117,6 +120,7 @@ class SOMProcessHandler( object ):
 		if process is not 0:
 			# Melikerion execution failed
 			print "[Info] Octave exited with error code."
+			self.successExitStatus = False
 			return EXIT_ERR_MELIKERION_ERROR
 
 		#print "Octave exited."
@@ -131,8 +135,9 @@ class SOMProcessHandler( object ):
 		self.somDoc = createSOM(self.datasets, self.variables, fileDict)
 
 		# Delete working directory
-		#self._delTaskDirectory()
+		self._delTaskDirectory()
 
+		self.successExitStatus = True
 		return process
 
 
@@ -190,8 +195,7 @@ class SOMWorker( object ):
 
 			if tooManyTasks(self.cfg):
 				print "[Info] Too many tasks, reject"
-				# message here
-				#self.socket.send_json(response)
+				self.socket.send_json( getErrorResponse('Too many other computations on the server. Please wait a while.') )
 				continue
 
 			if not self._testSOMParams(message):
@@ -212,8 +216,13 @@ class SOMWorker( object ):
 				variables = message.get('variables')
 				samples = message.get('samples')
 				if taskExists(datasets, variables):
-					# wait here
-					pass
+					print "[Info] Task exists, wait."
+					startTime = time()
+					waitTime = 0
+					while taskExists( datasets, variables ) and waitTime < CONCURRENCY_WAIT_TIME:
+						sleep(3)
+						waitTime = time() - startTime
+
 
 				existing = getExistingSOM(variables, datasets)
 				if existing:
@@ -232,9 +241,12 @@ class SOMWorker( object ):
 					thread.start()
 					# block the response until the computation is complete
 					thread.join()
-					# all OK, send response
-					somDoc = handler.getDocument()
-					self.socket.send_json( getSuccessResponse({ 'variables': variables, 'datasets': datasets, 'id': str(somDoc.id) }) )
+					if not handler.resultIsSuccess():
+						self.socket.send_json( getErrorResponse('Internal error while executing Melikerion software.') )
+					else:
+						# all OK, send response
+						somDoc = handler.getDocument()
+						self.socket.send_json( getSuccessResponse({ 'variables': variables, 'datasets': datasets, 'id': str(somDoc.id) }) )
 
 
 # Main function

@@ -28,9 +28,6 @@ def createTask(datasets, variables):
 	task.save()
 	return task
 
-def deleteTask(id):
-	SOMTask(id=id).delete()
-
 def createSOM(datasets, variables, fileDict):
 
 	doc = SOM(datasets=datasets, variables=variables)

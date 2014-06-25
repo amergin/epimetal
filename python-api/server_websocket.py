@@ -2,6 +2,8 @@ from flask import Flask
 from flask_sockets import Sockets
 from config import Config
 
+from melikerion_controller.run_config import Config as MelikerionConfig
+
 from flask.ext.mongoengine import MongoEngine
 from orm_models import Sample, Header
 import zmq
@@ -11,6 +13,7 @@ import json
 app = Flask(__name__)
 sockets = Sockets(app)
 config = Config('setup.config')
+melikerionConfig = MelikerionConfig('melikerion_controller/run.config')
 app.config.update(
 	DEBUG=True,
 	SECRET_KEY=os.urandom(24),
@@ -81,7 +84,7 @@ def createSOM(ws):
 		response = { "result": { 'code': 'error', 'message': 'Incorrect parameters' }, 'data': [] }
 	else:
 		samples = Sample.objects.filter(dataset__in=datasets).only(*(_getModifiedParameters(variables))).order_by('sampleid', 'dataset')
-		zmqSocketSOM.connect('tcp://127.0.0.1:5678')
+		zmqSocketSOM.connect( melikerionConfig.getZMQVar('bind_som') )
 		zmqSocketSOM.send_json({ 'datasets': datasets, 'variables': variables, 'samples': _getFormattedSamples(samples, variables) })
 		response = zmqSocketSOM.recv_json()
 
@@ -95,7 +98,7 @@ def createPlane(ws):
 		message = json.loads(rawMessage)
 		planeid = message.get('planeid')
 		if planeid:
-			zmqSocketPlane.connect('tcp://127.0.0.1:5679')
+			zmqSocketPlane.connect(  melikerionConfig.getZMQVar('bind_plane') )
 			zmqSocketPlane.send_json({ 'planeid': planeid })
 			response = json.dumps(zmqSocketPlane.recv_json())
 			ws.send(response)
@@ -122,7 +125,7 @@ def createPlane(ws):
 			})
 			response = json.dumps(zmqSocketPlane.recv_json())
 		ws.send(response)
-	except ValueError, AttributeError:
+	except: #ValueError, AttributeError:
 		response = { 'result': { 'code': 'error', 'message': 'Invalid parameters sent.' } }
 		ws.send(json.dumps(response))
 
