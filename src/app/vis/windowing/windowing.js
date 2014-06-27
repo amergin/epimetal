@@ -87,7 +87,7 @@ win.directive('packery', [ function() {
 
 
 // Directive for individual Window in Packery windowing system
-win.directive('window', ['$compile', '$injector', function($compile, $injector){
+win.directive('window', ['$compile', '$injector', '$timeout', function($compile, $injector, $timeout){
   return {
     scope: false,
     // must be within packery directive
@@ -297,40 +297,23 @@ win.directive('window', ['$compile', '$injector', function($compile, $injector){
       }
 
       var draggable = new Draggabilly( $scope.element[0], { handle : '.handle' } );
+      draggable.on('dragEnd', function(instance, event, pointer) {
+         $timeout( function() {
+          $scope.packery.layout();
+         }, 200);
+      });
       // create window and let Packery know
       $scope.packery.bindDraggabillyEvents( draggable );
 
-      var newEl = angular.element(
-        '<div class="' + $scope.window.type + '"' + 
-        ' id="window' + $scope.window.number + '"></div>');
+      var newEl = angular.element('<div/>')
+      .attr('class', $scope.window.type)
+      .attr('window', 'window' + $scope.window.number);
+
       $scope.element.append( newEl );
       $compile( newEl )($scope);
 
       $scope.packery.reloadItems();
       $scope.packery.layout();
-      //$scope.packery.layoutItems( [draggable], false );
-
-      // tell about dragging events:
-      $scope.isDragging = false;
-      $scope.element.find('.handle').mousedown( function() {
-          $(window).mousemove(function() {
-              $scope.isDragging = true;
-              $(window).unbind("mousemove");
-          });
-      })
-      .mouseup(function() {
-          var wasDragging = $scope.isDragging;
-          $scope.isDragging = false;
-          $(window).unbind("mousemove");
-          if (!wasDragging) { //was clicking
-            return;
-          }
-          console.log("was dragging");
-          setTimeout( function() {
-            $scope.packery.reloadItems();
-            // $scope.packery.layout();
-          }, 900);
-      });
 
       // catch window destroys
       $scope.$on('$destroy', function() {
