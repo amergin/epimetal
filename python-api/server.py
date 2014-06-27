@@ -4,13 +4,16 @@ import os
 import sys
 from config import Config
 import flask
-from flask import Flask, Request, request
+from flask import Flask, Request, request, Response, abort
 
 from flask.ext.mongoengine import MongoEngine
 import json
 
 from orm_models import Sample, Header 
 from flask_sockets import Sockets
+
+import io
+from base64 import b64decode
 
 app = Flask(__name__)
 config = Config('setup.config')
@@ -24,28 +27,7 @@ app.config.update(
 	}
 )
 db = MongoEngine(app)
-#app.secret_key = '\x88\xd5\x1f\xbf\xffF\x98\xcbH\xfcy\xa0zD\xa0\x86\xd5l#\xa2g\x1b\x9cW'
 sockets = Sockets(app)
-
-'''class Sample(db.DynamicDocument):
-	dataset = db.StringField()
-	sampleid = db.StringField()
-	variables = db.DictField()
-	#'variables' will be added dynamically later on
-
-	meta = {
-	'indexes': [ 
-		{'fields': ('dataset', 'sampleid'), 'unique': True},
-		{'fields': ['dataset'] }
-	] }
-
-class Header(db.Document):
-	variables = db.DictField()
-	
-	meta = {
-	'indexes': [ 
-		{'fields': ['variables'] }
-	] }'''
 
 @app.route( config.getFlaskVar('prefix') + 'headers/NMR_results', methods=['GET'])
 def headers():
@@ -78,8 +60,31 @@ def datasets():
 	response.status_code = 200
 	return response
 
+@app.route( config.getFlaskVar('prefix') + 'export/svg', methods=['POST'] )
+def exportSVG():
 
-@app.route( config.getFlaskVar('prefix') + 'list/<variable>/in/<dataset>' )
+	suffix = '.svg'
+	filename = request.form.get('filename', 'export') + suffix
+	try:
+		svgFile = io.BytesIO( b64decode( request.form.get('payload') ) )
+	except:
+		abort(400)
+	return flask.send_file( svgFile,
+		as_attachment=True, mimetype='image/svg+xml', attachment_filename=filename)
+
+
+@app.route( config.getFlaskVar('prefix') + 'export/png', methods=['POST'] )
+def exportPNG():
+	suffix = '.png'
+	filename = request.form.get('filename', 'export') + suffix
+	try:
+		pngFile = io.BytesIO( b64decode( request.form.get('payload') ) )
+	except:
+		abort(400)
+	return flask.send_file( pngFile,
+		as_attachment=True, mimetype='image/png', attachment_filename=filename)
+
+@app.route( config.getFlaskVar('prefix') + 'list/<variable>/in/<dataset>', methods=['GET'] )
 def variable(variable, dataset):
 	if not Header.objects.first().variables.get(variable):
 		response = flask.jsonify({
@@ -123,6 +128,4 @@ def variable(variable, dataset):
 
 if __name__ == '__main__':
 	config = Config('setup.config')
-	#connect()
-	#connect( db=config.getMongoVar('db'), host=config.getMongoVar('host'), port=int(config.getMongoVar('port')) )
 	app.run(host=config.getFlaskVar('host'), port=int(config.getFlaskVar('port')), debug=True)

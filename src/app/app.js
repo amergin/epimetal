@@ -24,6 +24,10 @@ App.constant('constants', {
       },
       url: 'ws://localhost:6565'
     }
+  },
+  'export': {
+    'svg': '/API/export/svg',
+    'png': '/API/export/png'
   }
 });
 

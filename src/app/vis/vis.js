@@ -110,7 +110,6 @@
     };
 
     $scope.sidebarInfo = function() {
-      //  {{ (showSidebar) && 'Hide' || 'Show' }} sidebar
       return ( $scope.showSidebar ? 'Hide' : "Show" ) + " sidebar";
     };
 

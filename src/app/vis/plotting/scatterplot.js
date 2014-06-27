@@ -151,8 +151,11 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
         .attr("height", h + "px")
         .style('z-index', zIndex);
 
+      canvas[0][0].width = w;
+      canvas[0][0].height = h;
+
       // rendering context
-      ctx = canvas[0][0].getContext('2d');
+      var ctx = canvas[0][0].getContext('2d');
       // set opacity for the canvas
       ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
       //ctx.strokeStyle = "rgba(0,0,0,0.8)";

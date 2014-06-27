@@ -50,7 +50,6 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
         var title = 'Error fetching variable ' + variable,
         message = 'Something went wrong while fetching samples with the given combination.',
         level = 'danger';
-        console.log(title,message,level);
         NotifyService.addTransient(title, message, level);
       }).finally( function() {
       });
@@ -183,7 +182,7 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
     };
 
     $scope.canSubmit = function () {
-      return $scope.canEdit() && !_.isEmpty($scope.selection.x);
+      return $scope.canEdit() && !_.isEmpty($scope.selection.x) && ($scope.selection.x.length >= 3);
     };
 
     $scope.close = function(somId) {
@@ -199,7 +198,6 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
       NotifyService.addTransient('Plane computation started', 'Please be patient, as the computation may take several minutes.', 'info');
       DatasetFactory.getPlane(som).then( 
         function succFn(res) {
-          console.log("success", som);
 
           $scope.SOMs[som.id].state = 'ready';
           $scope.SOMs[som.id].planes[res.id] = {
@@ -212,7 +210,6 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
 
       }, function errFn(res) {
         NotifyService.addTransient('Plane computation failed', res, 'danger');
-        console.log("som failed", res);
       });
 
     };
@@ -231,8 +228,6 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
 
       DatasetFactory.getSOM(selection.x).then( 
         function succFn(som) {
-          console.log("success", som);
-
           $scope.SOMs[id].state = 'ready';
           angular.extend( $scope.SOMs[id], {
             som: som.id
@@ -240,7 +235,7 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
           NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
       }, function errFn(res) {
         NotifyService.addTransient('SOM computation failed', res, 'danger');
-        console.log("som failed", res);
+        delete $scope.SOMs[id];
       });
 
     };

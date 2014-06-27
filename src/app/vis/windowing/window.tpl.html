@@ -1,6 +1,7 @@
 <div>
 	<div class="handle text-center">
-		<button type="button" class="close ctrl-close" ng-click="remove(window.number,element)" aria-hidden="true">×</button>
+		<i class="fa fa-cog pull-left action-btn" data-html="true" data-animation="am-fade" bs-dropdown="settingsDropdown" title="Settings"></i>
+		<a class="close ctrl-close" ng-click="remove(window.number,element)" aria-hidden="true">&times;</button>
 		<a class="btn btn-default btn-xs ctrl-filter" ng-click="resetFilter()" ng-show="window.showResetBtn">reset filter</a>
 	</div>
 	<div class="text-center plot-title" ng-switch on="window.type"> 

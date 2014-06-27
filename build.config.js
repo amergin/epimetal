@@ -85,7 +85,7 @@ module.exports = {
     css: [
       'vendor/dcjs/dc.css',
       'vendor/angular-motion/dist/angular-motion.min.css',
-      'vendor/bootstrap-additions/dist/bootstrap-additions.min.css'
+      'vendor/bootstrap-additions/dist/bootstrap-additions.min.css',
       //'vendor/chosen/chosen.min.css'
     ],
     assets: [

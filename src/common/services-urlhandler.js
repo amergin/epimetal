@@ -85,7 +85,6 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
           return;
         }
         _.each(regex.execAll(path), function(result) {
-          console.log("res", result[1]);
           switch (result[1]) {
             case 'his':
               if (!DatasetFactory.legalVariables([result[2]])) {
@@ -166,7 +165,6 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
 
             case 'som':
               DatasetFactory.getPlane(win).then( function succFn(res) {
-                console.log("success", res);
                 that._loadingNewState = true;
                 PlotService.drawSOM(res);
               }, function errFn(res) {
