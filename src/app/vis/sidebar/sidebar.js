@@ -88,7 +88,8 @@ vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'Data
       return $scope.canEdit() && !_.isUndefined($scope.selection.x) && !_.isUndefined($scope.selection.y);
     };
 
-    $scope.add = function (selection) {
+    $scope.add = function (select) {
+      var selection = angular.copy(select);
 
       var _callback = function() {
         var plottingDataPromise = DatasetFactory.getVariableData([selection.x, selection.y]);
@@ -145,7 +146,9 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
       return $scope.canEdit() && !_.isUndefined($scope.selection.x);
     };
 
-    $scope.add = function (selection) {
+    $scope.add = function (select) {
+
+      var selection = angular.copy(select);
 
       var _callback = function() {
         var plottingDataPromise = DatasetFactory.getVariableData([selection.x]);
@@ -282,7 +285,8 @@ vis.controller('HeatmapFormController', ['$scope', '$rootScope', 'DatasetFactory
       $scope.selection.x = [];
     };
 
-    $scope.add = function (selection) {
+    $scope.add = function (select) {
+      var selection = angular.copy(select);
 
       var _callback = function() {
         var plottingDataPromise = DatasetFactory.getVariableData(selection.x);

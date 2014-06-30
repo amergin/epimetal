@@ -19,13 +19,11 @@ win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
 
   // remove from grid
   $scope.remove = function(number, element) {
-    // console.log("remove window ", number, ", array size=", $scope.windows.length);
     $scope.windows = _.reject( $scope.windows, function(obj) { 
       return obj.number === number; 
     });
-    // $scope.windows.splice(number,1);
-    $scope.packery.remove( element[0] );
-    $scope.packery.layout();
+    // $scope.packery.remove( element[0] );
+    // $scope.packery.layout();
   };
 
   // adds window to grid
@@ -40,14 +38,6 @@ win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
     };
     angular.extend(win, config);
 
-    // $scope.windows.push({ 
-    //   number : (++$scope.windowRunningNumber),
-    //   type: config.type, 
-    //   variables: variablesCopy,
-    //   pooled: config.pooled,
-    //   size: config.size,
-    //   filter: config.filter
-    // });
     $scope.windows.push(win);
   };
 
@@ -68,11 +58,7 @@ win.directive('packery', [ function() {
           // create a new empty grid system
           scope.packery = new Packery( elm[0], 
           {
-          // don't start layouting now
-          // isInitLayout: false,
           isResizeBound: true,
-          // columnWidth: 220, 
-          // gutter: 10,
           // see https://github.com/metafizzy/packery/issues/7
           rowHeight: 400,
           itemSelector: '.window',
@@ -80,7 +66,8 @@ win.directive('packery', [ function() {
           columnWidth: 500
           // columnWidth: '.grid-sizer'
         } );
-          window.packery = scope.packery;
+
+
         }
       };
     }]);
@@ -296,12 +283,11 @@ win.directive('window', ['$compile', '$injector', '$timeout', function($compile,
         $scope.element.addClass('window-dbl-norm');
       }
 
-      var draggable = new Draggabilly( $scope.element[0], { handle : '.handle' } );
-      draggable.on('dragEnd', function(instance, event, pointer) {
-         $timeout( function() {
-          $scope.packery.layout();
-         }, 200);
+      $timeout(function() {
+        $scope.packery.appended( ele[0] );
       });
+      var draggable = new Draggabilly( ele[0], { handle : '.handle' } );
+
       // create window and let Packery know
       $scope.packery.bindDraggabillyEvents( draggable );
 
@@ -312,15 +298,17 @@ win.directive('window', ['$compile', '$injector', '$timeout', function($compile,
       $scope.element.append( newEl );
       $compile( newEl )($scope);
 
-      $scope.packery.reloadItems();
-      $scope.packery.layout();
+      $timeout(function() {
+          $scope.packery.layout();
+      });
 
       // catch window destroys
       $scope.$on('$destroy', function() {
+        $scope.packery.remove( $scope.element[0] );
+        $scope.packery.layout();
+
         $rootScope.$emit('variable:remove', $scope.window.type, $scope.window.variables);
         $injector.get('UrlHandler').removeWindow($scope.window.type, $scope.window.variables, $scope.window.filter);
-        // $scope.packery.reloadItems();
-        $scope.packery.layout();
       });
     }
   };
