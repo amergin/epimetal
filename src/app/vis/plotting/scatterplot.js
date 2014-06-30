@@ -64,8 +64,19 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       _calcCanvasAttributes();
 
       _.each($scope.sets, function(set, ind) {
+        // remove previous canvas
+        if( !_.isUndefined( $scope.canvases[set.getName()] ) ) {
+          $scope.canvases[set.getName()].canvas.canvas.remove();
+        }
+
+        // create a new one
         $scope._createCanvas(set, ind);
       });
+
+      if( !_.isUndefined( $scope.canvases['axes'] ) ) {
+        // delete old one
+        $scope.canvases['axes'].canvas.canvas.remove();
+      }
 
       // create the axes last and place them on top of other canvases
       var axesCanvas = $scope.createAxisCanvas(
@@ -93,6 +104,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
     $scope.width = 490;
     $scope.height = 345;
     $scope.zIndexCount = 0;
+
     _calcCanvasAttributes();
 
 

@@ -27,9 +27,7 @@ win.controller('PackeryController', ['$scope', '$rootScope', '$timeout', functio
   };
 
   // adds window to grid
-  $scope.add = function(config) { //selection, type, size, filter, pooled) {
-
-    // always form a copy so that the form selection is not updated via reference to here.
+  $scope.add = function(config) {
     var variablesCopy = {};
     angular.copy(config.variables, variablesCopy);
 
@@ -67,9 +65,9 @@ win.directive('packery', [ function() {
           // columnWidth: '.grid-sizer'
         } );
 
-
         }
       };
+
     }]);
 
 
