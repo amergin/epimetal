@@ -230,12 +230,15 @@ win.directive('window', ['$compile', '$injector', '$timeout', function($compile,
           combinedEl = document.createElement('canvas');
 
           var combinedCtx = combinedEl.getContext('2d');
-          _.each( element.find('canvas').slice(0,4), function(canvas, ind) {
-            if( ind == 1) {
+          _.each( element.find('canvas'), function(canvas, ind) {
+            if( ind === 0 ) {
               combinedEl.setAttribute('width', canvas.width);
               combinedEl.setAttribute('height', canvas.height);
             }
-            combinedCtx.drawImage( canvas, 0, 0 );
+            if( canvas.style.display !== 'none' ) {
+              // dont draw hidden datasets
+              combinedCtx.drawImage( canvas, 0, 0 );
+            }
           });
 
           return canvasToBase64( combinedEl, '#FFFFFF' );

@@ -175,41 +175,65 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
     service.checkActiveVariables = function (set) {
 
       var defer = $q.defer();
+      var DimensionService = $injector.get('DimensionService');
+      var activeVars = service.getActiveVariables();
 
       // nothing to add if disabled
       if (!set.isActive()) {
         defer.resolve('disabled');
       }
-
-      var DimensionService = $injector.get('DimensionService');
-      var activeVars = service.getActiveVariables();
-      var dataWasAdded = false;
-
-      if( activeVars.length === 0 ) {
+      else if( activeVars.length === 0 ) {
         // this is the case when no windows are present but selections are made
         // on the datasets. Just update the dimensionFilter...
         defer.resolve('empty');
       }
+      else {
 
-      _.each(activeVars, function (variable, ind) {
-        var varPromise = set.getVarSamples(variable);
-        varPromise.then(function sucFn(samples) {
-          var dataAdded = DimensionService.addVariableData(variable, samples);
-          if (dataAdded) {
-            dataWasAdded = true;
-          }
+          var promises = [];
+          var dataWasAdded = false;
 
-          if (ind === (activeVars.length - 1)) {
-            if (dataWasAdded) {
+          _.each(activeVars, function (variable, ind) {
+
+            var varPromise = set.getVarSamples(variable);
+            varPromise.then(function sucFn(samples) {
+              var dataAdded = DimensionService.addVariableData(variable, samples);
+              if (dataAdded) {
+                dataWasAdded = true;
+              }
+            });
+
+            promises.push(varPromise);
+
+            // varPromise.then(function sucFn(samples) {
+            //   var dataAdded = DimensionService.addVariableData(variable, samples);
+            //   if (dataAdded) {
+            //     dataWasAdded = true;
+            //   }
+
+            //   if (ind === (activeVars.length - 1)) {
+            //     if (dataWasAdded) {
+            //       DimensionService.rebuildInstance();
+            //     }
+            //     defer.resolve('enabled');
+            //   }
+
+            // }, function errFn(errVar) {
+            //   defer.reject(errVar);
+            // });
+          });
+
+          $q.all(promises).then( function sucFn(samplesAll) {
+
+            if( dataWasAdded ) {
               DimensionService.rebuildInstance();
             }
             defer.resolve('enabled');
-          }
 
-        }, function errFn(errVar) {
-          defer.reject(errVar);
-        });
-      });
+          }, function errFn(errVars) {
+            console.log("checkActiveVariables", errVars);
+          });
+      }
+
       return defer.promise;
     };
 

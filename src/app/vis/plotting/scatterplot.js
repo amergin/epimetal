@@ -49,7 +49,6 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
         $scope.window.variables.x,
         $scope.window.variables.y,
         data,
-        //$scope.reduced.top(Infinity),
         name,
         color
       );
@@ -64,7 +63,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       _calcCanvasAttributes();
 
       _.each($scope.sets, function(set, ind) {
-        // remove previous canvas
+        // remove previous canvas, if any
         if( !_.isUndefined( $scope.canvases[set.getName()] ) ) {
           $scope.canvases[set.getName()].canvas.canvas.remove();
         }
@@ -74,7 +73,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       });
 
       if( !_.isUndefined( $scope.canvases['axes'] ) ) {
-        // delete old one
+        // delete old axes canvas, if any
         $scope.canvases['axes'].canvas.canvas.remove();
       }
 
@@ -103,10 +102,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
     $scope.margins = [10, 10, 45, 55];
     $scope.width = 490;
     $scope.height = 345;
-    $scope.zIndexCount = 0;
-
-    _calcCanvasAttributes();
-
+    $scope.zIndexCount = 1;
 
     $scope.$onRootScope('scatterplot.redraw', function(event, dset, action) {
       if (action === 'disabled') {
