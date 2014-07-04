@@ -64,6 +64,10 @@ module.exports = {
     js: [
       // notice the order: jquery before angular!
       'vendor/jquery/dist/jquery.js',
+      'vendor/jquery-ui/ui/minified/jquery.ui.core.min.js',
+      'vendor/jquery-ui/ui/minified/jquery.ui.widget.min.js',
+      'vendor/jquery-ui/ui/minified/jquery.ui.mouse.min.js',
+      'vendor/jquery-ui/ui/minified/jquery.ui.resizable.min.js',
       'vendor/angular/angular.js',
       'vendor/chosen/chosen.jquery.js',
       //'vendor/placeholders/angular-placeholders-0.0.1-SNAPSHOT.min.js',
@@ -72,8 +76,8 @@ module.exports = {
       'vendor/crossfilter/crossfilter.js',
       'vendor/d3/d3.js',
       'vendor/dcjs/dc.js',
-      'vendor/packery/packery.pkgd.js',
-      'vendor/draggabilly/draggabilly.pkgd.js',
+      'vendor/packery/dist/packery.pkgd.js',
+      'vendor/draggabilly/draggabilly.js',
       'vendor/underscore/underscore.js',
       'vendor/angular-chosen-localytics/chosen.js',
       'vendor/angular-sanitize/angular-sanitize.js',

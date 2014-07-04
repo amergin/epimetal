@@ -45,6 +45,7 @@ win.controller('PackeryController', ['$scope', '$rootScope', '$timeout',
 
 // directive for Packery windowing system
 win.directive('packery', [
+
   function() {
     return {
       restrict: 'C',
@@ -59,12 +60,14 @@ win.directive('packery', [
         // create a new empty grid system
         scope.packery = new Packery(elm[0], {
           isResizeBound: true,
+          isHorizontal: false,
+          isOriginTop: true,
+          isOriginLeft: true,
           // see https://github.com/metafizzy/packery/issues/7
-          rowHeight: 400,
           itemSelector: '.window',
           gutter: '.gutter-sizer',
-          columnWidth: 500
-          // columnWidth: '.grid-sizer'
+          // rowHeight: 60,
+          columnWidth: 50 //".grid-sizer", //50
         });
 
       }
@@ -88,9 +91,13 @@ win.directive('window', ['$compile', '$injector', '$timeout',
           $scope.exportSVG = function(win) {
             var svg = $scope.element.find('svg')[0].cloneNode(true);
             setNameSpaceOnEl(svg);
-            appendCSSRules(svg);
-            var serializer = new XMLSerializer();
-            var b64str = btoa(serializer.serializeToString(svg));
+            appendCSSRules(svg, getCssRules(svg));
+            // var b64str = btoa( svg.outerHTML );
+            // var serializer = new XMLSerializer();
+
+            // this is ugly but will do:
+            var b64str = btoa($('<div>').append($(svg).clone()).html());
+
             var filename = win.type + "_of_" + (win.variables.x || win.variable) + "_on_" +
               _.map(DatasetFactory.activeSets(), function(set) {
                 return set.getName();
@@ -106,7 +113,7 @@ win.directive('window', ['$compile', '$injector', '$timeout',
           var setNameSpaceOnEl = function(element) {
             element.setAttribute("version", "1.1");
             element.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-            element.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+            // element.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
           };
 
           var sendFile = function(b64, url, filename) {
@@ -134,7 +141,7 @@ win.directive('window', ['$compile', '$injector', '$timeout',
           };
 
 
-          var appendCSSRules = function(dom) {
+          var getCssRules = function(dom) {
             var used = "";
             var sheets = document.styleSheets;
             for (var i = 0; i < sheets.length; i++) {
@@ -155,10 +162,14 @@ win.directive('window', ['$compile', '$injector', '$timeout',
                 }
               }
             }
+            return used;
+          };
 
+
+          var appendCSSRules = function(dom, rules) {
             var style = document.createElement('style');
             style.setAttribute('type', 'text/css');
-            style.innerHTML = "<![CDATA[\n" + used + "\n]]>";
+            style.innerHTML = "<![CDATA[\n" + rules + "\n]]>";
 
             var defs = document.createElement('defs');
             defs.appendChild(style);
@@ -193,11 +204,20 @@ win.directive('window', ['$compile', '$injector', '$timeout',
           $scope.exportPNG = function(win) {
 
             var svgToCanvas = function(svgElement) {
+              var DOMURL = window.URL || window.webkitURL || window;
+
               setNameSpaceOnEl(svgElement);
-              appendCSSRules(svgElement);
+              appendCSSRules(svgElement, getCssRules(svgElement));
+
+              // this is ugly but will do:
+              var svgXml = $('<div>').append($(svgElement).clone()).html();
+              var b64str = btoa(unescape(encodeURIComponent(svgXml)));
 
               var image = new Image();
-              var svgXml = new XMLSerializer().serializeToString(svgElement);
+              var svg = new Blob([svgXml], {
+                type: 'image/svg+xml;charset=utf-8'
+              });
+              var url = DOMURL.createObjectURL(svg);
 
               var defer = $q.defer();
 
@@ -209,9 +229,34 @@ win.directive('window', ['$compile', '$injector', '$timeout',
                 context.drawImage(image, 0, 0);
                 defer.resolve(canvas);
               };
-              image.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgXml)));
+              image.src = url;
               return defer.promise;
             };
+
+            // var svgToCanvas = function(svgElement) {
+            //   setNameSpaceOnEl(svgElement);
+            //   appendCSSRules(svgElement, getCssRules(svgElement));
+
+            //   var image = new Image();
+
+            //   // this is ugly but will do:
+            //   var svgXml = $('<div>').append($(svgElement).clone()).html();
+            //   var b64str = btoa(unescape(encodeURIComponent(svgXml)));
+            //   // var svgXml = new XMLSerializer().serializeToString(svgElement);
+
+            //   var defer = $q.defer();
+
+            //   image.onload = function() {
+            //     var canvas = document.createElement('canvas');
+            //     canvas.width = image.width;
+            //     canvas.height = image.height;
+            //     var context = canvas.getContext('2d');
+            //     context.drawImage(image, 0, 0);
+            //     defer.resolve(canvas);
+            //   };
+            //   image.src = 'data:image/svg+xml;base64,' + b64str;
+            //   return defer.promise;
+            // };
 
             // sets background color from transparent to white
             // see http://www.mikechambers.com/blog/2011/01/31/setting-the-background-color-when-generating-images-from-canvas-todataurl/
@@ -304,35 +349,70 @@ win.directive('window', ['$compile', '$injector', '$timeout',
           $scope.element.addClass('window-dbl-norm');
         }
 
-          var newEl = angular.element('<div/>')
-            .attr('class', $scope.window.type)
-            .attr('window', 'window' + $scope.window.number);
+        // append the respective figure directive inside the window
+        var newEl = angular.element('<div/>')
+          .attr('class', $scope.window.type)
+          .attr('window', 'window' + $scope.window.number);
 
-          $scope.element.append(newEl);
-          $compile(newEl)($scope);
+        $scope.element.append(newEl);
+        $compile(newEl)($scope);
 
-        $timeout( function() {
+        $timeout(function() {
+
+          ele.resizable({
+            grid: [25, 25],
+            minHeight: 375,
+            minWidth: 475,
+            maxWidth: 1200,
+            maxHeight: 1200,
+            // aspectRatio: 500 / 400,
+            handles: {
+              'se': '#segrip'
+            },
+            start: function(event, ui) {
+              if ($(event.target).hasClass('window')) {
+                $(event.target).css('z-index', 1000);
+              }
+            },
+            resize: function(event, ui) {
+              $scope.packery.fit(event.target, ui.position.left, ui.position.top);
+            },
+            stop: function(event, ui) {
+              $(event.target).css('z-index', 'auto');
+              $scope.packery.layout();
+            },
+            refreshPositions: true
+          });
+
+
+          // append the element to the packery grid
           $scope.packery.appended(ele[0]);
+
+
         }, 10);
 
 
         $timeout(function() {
+          // create draggable element and bind its action to Packery
           var draggable = new Draggabilly(ele[0], {
             handle: '.handle'
           });
 
-          // create window and let Packery know
+          draggable.on('dragEnd', function(instance, event, pointer) {
+            $scope.packery.fit(event.target);
+          });
+
           $scope.packery.bindDraggabillyEvents(draggable);
 
+          // finish with re-layout
           $scope.packery.layout();
         }, 20);
 
 
 
-
         // catch window destroys
         $scope.$on('$destroy', function() {
-          $timeout( function() {
+          $timeout(function() {
             $scope.packery.remove($scope.element[0]);
             $scope.packery.layout();
           });

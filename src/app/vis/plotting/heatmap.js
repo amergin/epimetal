@@ -11,13 +11,13 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
     $scope.window.showResetBtn = false;
 
     // create anchor for heatmap
-    $scope.heatmapAnchor = d3.select($scope.element[0])
-      .append('div')
-      .attr('class', 'heatmap-chart-anchor')[0];
+    // $scope.heatmapAnchor = d3.select($scope.element[0])
+    //   .append('div')
+    //   .attr('class', 'heatmap-chart-anchor')[0];
 
-    $scope.colorbarAnchor = d3.select($scope.element[0])
-      .append('div')
-      .attr('class', 'heatmap-legend-anchor')[0][0];
+    // $scope.colorbarAnchor = d3.select($scope.element[0])
+    //   .append('div')
+    //   .attr('class', 'heatmap-legend-anchor')[0][0];
 
 
     $scope.width = 420;
@@ -40,16 +40,17 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
     $scope.drawHeatmap = function(element, dimension, group, margins, width, height) {
 
       var _drawLegend = function(element, scale, height) {
-        var svg = d3.select(element).append('svg');
-        //height = height - 80;
         var width = 60;
-        // var height = 320;
-        // var width = 60;
+        var svg = d3.select(element)
+        .append('svg')
+        .attr("viewBox", "0 0 " + width + " " + height)
+        .attr("preserveAspectRatio", "xMaxYMid meet")
+        .attr("width", "100%")
+        .attr("height", "100%");
 
         svg
-          .attr("width", width)
-          .attr("height", height)
-        //.attr("class", "heatmap-legend pull-right")
+        // .attr("width", width)
+        // .attr("height", height)
         .style('vertical-align', 'top')
           .style('padding-right', '10px');
         var g = svg.append("g").attr("transform", "translate(10,10)").classed("colorbar", true);
@@ -58,24 +59,19 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
           .size(height - 20)
           .lineWidth(width - 30)
           .precision(4);
-        //.tickFormat(constants.tickFormat);
         g.call(cb);
         return cb;
       };
 
-      // var width = 400;
-      // var height = 325;
       $scope.heatmap = dc.heatMap(element[0], constants.groups.heatmap);
-      // var noRows = Math.floor( height / variables.length );
-      // var noCols = Math.floor( width / variables.length );
 
       var colorScale = d3.scale.linear()
         .domain([-1, 0, 1])
         .range(['blue', 'white', 'red']);
 
       $scope.heatmap
-        .width(width)
-        .height(height)
+        .width(null)
+        .height(null)
         .margins(margins)
         .turnOffControls()
         .dimension(dimension)
@@ -210,7 +206,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
     };
 
     $scope.computeVariables();
-    $scope.drawHeatmap($scope.heatmapAnchor, $scope.coordDim, $scope.coordGroup, $scope.margins, $scope.width, $scope.height);
+    // $scope.drawHeatmap($scope.heatmapAnchor, $scope.coordDim, $scope.coordGroup, $scope.margins, $scope.width, $scope.height);
 
 
     $scope.$onRootScope('heatmap.redraw', function(event, dset, action) {
@@ -238,7 +234,35 @@ visu.directive('heatmap', [
   function() {
 
     var linkFn = function($scope, ele, iAttrs) {
-      //$scope.element = ele;
+
+      // $scope.heatmapAnchor = ele;
+      $scope.heatmapAnchor = d3.select(ele[0])
+        .append('div')
+        .attr('class', 'heatmap-chart-anchor')[0];
+
+
+    $scope.colorbarAnchor = d3.select(ele[0])
+      .append('div')
+      .attr('class', 'heatmap-legend-anchor')[0][0];
+
+      $scope.drawHeatmap(
+        $scope.heatmapAnchor, 
+        $scope.coordDim, 
+        $scope.coordGroup, 
+        $scope.margins, 
+        $scope.width, 
+        $scope.height );
+
+
+      // redraw on window resize
+      ele.parent().on('resize', function() {
+        if( !_.isUndefined( $scope.heatmap ) ) {
+          $scope.heatmap.render();
+          window.heatmap = $scope.heatmap;
+        }
+      });
+
+
     };
 
     return {
@@ -247,9 +271,9 @@ visu.directive('heatmap', [
       restrict: 'C',
       require: '^?window',
       replace: true,
+      link: linkFn,
       controller: 'HeatmapController',
-      transclude: true,
-      link: linkFn
+      transclude: true
     };
   }
 ]);

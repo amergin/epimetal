@@ -78,7 +78,6 @@ table#dataset {
   height: 400px;
   cursor: default;
   float: left;
-  /*background: #DDD;#C09;*/
   border: 2px solid #333;
   border-color: hsla(0, 0%, 0%, 0.3);
   -webkit-border-radius: 4px 4px 4px 4px;
@@ -87,8 +86,6 @@ table#dataset {
 }
 
 .window-dbl {
-/*  width: 750px;
-  height: 600px; */
   width: 1000px;
   height: 800px;
 }
@@ -99,9 +96,13 @@ table#dataset {
 }
 
 .grid-sizer {
-  width: 500px;
+  width: 20%;
 }
 
+@media screen and (min-width: 1280px) {
+  /* 10 columns for larger screens */
+  .grid-sizer { width: 10%; }
+}
 
 
 .window:hover {
@@ -149,7 +150,30 @@ table#dataset {
   background-color: rgba(204, 153, 0, 0.25);
 }
 
-*/
+
+/* Window resize setup, see http://codepen.io/amergin/pen/IyvsF?editors=011 */
+
+.ui-resizable-handle {
+  visibility: hidden;
+}
+
+.window:hover .ui-resizable-handle{
+  visibility: visible;
+}
+
+/*resizable grips*/
+#segrip { 
+  width: 10px; 
+  height: 10px; 
+  background-color: darkgrey; 
+  border: 1px solid #727272;
+  position: absolute;
+  bottom: 10px;
+  right:10px;
+  cursor: se-resize;
+  z-index: 200; /* keep above 100 so it's not under canvas'es */
+} 
+
 
 /********************
   PLOTS
@@ -215,6 +239,22 @@ svg text.label {
   font-family: FreeSans;
 }
 
+.histogram, .heatmap, .som, .scatterplot {
+  position: absolute;
+  width: 100%;
+  height: 90%;
+}
+
+.heatmap-chart-anchor {
+  width: 86%;
+  height: 100%;
+}
+
+.heatmap-legend-anchor {
+  width: 5%;
+  min-width: 60px;
+  height: 100%;
+}
 
 /********************
   OTHER
@@ -229,8 +269,7 @@ svg text.label {
   width: 300px;
 }
 
-/* TESTIII */
-
+/* Sidebar animations */
 
 #sidebar {
   transition: 0.5s all ease-out;
@@ -260,3 +299,4 @@ svg text.label {
     transform: translateX(0%);  
   opacity: 1;
 }
+

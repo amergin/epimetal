@@ -13,14 +13,6 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
     $scope.window.variables = $scope.window.id;
     $scope.window.showResetBtn = false;
 
-    $scope.width = 455;
-    $scope.height = 360;
-
-    // create anchor for heatmap
-    $scope.anchor = d3.select($scope.element[0])
-      .append('div')
-      .attr('class', 'som-anchor text-center')[0];
-
     $scope.drawSOMPlane = function(plane, element, width, height) {
 
       var labelFormat = d3.format('.3f');
@@ -98,8 +90,12 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       //Create SVG element
       var svg = d3.select(element[0]).append('svg') //d3.select("#chart").append("svg")
         .attr('xmlns', "http://www.w3.org/2000/svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
+        // .attr("width", width + margin.left + margin.right)
+        // .attr("height", height + margin.top + margin.bottom)
+        .attr("viewBox", "0 0 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom) )
+        .attr("preserveAspectRatio", "xMidYMid meet")
+        .attr("width", "100%")
+        .attr("height", "100%")
         .attr('x',0)
         .attr('y',0);
 
@@ -160,7 +156,6 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
     };
 
-    $scope.drawSOMPlane($scope.window.plane, $scope.anchor, $scope.width, $scope.height);
 
 }]);
 
@@ -171,7 +166,23 @@ visu.directive('som', [
   function() {
 
     var linkFn = function($scope, ele, iAttrs) {
-      //$scope.element = ele;
+
+    $scope.width = 455;
+    $scope.height = 360;
+
+
+    // create anchor for heatmap
+    $scope.anchor = ele;
+    // $scope.anchor = d3.select($scope.element[0])
+    //   .append('div')
+    //   .attr('class', 'som-anchor text-center')[0];
+
+      $scope.drawSOMPlane(
+        $scope.window.plane, 
+        $scope.anchor, 
+        $scope.width, 
+        $scope.height);
+
     };
 
     return {

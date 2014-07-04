@@ -100,8 +100,6 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
     $scope.canvases = {};
 
     $scope.margins = [10, 10, 45, 55];
-    $scope.width = 490;
-    $scope.height = 345;
     $scope.zIndexCount = 1;
 
     $scope.$onRootScope('scatterplot.redraw', function(event, dset, action) {
@@ -370,11 +368,28 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
 ]);
 
-visu.directive('scatterplot', [
+visu.directive('scatterplot', ['$timeout',
 
-  function() {
+  function($timeout) {
 
     var linkFn = function($scope, ele, iAttrs) {
+
+      $scope.width = ele.width() || 490;
+      $scope.height = ele.height() || 345;
+
+      // redraw on window resize
+      ele.parent().on('resize', function() {
+        $timeout( function() {
+          $scope.width = ele.width();
+          $scope.height = ele.height();
+
+          if( !_($scope.canvases).isEmpty() ) {
+            $scope.redrawAll();
+          }
+        }, 300);
+      });
+
+
       $scope.redrawAll();
     };
 
