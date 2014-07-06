@@ -32,7 +32,7 @@ serv.factory('NotifyService', ['$injector',
 
       /* THESE ARE FOR MODAL WINDOWS */
 
-      addClosableModal: function (templateUrl) {
+      addClosableModal: function (templateUrl, scope) {
 
         var $modal = $injector.get('$modal');
         var $q = $injector.get('$q');
@@ -44,9 +44,10 @@ serv.factory('NotifyService', ['$injector',
         });
 
         _modalInstanceRef = $modal({
+          scope: scope,
           contentTemplate: templateUrl,
           show: true,
-          backdrop: 'static',
+          backdrop: true, //'static',
           keyboard: false,
           placement: 'center',
           animation: 'am-fade-and-scale'

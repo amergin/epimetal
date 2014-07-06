@@ -64,27 +64,35 @@ module.exports = {
     js: [
       // notice the order: jquery before angular!
       'vendor/jquery/dist/jquery.js',
+      // resizeable x4
       'vendor/jquery-ui/ui/minified/jquery.ui.core.min.js',
       'vendor/jquery-ui/ui/minified/jquery.ui.widget.min.js',
       'vendor/jquery-ui/ui/minified/jquery.ui.mouse.min.js',
       'vendor/jquery-ui/ui/minified/jquery.ui.resizable.min.js',
       'vendor/angular/angular.js',
+      // dropdowns x2
       'vendor/chosen/chosen.jquery.js',
-      //'vendor/placeholders/angular-placeholders-0.0.1-SNAPSHOT.min.js',
+      'vendor/angular-chosen-localytics/chosen.js',
       'vendor/angular-ui-router/release/angular-ui-router.js',
       'vendor/angular-ui-utils/modules/route/route.js',
       'vendor/crossfilter/crossfilter.js',
       'vendor/d3/d3.js',
       'vendor/dcjs/dc.js',
+      // windowing
       'vendor/packery/dist/packery.pkgd.js',
       'vendor/draggabilly/draggabilly.js',
+      // utilities
       'vendor/underscore/underscore.js',
-      'vendor/angular-chosen-localytics/chosen.js',
+      // html sanitizer for notify service
       'vendor/angular-sanitize/angular-sanitize.js',
       'vendor/angular-animate/angular-animate.js',
+      // core framework for UI
       'vendor/angular-strap/dist/angular-strap.js',
       'vendor/angular-strap/dist/angular-strap.tpl.js',
-      'vendor/d3-plugins/hexbin/hexbin.js'
+      // SOM figures
+      'vendor/d3-plugins/hexbin/hexbin.js',
+      // compatibility-service
+      'vendor/modernizr/modernizr.custom.min.js'
     ],
     css: [
       'vendor/dcjs/dc.css',

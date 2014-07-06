@@ -51,6 +51,10 @@
       }],
       datasets: ['DatasetFactory', function(DatasetFactory) {
         return DatasetFactory.getDatasets();
+      }],
+
+      compatibility: ['CompatibilityService', function(CompatibilityService) {
+        return CompatibilityService.browserCompatibility();
       }]
     }
   };

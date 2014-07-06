@@ -4,7 +4,9 @@ var App = angular.module('plotter', [
   'plotter.vis',
   'plotter.login',
   'ui.router.state',
-  'ui.router'
+  'ui.router',
+  'services.compatibility',
+  'plotter.compatibility'
 ]);
 
 App.constant('constants', {
@@ -49,19 +51,11 @@ App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', '$injector'
       };
 
       var errorFn = function (response) {
-        // var NotifyService = $injector.get('NotifyService');
-        // var $state = $injector.get('$state');
         if (response.status === 403) {
-          //NotifyService.addLoginNeeded();
           $location.path('/login/');
-          // $injector.invoke( function($state) {
-          //   $state.go('/login/');
-          // });
         }
         return $q.reject(response);
       };
-
-      //errorFn.$inject = ['NotifyService', '$state'];
 
       // return the success/error functions
       return function (promise) {
@@ -71,44 +65,19 @@ App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', '$injector'
     };
     errorInterceptor.$inject = ['$q', '$location', 'NotifyService'];
 
-
     $httpProvider.responseInterceptors.push(errorInterceptor);
-
   }
 ])
   .run(['$rootScope', '$state', '$stateParams', '$location',
     function ($rootScope, $state, $stateParams, $location) {
       $rootScope.$state = $state;
       $rootScope.$stateParams = $stateParams;
-
-      // // auth & login stuff:
-      // // enumerate routes that don't need authentication
-      // var routesThatDontRequireAuth = ['/login'];
-
-      // // check if current location matches route  
-      // var routeClean = function (route) {
-      //   return _.find(routesThatDontRequireAuth,
-      //     function (noAuthRoute) {
-      //       return _.str.startsWith(route, noAuthRoute);
-      //     });
-      // };
-
-      // $rootScope.$on('$stateChangeStart', function (ev, to, toParams, from, fromParams) {
-      //   // if route requires auth and user is not logged in
-      //   if (!routeClean($location.url()) && !AuthenticationService.isLoggedIn()) {
-      //     // redirect back to login
-      //     $location.path('/login');
-      //   }
-      // });
-
-
-
     }
 
   ]);
 
-App.controller('AppCtrl', ['$scope', '$location', '$templateCache',
-  function AppCtrl($scope, $location, $templateCache) {
+App.controller('AppCtrl', ['$scope', '$location', '$templateCache', 'CompatibilityService', 'NotifyService',
+  function AppCtrl($scope, $location, $templateCache, CompatibilityService, NotifyService) {
 
     $scope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
       if (toState.resolve) {
@@ -130,6 +99,8 @@ App.controller('AppCtrl', ['$scope', '$location', '$templateCache',
     });
 
     $scope.loading = { spinner: true };
+
+    // $scope.compatible = CompatibilityService.isCompatible();
   }
 ]);
 

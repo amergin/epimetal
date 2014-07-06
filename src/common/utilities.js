@@ -3,12 +3,12 @@ var Utils = Utils || {};
 var module = angular.module('utilities', []);
 
 // selects all text for example in a input/text area when applied
-module.directive('selectOnClick', function () {
+module.directive('selectOnClick', function() {
   return {
     restrict: 'A',
     // Linker function
-    link: function (scope, element, attrs) {
-      element.bind('click', function () {
+    link: function(scope, element, attrs) {
+      element.bind('click', function() {
         this.select();
       });
     }
@@ -16,22 +16,18 @@ module.directive('selectOnClick', function () {
 });
 
 Utils.getVariables = function(windowType, selection, splitScatter) {
-  if( windowType === 'scatterplot' ) {
-    if( splitScatter ) {
+  if (windowType === 'scatterplot') {
+    if (splitScatter) {
       return [selection.x + "|" + selection.y];
     }
     return [selection.x, selection.y];
-  }
-  else if( windowType === 'histogram' ) {
+  } else if (windowType === 'histogram') {
     return [selection.x];
-  }
-  else if( windowType === 'heatmap' ) {
+  } else if (windowType === 'heatmap') {
     return selection.x;
-  }
-  else if( windowType === 'som' ) {
+  } else if (windowType === 'som') {
     return [];
-  }
-  else {
+  } else {
     console.log("Undefined type!");
   }
 };
@@ -40,17 +36,17 @@ Utils.stDeviation = function(array, mean, variable) {
   // for loop is actually fastest vs js map-reduce
   // http://stackoverflow.com/questions/3762589/fastest-javascript-summation
   var dev = [];
-  for( var i = array.length; i--; ) {
+  for (var i = array.length; i--;) {
     var val = +array[i].variables[variable];
-    dev.push( (val - mean) * (val - mean) );
+    dev.push((val - mean) * (val - mean));
   }
 
   var count = 0;
-  for( var j = dev.length; j--; ) {
+  for (var j = dev.length; j--;) {
     count += dev[j] || 0;
   }
 
-  return Math.sqrt( count / ( array.length - 1) );
+  return Math.sqrt(count / (array.length - 1));
 };
 
 Utils.sampleCorrelation = function(samples, varA, meanA, stdA, varB, meanB, stdB) {
@@ -62,7 +58,9 @@ Utils.sampleCorrelation = function(samples, varA, meanA, stdA, varB, meanB, stdB
     //   return;
     // }
     var sum = (valA - meanA) * (valB - meanB);
-    if( _(sum).isNaN() ) { return; }
+    if (_(sum).isNaN()) {
+      return;
+    }
     val += sum;
   });
   return val / (stdA * stdB * (samples.length - 1));
@@ -70,16 +68,16 @@ Utils.sampleCorrelation = function(samples, varA, meanA, stdA, varB, meanB, stdB
 
 // NOTE: this will be an infinite loop without 'g' flag!
 RegExp.prototype.execAll = function(string) {
-    var match = null;
-    var matches = [];//new Array();
-    while (match = this.exec(string)) {
-        var matchArray = [];
-        for (var i in match) {
-            if (parseInt(i) == i) {
-                matchArray.push(match[i]);
-            }
-        }
-        matches.push(matchArray);
+  var match = null;
+  var matches = []; //new Array();
+  while (match = this.exec(string)) {
+    var matchArray = [];
+    for (var i in match) {
+      if (parseInt(i) == i) {
+        matchArray.push(match[i]);
+      }
     }
-    return matches;
+    matches.push(matchArray);
+  }
+  return matches;
 };

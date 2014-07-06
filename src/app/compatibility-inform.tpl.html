@@ -1,0 +1,44 @@
+<div>
+	<div class="modal-header">
+		<button type="button" class="close" ng-click="close()" aria-hidden="true" title="Close this warning and load the application">×</button>
+		<i class="fa fa-exclamation-triangle fa-2x"> Your browser is not supported</i>
+	</div>
+	<div class="modal-body">
+		<div class="row">
+			<div class="col-sm-12">
+				<p>It seems that your browser does not support all the necessary features this web application requires to function.</p>
+				<h3>Here's a rundown of what features were tested:</h3>
+
+				<ul class="list-group">
+					<li ng-repeat="feature in features" ng-class="{ true: 'list-group-item list-group-item-success', false: 'list-group-item list-group-item-danger'}[feature.supported()]">{{feature.name}}
+						<i ng-class="{ true: 'fa fa-check pull-right fa-2x', false: 'fa fa-times fa-2x pull-right'}[feature.supported()]"></i>
+					</li>
+				</ul>
+
+				<h3>Actions to take</h3>
+				<p>Downloading the latest version of a modern browser that conforms to web standards is highly recommended. Chrome and Firefox are the recommended browsers for this tool. </p>
+				<p>
+					Internet Explorer is known for not conforming to web standards, and its performance is among the worst. As a consequence, <b>Internet Explorer is not officially supported.</b>
+				</p>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-offset-2 col-sm-3 text-center">
+				<a href="https://www.google.com/intl/en/chrome/browser/"><img src="assets/images/chrome_64x64.png" width="64" height="64" title="Get Google Chrome Browser">
+				Download Google Chrome Browser
+				</a>
+			</div>
+			<div class="col-sm-offset-2 col-sm-3 text-center">
+				<a href="http://www.mozilla.org/en-US/firefox/new/"><img src="assets/images/firefox_64x64.png" width="64" height="64" title="Get Mozilla Firefox">
+					Download Mozilla Firefox browser
+				</a>		
+			</div>
+		</div>
+		<br>
+		<div class="row text-center">
+			<button class="btn btn-primary text-center">I understand, load the application despite these warnings</button>
+		</div>
+
+
+	</div>
+</div>
