@@ -50,7 +50,10 @@
 						<div class="form-group">
 							<label class="col-sm-4 control-label">Datasets</label>
 							<span class="col-sm-8 control-label">
-								{{som.datasets.join(", ")}}
+								<span ng-repeat="set in som.datasets">
+									<span class="label" ng-style="{ 'background-color': set.getColor() }">{{set.getName()}}</span>
+									{{$last ? '' : ', '}}
+								</span>
 							</span>
 						</div>
 						<div class="form-group">

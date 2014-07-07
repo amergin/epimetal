@@ -310,7 +310,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
            ws.onopen = function() {
               ws.send(JSON.stringify({
                 'somid': som.som,
-                'datasets': som.datasets,
+                'datasets': _.map( som.datasets, function(set) { return set.getName(); } ), //som.datasets,
                 'variables': {
                   'test': som.tinput,
                   'input': som.variables

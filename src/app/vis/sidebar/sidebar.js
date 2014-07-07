@@ -185,7 +185,7 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
     };
 
     $scope.canSubmit = function () {
-      return $scope.canEdit() && !_.isEmpty($scope.selection.x) && ($scope.selection.x.length >= 3);
+      return $scope.canEdit() && !_.isEmpty($scope.selection.x) && ($scope.selection.x.length >= 3) && _.isEmpty( _.keys( $scope.SOMs ) );
     };
 
     $scope.close = function(somId) {
@@ -225,7 +225,7 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
         'id': id,
         'state': 'loading',
         'variables': angular.copy($scope.selection.x),
-        'datasets':  _.map( DatasetFactory.activeSets(),function(set) { return set.getName(); } ),
+        'datasets':  DatasetFactory.activeSets(), //_.map( DatasetFactory.activeSets(),function(set) { return set.getName(); } ),
         'planes': {}
       };
 
