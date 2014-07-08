@@ -147,6 +147,7 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
       // load active variables:
       var NotifyService = $injector.get('NotifyService');
       NotifyService.addSpinnerModal('Loading samples and drawing figures...');
+      // DatasetFactory.getMultipleVariables(activeVariables).then( function success(res) {
       DatasetFactory.getVariableData(activeVariables).then(function success(res) {
 
         _.each(windowsToCreate, function(win) {

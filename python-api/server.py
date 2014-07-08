@@ -1,6 +1,4 @@
 import os
-#from mongoengine import connect, Document, DynamicDocument
-#from mongoengine.fields import StringField, ListField
 import sys
 from config import Config
 import flask
@@ -28,6 +26,13 @@ app.config.update(
 )
 db = MongoEngine(app)
 sockets = Sockets(app)
+
+def _getModifiedParameters(variables):
+	ret = ['sampleid', 'dataset']
+	prefix = 'variables.'
+	for var in variables:
+		ret.append( prefix + var )
+	return ret
 
 @app.route( config.getFlaskVar('prefix') + 'headers/NMR_results', methods=['GET'])
 def headers():
@@ -84,6 +89,37 @@ def exportPNG():
 	return flask.send_file( pngFile,
 		as_attachment=True, mimetype='image/png', attachment_filename=filename)
 
+@app.route( config.getFlaskVar('prefix') + 'list/', methods=['POST'] )
+def getBulk():
+	def getError():
+		resp = flask.jsonify({
+		'success': 'false',
+		'query': '',
+		'result': { 'error': 'Incorrect payload POSTed.' }
+		})
+		resp.status_code = 400
+		return resp
+
+	try:
+		payload = request.get_json()
+		dataset = payload.get('dataset')
+		variables = payload.get('variables')
+
+		if not( dataset and variables) or not( ( isinstance( dataset, str ) or isinstance( dataset, unicode ) ) and isinstance( variables, list ) ):
+			return getError()
+		else:
+			samples = Sample.objects.filter(dataset=dataset).only(*_getModifiedParameters(variables))
+			response = flask.jsonify({
+				'success': 'true',
+				'query': { 'variables': variables, 'dataset': dataset },
+				'result': { 'values': json.loads(samples.to_json()) } #getSamples(samples, variables) }
+			})
+			response.status_code = 200
+			return response
+
+	except:
+		return getError()
+
 @app.route( config.getFlaskVar('prefix') + 'list/<variable>/in/<dataset>', methods=['GET'] )
 def variable(variable, dataset):
 	if not Header.objects.first().variables.get(variable):
@@ -95,7 +131,8 @@ def variable(variable, dataset):
 		response.status_code = 400
 		return response
 
-	if not Sample.objects.filter(dataset=dataset).count():
+	results = Sample.objects.filter(dataset=dataset).only('sampleid', 'variables.'+variable)
+	if not results.count():
 		response = flask.jsonify({
 			'success': 'false',
 			'query': request.path,
@@ -104,8 +141,6 @@ def variable(variable, dataset):
 		response.status_code = 400
 		return response
 
-	results = Sample.objects.filter(dataset=dataset).only('sampleid', 'variables.'+variable)
-	
 	d = dict()
 	try:
 		for res in results:

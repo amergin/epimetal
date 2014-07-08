@@ -1,7 +1,7 @@
 var serv = angular.module('services.dataset', ['services.notify']);
 
 serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
-  function ($http, $q, $injector, constants) {
+  function($http, $q, $injector, constants) {
 
     // privates
     var that = this;
@@ -10,7 +10,9 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
     that.variablesLookup = {};
     that.config = {
       datasetsURL: '/API/datasets',
-      variablesURL: '/API/headers/NMR_results'
+      variablesURL: '/API/headers/NMR_results',
+      variableURLPrefix: '/API/list/',
+      multipleVariablesURL: '/API/list/'
     };
     that.colors = d3.scale.category20();
 
@@ -31,10 +33,6 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
       // privates:
       // --------------------------------------
 
-      var config = {
-        variableURLPrefix: '/API/list/'
-      };
-
       var name = dsetName;
       var color = col;
 
@@ -49,46 +47,72 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
       // functions
       // --------------------------------------
 
-      var _restructureSamples = function (samples, variable) {
+      var _restructureSamples = function(samples, variable) {
         var res = {};
-        _.each(samples, function (val, sampId) {
+        _.each(samples, function(val, sampId) {
           res[sampId] = {
-            dataset: name
+            dataset: name,
+            variables: {},
+            id: sampId
           };
-          res[sampId].variables = {};
           res[sampId].variables[variable] = val;
-          res[sampId]['id'] = sampId;
         });
         return res;
       };
 
-      // returns a map for the variables asked for,
-      // fetches them from api if necessary
-      this.getVarSamples = function (variable) {
-        var deferred = $q.defer();
+      // 'variables' is a list
+      this.getVarSamples = function(variables) {
+        var defer = $q.defer();
 
-        // check if needed to fetch
-        if (_.isUndefined(samples[variable])) {
-          $http.get(config.variableURLPrefix + variable + "/in/" + name)
-            .success(function (response) {
-              samples[variable] = response.result.values;
-              deferred.resolve(_restructureSamples(samples[variable], variable));
+        var performPost = function() {
+          $http.post(that.config.multipleVariablesURL, {
+            variables: variables,
+            dataset: name
+          })
+            .success(function(response) {
+
+              _.each(response.result.values, function(sample) {
+                if (_.isUndefined(samples[sample['sampleid']])) {
+                  // previously unknown sample
+                  samples[sample['sampleid']] = sample;
+                } else {
+                  // already present, just extend to include the new variable data
+                  _.extend(samples[sample['sampleid']].variables, samples.variables);
+                }
+              });
+
+              // send the received data to dimension, to be further added to crossfilter instance
+              defer.resolve(response.result.values);
             })
-            .error(function (response, status, headers, config) {
-              deferred.reject(variable);
+            .error(function(response, status, headers, config) {
+              defer.reject(response);
             });
+        };
+
+        var samplesPopulated = !_.isUndefined(_.first(_.values(samples)));
+        if (samplesPopulated) {
+          var availableVariables = _.keys(_.first(_.values(samples)).variables);
+          var newVariables = _.difference(variables, availableVariables);
+
+          if (!_.isEmpty(newVariables)) {
+            performPost();
+          } else {
+            // nothing new discovered
+            defer.resolve();
+          }
         } else {
-          // already available, fetched
-          deferred.resolve(_restructureSamples(samples[variable], variable));
+          // samples is completely empty, e.g. pageload situation
+          performPost();
         }
-        return deferred.promise;
+
+        return defer.promise;
       };
 
-      this.getColor = function () {
+      this.getColor = function() {
         return color;
       };
 
-      this.toggle = function () {
+      this.toggle = function() {
         active = !active;
       };
 
@@ -96,14 +120,14 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
         active = false;
       };
 
-      this.isActive = function () {
+      this.isActive = function() {
         return active;
       };
 
-      this.getName = function () {
+      this.getName = function() {
         return name;
       };
-      this.getSize = function () {
+      this.getSize = function() {
         return size || _.size(samples);
       };
 
@@ -113,56 +137,56 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
 
     var service = {};
 
-    service.getColorScale = function () {
+    service.getColorScale = function() {
       return that.colors;
     };
 
-    service.getVariables = function () {
+    service.getVariables = function() {
       var deferred = $q.defer();
       $http.get(that.config.variablesURL)
-        .success(function (response) {
+        .success(function(response) {
           console.log("Load variable list");
           // empty just in case it's not empty
           that.variables = [];
-          _.each(response.result, function (varNameObj, ind) {
+          _.each(response.result, function(varNameObj, ind) {
             that.variables.push(varNameObj);
             that.variablesLookup[varNameObj.name] = ind;
           });
-          that.variables = _.sortBy(that.variables, function (obj) {
+          that.variables = _.sortBy(that.variables, function(obj) {
             return obj.desc || obj.name;
           });
           deferred.resolve(that.variables);
         })
-        .error(function (response) {
+        .error(function(response) {
           deferred.reject('Error in fetching variable list');
         });
       return deferred.promise;
     };
 
-    service.getDatasets = function () {
+    service.getDatasets = function() {
       var deferred = $q.defer();
       $http.get(that.config.datasetsURL)
-        .success(function (response) {
+        .success(function(response) {
           console.log("load dataset names");
-          _.each(response.result, function (nameObj) {
+          _.each(response.result, function(nameObj) {
             // create a dataset stub
             that.sets[nameObj.name] = new Dataset(nameObj.name, that.colors(nameObj.name), nameObj.size);
           });
           deferred.resolve(that.sets);
         })
-        .error(function () {
+        .error(function() {
           deferred.reject('Error in fetching dataset list');
         });
       return deferred.promise;
     };
 
-    service.variables = function () {
+    service.variables = function() {
       return that.variables;
     };
 
     service.legalVariables = function(array) {
       _.each(array, function(variable) {
-        if( _.isUndefined( that.variablesLookup[variable] ) ) {
+        if (_.isUndefined(that.variablesLookup[variable])) {
           return false;
         }
       });
@@ -172,7 +196,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
     // this function checks if new variables need to be fetched
     // for datasets that have not been previously selected
     // Called on dataset toggling!
-    service.checkActiveVariables = function (set) {
+    service.checkActiveVariables = function(set) {
 
       var defer = $q.defer();
       var DimensionService = $injector.get('DimensionService');
@@ -181,75 +205,56 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
       // nothing to add if disabled
       if (!set.isActive()) {
         defer.resolve('disabled');
-      }
-      else if( activeVars.length === 0 ) {
+      } else if (activeVars.length === 0) {
         // this is the case when no windows are present but selections are made
         // on the datasets. Just update the dimensionFilter...
         defer.resolve('empty');
-      }
-      else {
+      } else {
 
-          var promises = [];
-          var dataWasAdded = false;
+        // var promises = [];
+        var dataWasAdded = false;
 
-          _.each(activeVars, function (variable, ind) {
+        set.getVarSamples(activeVars).then(function sucFn(samples) {
 
-            var varPromise = set.getVarSamples(variable);
-            varPromise.then(function sucFn(samples) {
-              var dataAdded = DimensionService.addVariableData(variable, samples);
-              if (dataAdded) {
-                dataWasAdded = true;
-              }
-            });
-
-            promises.push(varPromise);
-
-            // varPromise.then(function sucFn(samples) {
-            //   var dataAdded = DimensionService.addVariableData(variable, samples);
-            //   if (dataAdded) {
-            //     dataWasAdded = true;
-            //   }
-
-            //   if (ind === (activeVars.length - 1)) {
-            //     if (dataWasAdded) {
-            //       DimensionService.rebuildInstance();
-            //     }
-            //     defer.resolve('enabled');
-            //   }
-
-            // }, function errFn(errVar) {
-            //   defer.reject(errVar);
-            // });
-          });
-
-          $q.all(promises).then( function sucFn(samplesAll) {
-
-            if( dataWasAdded ) {
-              DimensionService.rebuildInstance();
-            }
+          if (_.isUndefined(samples)) {
             defer.resolve('enabled');
+            return;
+          }
 
-          }, function errFn(errVars) {
-            console.log("checkActiveVariables", errVars);
+          _.each(activeVars, function(variable) {
+            var dataAdded = DimensionService.addVariableData(variable, samples);
+            if (dataAdded) {
+              dataWasAdded = true;
+            }
           });
+
+          if (dataWasAdded) {
+            DimensionService.rebuildInstance();
+          }
+          defer.resolve('enabled');
+
+        }, function errFn(samples) {
+          console.log("checkActiveVariables", samples);
+          defer.reject(samples);
+        });
       }
 
       return defer.promise;
     };
 
     var _findSOM = function(selection, datasets) {
-      for(var key in that.SOMs) {
+      for (var key in that.SOMs) {
         var som = that.SOMs[key];
-        if( _.isEqual( som.variables, selection ) && _.isEqual( som.datasets, datasets ) ) {
+        if (_.isEqual(som.variables, selection) && _.isEqual(som.datasets, datasets)) {
           return som;
         }
       }
     };
 
     var _findPlane = function(som) {
-      for(var key in that.SOMPlanes) {
+      for (var key in that.SOMPlanes) {
         var plane = that.SOMPlanes[key];
-        if( _.isEqual( plane.som_id, som.som ) && _.isEqual( plane.variable, som.tinput ) ) {
+        if (_.isEqual(plane.som_id, som.som) && _.isEqual(plane.variable, som.tinput)) {
           return plane;
         }
       }
@@ -258,33 +263,33 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
     service.getSOM = function(selection) {
       var defer = $q.defer();
 
-      var datasets = _.map( service.activeSets(),function(set) { return set.getName(); });
-      var cachedSom = _findSOM(selection,datasets);
-      if( cachedSom ) {
-        defer.resolve( cachedSom );
-      }
-      else {
+      var datasets = _.map(service.activeSets(), function(set) {
+        return set.getName();
+      });
+      var cachedSom = _findSOM(selection, datasets);
+      if (cachedSom) {
+        defer.resolve(cachedSom);
+      } else {
         var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
-         ws.onopen = function() {
-            ws.send(JSON.stringify({
-              'datasets': datasets,
-              'variables': selection
-            }));
-         };
-         ws.onclose = function(evt) {
-            console.log("closed", evt);
-         };
+        ws.onopen = function() {
+          ws.send(JSON.stringify({
+            'datasets': datasets,
+            'variables': selection
+          }));
+        };
+        ws.onclose = function(evt) {
+          console.log("closed", evt);
+        };
 
-         ws.onmessage = function(evt) {
-            var result = JSON.parse(evt.data);
-            if( result.result.code == 'error' ) {
-              defer.reject(result.result.message);
-            }
-            else {
-              that.SOMs[result.data.id] = result.data;
-              defer.resolve(result.data);
-            }
-         };
+        ws.onmessage = function(evt) {
+          var result = JSON.parse(evt.data);
+          if (result.result.code == 'error') {
+            defer.reject(result.result.message);
+          } else {
+            that.SOMs[result.data.id] = result.data;
+            defer.resolve(result.data);
+          }
+        };
       }
       return defer.promise;
     };
@@ -295,49 +300,46 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
 
       var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.plane);
       var cachedPlane = _findPlane(som);
-      if( cachedPlane ) {
-        defer.resolve( cachedPlane );
-      }
-      else {
-        if( som.planeid ) {
+      if (cachedPlane) {
+        defer.resolve(cachedPlane);
+      } else {
+        if (som.planeid) {
           ws.onopen = function() {
             ws.send(JSON.stringify({
               'planeid': som.planeid
             }));
           };
-        }
-        else {
-           ws.onopen = function() {
-              ws.send(JSON.stringify({
-                'somid': som.som,
-                'datasets': _.map( som.datasets, function(set) { return set.getName(); } ), //som.datasets,
-                'variables': {
-                  'test': som.tinput,
-                  'input': som.variables
-                }
-              }));
-           };
+        } else {
+          ws.onopen = function() {
+            ws.send(JSON.stringify({
+              'somid': som.som,
+              'datasets': _.map(som.datasets, function(set) {
+                return set.getName();
+              }), //som.datasets,
+              'variables': {
+                'test': som.tinput,
+                'input': som.variables
+              }
+            }));
+          };
         }
 
-         ws.onclose = function(evt) {
-            console.log("closed", evt);
-         };
+        ws.onclose = function(evt) {
+          console.log("closed", evt);
+        };
 
-         ws.onmessage = function(evt) {
-            var result = JSON.parse(evt.data);
-            if( result.result.code == 'error' ) {
-              defer.reject(result.result.message);
-            }
-            else {
-              that.SOMPlanes[result.id] = result.data;
-              defer.resolve(result.data);
-            }
-         };
+        ws.onmessage = function(evt) {
+          var result = JSON.parse(evt.data);
+          if (result.result.code == 'error') {
+            defer.reject(result.result.message);
+          } else {
+            that.SOMPlanes[result.id] = result.data;
+            defer.resolve(result.data);
+          }
+        };
       }
       return defer.promise;
     };
-
-
 
     // this is called whenever a plot is drawn to check if variable data
     // is to be fetched beforehand. 
@@ -345,72 +347,56 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
     // 1. select three datasets
     // 2. select varA for histogram
     // 3. plot -> this is called
-    service.getVariableData = function (variables) {
-
-      // checks all active datasets and gets the parameter var
-      // samples for that dataset. Response: { sampid: sample, ... }
-      var _getVarForDatasets = function (variable) {
-        var defer = $q.defer();
-
-        var varPromises = [];
-        var activeSets = service.activeSets();
-
-        // check every set
-        _.each(activeSets, function (set) {
-          varPromises.push(set.getVarSamples(variable));
-        });
-
-        $q.all(varPromises).then(function sucFn(resArray) {
-          var result = {};
-          _.each(resArray, function (varMap) {
-            _.extend(result, varMap);
-          });
-
-          defer.resolve({
-            variable: variable,
-            samples: result
-          });
-
-        }, function errFn(errVar) {
-          defer.reject(errVar);
-        });
-
-        return defer.promise;
-      };
-
-      var combDefer = $q.defer();
-      var combPromises = [];
+    service.getVariableData = function(variables) {
+      var defer = $q.defer();
+      var activeSets = service.activeSets();
+      var dataWasAdded = false;
       var DimensionService = $injector.get('DimensionService');
+      var setPromises = [];
 
-      // for each inserted var, usually only x/y
-      _.each(variables, function (variable) {
-        combPromises.push(_getVarForDatasets(variable));
-      });
+      if (_.isEmpty(variables)) {
 
-      $q.all(combPromises).then(function succFn(res) {
-
-        var dataWasAdded = false;
-        _.each(res, function (varInSet) {
-          var dataAdded = DimensionService.addVariableData(varInSet.variable, varInSet.samples);
-          if (dataAdded) {
-            dataWasAdded = true;
-          }
+        defer.resolve();
+      } else {
+        // check every set
+        _.each(activeSets, function(set) {
+          setPromises.push(set.getVarSamples(variables));
         });
 
-        if (dataWasAdded) {
-          DimensionService.rebuildInstance();
-        }
-        combDefer.resolve(res);
+        $q.all(setPromises).then(function sucFn(resArray) {
+          _.each(resArray, function(setSamples) {
 
-      }, function errFn(res) {
-        combDefer.reject(res);
-      });
+            if (_.isUndefined(setSamples)) {
+              // nothing new was fetched
+              return;
+            }
 
-      return combDefer.promise;
+            _.each(variables, function(vari) {
+              var dataAdded = DimensionService.addVariableData(vari, setSamples);
+              if (dataAdded) {
+                dataWasAdded = true;
+              }
+            });
+
+          });
+
+          if (dataWasAdded) {
+            // rebuilds crossfilter instance
+            DimensionService.rebuildInstance();
+          }
+          // result can be empty, it's the promise that counts, not the data delivered outwards
+          defer.resolve();
+        }, function errFn(res) {
+          defer.reject(res);
+        });
+      }
+
+      return defer.promise;
     };
 
+
     // assumes getDatasets is called and therefore the service is initialized
-    service.getSets = function () {
+    service.getSets = function() {
       return that.sets;
     };
 
@@ -419,33 +405,34 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
     };
 
     // get all dset names, whether active or not
-    service.getSetNames = function () {
-      return _.map(service.getSets(), function (set) {
+    service.getSetNames = function() {
+      return _.map(service.getSets(), function(set) {
         return set.getName();
       });
     };
 
-    service.toggle = function (set) {
+    service.toggle = function(set) {
       var DimensionService = $injector.get('DimensionService');
       DimensionService.updateDatasetDimension();
     };
 
-    service.activeSets = function () {
-      return _.filter(that.sets, function (set) {
+    service.activeSets = function() {
+      return _.filter(that.sets, function(set) {
         return set.isActive();
       });
     };
 
-    service.isActive = function (name) {
+    service.isActive = function(name) {
       return that.sets[name].active();
     };
 
 
     service._addActiveVariable = function(variable) {
-      if( _.isUndefined( that.activeVariables[variable] ) ) {
-        that.activeVariables[variable] = { count: 1 };
-      }
-      else {
+      if (_.isUndefined(that.activeVariables[variable])) {
+        that.activeVariables[variable] = {
+          count: 1
+        };
+      } else {
         ++that.activeVariables[variable].count;
       }
     };
@@ -455,21 +442,25 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
     };
 
     service.getActiveVariables = function() {
-      return _.without( 
-        _.map( that.activeVariables, function(val,key) { if( val.count > 0 ) { return key; } } ), 
-        undefined );
+      return _.without(
+        _.map(that.activeVariables, function(val, key) {
+          if (val.count > 0) {
+            return key;
+          }
+        }),
+        undefined);
     };
 
     var $rootScope = $injector.get('$rootScope');
     $rootScope.$on('variable:add', function(event, type, selection) {
-      _.each( Utils.getVariables(type,selection), function(variable) {
-        service._addActiveVariable( variable );
+      _.each(Utils.getVariables(type, selection), function(variable) {
+        service._addActiveVariable(variable);
       });
     });
 
     $rootScope.$on('variable:remove', function(event, type, selection) {
-      _.each( Utils.getVariables(type,selection), function(variable) {
-        service._removeActiveVariable( variable );
+      _.each(Utils.getVariables(type, selection), function(variable) {
+        service._removeActiveVariable(variable);
       });
     });
 
