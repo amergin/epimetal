@@ -130,7 +130,7 @@ class PlaneProcessHandler( object ):
 			"'" + self.path + "'", \
 			"'" + MELIKERION_SAMPLES_FILENAME + "'" \
 			)
-		call = [ octavePath, '--norc', '--silent', '--no-line-editing', '--no-init-file', \
+		call = [ octavePath, '--norc', '--silent', '--no-line-editing', '--no-init-file', '--no-history', \
 		'--path', melikerionPath, \
 		'--path', jsonlabPath,
 		'--eval', params ]

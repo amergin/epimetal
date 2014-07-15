@@ -21,10 +21,10 @@ App.constant('constants', {
   som: {
     websocket: {
       api: {
-        som: '/API/ws/som',
-        plane: '/API/ws/plane'
+        som: '/ws/som',
+        plane: '/ws/plane'
       },
-      url: 'ws://localhost:6565'
+      url: 'ws://' + window.location.host //'ws://localhost:6565'
     }
   },
   'export': {

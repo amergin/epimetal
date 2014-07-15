@@ -112,7 +112,7 @@ class SOMProcessHandler( object ):
 			"'" + self.path + "'", \
 			"'" + INPUT_SAMPLES_FILENAME + "'" \
 			)
-		call = [ octavePath, '--norc', '--silent', '--no-line-editing', '--no-init-file',
+		call = [ octavePath, '--norc', '--silent', '--no-line-editing', '--no-init-file', '--no-history',
 		'--path', melikerionPath,
 		'--path', jsonlabPath,
 		'--eval', somParams ]
