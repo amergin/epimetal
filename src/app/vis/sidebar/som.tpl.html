@@ -3,8 +3,8 @@
 	<form class="form-horizontal" role="form" name="plot" novalidate>
 		<fieldset>
 			<div class="form-group">
-				<label class="col-sm-3 control-label" for="vars-som">Input variables</label>
-				<div class="col-sm-7">
+				<label class="col-sm-4 control-label" for="vars-som">Input variables</label>
+				<div class="col-sm-8">
 					<small class="pull-right" ng-show="selection.x"><a href="" ng-click="clear()">Clear selection</a></small>
 					<select
 					chosen
@@ -19,7 +19,7 @@
 		</div>
 
 		<div class="form-group">
-			<div class="col-sm-offset-3 col-sm-7">
+			<div class="col-sm-offset-4 col-sm-8">
 				<button type="submit" class="btn btn-primary" ng-disabled="!canSubmit()" ng-click="add(selection)">Compute SOM</button>
 			</div>
 		</div>
@@ -58,7 +58,7 @@
 						</div>
 						<div class="form-group">
 							<label for="tinput" class="col-sm-4 control-label">Test variable</label>
-							<div class="col-sm-offset-4 col-sm-6">
+							<div class="col-sm-offset-4 col-sm-8">
 								<select
 								chosen
 								class="form-control" id="tinput" 

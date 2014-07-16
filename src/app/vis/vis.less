@@ -29,11 +29,10 @@ table#dataset {
   min-width: 370px;
 } */
 
-
-/* Prevent overflow */
-#sidebar select {
-    box-sizing: border-box;
-    width: 100%;
+@media (min-width: @screen-lg-min) {
+  #sidebar {
+    max-width: 500px;
+  }
 }
 
 .form-horizontal .control-label {
