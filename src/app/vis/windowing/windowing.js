@@ -1,4 +1,4 @@
-var win = angular.module('plotter.vis.windowing', ['services.urlhandler', 'mgcrea.ngStrap.dropdown']);
+var win = angular.module('plotter.vis.windowing', ['services.urlhandler', 'mgcrea.ngStrap.dropdown', 'mgcrea.ngStrap.tooltip']);
 
 // controller for Packery windowing system
 win.controller('PackeryController', ['$scope', '$rootScope', '$timeout',

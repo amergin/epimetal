@@ -25,6 +25,22 @@ serv.service('CompatibilityService', ['$q', '$timeout', '$modal', '$rootScope',
         supported: function() {
           return Modernizr.canvas && Modernizr.canvastext;
         }
+      },
+
+      browser: {
+        name: 'Modern Web browser (Detect outdated Internet Explorer versions)',
+        supported: function() {
+          var modernBrowser;
+          // Detecting IE
+          var oldIE;
+          if ($('html').is('.ie6, .ie7, .ie8, .ie9')) {
+              modernBrowser = false;
+          }
+          else {
+              modernBrowser = true;
+          }
+          return modernBrowser;
+        }
       }
 
     };

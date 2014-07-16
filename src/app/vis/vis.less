@@ -45,6 +45,10 @@ table#dataset {
   WINDOWING
  *********************/
 
+.modal {
+    overflow: hidden;
+}
+
 
 .packery {
   /* background: #f5f5f5; */
@@ -65,6 +69,16 @@ table#dataset {
   padding-right: 10px;
   height: 25px;
   background-color: #E6E4E1;
+
+  .ctrl-close {
+    position: absolute;
+    right: 10px;
+    top: 0px;
+  }
+
+  .ctrl {
+    cursor: pointer;
+  }
 
 }
 
@@ -115,13 +129,6 @@ table#dataset {
   border: 2px solid;
   /*background: #09F;*/
   z-index: 2;
-}
-
-.window .ctrl-close {
-  position: absolute;
-  right: 10px;
-  top: 0px;
-  cursor: pointer;
 }
 
 .window canvas {

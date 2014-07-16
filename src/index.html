@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+<!--[if lt IE 7 ]> <html ng-app="plotter" ng-controller="AppCtrl" class="ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html ng-app="plotter" ng-controller="AppCtrl" class="ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html ng-app="plotter" ng-controller="AppCtrl" class="ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html ng-app="plotter" ng-controller="AppCtrl" class="ie9"> <![endif]-->
+<!--[if (gt IE 10)|!(IE)]><!--> <html ng-app="plotter" ng-controller="AppCtrl" class=""> <!--<![endif]-->
 <html ng-app="plotter" ng-controller="AppCtrl">
 <head>
   <title ng-bind="pageTitle"></title>
@@ -27,7 +32,7 @@
     <div class="row content">
           
           <!-- Inject route here -->
-          <div ui-view/>
+          <div ui-view></div>
           <div class="text-center" ng-show="loading.spinner">
             <i class="fa fa-spinner fa-5x fa-spin"></i>
             <h3>Loading...</h3>
