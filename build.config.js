@@ -65,10 +65,10 @@ module.exports = {
       // notice the order: jquery before angular!
       'vendor/jquery/dist/jquery.js',
       // resizeable x4
-      'vendor/jquery-ui/ui/minified/jquery.ui.core.min.js',
-      'vendor/jquery-ui/ui/minified/jquery.ui.widget.min.js',
-      'vendor/jquery-ui/ui/minified/jquery.ui.mouse.min.js',
-      'vendor/jquery-ui/ui/minified/jquery.ui.resizable.min.js',
+      'vendor/jquery-ui/ui/minified/core.min.js',
+      'vendor/jquery-ui/ui/minified/widget.min.js',
+      'vendor/jquery-ui/ui/minified/mouse.min.js',
+      'vendor/jquery-ui/ui/minified/resizable.min.js',
       'vendor/angular/angular.js',
       // dropdowns x2
       'vendor/chosen/chosen.jquery.js',

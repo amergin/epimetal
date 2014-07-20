@@ -76,6 +76,8 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         .turnOffControls()
         .dimension(dimension)
         .group(group)
+        .xBorderRadius(0)
+        .yBorderRadius(0)
         .keyAccessor(function(d) {
           return d.key[0];
         })
@@ -125,9 +127,9 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
           //chart.selectAll('rect').on("mouseover", function(d) { console.log("mouse", d, this); } )
 
           // remove rounded edges
-          chart.selectAll("g.box-group > rect")
-            .attr("rx", null)
-            .attr("ry", null);
+          // chart.selectAll("g.box-group > rect")
+          //   .attr("rx", null)
+          //   .attr("ry", null);
         })
         .on('preRender', function(chart) {
           // try to hide flickering from renderlet

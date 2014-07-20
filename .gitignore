@@ -4,8 +4,13 @@
 build/
 bin/
 node_modules/
+!vendor/
 vendor/*
-!vendor/modernizr/
+!vendor/dcjs
+vendor/dcjs/*
+!vendor/dcjs/dc.js
+!vendor/modernizr
+vendor/modernizr/*
 !vendor/modernizr/*.js
 python-api/*
 !python-api/README.md

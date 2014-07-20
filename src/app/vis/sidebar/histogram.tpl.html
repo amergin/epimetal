@@ -11,7 +11,8 @@
 				data-placeholder=" "
 				ng-model="selection.x"
 				ng-options="o.name as o.name group by o.group for o in variables | orderBy:['group','name']"
-				required ng-disabled="!canEdit()">
+				required ng-disabled="!canEdit()"
+				width="'100%'">
 				<option value=""></option>
 			</select>
 		</div>
