@@ -423,8 +423,14 @@ win.directive('window', ['$compile', '$injector', '$timeout',
             $scope.packery.layout();
           });
 
-          $rootScope.$emit('variable:remove', $scope.window.type, $scope.window.variables);
-          $injector.get('UrlHandler').removeWindow($scope.window.type, $scope.window.variables, $scope.window.filter);
+          if( _.isUndefined( $scope.window.variables ) ) {
+            $rootScope.$emit('dimension:decreaseCount', "som" + $scope.window.som_id);
+            $injector.get('UrlHandler').removeWindow($scope.window.type, $scope.window.id);
+          }
+          else {
+            $rootScope.$emit('variable:remove', $scope.window.type, $scope.window.variables);
+            $injector.get('UrlHandler').removeWindow($scope.window.type, $scope.window.variables, $scope.window.filter);
+          }
         });
       }
     };

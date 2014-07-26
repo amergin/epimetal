@@ -75,7 +75,13 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
       }
 
       _.each(datasets, function(name) {
-        DatasetFactory.getSet(name).toggle();
+        var set = DatasetFactory.getSet(name);
+        if( _.isUndefined(set) ) { 
+          that._createError();
+          that.clear();
+          return;
+        }
+        set.toggle();
       });
       this.updateDataset(datasets);
 
@@ -146,7 +152,8 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
       });
 
       if (illegalVars) {
-        this._createError();
+        that._createError();
+        that.clear();
         return;
       }
 
@@ -175,7 +182,8 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
               DatasetFactory.getSOM(win).then( function succFn(res) {
                 $rootScope.$emit('sidebar:addSom', res);
               }, function errFn(res) {
-                console.log("failed", res);
+                that._createError();
+                that.clear();
               }).finally( function() {
                 //that._loadingNewState = false;
               });
@@ -186,7 +194,8 @@ dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFac
                 that._loadingNewState = true;
                 PlotService.drawSOM(res);
               }, function errFn(res) {
-                console.log("failed", res);
+                that._createError();
+                that.clear();
               }).finally( function() {
                 that._loadingNewState = false;
               });

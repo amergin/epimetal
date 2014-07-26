@@ -12,12 +12,9 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
 
     var pvalFormat = d3.format('.2e');
-    $scope.headerText = $scope.window.variable + " (P = " + pvalFormat($scope.window.plane.pvalue) + ")";
+    $scope.headerText = ['Self-organizing map of', $scope.window.variable, "(P = " + pvalFormat($scope.window.plane.pvalue) + ")"];
 
-    // needed later on for removing the url
-    $scope.window.variables = $scope.window.id;
     $scope.window.showResetBtn = false;
-
     $scope.dimension = DimensionService.getSOMDimension( $scope.window.som_id );
 
     $scope.selections = {};
@@ -197,7 +194,9 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
             $scope.removeFilter({ x: d.i, y: d.j });
           }
 
-        });
+        })
+        .append("svg:title")
+        .text('Click to filter');
 
       svg.append("g")
         .selectAll(".label")

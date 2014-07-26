@@ -16,6 +16,8 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
     // current samples, formatted for crossfilter
     var currSamples = {};
 
+    var that = this;
+
     // return one dimension. This is used for 
     this.getDimension = function (selection) {
 
@@ -175,13 +177,16 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
     };
 
     var $rootScope = $injector.get('$rootScope');
-    var that = this;
     $rootScope.$on('variable:remove', function(event, type, selection) {
       _.each( Utils.getVariables(type,selection, true), function(variable) {
         // heatmaps don't have a dimension
         if( type === 'heatmap' ) { return; }
         that._checkDimension(variable);
       });
+    });
+
+    $rootScope.$on('dimension:decreaseCount', function(event, name) {
+      that._checkDimension(name);
     });
 
     // Notice: 'variable:add' message is not noted on this service,

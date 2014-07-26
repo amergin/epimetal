@@ -11,7 +11,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
 
     });
 
-    $scope.headerText = $scope.window.variables.x;
+    $scope.headerText = ['Histogram of', $scope.window.variables.x, ''];
     $scope.window.showResetBtn = false;
 
 

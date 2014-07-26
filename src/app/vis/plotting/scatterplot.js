@@ -11,7 +11,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
     $scope.showResetBtn = false;
 
-    $scope.headerText = $scope.window.variables.x + ", " + $scope.window.variables.y;
+    $scope.headerText = ['Scatter plot of', $scope.window.variables.x + ", " + $scope.window.variables.y, ''];
 
     var _calcCanvasAttributes = function() {
       $scope.reduced = DimensionService.getReduceScatterplot($scope.dimension.group());

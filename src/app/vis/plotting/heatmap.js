@@ -7,7 +7,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       dc.redrawAll(constants.groups.heatmap);
     };
 
-    $scope.headerText = $scope.window.variables.x.length + " variables";
+    $scope.headerText = ['Heat map of', $scope.window.variables.x.length + " variables", ''];
     $scope.window.showResetBtn = false;
 
     // create anchor for heatmap

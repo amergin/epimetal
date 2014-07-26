@@ -6,9 +6,8 @@
 	</div>
 	<div class="ui-resizable-handle ui-resizable-se" id="segrip"></div>
 	<div class="text-center plot-title" ng-switch on="window.type"> 
-		{{window.type}} of
-		<strong>
-			{{headerText}}
-		</strong>
+		{{headerText[0]}}
+		<strong>{{headerText[1]}}</strong>
+		{{headerText[2]}}
 	</div>
 </div>

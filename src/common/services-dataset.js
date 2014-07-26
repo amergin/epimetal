@@ -185,12 +185,15 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
     };
 
     service.legalVariables = function(array) {
-      _.each(array, function(variable) {
+      var legal = true;
+      _.every(array, function(variable) {
         if (_.isUndefined(that.variablesLookup[variable])) {
-          return false;
+          legal = false;
+          return false; // break
         }
+        return true; // continue iter
       });
-      return true;
+      return legal;
     };
 
     // this function checks if new variables need to be fetched
