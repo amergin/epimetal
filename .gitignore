@@ -20,3 +20,4 @@ python-api/*
 !python-api/*.py
 !python-api/*.json
 !python-api/melikerion-controller/
+python-api/melikerion-controller/*.pyc

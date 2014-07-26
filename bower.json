@@ -1,6 +1,6 @@
 {
   "name": "plotter",
-  "version": "0.1",
+  "version": "0.6.0",
   "devDependencies": {
     "angular": "~1.2.14",
     "angular-mocks": "~1.3",
