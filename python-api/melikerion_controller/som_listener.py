@@ -273,7 +273,12 @@ class SOMWorker( object ):
 					else:
 						# all OK, send response
 						somDoc = handler.getDocument()
-						self.socket.send_json( getSuccessResponse({ 'variables': variables, 'datasets': datasets, 'id': str(somDoc.id) }) )
+						self.socket.send_json( getSuccessResponse({ 
+							'variables': variables, 
+							'datasets': datasets, 
+							'id': str(somDoc.id),
+							'bmus': somDoc.plane_bmu
+						}) )
 
 
 # Main function
