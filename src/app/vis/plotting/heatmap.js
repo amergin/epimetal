@@ -95,22 +95,6 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
           return d.value;
         })
         .colors(colorScale)
-        .on('filtered', function(chart, filter) {
-          $timeout(function() { // reset button clicked or selection is removed
-            if (_.isNull(filter) || _.isNull(chart.filter())) {
-              $scope.window.showResetBtn = false;
-            } else {
-              $scope.window.showResetBtn = true;
-              $injector.get('PlotService').drawScatter({
-                variables: {
-                  x: filter[0],
-                  y: filter[1]
-                }
-              });
-              $rootScope.$apply();
-            }
-          });
-        })
         .renderlet(function(chart) {
           // rotate labels
           chart.selectAll('g.cols > text')
@@ -122,14 +106,6 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
             .attr("dy", function(d) {
               return +d3.select(this).attr('dy') / 2;
             });
-
-          // set background on mouseover
-          //chart.selectAll('rect').on("mouseover", function(d) { console.log("mouse", d, this); } )
-
-          // remove rounded edges
-          // chart.selectAll("g.box-group > rect")
-          //   .attr("rx", null)
-          //   .attr("ry", null);
         })
         .on('preRender', function(chart) {
           // try to hide flickering from renderlet
@@ -137,6 +113,19 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         })
         .on('postRender', function(chart) {
           chart.transitionDuration(500);
+        })
+        // override default click actions
+        .xAxisOnClick( function() {} )
+        .yAxisOnClick( function() {} )
+        .boxOnClick( function(cell) {
+          $timeout( function() {
+            $injector.get('PlotService').drawScatter({
+              variables: {
+                x: cell.key[0],
+                y: cell.key[1]
+              }
+            });
+          });
         });
 
       $scope.heatmap.render();

@@ -262,8 +262,17 @@ svg text.label {
   height: 100%;
 }
 
+rect.heat-box {
+  cursor: pointer;
+}
+
 .hexagon {
   cursor: pointer;
+}
+
+// see http://stackoverflow.com/questions/7570917/svg-height-incorrectly-calculated-in-webkit-browsers
+.somplane svg {
+  max-height: 100%;
 }
 
 /********************
