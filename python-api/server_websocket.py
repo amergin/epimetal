@@ -58,7 +58,7 @@ def _getModifiedParameters(variables):
 def _getFormattedSamples(samples, variables):
 	retSamples = { 'id': [] }
 	for samp in samples:
-		retSamples['id'].append( samp.sampleid )
+		retSamples['id'].append( { 'dataset': samp.dataset, 'sampleid': samp.sampleid } )
 		for var in variables:
 			if not retSamples.get(var):
 				retSamples[var] = []
@@ -77,6 +77,14 @@ def createSOM(ws):
 	except ValueError, TypeError:
 		response = { "result": { 'code': 'error', 'message': 'Incorrect parameters' }, 'data': [] }
 		ws.send(json.dumps(response))
+
+	somid = message.get('somid')
+	if somid:
+		zmqSocketSOM.connect( melikerionConfig.getZMQVar('bind_som') )
+		zmqSocketSOM.send_json({ 'somid': somid })
+		response = json.dumps( zmqSocketSOM.recv_json() )
+		ws.send(response)
+		return
 
 	datasets = message.get('datasets')
 	variables = message.get('variables')
@@ -117,7 +125,7 @@ def createPlane(ws):
 		else:
 			uniqueVars = list(set( inputVariables + [testVariable] ) )
 			samples = Sample.objects.filter( dataset__in=inputDatasets ).only( *_getModifiedParameters(uniqueVars) ).order_by('sampleid', 'dataset')
-			zmqSocketPlane.connect('tcp://127.0.0.1:5679')
+			zmqSocketPlane.connect( melikerionConfig.getZMQVar('bind_plane') )
 			zmqSocketPlane.send_json({ 
 				'variables': { 'test': testVariable, 'input': inputVariables },
 				'som': somId,

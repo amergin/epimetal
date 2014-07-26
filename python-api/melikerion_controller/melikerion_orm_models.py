@@ -5,11 +5,12 @@ from datetime import datetime
 class SOM(DynamicDocument):
 	datasets = ListField(required=True)#, unique_with='variables')
 	variables = ListField(required=True)
+	plane_bmu = DynamicField(required=True)
 
 	# file fields
 	som = FileField(required=True)
 	xstats = FileField(required=True)
-	bmu = FileField(required=True)
+	#bmu = FileField(required=True)
 	zi = FileField(required=True)
 
 	meta = {

@@ -28,7 +28,7 @@ serv.factory('NotifyService', ['$injector',
           animation: 'am-fade-and-slide-top',
           type: level,
           show: true,
-          duration: 7
+          duration: 8
         });
       },
 

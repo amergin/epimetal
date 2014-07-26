@@ -68,10 +68,17 @@ class PlaneProcessHandler( object ):
 	# Creates the files containing which variables will be used & input samples
 	def _prepTaskDirectory(self):
 
+		def _createBMUFile(fileName, somDoc):
+			bmuFile = open( fileName, 'w')
+			bmuFile.write( "".join( ["ROW", "\t", "COLUMN", "\n"] ) )
+			for coord in somDoc.plane_bmu:
+				bmuFile.write( "".join([ str(coord['y']), "\t", str(coord['x']), "\n"]) )
+			bmuFile.close()
+
 		# Read SOM files and put to task directory
-		bmuFile = open( self.path + "/" + MELIKERION_BMUS_FILENAME, 'w' )
-		bmuFile.write( self.somDoc.bmu.read() )
-		bmuFile.close()
+
+		bmuFilename = self.path + "/" + MELIKERION_BMUS_FILENAME
+		_createBMUFile(bmuFilename, self.somDoc)
 
 		smFile = open( self.path + "/" + MELIKERION_SM_FILENAME, 'w' )
 		smFile.write( self.somDoc.som.read() )
@@ -101,8 +108,9 @@ class PlaneProcessHandler( object ):
 			self.task = createTask(self.somDoc, self.testVar)
 			self.id = str(self.task.id)
 			self._execMelikerion()
-		except:
-			print "[Error] Melikerion execution threw exception."
+		except Exception, e:
+			print "[Error] Plane Listener threw exception:"
+			print e
 		finally:
 			# Delete working directory
 			self._delTaskDirectory()
@@ -224,7 +232,7 @@ class PlaneWorker( object ):
 					'plane': planeDoc.plane, 
 					'variable': planeDoc.variable, 
 					'id': str(planeDoc.id),
-					'som_id': str(planeDoc.som) }) )
+					'som_id': str(planeDoc.som.id) }) )
 				continue
 
 			else:

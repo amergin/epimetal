@@ -1,17 +1,63 @@
 var visu = angular.module('plotter.vis.plotting.som', ['plotter.vis.plotting']);
-visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout) {
+visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope) {
 
     $scope.resetFilter = function() {
-      // $scope.heatmap.filterAll();
-      // dc.redrawAll(constants.groups.heatmap);
+      var filters = $scope.ownFilters;
+      _.each(filters, function(coord) {
+        DimensionService.removeSOMFilter( $scope.window.som_id, coord );
+      });
+      $scope.ownFilters = [];
     };
 
-    $scope.headerText = $scope.window.variable;
+
+    var pvalFormat = d3.format('.2e');
+    $scope.headerText = $scope.window.variable + " (P = " + pvalFormat($scope.window.plane.pvalue) + ")";
 
     // needed later on for removing the url
     $scope.window.variables = $scope.window.id;
     $scope.window.showResetBtn = false;
+
+    $scope.dimension = DimensionService.getSOMDimension( $scope.window.som_id );
+
+    $scope.selections = {};
+
+    $scope.ownFilters = [];
+
+    var _callRedraw = function() {
+      $rootScope.$emit('scatterplot.redrawAll');
+      $rootScope.$emit('histogram.redraw');
+      $rootScope.$emit('heatmap.redraw');
+      dc.redrawAll(constants.groups.scatterplot);
+      dc.redrawAll(constants.groups.heatmap);
+    };
+
+    $scope.addFilter = function(coord) {
+      $scope.ownFilters.push(coord);
+      DimensionService.addSOMFilter( $scope.window.som_id, coord );
+      _callRedraw();
+    };
+
+    $scope.removeFilter = function(coord) {
+      $scope.ownFilters = _.reject( $scope.ownFilters, function(f) { 
+        return _.isEqual(f,coord);
+      });
+      DimensionService.removeSOMFilter( $scope.window.som_id, coord );
+      _callRedraw();  
+    };
+
+    /*$scope.$watchCollection('ownFilters', function(coll) {
+      if( coll.length > 0) { $scope.window.showResetBtn = true; }
+      else { $scope.window.showResetBtn = false; }
+    }); */
+
+    $scope.$on('$destroy', function() {
+      // remove any filters this window may have applied on close
+      var filters = $scope.ownFilters;
+      _.each( filters, function(f) {
+        $scope.removeFilter(f);
+      });
+    });
 
     $scope.drawSOMPlane = function(plane, element, width, height) {
 
@@ -133,8 +179,25 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           });
           return cell.color;
         })
-        .on("mouseover", mover)
-        .on("mouseout", mout);
+        /*.on("mouseover", mover)
+        .on("mouseout", mout) */
+        .on("click", function(d) {
+          var key = d.i + "|" + d.j;
+          if( _.isUndefined( $scope.selections[key] ) || !$scope.selections[key] ) {
+            $scope.selections[key] = true;
+            d.origColor = d3.select(this).style('fill');
+            d3.select(this).style("fill", 'black');
+
+            $scope.addFilter({ x: d.i, y: d.j });
+          }
+          else {
+            $scope.selections[key] = false;
+            d3.select(this).style("fill", d.origColor);
+
+            $scope.removeFilter({ x: d.i, y: d.j });
+          }
+
+        });
 
       svg.append("g")
         .selectAll(".label")
@@ -161,7 +224,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
 
 
-visu.directive('som', [
+visu.directive('somplane', [
 
   function() {
 

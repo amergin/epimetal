@@ -1,4 +1,4 @@
-function writeplanefiles(hexmaps, header, path)
+function writeplanefiles(hexmaps, path)
 
 prefix = 'results_plane';
 suffix = '.json';

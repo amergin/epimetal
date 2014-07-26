@@ -20,7 +20,8 @@
     "d3-plugins": "*",
     "angular-gridster": "~0.9.9",
     "packery": "~1.2.3",
-    "draggabilly": "~1.1.0"
+    "draggabilly": "~1.1.0",
+    "bootstrap-chosen": "*"
   },
   "dependencies": {},
   "resolutions": {

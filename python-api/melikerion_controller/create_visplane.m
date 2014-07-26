@@ -56,6 +56,6 @@ tstats = somtest(sm, bmus, t, 500);
 hexmap = somvisplane(sm, bmus, t, tVariableName, tstats, RDIR);
 %hexmap = somvisplane(sm, bmus, [x t], {xVariableNames{:}, tVariableName}, [xstats tstats], RDIR);
 % save the map cell values as json file
-writeplanefiles( hexmap, tVariableName, RDIR );
+writeplanefiles( hexmap, RDIR );
 
 return;

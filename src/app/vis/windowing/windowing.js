@@ -27,6 +27,12 @@ win.controller('PackeryController', ['$scope', '$rootScope', '$timeout',
       // $scope.packery.layout();
     };
 
+    $scope.$onRootScope('packery.close', function(event, vari, val) {
+      $scope.windows = _.reject($scope.windows, function(obj) {
+        return obj[vari] === val;
+      });
+    });
+
     // adds window to grid
     $scope.add = function(config) {
       var variablesCopy = {};
@@ -189,7 +195,7 @@ win.directive('window', ['$compile', '$injector', '$timeout',
               break;
 
             case 'histogram':
-            case 'som':
+            case 'somplane':
               $scope.settingsDropdown.push({
                 'text': '<i class="fa fa-download"></i> Export as PNG',
                 'click': "exportPNG(window)"
@@ -306,7 +312,7 @@ win.directive('window', ['$compile', '$injector', '$timeout',
               return canvasToBase64(combinedEl, '#FFFFFF');
             };
 
-            if (win.type == 'histogram' || win.type == 'som') {
+            if (win.type == 'histogram' || win.type == 'somplane') {
               var svgElement = $scope.element.find('svg')[0].cloneNode(true);
 
               filename += (win.variables.x || win.variable) + "_on_" + _.map(DatasetFactory.activeSets(), function(set) {

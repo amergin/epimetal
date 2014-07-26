@@ -25,7 +25,7 @@ Utils.getVariables = function(windowType, selection, splitScatter) {
     return [selection.x];
   } else if (windowType === 'heatmap') {
     return selection.x;
-  } else if (windowType === 'som') {
+  } else if (windowType === 'somplane') {
     return [];
   } else {
     console.log("Undefined type!");

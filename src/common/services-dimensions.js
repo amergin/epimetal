@@ -55,8 +55,78 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
       return dimensions['_dataset'];
     };
 
-    this.getSampleDimension = function() {
+    this.getSOMDimension = function(somId) {
+      var somKey = "som" + somId;
+      if( _.isUndefined( dimensions[somKey] ) ) {
 
+        if( _.isNull( crossfilterInst ) ) { 
+          this.rebuildInstance();
+        }
+
+        dimensions[somKey] = {
+          count: 1,
+          filters: [],
+          dimension: crossfilterInst.dimension( function(d) { 
+            if( _.isUndefined( d['bmus'][somId] ) ) {
+              return {
+                x: NaN,
+                y: NaN,
+                valueOf: function() { return constants.nanValue; }
+              };
+           }
+            return {
+              x: d['bmus'][somId].x,
+              y: d['bmus'][somId].y,
+              valueOf: function() {
+                return ( d['bmus'][somId].x + d['bmus'][somId].y ) || constants.nanValue;
+              }
+            };
+          })
+        };
+      }
+      else {
+        ++dimensions[somKey].count;
+      }
+      return dimensions[somKey].dimension;
+    };
+
+    var _applySOMFilter = function(somKey) {
+      if( _.isEmpty( dimensions[somKey].filters ) ) {
+        // all filters have been removed, remove the filter function
+        dimensions[somKey].dimension.filterAll();
+      }
+      else {
+        dimensions[somKey].dimension.filterFunction( function(d) {
+
+          if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
+            // sample is not in the dataset included in the SOM computation,
+            // therefore do NOT filter it out
+            return true;
+          }
+          return _.any( dimensions[somKey].filters, function(f) {
+            return (f.x === d.x) && (f.y === d.y); 
+          });
+        });
+      }
+    };
+
+    this.addSOMFilter = function(somId, coord) {
+      var somKey = "som" + somId;
+      dimensions[somKey].filters.push( coord );
+
+      _applySOMFilter(somKey);
+    };
+
+    this.removeSOMFilter = function(somId, coord) {
+      var somKey = "som" + somId;
+      dimensions[somKey].filters = _.reject( dimensions[somKey].filters, function(f) {
+        return _.isEqual(coord,f);
+      });
+
+      _applySOMFilter(somKey);
+    };
+
+    this.getSampleDimension = function() {
       if( _.isUndefined( dimensions['_samples'] ) ) {
         dimensions['_samples'] = {
           count: 1,
@@ -211,6 +281,26 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
       return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
     };
 
+    // adds BMU information for each sample in SOM
+    this.addBMUs = function(somId, bmuSamples) {
+      _.each( bmuSamples, function(samp) {
+        var key = _getSampleKey(samp.sample.dataset, samp.sample.sampleid);
+        if( _.isUndefined( currSamples[key] ) ) {
+          currSamples[key] = {};
+
+          // add dataset and sampleid fields
+          angular.extend( currSamples[key], samp.sample );
+        }
+        if( _.isUndefined( currSamples[key]['bmus'] ) ) {
+          currSamples[key]['bmus'] = {};
+        }
+        // add bmu info
+        currSamples[key]['bmus'][somId] = { x: samp.x, y: samp.y };
+      });
+
+      this.rebuildInstance();
+    };
+
     // receives new variable data
     this.addVariableData = function (variable, samples) {
 
@@ -218,24 +308,28 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
 
       usedVariables[variable] = true;
 
-      _.every(samples, function (samp, sampId) {
+      _.every(samples, function (samp) {
 
-        var key = _getSampleKey(samp.dataset, sampId);
+        var key = _getSampleKey(samp.dataset, samp.sampleid);
 
         if (_.isUndefined(currSamples[key])) {
           currSamples[ key ] = samp;
+          currSamples[ key ]['bmus'] = {};
         } else {
+          if( _.isUndefined( currSamples[key].variables ) ) {
+            currSamples[key].variables = {};
+          }
+
           if( !_.isUndefined( currSamples[key].variables[ variable ] ) ) {
             // dummy work for the whole gang
             dataWasAdded = false;
             return false; // stop iteration
           }
-          // pre-existing, extend:
-          _.extend(currSamples[key].variables, samp.variables);
+
+          angular.extend( currSamples[key].variables, samp.variables );
         }
         return true;
       });
-
       return dataWasAdded;
     };
 

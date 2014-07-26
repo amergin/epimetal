@@ -67,12 +67,15 @@ rfactor = get_range(sm, bmus, y, stats);
 
 % Visualize planes.
 %msg = '';
+
 hexmaps = {};
 for j = ind
   hexmaps(end+1) = paint_plane(sm, bmus, y(:, j), hdr{j}, stats(j), rpath, rfactor);
   %msg = [msg s];
-end
+end  
 
+%hexmaps = {};
+%hexmaps(end+1) = paint_plane(sm, bmus, y(:, j), hdr{j}, stats(j), rpath, rfactor);
 
 
 #{
@@ -133,8 +136,15 @@ lim = (mean(rg) + lim);
 a = hexavalue(bmus, sm.msize, yj, sm.rho);
 hexmap = hexaimage(a, lim);
 
+% append by adding pvalue
+hexmap.pvalue = statj.p;
+
 
 #{
+disp("pval=");
+disp(statj.p);
+disp(typeinfo(statj.p));
+disp(statj);
 disp("----------------");
 disp(a);
 disp("----------------");

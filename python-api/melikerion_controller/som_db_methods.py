@@ -1,4 +1,6 @@
 from melikerion_orm_models import SOM, Plane, SOMTask, PlaneTask
+from pymongo.errors import InvalidId
+from bson.objectid import ObjectId
 
 # Utility functions
 def getObjectId(idStr):
@@ -16,7 +18,7 @@ def tooManyTasks(cfg):
 	return False
 
 def getSOM(idStr):
-	return SOM.objects.filter(id=idStr)
+	return SOM.objects.filter(id=idStr).first()
 
 def getExistingSOM(variables, datasets):
 	return SOM.objects.filter( \
@@ -28,14 +30,13 @@ def createTask(datasets, variables):
 	task.save()
 	return task
 
-def createSOM(datasets, variables, fileDict):
+def createSOM(datasets, variables, fileDict, bmus):
 
-	doc = SOM(datasets=datasets, variables=variables)
+	doc = SOM(datasets=datasets, variables=variables, plane_bmu=bmus)
 	for fileKey, filePath in fileDict.iteritems():
 		handle = open( filePath, 'r' )
 		doc[fileKey].put( handle )
 		handle.close()
-
 	doc.save()
 	print "Inserted SOM document, ID = %s" %str(doc.id)
 	return doc

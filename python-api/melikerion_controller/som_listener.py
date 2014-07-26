@@ -90,15 +90,33 @@ class SOMProcessHandler( object ):
 			self.task = createTask(self.datasets, self.variables)
 			self.id = str(self.task.id)
 			resultId = self._execMelikerion()
-		except:
-			pass
+		except Exception, e:
+			print "[Error] SOM Listener threw exception:"
+			print e
 		finally:
 			self.task.delete()
 
 
-	def _execMelikerion(self):
-		config = self.cfg
 
+	def _execMelikerion(self):
+		def _createBMUs(fileName, samples):
+			bmus = list()
+			with open(fileName, 'r') as f:
+				for no, line in enumerate(f, start=0):
+					# skip header
+					if no == 0:
+						continue
+					if not line.strip():
+						continue
+					d = dict()
+					xy = line.strip().split("\t")
+					d['y'] = int(xy[0])
+					d['x'] = int(xy[1])
+					d['sample'] = samples['id'][no-1]
+					bmus.append(d)
+			return bmus
+
+		config = self.cfg
 		self.path = config.getCtrlVar('task_file_path') + "/" + str(self.id)
 
 		octavePath = config.getCtrlVar('octave_path')
@@ -127,12 +145,14 @@ class SOMProcessHandler( object ):
 
 		fileDict = dict()
 		fileDict['som'] = self.path + "/" + MELIKERION_SM_FILENAME
-		fileDict['bmu'] = self.path + "/" + MELIKERION_BMUS_FILENAME
 		fileDict['xstats'] = self.path + "/" + MELIKERION_XSTATS_FILENAME
 		fileDict['zi'] = self.path + "/" + MELIKERION_ZI_FILENAME
 
+		bmuFilename = self.path + "/" + MELIKERION_BMUS_FILENAME
+		bmus = _createBMUs( bmuFilename, self.samples )
+
 		# Save som computations to db
-		self.somDoc = createSOM(self.datasets, self.variables, fileDict)
+		self.somDoc = createSOM(self.datasets, self.variables, fileDict, bmus)
 
 		# Delete working directory
 		self._delTaskDirectory()
@@ -160,7 +180,7 @@ class SOMWorker( object ):
 		variables = message.get('variables')
 		datasets = message.get('datasets')
 		samples = message.get('samples')
-		somId = message.get('id')
+		somId = message.get('somid')
 
 		# straight-forward request where the client already knows the
 		# preprocessed SOM id
@@ -191,6 +211,7 @@ class SOMWorker( object ):
 
 		while True:
 			message = self.socket.recv_json()
+			print "message=", message
 			print "[Info] Received message..."
 
 			if tooManyTasks(self.cfg):
@@ -202,14 +223,19 @@ class SOMWorker( object ):
 				self.socket.send_json( getErrorResponse(message) )
 			else:
 				# GET request containing the objectId
-				objIdStr = message.get('id')
+				objIdStr = message.get('somid')
 				if objIdStr:
 					doc = getSOM( objIdStr )
 					if not doc:
 						# the provided ObjectID is not in the DB
 						self.socket.send_json( getErrorResponse( 'SOM ID not found' ) )
 					else:
-						self.socket.send_json( getSuccessResponse( { 'id': objIdStr, 'variables': doc.variables, 'datasets': doc.datasets } ) )
+						self.socket.send_json( getSuccessResponse( { 
+							'id': objIdStr, 
+							'variables': doc.variables, 
+							'datasets': doc.datasets,
+							'bmus': doc.plane_bmu
+						} ) )
 					continue
 
 				datasets = message.get('datasets')
@@ -230,7 +256,8 @@ class SOMWorker( object ):
 						getSuccessResponse( 
 							{ 'id': str(existing.id), 
 							'variables': existing.variables, 
-							'datasets': existing.datasets } ) )
+							'datasets': existing.datasets,
+							'bmus': existing.plane_bmu } ) )
 
 				else:
 					# nothing ready, have to compute

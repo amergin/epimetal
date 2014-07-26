@@ -45,8 +45,8 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
       // emit signal to create a new window:
       $rootScope = $injector.get('$rootScope');
       config.size = 'double-normal';
-      config.type = 'som';
-      UrlHandler.createWindow( 'som', config );
+      config.type = 'somplane';
+      UrlHandler.createWindow( 'somplane', config );
       $rootScope.$emit('packery.add', config);
     };    
 

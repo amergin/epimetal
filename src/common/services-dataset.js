@@ -260,6 +260,12 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
       }
     };
 
+    service.getPlaneBySOM = function(somId) {
+      return _.filter( that.SOMPlanes, function(plane, key) {
+        return plane.som_id === somId;
+      });
+    };
+
     service.getSOM = function(selection) {
       var defer = $q.defer();
 
@@ -271,23 +277,41 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
         defer.resolve(cachedSom);
       } else {
         var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
-        ws.onopen = function() {
-          ws.send(JSON.stringify({
-            'datasets': datasets,
-            'variables': selection
-          }));
-        };
+
+        if(selection.somid) {
+          // som exists beforehand, it's queried by its id
+          ws.onopen = function() {
+            ws.send(JSON.stringify({
+              'somid': selection.somid
+            }));
+          };
+        } else {
+          // don't know whether som exists already
+          ws.onopen = function() {
+            ws.send(JSON.stringify({
+              'datasets': datasets,
+              'variables': selection
+            }));
+          };
+        }
+
         ws.onclose = function(evt) {
-          console.log("closed", evt);
+          console.log("SOM WS closed", evt);
         };
 
         ws.onmessage = function(evt) {
           var result = JSON.parse(evt.data);
           if (result.result.code == 'error') {
+            // SOM computation failed
             defer.reject(result.result.message);
           } else {
-            that.SOMs[result.data.id] = result.data;
-            defer.resolve(result.data);
+            // SOM comp is OK
+            var som = result.data;
+            var DimensionService = $injector.get('DimensionService');
+            DimensionService.addBMUs(som.id, som.bmus);
+
+            that.SOMs[som.id] = som;
+            defer.resolve(som);
           }
         };
       }
@@ -298,11 +322,11 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
 
       var defer = $q.defer();
 
-      var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.plane);
       var cachedPlane = _findPlane(som);
       if (cachedPlane) {
         defer.resolve(cachedPlane);
       } else {
+        var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.plane);
         if (som.planeid) {
           ws.onopen = function() {
             ws.send(JSON.stringify({
@@ -325,7 +349,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
         }
 
         ws.onclose = function(evt) {
-          console.log("closed", evt);
+          console.log("Plane WS closed", evt);
         };
 
         ws.onmessage = function(evt) {

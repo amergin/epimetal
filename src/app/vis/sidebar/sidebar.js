@@ -175,8 +175,8 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
 ]);
 
 // controller for the histogram form
-vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'constants', '$timeout',
-  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, constants, $timeout) {
+vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'constants', '$timeout', 'UrlHandler',
+  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, constants, $timeout, UrlHandler) {
     $scope.variables = DatasetFactory.variables();
     $scope.selection = {};
 
@@ -189,6 +189,8 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
     };
 
     $scope.close = function(somId) {
+      $rootScope.$emit('packery.close', 'som_id', $scope.SOMs[somId].som);
+      UrlHandler.removeWindow('som', $scope.SOMs[somId].som);
       delete $scope.SOMs[somId];
     };
 
@@ -209,13 +211,23 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
           };
           NotifyService.addTransient('SOM plane ready', 'The submitted SOM plane computation is ready', 'success');
           var PlotService = $injector.get('PlotService');
+
           PlotService.drawSOM(res);
 
       }, function errFn(res) {
         NotifyService.addTransient('Plane computation failed', res, 'danger');
       });
-
     };
+
+
+    // this signal is emitted when url path is extracted on page load, to
+    // display the loaded som menu
+    $rootScope.$on('sidebar:addSom', function(event, som) {
+      var somObj = angular.extend({'state': 'ready', 'planes': {}}, som);
+      somObj.som = som.id;
+      somObj.datasets = _.map( som.datasets, function(name) { return DatasetFactory.getSet(name); } );
+      $scope.SOMs[som.id] = somObj;
+    });
 
     $scope.add = function (selection) {
 
@@ -225,7 +237,7 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
         'id': id,
         'state': 'loading',
         'variables': angular.copy($scope.selection.x),
-        'datasets':  DatasetFactory.activeSets(), //_.map( DatasetFactory.activeSets(),function(set) { return set.getName(); } ),
+        'datasets':  DatasetFactory.activeSets(),
         'planes': {}
       };
 
@@ -235,6 +247,8 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
           angular.extend( $scope.SOMs[id], {
             som: som.id
           });
+
+          UrlHandler.createWindow('som', som);
           NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
       }, function errFn(res) {
         NotifyService.addTransient('SOM computation failed', res, 'danger');
