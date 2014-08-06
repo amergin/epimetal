@@ -1,4 +1,9 @@
-var mod = angular.module('plotter.compatibility', ['services.compatibility', 'ngSanitize', 'ngAnimate', 'mgcrea.ngStrap.alert', 'mgcrea.ngStrap.popover', 'mgcrea.ngStrap.modal']);
+var mod = angular.module('plotter.compatibility', ['services.compatibility', 
+  'ngSanitize', 
+  // 'ngAnimate', 
+  'mgcrea.ngStrap.alert', 
+  'mgcrea.ngStrap.popover', 
+  'mgcrea.ngStrap.modal']);
 
 mod.directive('compatibilityInform', ['$rootScope',
   function($rootScope) {

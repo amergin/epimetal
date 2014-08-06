@@ -26,7 +26,7 @@ vis.directive('dataset', function () {
 // dataset table controller
 vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService', 'constants', '$location', 'UrlHandler',
   function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService, constants, $location, UrlHandler) {
-    $scope.sets = DatasetFactory.getSets();
+    // $scope.sets = DatasetFactory.getSets();
 
     $scope.toggle = function(set) {
       set.toggle();
@@ -83,7 +83,7 @@ vis.directive('scatterplotForm', function () {
 // scatter plot form controller
 vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'DatasetFactory', '$injector', 'NotifyService',
   function ($scope, $rootScope, $q, DatasetFactory, $injector, NotifyService) {
-    $scope.variables = DatasetFactory.variables();
+    // $scope.variables = DatasetFactory.variables();
     $scope.selection = {};
 
     $scope.canEdit = function () {
@@ -141,7 +141,7 @@ vis.directive('histogramForm', function () {
 // controller for the histogram form
 vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService',
   function ($scope, $rootScope, DatasetFactory, $injector, NotifyService) {
-    $scope.variables = DatasetFactory.variables();
+    // $scope.variables = DatasetFactory.variables();
     $scope.selection = {};
 
     $scope.canEdit = function () {
@@ -184,7 +184,7 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
 vis.controller('SOMFormController', 
   ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'constants', '$timeout', 'UrlHandler', 'WindowService',
   function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, constants, $timeout, UrlHandler, WindowService) {
-    $scope.variables = DatasetFactory.variables();
+    // $scope.variables = DatasetFactory.variables();
     $scope.selection = {};
 
     $scope.canEdit = function () {
@@ -296,7 +296,7 @@ vis.directive('somForm', function () {
 // controller for the histogram form
 vis.controller('HeatmapFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'PlotService',
   function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService) {
-    $scope.variables = DatasetFactory.variables();
+    // $scope.variables = DatasetFactory.variables();
     $scope.selection = {};
 
     $scope.canEdit = function () {

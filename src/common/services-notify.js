@@ -1,4 +1,7 @@
-var serv = angular.module('services.notify', ['ngSanitize', 'ngAnimate', 'mgcrea.ngStrap.alert', 'mgcrea.ngStrap.popover', 'mgcrea.ngStrap.modal']);//['angular-growl', 'ngSanitize', 'ngAnimate', 'ui.bootstrap']);
+var serv = angular.module('services.notify', [
+'mgcrea.ngStrap.alert', 
+'mgcrea.ngStrap.popover', 
+'mgcrea.ngStrap.modal']);
 
 serv.factory('NotifyService', ['$injector',
   function NotifyService($injector) {

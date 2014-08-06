@@ -15,6 +15,23 @@ module.directive('selectOnClick', function() {
   };
 });
 
+// disables angular-animate on elements. See
+//http://stackoverflow.com/questions/21249441/disable-nganimate-form-some-elements
+module.directive('disableAnimate', ['$animate', function($animate) {
+  return {
+    link: function(scope, element) {
+        $animate.enabled(false, element);
+    },
+    priority: 150
+  };
+}]);
+
+module.directive('enableAnimate', ['$animate', function($animate) {
+    return function(scope, element) {
+        $animate.enabled(true, element);
+    };
+}]);
+
 Utils.getVariables = function(windowType, selection, splitScatter) {
   if (windowType === 'scatterplot') {
     if (splitScatter) {

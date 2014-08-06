@@ -1,5 +1,5 @@
 /*!
- * angular-packery 0.8.1
+ * angular-packery
  * Forked from angular-masonry 
  * by Jussi Ekholm, github.com/amergin
  * License: MIT
@@ -51,6 +51,7 @@
           });
           schedule = [];
         }, 30);
+
       };
       function defaultLoaded($element) {
         $element.addClass('loaded');
@@ -95,8 +96,13 @@
               element.resizable(resizeObj);
             }
 
-
           }
+
+          $timeout( function() {
+            $rootScope.$emit('packery.added', element);
+          });
+
+
         }
         function _layout() {
           // I wanted to make this dynamic but ran into huuuge memory leaks
@@ -112,18 +118,7 @@
 
         _append();
         _layout();
-        /* if (!self.loadImages) {
-          _append();
-          _layout();
-        } else if (self.preserveOrder) {
-          _append();
-          element.imagesLoaded(_layout);
-        } else {
-          element.imagesLoaded(function imagesLoaded() {
-            _append();
-            _layout();
-          });
-        } */
+
       };
       this.removeBrick = function removeBrick(id, element) {
         if (destroyed) {
@@ -182,7 +177,7 @@
         }
       }
     };
-  }).directive('packeryBrick', function packeryBrickDirective($compile, $timeout) {
+  }).directive('packeryBrick', ['$compile', '$timeout', '$rootScope', function packeryBrickDirective($compile, $timeout, $rootScope) {
     return {
       restrict: 'AC',
       require: '^packery',
@@ -207,12 +202,16 @@
           });
         },
         post: function postLink(scope, element, attrs, ctrl) {
-          var ele = angular.element('<div/>')
-          .addClass(scope.window.type);
-          element.append(ele);
-          $compile(ele)(scope);
+          $timeout( function() {
+            var el = angular.element('<div/>')
+            .addClass(scope.window.type)
+            .addClass('figure');
+            element.append(el);
+            $compile(el)(scope);
+
+          }, 650);
         }
       }
     };
-  });
+  }]);
 }());

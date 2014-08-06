@@ -86,8 +86,8 @@ visu.directive('histogram', ['constants', '$timeout',
       // 1. create composite chart
       $scope.histogram = dc.compositeChart(config.element[0], constants.groups.histogram)
         .dimension(config.dimension)
-        .width(null)//_width)
-        .height(null)//_height)
+        .width(null)
+        .height(null)
         .shareColors(true)
         .elasticY(true)
         .elasticX(false)
@@ -118,7 +118,6 @@ visu.directive('histogram', ['constants', '$timeout',
             else {
               $scope.window.showResetBtn = true;
             }
-            //$rootScope.$apply();
             $rootScope.$emit('scatterplot.redrawAll');
           });
         })
@@ -128,13 +127,6 @@ visu.directive('histogram', ['constants', '$timeout',
             .attr("class", 'bar pooled')
             .attr("fill", _poolingColor);
           }
-
-          // chart.select("svg")
-          //     .attr("viewBox", "0 0 " + _width + " " + _height) //400 300")
-          //     .attr("preserveAspectRatio", "xMinYMin")
-          //     .attr("width", "100%")
-          //     .attr("height", "100%");
-          // chart.redraw();
 
         });
 
@@ -156,7 +148,7 @@ visu.directive('histogram', ['constants', '$timeout',
       _.each(config.datasetNames, function(name, ind) {
 
         var chart = dc.barChart($scope.histogram) //, constants.groups.histogram)
-        .centerBar(true)
+          .centerBar(true)
           .barPadding(0.15)
           .brushOn(true)
           .dimension(config.dimension)
@@ -174,30 +166,16 @@ visu.directive('histogram', ['constants', '$timeout',
       $scope.histogram.render();
 
       if( !_.isUndefined( $scope.window.filter ) ) {
-        // _.delay( function() {
-        //   $scope.histogram.filter( $scope.extent );
-        //   $scope.histogram.redraw();
-        //   //$scope.histogram.filter( $scope.window.filter );
-        // }, 5200);
         $timeout( function() {
           $scope.histogram.filter( $scope.window.filter );
           $scope.histogram.redraw();
-          //$rootScope.$apply();
           $rootScope.$emit('scatterplot.redrawAll');
-          // _.delay( function() {
-          //   $scope.histogram.filter( $scope.window.filter );
-          //   $scope.histogram.redraw();
-          //   $rootScope.$apply();
-          //   $rootScope.$emit('scatterplot.redrawAll');
-          // }, 2500);
-
         });
       }
 
     };
 
-    var linkFn = function($scope, ele, iAttrs) {
-
+    function postLink($scope, ele, attrs, ctrl) {
       var config = {
         dimension: $scope.dimension,
         element: ele,
@@ -213,9 +191,7 @@ visu.directive('histogram', ['constants', '$timeout',
         filter: $scope.filterOnSet
       };
 
-      $timeout( function() { 
-        createSVG($scope, config);
-      });
+      createSVG($scope, config);
 
       // redraw on window resize
       ele.parent().on('resize', function() {
@@ -226,14 +202,16 @@ visu.directive('histogram', ['constants', '$timeout',
         }
       });
 
-    };
+    }
 
     return {
       scope: false,
       restrict: 'C',
       replace: true,
       controller: 'HistogramPlotController',
-      link: linkFn
+      link: {
+        post: postLink
+      }
     };
   }
 ]);

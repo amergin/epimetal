@@ -1,0 +1,93 @@
+/********************
+  PLOTS
+ *********************/
+
+
+.plot-title {
+  display: block;
+}
+
+
+.plot-title:first-letter {
+  text-transform: uppercase;
+}
+
+
+// allow overlapping bars on histograms
+.dc-chart rect.bar {
+opacity: 0.60;
+}
+
+.dc-chart rect.bar.pooled {
+  opacity: 1;
+} 
+
+
+// heatmap cell greyed out
+g.selected rect {
+  fill: darkgrey;
+}
+
+g.deselected rect {
+  fill: lightgrey;
+}
+
+
+.colorbar .axis line{
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+.colorbar .axis .domain{
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+
+.heatmap-chart-anchor {
+  float: left;
+}
+
+.heatmap-legend-anchor {
+  float: right;
+}
+
+// SOM label settings
+svg text.label {
+  text-anchor: middle;
+  alignment-baseline: middle;
+  font-size: 14px;
+  font-family: FreeSans;
+}
+
+.histogram, .heatmap, .som, .scatterplot {
+  position: absolute;
+  width: 100%;
+  height: 90%;
+}
+
+.heatmap-chart-anchor {
+  width: 86%;
+  height: 100%;
+}
+
+.heatmap-legend-anchor {
+  width: 5%;
+  min-width: 60px;
+  height: 100%;
+}
+
+rect.heat-box {
+  cursor: pointer;
+}
+
+.hexagon {
+  cursor: pointer;
+}
+
+// see http://stackoverflow.com/questions/7570917/svg-height-incorrectly-calculated-in-webkit-browsers
+.somplane svg {
+  max-height: 100%;
+}

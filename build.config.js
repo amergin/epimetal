@@ -70,6 +70,13 @@ module.exports = {
       'vendor/jquery-ui/ui/minified/mouse.min.js',
       'vendor/jquery-ui/ui/minified/resizable.min.js',
       'vendor/angular/angular.js',
+      // html sanitizer for notify service
+      'vendor/angular-sanitize/angular-sanitize.js',
+      // animation framework
+      'vendor/angular-animate/angular-animate.js',
+      // windowing
+      'vendor/packery/dist/packery.pkgd.js',
+      'vendor/draggabilly/draggabilly.js',
       // dropdowns x2
       'vendor/chosen/chosen.jquery.js',
       'vendor/angular-chosen-localytics/chosen.js',
@@ -78,14 +85,8 @@ module.exports = {
       'vendor/crossfilter/crossfilter.js',
       'vendor/d3/d3.js',
       'vendor/dcjs/dc.js',
-      // windowing
-      'vendor/packery/dist/packery.pkgd.js',
-      'vendor/draggabilly/draggabilly.js',
       // utilities
       'vendor/underscore/underscore.js',
-      // html sanitizer for notify service
-      'vendor/angular-sanitize/angular-sanitize.js',
-      'vendor/angular-animate/angular-animate.js',
       // core framework for UI
       'vendor/angular-strap/dist/angular-strap.js',
       'vendor/angular-strap/dist/angular-strap.tpl.js',
@@ -97,7 +98,7 @@ module.exports = {
     css: [
       'vendor/dcjs/dc.css',
       'vendor/angular-motion/dist/angular-motion.min.css',
-      'vendor/bootstrap-additions/dist/bootstrap-additions.min.css',
+      'vendor/bootstrap-additions/dist/bootstrap-additions.min.css'
       //'vendor/chosen/chosen.min.css'
     ],
     assets: [

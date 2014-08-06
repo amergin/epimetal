@@ -24,8 +24,7 @@
   'plotter.vis.sidebar',
   'plotter.vis.plotting',
   'services.urlhandler',
-  'plotter.vis.linkcreator',
-  'ngAnimate'
+  'plotter.vis.linkcreator'
   ] );
 
 /**
@@ -92,8 +91,11 @@
 
 }]);
 
- vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams', 'PlotService', 'UrlHandler', '$animate', '$injector', 'WindowService',
-  function VisController( $scope, DimensionService, $stateParams, PlotService, UrlHandler, $animate, $injector, WindowService) {
+ vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowService', 'variables', 'datasets',
+  function VisController( $scope, DimensionService, $stateParams, PlotService, UrlHandler, $injector, WindowService, variables, datasets) {
+
+    $scope.menuDatasets = datasets;
+    $scope.menuVariables = variables;
     
     $scope.visController = "visController";
     console.log("viscontroller");

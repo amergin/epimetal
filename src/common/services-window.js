@@ -47,7 +47,7 @@ dimMod.service('WindowService', ['$injector', 'constants', '$rootScope', '$timeo
       }
 
       windows.splice(wind,1);
-    };
+    }; 
 
     this.getId = function(key,val) {
       var ret;
@@ -60,20 +60,6 @@ dimMod.service('WindowService', ['$injector', 'constants', '$rootScope', '$timeo
       });
       return ret;
     };
-
-    /*this.removeByValue = function(key, val) {
-      var rem;
-      _.every(windows, function(win,id) {
-        if( win[key] === val ) {
-          rem = id;
-          return false; // stop
-        }
-        return true;
-      });
-      if( rem ) { 
-        delete win[rem]; 
-      }
-    };*/
 
     this.get = function() {
       return windows;

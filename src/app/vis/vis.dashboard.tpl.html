@@ -1,4 +1,4 @@
-<div packery 
+<div disable-animate packery 
 packery-drag="{ handle: '.handle' }" 
 packery-resize="{
     grid: [25, 25],
@@ -17,10 +17,10 @@ itemSelector: '.packery-brick',
 columnWidth: 50,
 gutter: '.gutter-sizer'
 }">
-	<div class="packery-brick window" ng-repeat="window in windows" ng-controller="WinController">
+	<div ng-repeat="window in windows" ng-controller="WinController" class="packery-brick window">
 		<div class="gutter-sizer"></div>
 		<div class="handle text-center">
-			<i class="ctrl fa fa-cog pull-left action-btn" data-html="true" data-animation="am-fade" bs-dropdown="settingsDropdown" title="Settings"></i>
+			<i class="ctrl fa fa-cog pull-left action-btn" enable-animate data-html="true" bs-dropdown="settingsDropdown" title="Settings"></i>
 			<a class="close ctrl ctrl-close" ng-click="close(window._winid)" title="Close this window">&times;</a>
 			<a class="btn btn-default btn-xs ctrl-filter" ng-click="resetFilter()" ng-show="window.showResetBtn">reset filter</a>
 		</div>
@@ -32,6 +32,3 @@ gutter: '.gutter-sizer'
 		</div>
 	</div>
 </div>
-
-<!--<div class="packery">
-</div> -->

@@ -6,7 +6,8 @@ var App = angular.module('plotter', [
   'ui.router.state',
   'ui.router',
   'services.compatibility',
-  'plotter.compatibility'
+  'plotter.compatibility',
+  'ngSanitize', 'ngAnimate'
 ]);
 
 App.constant('constants', {

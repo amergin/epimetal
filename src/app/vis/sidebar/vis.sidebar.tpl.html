@@ -1,6 +1,6 @@
-<div class="sidebar-anim col-sm-12 col-md-5 col-lg-4" id="sidebar" ng-show="showSidebar" ng-animate="{ show: 'am-slide-left', hide: 'am-slide-right' }" ng-mouseenter="hover = true" ng-mouseleave="hover = false">
+<div class="col-sm-12 col-md-5 col-lg-4 am-slide-left" id="sidebar" ng-show="showSidebar" ng-mouseenter="hover = true" ng-mouseleave="hover = false">
 
-	<button class="btn btn-secondary pull-right am-fade" ng-show="hover" ng-animation="{ show: 'am-fade', hide: 'am-fade' }" ng-click="toggleSidebar()" title="{{sidebarInfo()}}">
+	<button class="btn btn-secondary pull-right" ng-show="hover" ng-click="toggleSidebar()" title="{{sidebarInfo()}}">
 		<i ng-class="{ true: 'fa fa-arrow-left', false: 'fa fa-arrow-right'}[showSidebar]"></i> {{sidebarInfo()}}
 	</button>
 
