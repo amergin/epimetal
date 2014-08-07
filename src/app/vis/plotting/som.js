@@ -3,11 +3,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
   function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope) {
 
     $scope.resetFilter = function() {
-      var filters = $scope.ownFilters;
-      _.each(filters, function(coord) {
-        DimensionService.removeSOMFilter( $scope.window.som_id, coord );
-      });
-      $scope.ownFilters = [];
+      removeFilters();
     };
 
 
@@ -17,9 +13,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
     $scope.window.showResetBtn = false;
     $scope.dimension = DimensionService.getSOMDimension( $scope.window.som_id );
 
-    $scope.selections = {};
-
-    $scope.ownFilters = [];
+    $scope.ownFilters = DimensionService.getSOMFilters($scope.window.som_id);
 
     var _callRedraw = function() {
       $rootScope.$emit('scatterplot.redrawAll');
@@ -29,42 +23,78 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       dc.redrawAll(constants.groups.heatmap);
     };
 
-    $scope.addFilter = function(coord) {
-      $scope.ownFilters.push(coord);
+    $scope.sort = function(d) {
+      $rootScope.$emit('som:sort',d);
+    };
+
+    $scope.addFilter = function(coord, redraw) {
       DimensionService.addSOMFilter( $scope.window.som_id, coord );
-      _callRedraw();
+      $rootScope.$emit('som:addFilter', coord);
+      if(redraw) { _callRedraw(); }
     };
 
-    $scope.removeFilter = function(coord) {
-      $scope.ownFilters = _.reject( $scope.ownFilters, function(f) { 
-        return _.isEqual(f,coord);
-      });
+    $scope.removeFilter = function(coord, redraw) {
       DimensionService.removeSOMFilter( $scope.window.som_id, coord );
-      _callRedraw();  
+      $rootScope.$emit('som:removeFilter', coord);
+      if(redraw) { _callRedraw(); }
     };
 
-    /*$scope.$watchCollection('ownFilters', function(coll) {
+    $scope.$watchCollection('ownFilters', function(coll) {
       if( coll.length > 0) { $scope.window.showResetBtn = true; }
       else { $scope.window.showResetBtn = false; }
-    }); */
+    }); 
 
-    $rootScope.$on('window:preDelete', function(event, winId) {
-      if( $scope.window['_winid'] !== winId ) { return; }
-      // remove any filters this window may have applied on close
-      var filters = $scope.ownFilters;
-      _.each( filters, function(f) {
-        $scope.removeFilter(f);
+    function removeFilters() {
+      var filters = angular.copy($scope.ownFilters);
+      _.each( filters, function(f,i) {
+        $scope.removeFilter(f, false);
+      });
+      _callRedraw();
+    }
+
+    // $rootScope.$on('window:preDelete', function(event, winId) {
+    //   if( $scope.window['_winid'] !== winId ) { return; }
+    //   // remove any filters this window may have applied on close
+    //   removeFilters(true);
+    // });
+
+    $rootScope.$on('som:removeFilter', function(eve, coord) {
+      d3.selectAll( $scope.element )
+      .selectAll('.hexagon-selected')
+      .filter( function(d, i) {
+        return (d.i == coord.x) && (d.j == coord.y);
+      })
+      .classed('hexagon-selected', false)
+      .classed('hexagon', true);
+    });
+
+    $rootScope.$on('som:addFilter', function(eve,coord) {
+      d3.selectAll( $scope.element )
+      .selectAll('.hexagon')
+      .filter( function(d, i) {
+        return (d.i == coord.x) && (d.j == coord.y);
+      })
+      .classed('hexagon-selected', true)
+      .classed('hexagon', false);
+    });
+
+    $rootScope.$on('som:sort', function(eve,d) {
+      // select the parent and sort the path's
+      d3.selectAll($scope.element).selectAll('.hexagon')
+      .sort(function (a, b) {            
+        // a is not the element, send "a" to the back
+        if( (a.i !== d.i ) || (a.j !== d.j) ) { return -1; }
+        // element found, bring to front
+        else { return 1; }
       });
 
     });
 
-    /*$scope.$on('$destroy', function() {
-      // remove any filters this window may have applied on close
-      var filters = $scope.ownFilters;
-      _.each( filters, function(f) {
-        $scope.removeFilter(f);
+    $scope.$on('$destroy', function() {
+      $timeout( function() {
+        _callRedraw();
       });
-    }); */
+    });
 
     $scope.drawSOMPlane = function(plane, element, width, height) {
 
@@ -86,7 +116,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       function mout(d) {
         var el = d3.select(this)
           .transition()
-          .duration(1000)
+          .duration(500)
           .style("fill-opacity", 1);
       }
 
@@ -172,7 +202,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         .selectAll(".hexagon")
         .data(hexbin(points))
         .enter().append("path")
-        .attr("class", "hexagon")
+        .attr("class", "hexagon ctrl")
         .attr("d", function(d) {
           return "M" + d.x + "," + d.y + hexbin.hexagon();
         })
@@ -186,24 +216,17 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           });
           return cell.color;
         })
-        /*.on("mouseover", mover)
-        .on("mouseout", mout) */
+        .on("mouseover", mover)
+        .on("mouseout", mout)
         .on("click", function(d) {
-          var key = d.i + "|" + d.j;
-          if( _.isUndefined( $scope.selections[key] ) || !$scope.selections[key] ) {
-            $scope.selections[key] = true;
-            d.origColor = d3.select(this).style('fill');
-            d3.select(this).style("fill", 'black');
-
-            $scope.addFilter({ x: d.i, y: d.j });
+          if( !$(this).is('.hexagon-selected') ) {
+            $scope.sort(d);
+            $scope.addFilter({x: d.i, y: d.j}, true);
           }
           else {
-            $scope.selections[key] = false;
-            d3.select(this).style("fill", d.origColor);
-
-            $scope.removeFilter({ x: d.i, y: d.j });
+            $scope.removeFilter({x: d.i, y: d.j}, true);
           }
-
+          $scope.$apply();
         })
         .append("svg:title")
         .text('Click to filter');

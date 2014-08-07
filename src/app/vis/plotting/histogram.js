@@ -119,6 +119,7 @@ visu.directive('histogram', ['constants', '$timeout',
               $scope.window.showResetBtn = true;
             }
             $rootScope.$emit('scatterplot.redrawAll');
+            $rootScope.$emit('heatmap.redraw');
           });
         })
         .renderlet( function(chart) {

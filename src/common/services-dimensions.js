@@ -92,40 +92,56 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
       return dimensions[somKey].dimension;
     };
 
-    var _applySOMFilter = function(somKey) {
+    var _checkSOMFilterEmpty = function(somKey) {
       if( _.isEmpty( dimensions[somKey].filters ) ) {
         // all filters have been removed, remove the filter function
         dimensions[somKey].dimension.filterAll();
+        return true;
       }
-      else {
-        dimensions[somKey].dimension.filterFunction( function(d) {
+      return false;
+    };
 
-          if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
-            // sample is not in the dataset included in the SOM computation,
-            // therefore do NOT filter it out
-            return true;
-          }
-          return _.any( dimensions[somKey].filters, function(f) {
-            return (f.x === d.x) && (f.y === d.y); 
-          });
-        });
+    var _applySOMFilter = function(somKey) {
+      if( _checkSOMFilterEmpty(somKey) ) {
+        return;
       }
+      // if( _.isEmpty( dimensions[somKey].filters ) ) {
+      //   // all filters have been removed, remove the filter function
+      //   dimensions[somKey].dimension.filterAll();
+      // }
+      // else {
+      dimensions[somKey].dimension.filterFunction( function(d) {
+
+        if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
+          // sample is not in the dataset included in the SOM computation,
+          // therefore do NOT filter it out
+          return true;
+        }
+        return _.any( dimensions[somKey].filters, function(f) {
+          return (f.x === d.x) && (f.y === d.y); 
+        });
+      });
+      // }
+    };
+
+    this.getSOMFilters = function(somId) {
+      var somKey = 'som' + somId;
+      return dimensions[somKey].filters;
     };
 
     this.addSOMFilter = function(somId, coord) {
       var somKey = "som" + somId;
       dimensions[somKey].filters.push( coord );
-
       _applySOMFilter(somKey);
     };
 
     this.removeSOMFilter = function(somId, coord) {
       var somKey = "som" + somId;
-      dimensions[somKey].filters = _.reject( dimensions[somKey].filters, function(f) {
-        return _.isEqual(coord,f);
+      var result = _.reject( dimensions[somKey].filters, function(f) {
+        return (f.x == coord.x) && (f.y == coord.y);
       });
-
-      _applySOMFilter(somKey);
+      angular.copy(result, dimensions[somKey].filters);
+      _checkSOMFilterEmpty(somKey);
     };
 
     this.getSampleDimension = function() {
@@ -185,7 +201,7 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
       });
     });
 
-    $rootScope.$on('dimension:decreaseCount', function(event, name) {
+    $rootScope.$on('dimension:decreaseCount', function(eve, name) {
       that._checkDimension(name);
     });
 
@@ -200,6 +216,9 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
         --dimensions[variable].count;
 
         if( dimensions[variable].count === 0 ) {
+          if( !_.isUndefined(dimensions[variable].filters) ) {
+            dimensions[variable].dimension.filterAll();
+          }
           dimensions[variable].dimension.dispose();
           console.log('Deleting dimension', variable);
           delete dimensions[variable];
