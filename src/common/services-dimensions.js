@@ -105,11 +105,7 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
       if( _checkSOMFilterEmpty(somKey) ) {
         return;
       }
-      // if( _.isEmpty( dimensions[somKey].filters ) ) {
-      //   // all filters have been removed, remove the filter function
-      //   dimensions[somKey].dimension.filterAll();
-      // }
-      // else {
+
       dimensions[somKey].dimension.filterFunction( function(d) {
 
         if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
@@ -141,7 +137,7 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
         return (f.x == coord.x) && (f.y == coord.y);
       });
       angular.copy(result, dimensions[somKey].filters);
-      _checkSOMFilterEmpty(somKey);
+      _applySOMFilter(somKey);
     };
 
     this.getSampleDimension = function() {
