@@ -5,7 +5,7 @@ from config import Config
 from melikerion_controller.run_config import Config as MelikerionConfig
 
 from flask.ext.mongoengine import MongoEngine
-from orm_models import Sample, Header
+from orm_models import Sample, HeaderSample, HeaderGroup
 import zmq
 import os
 import json
@@ -24,7 +24,6 @@ app.config.update(
 	}
 )
 db = MongoEngine(app)
-HEADERS = Header.objects.first()
 
 # zmq stuff
 zmqContext = zmq.Context()
@@ -44,7 +43,7 @@ def _checkVariables(variables):
 	if not isinstance(variables, list):
 		return False
 	for var in variables:
-		if not HEADERS.variables.get(var):
+		if not HeaderSample.objects.filter(name=var):
 			return False
 	return True
 
