@@ -1,8 +1,14 @@
 var vis =
   angular.module('plotter.vis.sidebar', 
-    ['plotter.vis.plotting', 'services.dataset', 
-    'services.notify', 'services.dimensions', 'localytics.directives',
-    'services.urlhandler']);
+    [
+    'plotter.vis.plotting',
+    'services.dataset',
+    'services.window',
+    'services.notify', 
+    'services.dimensions', 
+    'localytics.directives',
+    'services.urlhandler'
+    ]);
 
 // directive for displaying the dataset table on sidebar
 vis.directive('dataset', function () {
@@ -175,8 +181,9 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
 ]);
 
 // controller for the histogram form
-vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'constants', '$timeout', 'UrlHandler',
-  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, constants, $timeout, UrlHandler) {
+vis.controller('SOMFormController', 
+  ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'constants', '$timeout', 'UrlHandler', 'WindowService',
+  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, constants, $timeout, UrlHandler, WindowService) {
     $scope.variables = DatasetFactory.variables();
     $scope.selection = {};
 
@@ -189,8 +196,13 @@ vis.controller('SOMFormController', ['$scope', '$rootScope', 'DatasetFactory', '
     };
 
     $scope.close = function(somId) {
-      $rootScope.$emit('packery.close', 'som_id', $scope.SOMs[somId].som);
-      UrlHandler.removeWindow('som', $scope.SOMs[somId].som);
+      var planes = DatasetFactory.getPlaneBySOM(somId);
+      _.each( planes, function(plane) {
+        var id = WindowService.getId('id', plane.id);
+        WindowService.remove(id);
+      });
+      // delete url entry for the menu
+      UrlHandler.removeWindow('som', somId);
       delete $scope.SOMs[somId];
     };
 

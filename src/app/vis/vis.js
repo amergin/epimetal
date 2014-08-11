@@ -17,8 +17,10 @@
  angular.module( 'plotter.vis', [ 
   'ui.router.state', 
   'services.dataset', 
-  'services.notify', 
-  'plotter.vis.windowing',
+  'services.notify',
+  'services.window',
+  'wu.packery',
+  //'plotter.vis.windowing',
   'plotter.vis.sidebar',
   'plotter.vis.plotting',
   'services.urlhandler',
@@ -90,8 +92,8 @@
 
 }]);
 
- vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams', 'PlotService', 'UrlHandler', '$animate', '$injector',
-  function VisController( $scope, DimensionService, $stateParams, PlotService, UrlHandler, $animate, $injector) {
+ vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams', 'PlotService', 'UrlHandler', '$animate', '$injector', 'WindowService',
+  function VisController( $scope, DimensionService, $stateParams, PlotService, UrlHandler, $animate, $injector, WindowService) {
     
     $scope.visController = "visController";
     console.log("viscontroller");
@@ -116,5 +118,7 @@
     $scope.sidebarInfo = function() {
       return ( $scope.showSidebar ? 'Hide' : "Show" ) + " sidebar";
     };
+
+    $scope.windows = WindowService.get();
 
   }]);

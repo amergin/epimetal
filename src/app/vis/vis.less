@@ -87,6 +87,11 @@ table#dataset {
 }
 
 .window {
+  display: none;
+}
+
+.window.loaded {
+  display: block;
   width: 500px;
   height: 400px;
   cursor: default;
@@ -95,7 +100,6 @@ table#dataset {
   border-color: hsla(0, 0%, 0%, 0.3);
   -webkit-border-radius: 4px 4px 4px 4px;
   border-radius: 4px 4px 4px 4px;
-  position: relative;
 }
 
 .window-dbl {

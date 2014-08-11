@@ -1,4 +1,4 @@
-var visu = angular.module('plotter.vis.plotting.som', ['plotter.vis.plotting']);
+var visu = angular.module('plotter.vis.plotting.som', []);
 visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope',
   function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope) {
 
@@ -48,13 +48,23 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       else { $scope.window.showResetBtn = false; }
     }); */
 
-    $scope.$on('$destroy', function() {
+    $rootScope.$on('window:preDelete', function(event, winId) {
+      if( $scope.window['_winid'] !== winId ) { return; }
       // remove any filters this window may have applied on close
       var filters = $scope.ownFilters;
       _.each( filters, function(f) {
         $scope.removeFilter(f);
       });
+
     });
+
+    /*$scope.$on('$destroy', function() {
+      // remove any filters this window may have applied on close
+      var filters = $scope.ownFilters;
+      _.each( filters, function(f) {
+        $scope.removeFilter(f);
+      });
+    }); */
 
     $scope.drawSOMPlane = function(plane, element, width, height) {
 
@@ -228,6 +238,8 @@ visu.directive('somplane', [
   function() {
 
     var linkFn = function($scope, ele, iAttrs) {
+
+    $scope.element = ele;
 
     $scope.width = 455;
     $scope.height = 360;

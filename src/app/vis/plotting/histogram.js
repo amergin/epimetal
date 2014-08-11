@@ -1,4 +1,4 @@
-var visu = angular.module('plotter.vis.plotting.histogram', ['plotter.vis.plotting']);
+var visu = angular.module('plotter.vis.plotting.histogram', []);
 visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants',
   function HistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants) {
 
@@ -212,7 +212,10 @@ visu.directive('histogram', ['constants', '$timeout',
         pooled: $scope.window.pooled || false,
         filter: $scope.filterOnSet
       };
-      createSVG($scope, config);
+
+      $timeout( function() { 
+        createSVG($scope, config);
+      });
 
       // redraw on window resize
       ele.parent().on('resize', function() {
@@ -228,10 +231,8 @@ visu.directive('histogram', ['constants', '$timeout',
     return {
       scope: false,
       restrict: 'C',
-      require: '^?window',
       replace: true,
       controller: 'HistogramPlotController',
-      transclude: true,
       link: linkFn
     };
   }

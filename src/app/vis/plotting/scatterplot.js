@@ -1,4 +1,4 @@
-var visu = angular.module('plotter.vis.plotting.scatterplot', ['plotter.vis.plotting']);
+var visu = angular.module('plotter.vis.plotting.scatterplot', []);
 visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants',
   function($scope, DatasetFactory, DimensionService, constants) {
 
@@ -373,6 +373,8 @@ visu.directive('scatterplot', ['$timeout',
   function($timeout) {
 
     var linkFn = function($scope, ele, iAttrs) {
+
+      $scope.element = ele;
 
       $scope.width = ele.width() || 490;
       $scope.height = ele.height() || 345;

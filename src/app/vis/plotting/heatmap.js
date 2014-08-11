@@ -1,4 +1,4 @@
-var visu = angular.module('plotter.vis.plotting.heatmap', ['plotter.vis.plotting']);
+var visu = angular.module('plotter.vis.plotting.heatmap', []);
 visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout',
   function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout) {
 
@@ -260,7 +260,7 @@ visu.directive('heatmap', [
       scope: false,
       // scope: {},
       restrict: 'C',
-      require: '^?window',
+      //require: '^?window',
       replace: true,
       link: linkFn,
       controller: 'HeatmapController',

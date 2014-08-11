@@ -360,8 +360,8 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
           if (result.result.code == 'error') {
             defer.reject(result.result.message);
           } else {
-            that.SOMPlanes[result.id] = result.data;
-            defer.resolve(result.data);
+            that.SOMPlanes[result.data.id] = result.data;
+            defer.resolve( angular.copy(result.data) );
           }
         };
       }
