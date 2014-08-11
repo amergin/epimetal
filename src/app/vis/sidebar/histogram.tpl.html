@@ -10,7 +10,7 @@
 				allow-single-deselect="true"
 				data-placeholder=" "
 				ng-model="selection.x"
-				ng-options="o.name as o.name group by o.group for o in menuVariables | orderBy:['group','name']"
+				ng-options="o.name as o.name group by o.group.name for o in menuVariables | orderBy:['group.order','name_order']"
 				required ng-disabled="!canEdit()"
 				width="'100%'">
 				<option value=""></option>

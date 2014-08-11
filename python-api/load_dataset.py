@@ -3,10 +3,11 @@ from mongoengine import connect, Document, DynamicDocument
 from mongoengine.fields import StringField, ListField
 import sys
 from config import Config
-from orm_models import Sample, Header
+from orm_models import Sample, HeaderSample, HeaderGroup
 import json
 import math
 import re
+import csv
 
 LINE_SEPARATOR = "\t"
 SAMPLEID_STRING ="sampleid"
@@ -33,7 +34,7 @@ class DataLoader( object ):
 	def __init__(self, config, fileName):
 		self.cfg = Config(config)
 		self.file = fileName
-		connect( db=self.cfg.getMongoVar('db'), host=self.cfg.getMongoVar('host'), port=int(self.cfg.getMongoVar('port')) )
+		connect( db=self.cfg.getMongoVar('db'), host=self.cfg.getMongoVar('host'), port=int(self.cfg.getMongoVar('port')), w=1 )
 
 	def load(self):
 		self._loadSamples()
@@ -41,45 +42,51 @@ class DataLoader( object ):
 
 	def _modifyHeader(self, headerList):
 		def _createHeaderObjects(headerList):
-			def _findVarInfo(var, headerInfo):
-				escapedVar = _getEscapedVar(var)
-				lookup = headerInfo.get(var)
-				if lookup:
-					return { 'name': escapedVar, 'group': lookup['group'], 'unit': lookup['unit'], 'desc': lookup['name'] }
+			def _getNewGroupOrder():
+				sortedGroups = HeaderGroup.objects.order_by('-order')
+				if not sortedGroups:
+					return 1
 				else:
-					return { 'name': escapedVar, 'group': '', 'unit': '', 'desc': '' }
+					return sortedGroups.limit(1)[0].order + 1
 
+			def _getGroup(name):
+				#return HeaderGroup.objects(name=name).update_one(upsert=True, set__name=name, set__order=_getNewGroupOrder())
+				return HeaderGroup.objects.get_or_create(name=name, defaults={ 'name': name, 'order': _getNewGroupOrder() })
 
-			headLookup = dict()
-			d = dict()
-			# convert to lookup table for fast access
-			with open( self.cfg.getDataLoaderVar('header_file'), 'r' ) as headFile:
-				headerInfo = json.loads( headFile.read() )
-				for head in headerInfo:
-					headLookup[ head.get('id') ] = head			
+			def _getSample(name):
+				return HeaderSample.objects(name=name)
 
-			for header in headerList:
-				varInfo = _findVarInfo(header, headLookup)
-				# do not use the original header because it may contain unescaped characters
-				d[ varInfo['name'] ] = varInfo
-			return d
-
-		doc = Header.objects.first()
+			fileName = self.cfg.getDataLoaderVar('header_file')
+			# assume header contains: [name, desc, unit, group]
+			with open( fileName, 'r' ) as tsv:
+				header = []
+				for no, line in enumerate(csv.reader(tsv, delimiter="\t")):
+					if( no is 0 ):
+						header = line
+						continue
+					rowDict = dict(zip(header, line))
+					rowDict['name'] = _getEscapedVar( rowDict.get('name') )
+					
+					group, created = _getGroup( rowDict.get('group') )
+					samp = _getSample(rowDict.get('name'))
+					if not samp:
+						payload = rowDict
+						payload['group'] = group
+						samp =HeaderSample(**payload)
+						samp.save()
+						group.variables.append(samp)
+						group.save()
+					else:
+						# header already exists, do nothing
+						pass
 
 		# omit sampleid
 		header = filter(lambda a: a != SAMPLEID_STRING, headerList)
 
-		headerObjs = _createHeaderObjects(header)
-		# fresh database, create header doc just once
-		if not doc:
-			obj = Header(variables=headerObjs)
-			obj.save()
-		else:
-			# only modify header collection if variable is missing
-			for head in header:
-				if not doc.variables.get(head):
-					doc.variables[head] = { 'name': head, 'group': '', 'desc': '', 'unit': '' }
-			doc.save()
+		# create new header info if necessary
+		_createHeaderObjects(header)
+
+
 
 	def _loadSamples(self):
 		def ffloat(f):

@@ -13,6 +13,7 @@ vendor/dcjs/*
 vendor/modernizr/*
 !vendor/modernizr/*.js
 python-api/*
+!python-api/metabolites*.tsv
 !python-api/README.md
 !python-api/requirements.txt
 !python-api/*.sh

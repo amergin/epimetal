@@ -7,7 +7,7 @@ from flask import Flask, Request, request, Response, abort
 from flask.ext.mongoengine import MongoEngine
 import json
 
-from orm_models import Sample, Header 
+from orm_models import Sample, HeaderSample, HeaderGroup
 from flask_sockets import Sockets
 
 import io
@@ -36,9 +36,28 @@ def _getModifiedParameters(variables):
 
 @app.route( config.getFlaskVar('prefix') + 'headers/NMR_results', methods=['GET'])
 def headers():
-	headerObj = Header.objects.first()
+	def _getFormatted():
+		def _getHeader(header, no):
+			return {
+				'unit': header.unit,
+				'name': header.name,
+				'name_order': no,
+				'desc': header.desc,
+				'group': { 'name': header.group.name, 'order': header.group.order },
+				'unit': header['unit'],
+				'unit': header['unit'],
+			}
+
+		formatted = []
+		for group in HeaderGroup.objects.all():
+			for no, header in enumerate(group.variables):
+				formatted.append( _getHeader(header, no) )
+		return formatted
+
+
+	headers = _getFormatted()
 	retDict = { 'query': request.path }
-	if not headerObj:
+	if not headers:
 		retDict['success'] = False
 		retDict['result'] = []
 		response = flask.jsonify( retDict )
@@ -46,7 +65,7 @@ def headers():
 		return response
 	else:
 		retDict['success'] = True
-		retDict['result'] = headerObj.variables.values()
+		retDict['result'] = headers
 
 		response = flask.jsonify( retDict )
 		response.status_code = 200

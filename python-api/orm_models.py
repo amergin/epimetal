@@ -1,6 +1,5 @@
-from mongoengine import Document, DynamicDocument
-from mongoengine.fields import StringField, ListField, DictField
-# notice that this needs to be kept in sync with server.py models (flask-mongoengine)
+from mongoengine import Document, DynamicDocument, CASCADE
+from mongoengine.fields import StringField, ListField, DictField, IntField, ReferenceField, GenericReferenceField
 
 class Sample(DynamicDocument):
 	dataset = StringField()
@@ -14,10 +13,29 @@ class Sample(DynamicDocument):
 		{'fields': ['dataset'] }
 	] }
 
-class Header(Document):
-	variables = DictField()
-	
+class HeaderGroup(Document):
+	name = StringField(unique=True)
+	order = IntField(required=True, unique=True)
+
+	variables = ListField(GenericReferenceField())#ReferenceField('HeaderSample', reverse_delete_rule=CASCADE))
+
 	meta = {
-	'indexes': [ 
-		{'fields': ['variables'] }
-	] }
+		'indexes': [
+			{'fields': ['order'], 'unique': True },
+			{'fields': ['name'], 'unique': True }
+		]
+	}
+
+class HeaderSample(Document):
+	group = ReferenceField('HeaderGroup', required=True, reverse_delete_rule=CASCADE)
+	name = StringField(unique=True, required=True)
+	unit = StringField()
+	desc = StringField()
+
+	meta = {
+	'indexes': [
+		{'fields': ['group', 'name', 'unit', 'desc'] },
+		{'fields': ['name'], 'unique': True }
+		]
+	}
+
