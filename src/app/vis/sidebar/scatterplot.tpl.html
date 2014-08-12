@@ -1,7 +1,7 @@
 <div class="well-small well">
 	<h4>New scatter plot</h4>
 	<form class="form-horizontal" role="form" name="plot" novalidate>
-		<fieldset>
+		<fieldset ng-disabled="!canEdit()">
 			<div class="form-group">
 				<label class="col-sm-4 control-label" for="xcoord-scatter">X coordinate</label>
 				<div class="col-sm-8">
@@ -12,43 +12,46 @@
 					data-placeholder=" "
 					ng-model="selection.x"
 					ng-options="o.name as o.name group by o.group.name for o in menuVariables | orderBy:['group.order','name_order']"
-					required ng-disabled="!canEdit()"
+					required
+					ng-disabled="!canEdit()"
 					width="'100%'">
 					<option value=""></option>
-				</select>
-				
+					</select>
+				</div>
 			</div>
-		</div>
-		<div class="form-group">
-			<label class="control-label col-sm-4" for="ycoord-scatter">Y coordinate</label>
-			<div class="col-sm-8">
-				<select
-				chosen
-				allow-single-deselect="true"
-				class="form-control" id="ycoord-scatter" 
-				data-placeholder=" "
-				ng-model="selection.y"
-				ng-options="o.name as o.name group by o.group.name for o in menuVariables | orderBy:['group.order','name_order']"
-				required ng-disabled="!canEdit()"
-				width="'100%'">
-				<option value=""></option>
-			</select>
+			<div class="form-group">
+				<label class="control-label col-sm-4" for="ycoord-scatter">Y coordinate</label>
+				<div class="col-sm-8">
+					<select
+					chosen
+					allow-single-deselect="true"
+					class="form-control" id="ycoord-scatter" 
+					data-placeholder=" "
+					ng-model="selection.y"
+					ng-options="o.name as o.name group by o.group.name for o in menuVariables | orderBy:['group.order','name_order']"
+					required
+					ng-disabled="!canEdit()"
+					width="'100%'">
+					<option value=""></option>
+					</select>
 
-		</div>
-	</div>
+				</div>
+			</div>
 
-	<div class="form-group">
-		<div class="col-sm-offset-4 col-sm-8">
-			<label>
-				<input type="checkbox" ng-model="selection.pooled" ng-disabled="!canEdit()"> Pool datasets
-			</label>
-		</div>
-	</div>
-	<div class="form-group">
-		<div class="col-sm-offset-4 col-sm-8">
-			<button type="submit" class="btn btn-primary" ng-disabled="!canSubmit()" ng-click="add(selection)">Add plot</button>
-		</div>
-	</div>
-</fieldset>
-</form>
+			<div class="form-group">
+				<div class="col-sm-offset-4 col-sm-8">
+			      <div class="checkbox">
+			        <label>
+			          <input type="checkbox" ng-model="selection.pooled"><strong>Pool datasets</strong>
+			        </label>
+			      </div>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-4 col-sm-8">
+					<button type="submit" class="btn btn-primary" ng-disabled="!canSubmit()" ng-click="add(selection)">Add plot</button>
+				</div>
+			</div>
+		</fieldset>
+	</form>
 </div>

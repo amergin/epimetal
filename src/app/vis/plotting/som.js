@@ -24,7 +24,6 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
     };
 
     $scope.sort = function(d) {
-      console.log("d=", d);
       d3.selectAll($scope.element).selectAll('.hexagon')
       .sort(function (a, b) {            
         // a is not the element, send "a" to the back

@@ -31,7 +31,7 @@
 	<div class="panel panel-default">
 		<div class="panel-heading" ng-switch="som.state">
 			<h3 class="panel-title" ng-switch-when="ready">Computed SOM #{{$index+1}}
-				<button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="close(som.id)">&times;</button>
+				<button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="close(som.id, som.som)">&times;</button>
 				<span class="label label-default" title="{{som.variables.length}} variables in {{som.datasets.length}} dataset(s)">{{som.variables.length}} variables</span>
 			</h3>
 			<h3 class="panel-title" ng-switch-when="loading">Loading SOM #{{$index+1}}

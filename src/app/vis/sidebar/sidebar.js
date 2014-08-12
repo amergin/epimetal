@@ -188,7 +188,7 @@ vis.controller('SOMFormController',
       return $scope.canEdit() && !_.isEmpty($scope.selection.x) && ($scope.selection.x.length >= 3) && _.isEmpty( _.keys( $scope.SOMs ) );
     };
 
-    $scope.close = function(somId) {
+    $scope.close = function(catalogId, somId) {
       var planes = DatasetFactory.getPlaneBySOM(somId);
       _.each( planes, function(plane) {
         var id = WindowService.getId('id', plane.id);
@@ -196,7 +196,7 @@ vis.controller('SOMFormController',
       });
       // delete url entry for the menu
       UrlHandler.removeWindow('som', somId);
-      delete $scope.SOMs[somId];
+      delete $scope.SOMs[catalogId];
     };
 
     $scope.canSubmitPlane = function(som) {
