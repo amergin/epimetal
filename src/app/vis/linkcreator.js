@@ -5,12 +5,11 @@ mod.directive('linkCreator', ['$templateCache', '$compile', '$rootScope', '$inje
     return {
       restrict: 'C',
       scope: true,
-      // replace: false,
+      replace: true,
       controller: 'LinkCreatorController',
       template: function(tElem, tAttrs) {
         var button = $templateCache.get('vis/linkcreator.btn.tpl.html');
         var btnEl = angular.element(button);
-        btnEl.attr('popover', $templateCache.get('vis/linkcreator.tpl.html'));
         return btnEl[0].outerHTML;
       }
     };

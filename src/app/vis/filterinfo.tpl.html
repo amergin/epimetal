@@ -1,0 +1,80 @@
+<div class="popover" id="filter-info" tabindex="-1" ng-show="content">
+	<div class="arrow"></div>
+	<h3 class="popover-title" ng-bind-html="title" ng-show="title"></h3>
+	<div class="popover-content">
+	    <table class="table table-striped table-condensed" ng-show="filters.length > 0">
+	      <thead>
+	        <tr>
+	          <th class="col-sm-9">Filter</th>
+	          <th class="col-sm-3">Delete</th>
+	        </tr>
+	      </thead>
+	      <tbody>
+	        <tr ng-repeat="filter in filters" class="am-fade-and-slide-top">
+	          <td  class="col-sm-9" ng-switch="filter.payload.type">
+					<span ng-switch-when="som">
+						SOM Cell <strong>({{filter.payload.coord.x}},{{filter.payload.coord.y}})</strong>  on plane 
+						<strong> {{filter.payload.var}}</strong>
+					</span>
+					<span ng-switch-when="range">
+						{{formatNumber(filter.payload.filter[0])}}
+						<span class="spaced">&lt;</span>
+						<strong>{{filter.payload.var}}</strong>
+						<span class="spaced">&lt;</span>
+						{{formatNumber(filter.payload.filter[1])}}
+					</span>
+					<span ng-switch-default>
+						(No information)
+					</span>
+	          </td>
+	          <td class="col-sm-3 text-center ctrl" ng-click="close(filter, true)">
+	          		<i class="fa fa-lg fa-times-circle text-danger"></i>
+	          </td>
+	        </tr>
+	      </tbody>
+	      <tfoot>
+	      	<tr>
+	      		<td></td>
+	      		<td class="text-center ctrl" ng-click="reset()">Delete all</td>
+	      	</tr>
+	      </tfoot>
+	    </table>
+	    <div ng-show="!filters.length">
+	    	<div class="container-fluid">
+	    		<p class="text-info">No active filters.</p>
+	    	</div>
+	    </div>
+
+<!-- 		<div class="container-fluid">
+			<div class="row" ng-repeat="filter in filters">
+				<div class="col-sm-10" ng-switch="filter.payload.type">
+					<span ng-switch-when="som">
+						SOM Cell <strong>({{filter.payload.coord.x}},{{filter.payload.coord.y}})</strong>  on plane {{filter.payload.var}}
+					</span>
+					<span ng-switch-when="range">
+						{{formatNumber(filter.payload.filter[0])}}
+						<span class="spaced">&lt;</span>
+						<strong>{{filter.payload.var}}</strong>
+						<span class="spaced">&lt;</span>
+						{{formatNumber(filter.payload.filter[1])}}
+					</span>
+					<span ng-switch-default>
+					</span>
+
+				</div>
+				<div class="col-sm-2">
+					<i class="fa fa-times-circle"></i>
+				</div>
+
+			</div>
+			<div ng-show="!filters.length">
+				<div class="row">
+					<div class="col-sm-12">(No active filters)</div>
+				</div>
+			</div>
+
+		</div> -->
+	</div>
+</div>
+
+

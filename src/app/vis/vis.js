@@ -24,7 +24,8 @@
   'plotter.vis.sidebar',
   'plotter.vis.plotting',
   'services.urlhandler',
-  'plotter.vis.linkcreator'
+  'plotter.vis.linkcreator',
+  'plotter.vis.filterinfo'
   ] );
 
 /**

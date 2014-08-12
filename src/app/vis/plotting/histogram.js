@@ -3,6 +3,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
   function HistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants) {
 
     $scope.dimension = DimensionService.getDimension($scope.window.variables);
+    $scope.prevFilter = null;
 
     $scope.$onRootScope('histogram.redraw', function(event, dset, action) {
       $scope.computeExtent();
@@ -114,9 +115,17 @@ visu.directive('histogram', ['constants', '$timeout',
           $timeout( function() {
             if (_.isNull(filter) || _.isNull(chart.filter())) {
               $scope.window.showResetBtn = false;
+              $rootScope.$emit('dc.histogram.filter', {'action': 'removed', 
+                'payload': { 'type': 'range', 'dimension': $scope.dimension, 
+                'chart': $scope.histogram, 'filter':  $scope.prevFilter, 'var': $scope.window.variables.x } });
+              $scope.prevFilter = null;
             }
             else {
               $scope.window.showResetBtn = true;
+              $rootScope.$emit('dc.histogram.filter', {'action': 'added', 
+                'payload': { 'type': 'range', 'dimension': $scope.dimension, 
+                'chart': $scope.histogram, 'filter':  filter, 'var': $scope.window.variables.x } });
+              $scope.prevFilter = filter;
             }
             $rootScope.$emit('scatterplot.redrawAll');
             $rootScope.$emit('heatmap.redraw');

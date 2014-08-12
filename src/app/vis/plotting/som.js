@@ -11,7 +11,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
     $scope.headerText = ['Self-organizing map of', $scope.window.variable, "(P = " + pvalFormat($scope.window.plane.pvalue) + ")"];
 
     $scope.window.showResetBtn = false;
-    $scope.dimension = DimensionService.getSOMDimension( $scope.window.som_id );
+    $scope.dimension = DimensionService.getSOMDimension( $scope.window.som_id, $scope.window.variable );
 
     $scope.ownFilters = DimensionService.getSOMFilters($scope.window.som_id);
 

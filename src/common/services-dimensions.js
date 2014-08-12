@@ -7,6 +7,9 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
     // dimensions created in this tool
     var dimensions = {};
 
+    // not internal record keeping, only for display purposes
+    var dispFilters = [];
+
     // keep a record of added vars so dummy work is avoided
     var usedVariables = {};
 
@@ -57,7 +60,7 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
       return dimensions['_dataset'];
     };
 
-    this.getSOMDimension = function(somId) {
+    this.getSOMDimension = function(somId, variable) {
       var somKey = "som" + somId;
       if( _.isUndefined( dimensions[somKey] ) ) {
 
@@ -68,6 +71,7 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
         dimensions[somKey] = {
           count: 1,
           filters: [],
+          variable: variable,
           dimension: crossfilterInst.dimension( function(d) { 
             if( _.isUndefined( d['bmus'][somId] ) ) {
               return {
@@ -126,17 +130,37 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
     };
 
     this.addSOMFilter = function(somId, coord) {
+      function updateDispFilter(coord, somId, somKey) {
+        dispFilters.push({'action': 'added', 
+          'payload': { 'type': 'som', 'coord': coord, 'var': dimensions[somKey].variable, 'id': somId }});
+      }
       var somKey = "som" + somId;
       dimensions[somKey].filters.push( coord );
+
+      updateDispFilter(coord, somId, somKey);
+
       _applySOMFilter(somKey);
     };
 
     this.removeSOMFilter = function(somId, coord) {
+      function updateDispFilter(coord, somId, somKey) {
+        var vari = dimensions[somKey].variable;
+        var ind = Utils.indexOf( dispFilters, function(f,i) { 
+          return _.isEqual(f.payload, {'type': 'som', 'id': somId, 'coord': coord, 'var': vari });
+        });
+        if( ind != -1 ) {
+          dispFilters.splice(ind,1);
+        }
+      }
+
       var somKey = "som" + somId;
-      var result = _.reject( dimensions[somKey].filters, function(f) {
+      var ind = Utils.indexOf( dimensions[somKey].filters, function(f,i) { 
         return (f.x == coord.x) && (f.y == coord.y);
       });
-      angular.copy(result, dimensions[somKey].filters);
+      dimensions[somKey].filters.splice(ind,1);
+
+      updateDispFilter(coord, somId, somKey);
+
       _applySOMFilter(somKey);
     };
 
@@ -213,6 +237,9 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
 
         if( dimensions[variable].count === 0 ) {
           if( !_.isUndefined(dimensions[variable].filters) ) {
+            _.each( angular.copy(dimensions[variable].filters), function(coord) {
+              that.removeSOMFilter(variable.replace(/som/, ''), coord);
+            });
             dimensions[variable].dimension.filterAll();
           }
           dimensions[variable].dimension.dispose();
@@ -389,8 +416,6 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
           return set.getName() === dsetName; 
         });
       });
-
-      //dc.redrawAll();
     };
 
     this.deleteDimension = function(variable) {
@@ -414,11 +439,23 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
       return dimensions;
     };
 
-    // this.getActiveVariables = function() {
-    //   // ensure xy-dimensions are split to two variables on return
-    //   var flat = _.flatten( _.map( dimensions, function(value,key) { return key.split("|"); } ) );
-    //   return _.without( flat, '_dataset', '_samples' );
-    // };
+    this.getFilters = function() {
+      return dispFilters;
+    };
+
+    // if histogram is filtered, display/remove the filter in the display array
+    $rootScope.$on('dc.histogram.filter', function(eve, info) {
+
+        // could also be moved from one range to another
+        var ind = Utils.indexOf( dispFilters, function(f,i) { 
+          return _.isEqual( f.payload.dimension, info.payload.dimension );
+        });
+        if( ind != -1 ) {
+          dispFilters.splice(ind,1);
+        }
+
+        if( info.action !== 'removed' ) { dispFilters.push(info); }
+    });
 
 
   // HELPER FUNCTIONS

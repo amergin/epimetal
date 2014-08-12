@@ -98,3 +98,21 @@ RegExp.prototype.execAll = function(string) {
   }
   return matches;
 };
+
+if (typeof String.prototype.startsWith != 'function') {
+  String.prototype.startsWith = function (str){
+    return this.slice(0, str.length) === str;
+  };
+}
+
+Utils.indexOf = function(arr, equalityFn) {
+  var ind = -1;
+  var found = _.some(arr, function(f,i) {
+    if( equalityFn(f,i) ) { 
+      ind = i;
+      return true;
+    }
+    return false;
+  });
+  return ind;
+};
