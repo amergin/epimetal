@@ -1,14 +1,17 @@
 var dimMod = angular.module('services.dimensions', ['services.dataset']);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
-  function ($injector, constants, DatasetFactory) {
+dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', '$rootScope',
+  function ($injector, constants, DatasetFactory, $rootScope) {
 
     // dimensions created in this tool
     var dimensions = {};
 
-    // not internal record keeping, only for display purposes
+    // for displaying active filters
     var dispFilters = [];
+
+    // for displaying active sample count
+    var dispSamples = {};
 
     // keep a record of added vars so dummy work is avoided
     var usedVariables = {};
@@ -107,21 +110,22 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
 
     var _applySOMFilter = function(somKey) {
       if( _checkSOMFilterEmpty(somKey) ) {
-        return;
+        // pass
       }
+      else {
+        dimensions[somKey].dimension.filterFunction( function(d) {
 
-      dimensions[somKey].dimension.filterFunction( function(d) {
-
-        if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
-          // sample is not in the dataset included in the SOM computation,
-          // therefore do NOT filter it out
-          return true;
-        }
-        return _.any( dimensions[somKey].filters, function(f) {
-          return (f.x === d.x) && (f.y === d.y); 
+          if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
+            // sample is not in the dataset included in the SOM computation,
+            // therefore do NOT filter it out
+            return true;
+          }
+          return _.any( dimensions[somKey].filters, function(f) {
+            return (f.x === d.x) && (f.y === d.y); 
+          });
         });
-      });
-      // }
+      }
+      $rootScope.$emit('dimension:SOMFilter');
     };
 
     this.getSOMFilters = function(somId) {
@@ -177,6 +181,31 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
       return dimensions['_samples'].dimension;
     };
 
+    this.getSampleInfo = function() {
+      _updateSampleInfo();
+      return dispSamples;
+
+    };
+
+    var _updateSampleInfo = function() {
+      angular.copy( {
+        'active': crossfilterInst.groupAll().value()
+      }, 
+      dispSamples);
+    };
+
+    $rootScope.$on('dc.histogram.filter', function() {
+      _updateSampleInfo();
+    });
+
+    $rootScope.$on('dimension:dataset', function() {
+      _updateSampleInfo();
+    });
+
+    $rootScope.$on('dimension:SOMFilter', function() {
+      _updateSampleInfo();
+    });
+
     // call this to get combined dimension for x-y scatterplots
     this.getXYDimension = function (selection) {
       var varComb = selection.x + "|" + selection.y;
@@ -212,7 +241,6 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
       return _dim;
     };
 
-    var $rootScope = $injector.get('$rootScope');
     $rootScope.$on('variable:remove', function(event, type, selection) {
       _.each( Utils.getVariables(type,selection, true), function(variable) {
         // heatmaps don't have a dimension
@@ -401,11 +429,10 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
         crossfilterInst.remove();
         crossfilterInst.add(_.values(currSamples));
       }
-      // redraw
-      //dc.redrawAll();
     };
 
     this.updateDatasetDimension = function () {
+
       if( _.isUndefined( dimensions['_dataset'] ) ) { return; }
 
       var DatasetFactory = $injector.get('DatasetFactory');
@@ -416,6 +443,7 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
           return set.getName() === dsetName; 
         });
       });
+      $rootScope.$emit('dimension:dataset');
     };
 
     this.deleteDimension = function(variable) {
@@ -456,6 +484,10 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory',
 
         if( info.action !== 'removed' ) { dispFilters.push(info); }
     });
+
+
+    // start by initializing crossfilter
+    that.rebuildInstance();
 
 
   // HELPER FUNCTIONS

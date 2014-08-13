@@ -1,7 +1,7 @@
 var serv = angular.module('services.dataset', ['services.notify']);
 
-serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
-  function($http, $q, $injector, constants) {
+serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootScope',
+  function($http, $q, $injector, constants, $rootScope) {
 
     // privates
     var that = this;
@@ -478,7 +478,6 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants',
         undefined);
     };
 
-    var $rootScope = $injector.get('$rootScope');
     $rootScope.$on('variable:add', function(event, type, selection) {
       _.each(Utils.getVariables(type, selection), function(variable) {
         service._addActiveVariable(variable);

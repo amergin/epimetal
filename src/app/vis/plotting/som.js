@@ -29,8 +29,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         // a is not the element, send "a" to the back
         if( (a.i !== d.x ) || (a.j !== d.y) ) { return -1; }
         // element found, bring to front
-        else {
-          return 1; }
+        else { return 1; }
       });
     };
 
