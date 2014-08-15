@@ -98,11 +98,6 @@
 
           }
 
-          $timeout( function() {
-            $rootScope.$emit('packery.added', element);
-          });
-
-
         }
         function _layout() {
           // I wanted to make this dynamic but ran into huuuge memory leaks
@@ -141,6 +136,20 @@
         $element.packery();
         $scope.$emit('packery.reloaded');
       };
+
+      // watch packery to come defined
+      var unregisterWatch = $scope.$watch('$element.packery', function() {
+        $element.packery('on', 'layoutComplete', function( pckryInstance, laidOutItems ) {
+          angular.forEach( laidOutItems, function(item) {
+            $rootScope.$emit('packery.added', item.element);
+          });
+        });
+        unregisterWatch();
+      });
+
+
+
+
     }
   ]).directive('packery', function packeryDirective() {
     return {
@@ -201,15 +210,20 @@
             index = scope.$index;
           });
         },
-        post: function postLink(scope, element, attrs, ctrl) {
-          $timeout( function() {
-            var el = angular.element('<div/>')
-            .addClass(scope.window.type)
-            .addClass('figure');
-            element.append(el);
-            $compile(el)(scope);
+        post: function postLink($scope, element, attrs, ctrl) {
+          $rootScope.$on('packery.added', function(eve, winElement) {
+            if( winElement !== element[0] || $scope.rendered ) { return; }
+            $scope.rendered = true;
 
-          }, 650);
+            $timeout( function() {
+              var el = angular.element('<div/>')
+              .addClass($scope.window.type)
+              .addClass('figure');
+              element.append(el);
+              $compile(el)($scope);
+            });
+
+          });
         }
       }
     };

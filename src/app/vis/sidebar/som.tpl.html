@@ -6,7 +6,7 @@
 				<label class="col-sm-4 control-label" for="vars-som">Input variables</label>
 				<div class="col-sm-8">
 					<small class="pull-right" ng-show="selection.x"><a href="" ng-click="clear()">Clear selection</a></small>
-					<select
+					<select 
 					chosen
 					multiple
 					class="form-control" id="vars-som"
@@ -27,7 +27,7 @@
 	</fieldset>
 </form>
 
-<div ng-repeat="som in SOMs" class="am-fade-and-slide-top" ng-animate="{ show: 'am-fade-and-slide-top', hide: 'am-fade-and-slide-top' }">
+<div ng-repeat="som in SOMs" class="am-fade-and-slide-top">
 	<div class="panel panel-default">
 		<div class="panel-heading" ng-switch="som.state">
 			<h3 class="panel-title" ng-switch-when="ready">Computed SOM
@@ -35,52 +35,68 @@
 				<span class="label label-default" title="{{som.variables.length}} variables in {{som.datasets.length}} dataset(s)">{{som.variables.length}} variables</span>
 			</h3>
 			<h3 class="panel-title" ng-switch-when="loading">Loading SOM
-				<span class="fa fa-spinner fa-spin pull-right"></i>
-				</h3>
-			</div>
-			<div class="panel-body am-fade-and-slide-top" ng-show=" som.state == 'ready' " ng-animate="{ show: 'am-fade-and-slide-top', hide: 'am-fade-and-slide-top' }">
+				<span class="fa fa-spinner fa-spin pull-right"></span>
+			</h3>
+		</div>
+		<div class="panel-body am-fade-and-slide-top" ng-show=" som.state == 'ready' ">
 
-				<form class="form-horizontal" role="form">
-					<fieldset>
-						<div class="form-group">
-							<label class="col-sm-4 control-label">Input variables</label>
-							<span class="col-sm-8 control-label">
-								{{som.variables.join(", ")}}
-							</span>
-						</div>
-						<div class="form-group">
-							<label class="col-sm-4 control-label">Datasets</label>
-							<span class="col-sm-8 control-label">
-								<span ng-repeat="set in som.datasets">
-									<span class="label" ng-style="{ 'background-color': set.getColor() }">{{set.getName()}}</span>
-									{{$last ? '' : ', '}}
-								</span>
-							</span>
-						</div>
-						<div class="form-group">
-							<label for="tinput" class="col-sm-4 control-label">Test variable</label>
-							<div class="col-sm-offset-4 col-sm-8">
-								<select
-								chosen
-								class="form-control" id="tinput" 
-								allow-single-deselect="true"
-								data-placeholder=" "
-								ng-model="som.tinput"
-								ng-options="o.name as o.name group by o.group.name for o in menuVariables | orderBy:['group.order','name_order']"
-								width="'100%'"
-								required>
-								<option value=""></option>
-								</select>
-						</div>
+			<form class="form-horizontal" role="form">
+				<fieldset>
+					<div class="form-group">
+						<label class="col-sm-4 control-label">Input variables</label>
+						<span class="col-sm-8 control-label">
+							{{som.variables.join(", ")}}
+						</span>
 					</div>
 					<div class="form-group">
-						<div class="col-sm-offset-4 col-sm-8">
-							<button type="submit" class="btn btn-primary" ng-disabled="!canSubmitPlane(som)" ng-click="addPlane(som)">Compute Plane</button>
-						</div>
+						<label class="col-sm-4 control-label">Datasets</label>
+						<span class="col-sm-8 control-label">
+							<span ng-repeat="set in som.datasets">
+								<span class="label" ng-style="{ 'background-color': set.getColor() }">{{set.getName()}}</span>
+								{{$last ? '' : ', '}}
+							</span>
+						</span>
 					</div>
-				</fieldset>
-			</form>
-		</div>
+					<div class="form-group">
+						<label for="tinput" class="col-sm-4 control-label">Test variable</label>
+						<div class="col-sm-offset-4 col-sm-8">
+							<select
+							chosen
+							class="form-control" id="tinput" 
+							allow-single-deselect="true"
+							data-placeholder=" "
+							ng-model="som.tinput"
+							ng-options="o.name as o.name group by o.group.name for o in menuVariables | orderBy:['group.order','name_order']"
+							width="'100%'"
+							required>
+							<option value=""></option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-offset-4 col-sm-8">
+						<button type="submit" class="btn btn-primary" ng-disabled="!canSubmitPlane(som)" ng-click="addPlane(som)">Compute Plane</button>
+					</div>
+				</div>
+			</fieldset>
+		</form>
+
+	<div class="panel panel-default am-fade-and-slide-top" ng-repeat="(planeid, plane) in SOMs[som.id].planes">
+	  <div class="panel-heading" ng-switch="plane.state">
+		<h3 class="panel-title" ng-switch-when="loading">Loading plane <strong>{{plane.variable}}</strong>
+			<span class="fa fa-spinner fa-spin pull-right"></span>
+		</h3>
+	  </div>
 	</div>
+
+
+	</div>
+
+
+
+
+
 </div>
 </div>
+</div>
+

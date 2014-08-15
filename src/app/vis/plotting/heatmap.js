@@ -10,6 +10,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
     $scope.headerText = ['Correlation heatmap of', $scope.window.variables.x.length + " variables", ''];
     $scope.window.showResetBtn = false;
     $scope.format = d3.format('.2g');
+    $scope.filtered = true; // p-value limiting
 
     // .html('Hide correlations with p > {{limitDisp}}');
 
@@ -95,12 +96,12 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
             "Correlation:  " + 
             constants.tickFormat(d.value) + "\n" + 
             "P-value:   " + 
-            ( _(d.key.pvalue).isNaN() ? "(not available)" : $scope.format(d.key.pvalue) );
+            ( _(d.key.pvalue).isNaN() || _(d.key.pvalue).isUndefined() ? "(not available)" : $scope.format(d.key.pvalue) );
         })
         .colorAccessor(function(d) {
           if($scope.filtered) {
             if( !_.isUndefined(d.key.pvalue) && d.key.pvalue > $scope.limit ) {
-              return NaN;
+              return 0;
             }
           }
           return d.value;
@@ -220,20 +221,18 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
     $scope.computeVariables();
 
     $scope.settingsDropdown.push({
-      'text': '<i class="fa fa-sliders"></i> Hide correlations with p > <b>' + $scope.limitDisp + '</b>',
+      'text': '<i class="fa fa-sliders"></i> Show correlations with p > <b>' + $scope.limitDisp + '</b>',
       'click': "filter()"
     });
 
     $scope.$watch('filtered', function(filt) {
       var entry = _.last($scope.settingsDropdown).text;
       if(filt) { 
-        $scope.headerText[2] = '(p-limited)';
+        $scope.headerText[2] = '(p < ' + $scope.limitDisp + ')';
         _.last($scope.settingsDropdown).text = entry.replace(/Hide/, 'Show');
-        // _.last($scope.settingsDropdown).text.replace(/Hide/, 'Show');
       } else {
         $scope.headerText[2] = '';
         _.last($scope.settingsDropdown).text = entry.replace(/Show/, 'Hide');
-        // _.last($scope.settingsDropdown).text = _.last($scope.settingsDropdown).text.replace(/Show/, 'Hide');
       }
     });
 

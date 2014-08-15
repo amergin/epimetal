@@ -205,15 +205,25 @@ vis.controller('SOMFormController',
 
     $scope.addPlane = function(som) {
 
+      var planeId = _.uniqueId('plane');
+
+      $scope.SOMs[som.id].planes[planeId] = {
+        state: 'loading',
+        variable: som.tinput
+      };
+
       NotifyService.addTransient('Plane computation started', 'Please be patient, as the computation may take several minutes.', 'info');
       DatasetFactory.getPlane(som).then( 
         function succFn(res) {
 
-          $scope.SOMs[som.id].state = 'ready';
-          $scope.SOMs[som.id].planes[res.id] = {
-            id: res.id,
-            plane: res.plane
-          };
+          delete $scope.SOMs[som.id].planes[planeId];
+          // $scope.SOMs[som.id].state = 'ready';
+          // $scope.SOMs[som.id].planes[res.id].state = 'ready';
+          // angular.extend( $scope.SOMs[som.id].planes[res.id], {
+          //   id: res.id,
+          //   plane: res.plane
+          // });
+
           NotifyService.addTransient('SOM plane ready', 'The submitted SOM plane computation is ready', 'success');
           var PlotService = $injector.get('PlotService');
 

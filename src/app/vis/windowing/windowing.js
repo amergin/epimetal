@@ -8,6 +8,8 @@ win.controller('WinController', ['$scope', 'WindowService', 'constants', 'Datase
     WindowService.remove(id);
   };
 
+$scope.rendered = false;
+
 $scope.exportSVG = function(win) {
   var svg = $scope.element.find('svg')[0].cloneNode(true);
   setNameSpaceOnEl(svg);
