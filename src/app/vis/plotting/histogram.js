@@ -133,7 +133,7 @@ visu.directive('histogram', ['constants', '$timeout',
         })
         .renderlet( function(chart) {
           if( config.pooled ) {
-            d3.selectAll( $($scope.element).find('rect.bar:not(.deselected)') )
+            d3.selectAll( $(config.element).find('rect.bar:not(.deselected)') )
             .attr("class", 'bar pooled')
             .attr("fill", _poolingColor);
           }
