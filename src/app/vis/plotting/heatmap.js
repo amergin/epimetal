@@ -7,8 +7,11 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       dc.redrawAll(constants.groups.heatmap);
     };
 
-    $scope.headerText = ['Heat map of', $scope.window.variables.x.length + " variables", ''];
+    $scope.headerText = ['Correlation heatmap of', $scope.window.variables.x.length + " variables", ''];
     $scope.window.showResetBtn = false;
+    $scope.format = d3.format('.2g');
+
+    // .html('Hide correlations with p > {{limitDisp}}');
 
     // create anchor for heatmap
     // $scope.heatmapAnchor = d3.select($scope.element[0])
@@ -23,8 +26,8 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
     $scope.width = 420;
     $scope.height = 350;
     $scope.margins = {
-      top: 10,
-      right: 10,
+      top: 0,
+      right: 0,
       bottom: 60,
       left: 80
     };
@@ -79,19 +82,27 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         .xBorderRadius(0)
         .yBorderRadius(0)
         .keyAccessor(function(d) {
-          return d.key[0];
+          return d.key.x;
         })
         .valueAccessor(function(d) {
-          return d.key[1];
+          return d.key.y;
         })
         .title(function(d) {
           return "Horizontal variable:  " +
-            d.key[0] + "\n" +
+            d.key.x + "\n" +
             "Vertical variable:  " +
-            d.key[1] + "\n" +
-            "Correlation:  " + constants.tickFormat(d.value);
+            d.key.y + "\n" +
+            "Correlation:  " + 
+            constants.tickFormat(d.value) + "\n" + 
+            "P-value:   " + 
+            ( _(d.key.pvalue).isNaN() ? "(not available)" : $scope.format(d.key.pvalue) );
         })
         .colorAccessor(function(d) {
+          if($scope.filtered) {
+            if( !_.isUndefined(d.key.pvalue) && d.key.pvalue > $scope.limit ) {
+              return NaN;
+            }
+          }
           return d.value;
         })
         .colors(colorScale)
@@ -121,8 +132,8 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
           $timeout( function() {
             $injector.get('PlotService').drawScatter({
               variables: {
-                x: cell.key[0],
-                y: cell.key[1]
+                x: cell.key.x,
+                y: cell.key.y
               }
             });
           });
@@ -147,7 +158,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
 
       $scope.sampDimension = DimensionService.getSampleDimension();
-      $scope.samples = $scope.sampDimension.top(Infinity);
+      var samples = $scope.sampDimension.top(Infinity);
 
       var variables = $scope.window.variables.x;
       var correlations = {};
@@ -165,31 +176,41 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
             coordinates.push({
               x: varA,
               y: varB,
-              corr: correlations[[varB, varA]]
+              corr: correlations[[varB, varA]]['corr'],
+              pvalue: correlations[[varB, varA]]['pvalue']
             });
             return;
           } else {
             // compute mean and st. deviation for varA & varB
-            var meanA = d3.mean($scope.samples, function(d) {
+            var meanA = d3.mean(samples, function(d) {
               return +d.variables[varA];
             });
-            var stdA = Utils.stDeviation($scope.samples, meanA, varA);
-            var meanB = d3.mean($scope.samples, function(d) {
+            var stdA = Utils.stDeviation(samples, meanA, varA);
+            var meanB = d3.mean(samples, function(d) {
               return +d.variables[varB];
             });
-            var stdB = Utils.stDeviation($scope.samples, meanB, varB);
+            var stdB = Utils.stDeviation(samples, meanB, varB);
             // compute correlation
-            coord['corr'] = Utils.sampleCorrelation($scope.samples, varA, meanA, stdA, varB, meanB, stdB);
-            correlations[[varA, varB]] = coord['corr'];
+            coord['corr'] = Utils.sampleCorrelation(samples, varA, meanA, stdA, varB, meanB, stdB);
+            // compute p-value
+            coord['pvalue'] = Utils.calcPForPearsonR( coord['corr'], samples.length);
+            correlations[[varA, varB]] = coord;//coord['corr'];
           }
           coordinates.push(coord);
         });
       });
 
+      // compute Bonferroni correction
+      var bonferroni = 0.5 * variables.length * (variables.length - 1);
+      $scope.limit = 0.05 / bonferroni;
+      $scope.limitDisp = $scope.format($scope.limit);
+
       // create a tiny crossfilt. instance for heatmap
       $scope.crossfilter = crossfilter(coordinates);
       $scope.coordDim = $scope.crossfilter.dimension(function(d) {
-        return [d.x, d.y];
+        return _.extend(d, { 'valueOf': function() { return d.x + "|" + d.y; } });
+        // console.log(d);
+        // return [d.x, d.y];
       });
       $scope.coordGroup = $scope.coordDim.group().reduceSum(function(d) {
         return d.corr;
@@ -197,11 +218,26 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
     };
 
     $scope.computeVariables();
-    // $scope.drawHeatmap($scope.heatmapAnchor, $scope.coordDim, $scope.coordGroup, $scope.margins, $scope.width, $scope.height);
 
+    $scope.settingsDropdown.push({
+      'text': '<i class="fa fa-sliders"></i> Hide correlations with p > <b>' + $scope.limitDisp + '</b>',
+      'click': "filter()"
+    });
+
+    $scope.$watch('filtered', function(filt) {
+      var entry = _.last($scope.settingsDropdown).text;
+      if(filt) { 
+        $scope.headerText[2] = '(p-limited)';
+        _.last($scope.settingsDropdown).text = entry.replace(/Hide/, 'Show');
+        // _.last($scope.settingsDropdown).text.replace(/Hide/, 'Show');
+      } else {
+        $scope.headerText[2] = '';
+        _.last($scope.settingsDropdown).text = entry.replace(/Show/, 'Hide');
+        // _.last($scope.settingsDropdown).text = _.last($scope.settingsDropdown).text.replace(/Show/, 'Hide');
+      }
+    });
 
     $scope.$onRootScope('heatmap.redraw', function(event, dset, action) {
-
       $scope.computeVariables();
 
       // update the chart and redraw
@@ -211,18 +247,21 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       // remember to clear any filters that may have been applied
       $scope.heatmap.filterAll();
       $scope.heatmap.render();
-
     });
 
+    $scope.filter = function() {
+      $scope.filtered = !$scope.filtered;
+      $scope.heatmap.render();
+    };
 
   }
 ]);
 
 
 
-visu.directive('heatmap', [
+visu.directive('heatmap', ['$compile',
 
-  function() {
+  function($compile) {
 
     var linkFn = function($scope, ele, iAttrs) {
 

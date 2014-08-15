@@ -26,6 +26,14 @@ mod.controller('FilterInfoController', ['$scope', '$templateCache', 'DimensionSe
       return numFormat(num);
     };
 
+    $scope.filterOrder = function(filt) {
+      if(filt.payload.type === 'som') {
+        return "som(" + filt.payload.coord.x + "," + filt.payload.coord.y + ")";
+      } else if(filt.payload.type === 'range') {
+        return "range" + filt.payload.var;
+      }
+    };
+
     var _redraw = function() {
       $rootScope.$emit('scatterplot.redrawAll');
       $rootScope.$emit('histogram.redraw');

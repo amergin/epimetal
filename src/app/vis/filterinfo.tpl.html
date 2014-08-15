@@ -10,11 +10,10 @@
 	        </tr>
 	      </thead>
 	      <tbody>
-	        <tr ng-repeat="filter in filters" class="am-fade-and-slide-top">
+	        <tr ng-repeat="filter in filters | orderBy:filterOrder" class="am-fade-and-slide-top">
 	          <td  class="col-sm-9" ng-switch="filter.payload.type">
 					<span ng-switch-when="som">
-						SOM Cell <strong>({{filter.payload.coord.x}},{{filter.payload.coord.y}})</strong>  on plane 
-						<strong> {{filter.payload.var}}</strong>
+						SOM Cell <strong>({{filter.payload.coord.x}},{{filter.payload.coord.y}})</strong>
 					</span>
 					<span ng-switch-when="range">
 						{{formatNumber(filter.payload.filter[0])}}
@@ -24,7 +23,7 @@
 						{{formatNumber(filter.payload.filter[1])}}
 					</span>
 					<span ng-switch-default>
-						(No information)
+						(No information of filter)
 					</span>
 	          </td>
 	          <td class="col-sm-3 text-center ctrl" ng-click="close(filter, true)">

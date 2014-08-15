@@ -63,7 +63,7 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
       return dimensions['_dataset'];
     };
 
-    this.getSOMDimension = function(somId, variable) {
+    this.getSOMDimension = function(somId) {
       var somKey = "som" + somId;
       if( _.isUndefined( dimensions[somKey] ) ) {
 
@@ -74,7 +74,6 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
         dimensions[somKey] = {
           count: 1,
           filters: [],
-          variable: variable,
           dimension: crossfilterInst.dimension( function(d) { 
             if( _.isUndefined( d['bmus'][somId] ) ) {
               return {
@@ -136,7 +135,7 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
     this.addSOMFilter = function(somId, coord) {
       function updateDispFilter(coord, somId, somKey) {
         dispFilters.push({'action': 'added', 
-          'payload': { 'type': 'som', 'coord': coord, 'var': dimensions[somKey].variable, 'id': somId }});
+          'payload': { 'type': 'som', 'coord': coord, 'id': somId }});
       }
       var somKey = "som" + somId;
       dimensions[somKey].filters.push( coord );
@@ -148,9 +147,8 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
 
     this.removeSOMFilter = function(somId, coord) {
       function updateDispFilter(coord, somId, somKey) {
-        var vari = dimensions[somKey].variable;
         var ind = Utils.indexOf( dispFilters, function(f,i) { 
-          return _.isEqual(f.payload, {'type': 'som', 'id': somId, 'coord': coord, 'var': vari });
+          return _.isEqual(f.payload, {'type': 'som', 'id': somId, 'coord': coord});
         });
         if( ind != -1 ) {
           dispFilters.splice(ind,1);
@@ -194,16 +192,11 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
       dispSamples);
     };
 
-    $rootScope.$on('dc.histogram.filter', function() {
-      _updateSampleInfo();
-    });
+    var sampleUpdates = ['dc.histogram.filter', 'dimension:dataset', 
+    'dimension:SOMFilter', 'dimension:crossfilter'];
 
-    $rootScope.$on('dimension:dataset', function() {
-      _updateSampleInfo();
-    });
-
-    $rootScope.$on('dimension:SOMFilter', function() {
-      _updateSampleInfo();
+    _.each(sampleUpdates, function(name) {
+      $rootScope.$on(name, function() { _updateSampleInfo(); });
     });
 
     // call this to get combined dimension for x-y scatterplots
@@ -429,6 +422,7 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
         crossfilterInst.remove();
         crossfilterInst.add(_.values(currSamples));
       }
+      $rootScope.$emit('dimension:crossfilter');
     };
 
     this.updateDatasetDimension = function () {
