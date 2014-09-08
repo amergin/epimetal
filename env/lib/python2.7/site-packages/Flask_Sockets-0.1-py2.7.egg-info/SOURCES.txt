@@ -1,0 +1,10 @@
+README.rst
+flask_sockets.py
+setup.cfg
+setup.py
+Flask_Sockets.egg-info/PKG-INFO
+Flask_Sockets.egg-info/SOURCES.txt
+Flask_Sockets.egg-info/dependency_links.txt
+Flask_Sockets.egg-info/not-zip-safe
+Flask_Sockets.egg-info/requires.txt
+Flask_Sockets.egg-info/top_level.txt

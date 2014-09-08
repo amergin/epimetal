@@ -1,5 +1,7 @@
 import ConfigParser
 import os
+import sys
+
 
 # Handles run configuration operations
 class Config( object ):

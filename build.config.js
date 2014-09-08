@@ -82,7 +82,7 @@ module.exports = {
       'vendor/angular-chosen-localytics/chosen.js',
       'vendor/angular-ui-router/release/angular-ui-router.js',
       'vendor/angular-ui-utils/modules/route/route.js',
-      'vendor/crossfilter/crossfilter.js',
+      'vendor/crossfilter/crossfilter.custom.js',
       'vendor/d3/d3.js',
       'vendor/dcjs/dc.js',
       // utilities

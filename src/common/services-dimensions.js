@@ -36,7 +36,16 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
 
           retDimension = crossfilterInst.dimension(function (d) {
             // a little checking to make sure NaN's are not returned
-            return +d.variables[variable] || constants.nanValue;
+            // if( d.dataset === 'DATASET2' ) {
+            //   console.log("DS2", d);
+            //   console.log(d.variables[variable]);
+            // }
+            if( _(d.variables).isUndefined() ) {
+              return constants.nanValue;
+            }
+            else {
+              return +d.variables[variable] || constants.nanValue;
+            }
           });
           dimensions[variable] = {
             count: 1,
@@ -367,6 +376,11 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
       });
 
       this.rebuildInstance();
+      // Context: datasets 1&3 have samples used to plot histogram.
+      // SOM is constructed of using datasets 1&2. As a result,
+      // DSETs 1&3 should be active, DSET2 is dummy and has no samples.
+      // Update by applying datasetfilter function
+      this.updateDatasetDimension();
     };
 
     // receives new variable data
@@ -419,7 +433,10 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
         _createDatasetDimension();
       } else {
         // already defined, just need to reboot it
-        crossfilterInst.remove();
+        // Important: remove ALL samples regardless of the current filters
+        // (requires custom build of crossfilter.js, see:
+        // https://github.com/square/crossfilter/issues/109#issuecomment-45359642)
+        crossfilterInst.remove( function() { return false; } );
         crossfilterInst.add(_.values(currSamples));
       }
       $rootScope.$emit('dimension:crossfilter');
