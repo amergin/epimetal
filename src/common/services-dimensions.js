@@ -35,15 +35,11 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
           console.log("Dimension for ", variable, " created");
 
           retDimension = crossfilterInst.dimension(function (d) {
-            // a little checking to make sure NaN's are not returned
-            // if( d.dataset === 'DATASET2' ) {
-            //   console.log("DS2", d);
-            //   console.log(d.variables[variable]);
-            // }
             if( _(d.variables).isUndefined() ) {
               return constants.nanValue;
             }
             else {
+              // a little checking to make sure NaN's are not returned
               return +d.variables[variable] || constants.nanValue;
             }
           });

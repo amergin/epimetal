@@ -3,7 +3,7 @@ function colorBar() {
     var orient = "right",
         lineWidth = 40, //Function?... because that would be coooooool... not sure if it is compatible with axis.js
         size_ = 300,
-        tickFormat = d3.format(".2"),//d3.format("3e"),
+        tickFormat = d3.format(".1f"), //d3.format(".2"),//d3.format("3e"),
         color = d3.scale.linear().domain([0, 0.5, 1]).range(["blue", "green", "red"]), //v -> color
         line = d3.svg.line().interpolate("basis"),
         precision = 8,

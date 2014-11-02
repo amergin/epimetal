@@ -60,7 +60,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         var g = svg.append("g").attr("transform", "translate(10,10)").classed("colorbar", true);
         var cb = colorBar()
           .color(scale)
-          .size(height - 20)
+          .size(height - 40)
           .lineWidth(width - 30)
           .precision(4);
         g.call(cb);
@@ -263,6 +263,10 @@ visu.directive('heatmap', ['$compile',
   function($compile) {
 
     var linkFn = function($scope, ele, iAttrs) {
+
+      // if( $scope.window.size === 'double' ) {
+      //   ele.parent().addClass('window-double');
+      // }
 
       // $scope.heatmapAnchor = ele;
       $scope.heatmapAnchor = d3.select(ele[0])
