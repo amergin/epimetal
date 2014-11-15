@@ -136,7 +136,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
                 x: cell.key.x,
                 y: cell.key.y
               }
-            });
+            }, $scope.window.handler );
           });
         });
 

@@ -10,14 +10,19 @@ var vis =
     'services.urlhandler'
     ]);
 
-mod.controller('ExploreController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants', 'datasets', 'variables',
-  function ExploreController($scope, $templateCache, DimensionService, $rootScope, constants, datasets, variables) {
-    console.log("explore ctrl", datasets, variables);
+mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', 'windowHandler',
+  function ExploreController($scope, $templateCache, $rootScope, windowHandler) {
+    console.log("explore ctrl");
+
+    $scope.windowHandler = windowHandler;
+    $scope.windows  = $scope.windowHandler.get();
   }
 ]);
 
-mod.controller('ExploreMenuCtrl', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants', 'datasets', 'variables',
-  function ExploreMenuCtrl($scope, $templateCache, DimensionService, $rootScope, constants, datasets, variables) {
+mod.controller('ExploreMenuCtrl', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants', 'datasets', 'variables', 'windowHandler',
+  function ExploreMenuCtrl($scope, $templateCache, DimensionService, $rootScope, constants, datasets, variables, windowHandler) {
     console.log("menu ctrl", datasets);
+
+    $scope.windowHandler = windowHandler;
   }
 ]);

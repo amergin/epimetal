@@ -2,16 +2,20 @@ var vis =
   angular.module('plotter.vis.som', 
     [
     'plotter.vis.plotting',
-    'services.dataset',
-    'services.window',
-    'services.notify', 
-    'services.dimensions', 
-    'localytics.directives',
-    'services.urlhandler'
+    'services.dataset'
+    // 'services.window',
+    // 'services.notify', 
+    // 'services.dimensions', 
+    // 'localytics.directives',
+    // 'services.urlhandler'
     ]);
 
-mod.controller('SOMController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants',
-  function SOMController($scope, $templateCache, DimensionService, $rootScope, constants) {
-    console.log("som ctrl");
+mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootScope',
+  function SOMBottomMenuController($scope, $templateCache, $rootScope) {
+  }
+]);
+
+mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$rootScope',
+  function SOMBottomContentController($scope, $templateCache, $rootScope) {
   }
 ]);

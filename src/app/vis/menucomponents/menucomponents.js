@@ -69,7 +69,7 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
 vis.directive('scatterplotForm', function () {
   return {
     restrict: 'C',
-    scope: {}, //true,
+    scope: { handler: '=' },
     replace: true,
     controller: 'ScatterplotFormController',
     templateUrl: 'vis/menucomponents/scatterplot.tpl.html',
@@ -105,7 +105,7 @@ vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'Data
           // draw the figure
           NotifyService.closeModal();
           var PlotService = $injector.get('PlotService');
-          PlotService.drawScatter({ variables: selection, pooled: selection.pooled});
+          PlotService.drawScatter({ variables: selection, pooled: selection.pooled}, $scope.handler);
         }, function errorFn(variable) {
           NotifyService.closeModal();
 
@@ -128,7 +128,7 @@ vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'Data
 vis.directive('histogramForm', function () {
   return {
     restrict: 'C',
-    scope: true,
+    scope: { handler: '=' },
     replace: true,
     controller: 'HistogramFormController',
     templateUrl: 'vis/menucomponents/histogram.tpl.html',
@@ -142,6 +142,8 @@ vis.directive('histogramForm', function () {
 // controller for the histogram form
 vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService',
   function ($scope, $rootScope, DatasetFactory, $injector, NotifyService) {
+    // $scope.handler comes when the directive is called in a template
+
     $scope.selection = {};
 
     $scope.variables = DatasetFactory.variables();   
@@ -164,7 +166,7 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
             // draw the figure
             NotifyService.closeModal();
             var PlotService = $injector.get('PlotService');
-            PlotService.drawHistogram({variables: selection, pooled: selection.pooled });
+            PlotService.drawHistogram({variables: selection, pooled: selection.pooled }, $scope.handler);
           },
           function errorFn(variable) {
             NotifyService.closeModal();
@@ -184,8 +186,8 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
 
 // controller for the histogram form
 vis.controller('SOMFormController', 
-  ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'constants', '$timeout', 'UrlHandler', 'WindowService',
-  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, constants, $timeout, UrlHandler, WindowService) {
+  ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'constants', '$timeout', 'UrlHandler',
+  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, constants, $timeout, UrlHandler) {
     $scope.selection = {};
 
     $scope.canEdit = function () {
@@ -199,8 +201,8 @@ vis.controller('SOMFormController',
     $scope.close = function(catalogId, somId) {
       var planes = DatasetFactory.getPlaneBySOM(somId);
       _.each( planes, function(plane) {
-        var id = WindowService.getId('id', plane.id);
-        WindowService.remove(id);
+        // var id = WindowService.getId('id', plane.id);
+        // WindowService.remove(id);
       });
       // delete url entry for the menu
       UrlHandler.removeWindow('som', somId);
@@ -293,7 +295,7 @@ vis.controller('SOMFormController',
 vis.directive('somForm', function () {
   return {
     restrict: 'C',
-    scope: true,
+    scope: { handler: '=' },
     replace: true,
     controller: 'SOMFormController',
     templateUrl: 'vis/menucomponents/som.tpl.html',
@@ -332,7 +334,7 @@ vis.controller('HeatmapFormController', ['$scope', '$rootScope', 'DatasetFactory
         plottingDataPromise.then(function (res) {
           // draw the figure
           NotifyService.closeModal();
-          PlotService.drawHeatmap({variables: selection});
+          PlotService.drawHeatmap({variables: selection}, $scope.handler);
         }, function errorFn(variable) {
           NotifyService.closeModal();
           var title = 'Variable ' + variable + ' could not be loaded\n',
@@ -352,7 +354,7 @@ vis.controller('HeatmapFormController', ['$scope', '$rootScope', 'DatasetFactory
 vis.directive('heatmapForm', function () {
   return {
     restrict: 'C',
-    scope: true,
+    scope: { handler: '=' },
     replace: true,
     controller: 'HeatmapFormController',
     templateUrl: 'vis/menucomponents/heatmap.tpl.html',

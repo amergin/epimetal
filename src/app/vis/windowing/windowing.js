@@ -1,11 +1,11 @@
 var win = angular.module('plotter.vis.windowing', 
   ['services.window', 'services.dataset', 'mgcrea.ngStrap.dropdown', 'mgcrea.ngStrap.tooltip']);
 
-win.controller('WinController', ['$scope', 'WindowService', 'constants', 'DatasetFactory', '$q',
-  function($scope, WindowService, constants, DatasetFactory, $q) {
+win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q',
+  function($scope, constants, DatasetFactory, $q) {
 
-  $scope.close = function(id) {
-    WindowService.remove(id);
+  $scope.close = function(windowHandler, id) {
+    windowHandler.remove(id);
   };
 
 $scope.rendered = false;

@@ -1,6 +1,8 @@
-<div class="som-top som-divider">
-	<div ui-view="top-distributions" ng-show="$state.includes('vis.som.distributions')"></div>
+<div class="som-top">
+	<div ui-view="top-distributions" ng-show="$state.includes('vis.som.distributions')" id="som-top-distributions"></div>
 	<div ui-view="top-profiles" ng-show="$state.includes('vis.som.profiles')"></div>
 </div>
-<div class="som-bottom som-divider" ui-view="som-bottom">
+<div class="som-bottom" ui-view="som-bottom">
+	<div ui-view="som-bottom-menu" id="som-bottom-menu"></div>
+	<div ui-view="som-bottom-content" class="som-width" id="som-bottom-content"></div>
 </div>

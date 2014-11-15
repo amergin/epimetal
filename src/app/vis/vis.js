@@ -78,12 +78,17 @@
     url: 'explore',
     parent: 'vis',
     data: { pageTitle: 'Explore datasets and filter | Visualization' },
+    resolve: {
+      windowHandler: ['WindowHandler', function(WindowHandler) {
+        return WindowHandler.create();
+      }]
+    },
     views: {
       'explore@vis': {
         controller: 'ExploreController',
         templateUrl: 'vis/explore/explore.tpl.html'
       },
-      'submenu@vis': {
+      'submenu': {
         controller: 'ExploreMenuCtrl',
         templateUrl: 'vis/explore/explore.submenu.tpl.html'
       }
@@ -107,24 +112,18 @@
         templateUrl: 'vis/som/som.tpl.html'
         // controller: 'ExploreMenuCtrl'
       },
-      'som-bottom@vis.som': {
-        controller: 'SOMController',
-        templateUrl: 'vis/som/som.bottom.tpl.html'
+      'som-bottom-menu@vis.som': {
+        controller: 'SOMBottomMenuController',
+        templateUrl: 'vis/som/som.bottom.menu.tpl.html'
+      },
+      'som-bottom-content@vis.som': {
+        controller: 'SOMBottomContentController',
+        templateUrl: 'vis/som/som.bottom.content.tpl.html'
       }
-      // 'menu@vis.som': {
-      //   templateUrl: 'vis/som/som.menu.tpl.html'
-      // },      
-      // 'top@vis.som': {
-      //   templateUrl: 'vis/som/som.top.tpl.html'
-      // },
-      // 'componentplane@vis.som': {
-      //   templateUrl: 'vis/som/som.componentplane.tpl.html'
-      // }
     },
     deepStateRedirect: true,
     sticky: true
   };
-
   $urlRouterProvider.when('/vis/som', '/vis/som/distributions');
 
   var somDistributions = {
@@ -132,22 +131,20 @@
     url: '/distributions',
     // parent: 'vis.som',
     data: { pageTitle: 'Compare distributions | Self-organizing maps | Visualization' },
+    resolve: {
+      windowHandler: ['WindowHandler', function(WindowHandler) {
+        return WindowHandler.create();
+      }]
+    },
     views: {
       'submenu-distributions@vis.som': {
-        // controller: 'SOMDistributionsController',
+        controller: 'SOMMenuController',
         templateUrl: 'vis/som/distributions/som.submenu.tpl.html'
       },
       'top-distributions@vis.som': {
-        // controller: 'SOMDistributionsController',
+        controller: 'SOMDistributionsController',
         templateUrl: 'vis/som/distributions/som.top.tpl.html'
-      },
-      'bottom-distributions@vis.som': {
-        // controller: 'SOMDistributionsController',
-        templateUrl: 'vis/som/distributions/som.bottom.tpl.html'
       }
-      // 'header@vis.som': {
-      //   template: '<h2>Histogram view</h2>'
-      // }
     },
     deepStateRedirect: true,
     sticky: true
@@ -166,14 +163,7 @@
       'top-profiles@vis.som': {
         // controller: 'SOMDistributionsController',
         templateUrl: 'vis/som/profiles/som.top.tpl.html'
-      },
-      'bottom-profiles@vis.som': {
-        // controller: 'SOMDistributionsController',
-        templateUrl: 'vis/som/profiles/som.bottom.tpl.html'
       }
-      // 'header@vis.som': {
-      //   template: '<h2>Metabolic profile</h2>'
-      // }
     },
     deepStateRedirect: true,
     sticky: true
@@ -209,8 +199,8 @@
 }]);
 
 
- vis.controller( 'HeaderCtrl', ['$scope', 'DimensionService', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowService', 'variables', 'datasets',
-  function ( $scope, DimensionService, $stateParams, PlotService, UrlHandler, $injector, WindowService, variables, datasets) {
+ vis.controller( 'HeaderCtrl', ['$scope', '$stateParams', '$injector',
+  function ( $scope, $stateParams, $injector ) {
 
     $scope.tabs = [
     { 'title': 'Explore and filter', 'name': 'explore' },
@@ -224,8 +214,10 @@
   }]);
 
 
- vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowService', 'variables', 'datasets',
-  function VisController( $scope, DimensionService, $stateParams, PlotService, UrlHandler, $injector, WindowService, variables, datasets) {
+ vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets',
+  function VisController( $scope, DimensionService, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets) {
+
+    $scope.testVariable = 'parent test';
 
     $scope.menuDatasets = datasets;
     $scope.menuVariables = variables;
@@ -250,8 +242,6 @@
     $scope.sidebarInfo = function() {
       return ( $scope.showSidebar ? 'Hide' : "Show" ) + " sidebar";
     };
-
-    $scope.windows = WindowService.get();
 
     console.log("viscontroller");
   }]);
