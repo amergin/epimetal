@@ -1,13 +1,13 @@
 <div class="row">
 	<div class="col-sm-offset-1 col-sm-2">
-		<button type="button" class="btn btn-primary">
-			<i class="fa fa-cog"></i>
+		<button class="btn btn-primary" ng-disabled="!canOpenPlane()" title="Create a new component plane" placement="bottom-left" content-template="vis/menucomponents/new.som-plane.tpl.html" data-animation="am-fade" bs-popover data-auto-close="1">
+		<!-- <button type="button" class="btn btn-primary" ng-disabled="!canOpenPlane()"> -->
 			<span>New component plane</span>
 			<i class="fa fa-caret-down"></i>
 		</button>
 	</div>
 	<div class="col-sm-offset-7 col-sm-1">
-		<button type="button" class="btn btn-primary">
+		<button type="button" class="btn btn-primary" ng-click="openSettings()">
 			<i class="fa fa-cog"></i>
 			<span>SOM settings</span>
 		</button>

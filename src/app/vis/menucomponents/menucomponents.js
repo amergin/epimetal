@@ -190,103 +190,121 @@ vis.controller('SOMFormController',
   function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, constants, $timeout, UrlHandler) {
     $scope.selection = {};
 
+    $scope.datasets = DatasetFactory.getSets();
+    $scope.variables = DatasetFactory.variables();
+
     $scope.canEdit = function () {
       return DatasetFactory.activeSets().length > 0;
-    };
-
-    $scope.canSubmit = function () {
-      return $scope.canEdit() && !_.isEmpty($scope.selection.x) && ($scope.selection.x.length >= 3) && _.isEmpty( _.keys( $scope.SOMs ) );
-    };
-
-    $scope.close = function(catalogId, somId) {
-      var planes = DatasetFactory.getPlaneBySOM(somId);
-      _.each( planes, function(plane) {
-        // var id = WindowService.getId('id', plane.id);
-        // WindowService.remove(id);
-      });
-      // delete url entry for the menu
-      UrlHandler.removeWindow('som', somId);
-      delete $scope.SOMs[catalogId];
-    };
-
-    $scope.canSubmitPlane = function(som) {
-      return som.state == 'ready' && !_.isUndefined(som.tinput);
-    };
-
-    $scope.addPlane = function(som) {
-
-      var planeId = _.uniqueId('plane');
-
-      $scope.SOMs[som.id].planes[planeId] = {
-        state: 'loading',
-        variable: som.tinput
-      };
-
-      NotifyService.addTransient('Plane computation started', 'Please be patient, as the computation may take several minutes.', 'info');
-      DatasetFactory.getPlane(som).then( 
-        function succFn(res) {
-
-          delete $scope.SOMs[som.id].planes[planeId];
-          // $scope.SOMs[som.id].state = 'ready';
-          // $scope.SOMs[som.id].planes[res.id].state = 'ready';
-          // angular.extend( $scope.SOMs[som.id].planes[res.id], {
-          //   id: res.id,
-          //   plane: res.plane
-          // });
-
-          NotifyService.addTransient('SOM plane ready', 'The submitted SOM plane computation is ready', 'success');
-          var PlotService = $injector.get('PlotService');
-
-          PlotService.drawSOM(res);
-
-      }, function errFn(res) {
-        NotifyService.addTransient('Plane computation failed', res, 'danger');
-      });
-    };
-
-
-    // this signal is emitted when url path is extracted on page load, to
-    // display the loaded som menu
-    $rootScope.$on('sidebar:addSom', function(event, som) {
-      var somObj = angular.extend({'state': 'ready', 'planes': {}}, som);
-      somObj.som = som.id;
-      somObj.datasets = _.map( som.datasets, function(name) { return DatasetFactory.getSet(name); } );
-      $scope.SOMs[som.id] = somObj;
-    });
-
-    $scope.add = function (selection) {
-
-      var id = _.uniqueId('som');
-
-      $scope.SOMs[id] = {
-        'id': id,
-        'state': 'loading',
-        'variables': angular.copy($scope.selection.x),
-        'datasets':  DatasetFactory.activeSets(),
-        'planes': {}
-      };
-
-      DatasetFactory.getSOM(selection.x).then( 
-        function succFn(som) {
-          $scope.SOMs[id].state = 'ready';
-          angular.extend( $scope.SOMs[id], {
-            som: som.id
-          });
-
-          UrlHandler.createWindow('som', som);
-          NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
-      }, function errFn(res) {
-        NotifyService.addTransient('SOM computation failed', res, 'danger');
-        delete $scope.SOMs[id];
-      });
-
     };
 
     $scope.clear = function() {
       $scope.selection.x = [];
     };
 
-    $scope.SOMs = {};
+    $scope.canSubmit = function () {
+      return $scope.canEdit() && !_.isEmpty($scope.selection.x) && ($scope.selection.x.length >= 3);
+    };
+
+    $scope.submitComputation = function(selection) {
+
+      NotifyService.closeModal();
+      
+      DatasetFactory.getSOM(selection.x).then(
+        function succFn(som) {
+          NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
+        }, function errFn(res) {
+          NotifyService.addTransient('SOM computation failed', res, 'danger');
+        });
+    };
+
+
+    // $scope.canSubmitPlane = function(som) {
+    //   return som.state == 'ready' && !_.isUndefined(som.tinput);
+    // };
+    // $scope.close = function(catalogId, somId) {
+    //   var planes = DatasetFactory.getPlaneBySOM(somId);
+    //   _.each( planes, function(plane) {
+    //     // var id = WindowService.getId('id', plane.id);
+    //     // WindowService.remove(id);
+    //   });
+    //   // delete url entry for the menu
+    //   UrlHandler.removeWindow('som', somId);
+    //   delete $scope.SOMs[catalogId];
+    // };
+    // $scope.addPlane = function(som) {
+
+    //   var planeId = _.uniqueId('plane');
+
+    //   $scope.SOMs[som.id].planes[planeId] = {
+    //     state: 'loading',
+    //     variable: som.tinput
+    //   };
+
+    //   NotifyService.addTransient('Plane computation started', 'Please be patient, as the computation may take several minutes.', 'info');
+    //   DatasetFactory.getPlane(som).then( 
+    //     function succFn(res) {
+
+    //       delete $scope.SOMs[som.id].planes[planeId];
+    //       // $scope.SOMs[som.id].state = 'ready';
+    //       // $scope.SOMs[som.id].planes[res.id].state = 'ready';
+    //       // angular.extend( $scope.SOMs[som.id].planes[res.id], {
+    //       //   id: res.id,
+    //       //   plane: res.plane
+    //       // });
+
+    //       NotifyService.addTransient('SOM plane ready', 'The submitted SOM plane computation is ready', 'success');
+    //       var PlotService = $injector.get('PlotService');
+
+    //       PlotService.drawSOM(res);
+
+    //   }, function errFn(res) {
+    //     NotifyService.addTransient('Plane computation failed', res, 'danger');
+    //   });
+    // };
+
+
+    // // this signal is emitted when url path is extracted on page load, to
+    // // display the loaded som menu
+    // $rootScope.$on('sidebar:addSom', function(event, som) {
+    //   var somObj = angular.extend({'state': 'ready', 'planes': {}}, som);
+    //   somObj.som = som.id;
+    //   somObj.datasets = _.map( som.datasets, function(name) { return DatasetFactory.getSet(name); } );
+    //   $scope.SOMs[som.id] = somObj;
+    // });
+
+    // $scope.add = function (selection) {
+
+    //   var id = _.uniqueId('som');
+
+    //   $scope.SOMs[id] = {
+    //     'id': id,
+    //     'state': 'loading',
+    //     'variables': angular.copy($scope.selection.x),
+    //     'datasets':  DatasetFactory.activeSets(),
+    //     'planes': {}
+    //   };
+
+    //   DatasetFactory.getSOM(selection.x).then( 
+    //     function succFn(som) {
+    //       $scope.SOMs[id].state = 'ready';
+    //       angular.extend( $scope.SOMs[id], {
+    //         som: som.id
+    //       });
+
+    //       UrlHandler.createWindow('som', som);
+    //       NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
+    //   }, function errFn(res) {
+    //     NotifyService.addTransient('SOM computation failed', res, 'danger');
+    //     delete $scope.SOMs[id];
+    //   });
+
+    // };
+
+    // $scope.clear = function() {
+    //   $scope.selection.x = [];
+    // };
+
+    // $scope.SOMs = {};
 
   }
 ]);

@@ -1,18 +1,18 @@
-<div class="well-small well">
-	<h4>New Self-Organizing Map</h4>
+<div class="" style="height: 400px;">
+	<h3 class="text-center" style="padding-bottom: 20px;">Self-Organizing Map settings</h3>
 	<form class="form-horizontal" role="form" name="plot" novalidate>
 		<fieldset>
 			<div class="form-group">
 				<label class="col-sm-4 control-label" for="vars-som">Input variables</label>
 				<div class="col-sm-8">
-					<small class="pull-right" ng-show="selection.x"><a href="" ng-click="clear()">Clear selection</a></small>
+					<small class="pull-right" ng-show="currentSelection.x"><a href="" ng-click="clear()">Clear selection</a></small>
 					<select 
 					chosen
 					multiple
 					class="form-control" id="vars-som"
 					data-placeholder=" "
-					ng-model="selection.x"
-					ng-options="o.name as o.name group by o.group.name for o in menuVariables | orderBy:['group.order','name_order']"
+					ng-model="currentSelection.x"
+					ng-options="o.name as o.name group by o.group.name for o in variables | orderBy:['group.order','name_order']"
 					required ng-disabled="!canEdit()"
 					width="'100%'">
 				</select>
@@ -21,86 +21,11 @@
 
 		<div class="form-group">
 			<div class="col-sm-offset-4 col-sm-8">
-				<button type="submit" class="btn btn-primary" ng-disabled="!canSubmit()" ng-click="add(selection)">Compute SOM</button>
+				<button type="submit" class="btn btn-primary" ng-disabled="!canSubmitSOM()" ng-click="saveSettings()">Save settings</button>
 			</div>
 		</div>
-	</fieldset>
-</form>
+		</fieldset>
+	</form>
 
-<div ng-repeat="som in SOMs" class="am-fade-and-slide-top">
-	<div class="panel panel-default">
-		<div class="panel-heading" ng-switch="som.state">
-			<h3 class="panel-title" ng-switch-when="ready">Computed SOM
-				<button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="close(som.id, som.som)">&times;</button>
-				<span class="label label-default" title="{{som.variables.length}} variables in {{som.datasets.length}} dataset(s)">{{som.variables.length}} variables</span>
-			</h3>
-			<h3 class="panel-title" ng-switch-when="loading">Loading SOM
-				<span class="fa fa-spinner fa-spin pull-right"></span>
-			</h3>
-		</div>
-		<div class="panel-body am-fade-and-slide-top" ng-show=" som.state == 'ready' ">
-
-			<form class="form-horizontal" role="form">
-				<fieldset>
-					<div class="form-group">
-						<label class="col-sm-4 control-label">Input variables</label>
-						<span class="col-sm-8 control-label">
-							<ul class="list-inline">
-								<li ng-repeat="variable in som.variables">
-									{{variable}}<span ng-hide="$last">, </span>
-								</li>
-							</ul>
-						</span>
-					</div>
-					<div class="form-group">
-						<label class="col-sm-4 control-label">Datasets</label>
-						<span class="col-sm-8 control-label">
-							<span ng-repeat="set in som.datasets">
-								<span class="label" ng-style="{ 'background-color': set.getColor() }">{{set.getName()}}</span>
-								{{$last ? '' : ', '}}
-							</span>
-						</span>
-					</div>
-					<div class="form-group">
-						<label for="tinput" class="col-sm-4 control-label">Test variable</label>
-						<div class="col-sm-offset-4 col-sm-8">
-							<select
-							chosen
-							class="form-control" id="tinput" 
-							allow-single-deselect="true"
-							data-placeholder=" "
-							ng-model="som.tinput"
-							ng-options="o.name as o.name group by o.group.name for o in menuVariables | orderBy:['group.order','name_order']"
-							width="'100%'"
-							required>
-							<option value=""></option>
-						</select>
-					</div>
-				</div>
-				<div class="form-group">
-					<div class="col-sm-offset-4 col-sm-8">
-						<button type="submit" class="btn btn-primary" ng-disabled="!canSubmitPlane(som)" ng-click="addPlane(som)">Compute Plane</button>
-					</div>
-				</div>
-			</fieldset>
-		</form>
-
-	<div class="panel panel-default am-fade-and-slide-top" ng-repeat="(planeid, plane) in SOMs[som.id].planes">
-	  <div class="panel-heading" ng-switch="plane.state">
-		<h3 class="panel-title" ng-switch-when="loading">Loading plane <strong>{{plane.variable}}</strong>
-			<span class="fa fa-spinner fa-spin pull-right"></span>
-		</h3>
-	  </div>
-	</div>
-
-
-	</div>
-
-
-
-
-
-</div>
-</div>
 </div>
 

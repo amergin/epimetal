@@ -22,8 +22,13 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
     // API loading.
     that.activeVariables = {};
 
-    that.SOMs = {};
+    // that.SOMs = {};
+    // only one SOM can be active at a time; if this is empty that means 
+    // a SOM has not yet been computed (waiting)
+    that.som = {}; 
     that.SOMPlanes = {};
+
+
 
     // --------------------------------------
     // class for defining a single dataset
@@ -245,14 +250,14 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       return defer.promise;
     };
 
-    var _findSOM = function(selection, datasets) {
-      for (var key in that.SOMs) {
-        var som = that.SOMs[key];
-        if (_.isEqual(som.variables, selection) && _.isEqual(som.datasets, datasets)) {
-          return som;
-        }
-      }
-    };
+    // var _findSOM = function(selection, datasets) {
+    //   for (var key in that.SOMs) {
+    //     var som = that.SOMs[key];
+    //     if (_.isEqual(som.variables, selection) && _.isEqual(som.datasets, datasets)) {
+    //       return som;
+    //     }
+    //   }
+    // };
 
     var _findPlane = function(som) {
       for (var key in that.SOMPlanes) {
@@ -275,10 +280,14 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       var datasets = _.map(service.activeSets(), function(set) {
         return set.getName();
       });
-      var cachedSom = _findSOM(selection, datasets);
-      if (cachedSom) {
-        defer.resolve(cachedSom);
-      } else {
+      // var cachedSom = _findSOM(selection, datasets);
+      // if (cachedSom) {
+      //   defer.resolve(cachedSom);
+      // } else {
+
+        // remove previous computation
+        that.som = {};
+
         var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
 
         if(selection.somid) {
@@ -313,58 +322,47 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
             var DimensionService = $injector.get('DimensionService');
             DimensionService.addBMUs(som.id, som.bmus);
 
-            that.SOMs[som.id] = som;
+            // that.SOMs[som.id] = som;
+            that.som = som;
             defer.resolve(som);
           }
         };
-      }
+      // }
       return defer.promise;
     };
 
-    service.getPlane = function(som) {
+    service.somReady = function() {
+      return !_.isEmpty(that.som);
+    };
+
+    service.getPlane = function(testVar) {
 
       var defer = $q.defer();
-
-      var cachedPlane = _findPlane(som);
-      if (cachedPlane) {
-        defer.resolve(cachedPlane);
-      } else {
-        var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.plane);
-        if (som.planeid) {
-          ws.onopen = function() {
-            ws.send(JSON.stringify({
-              'planeid': som.planeid
-            }));
-          };
-        } else {
-          ws.onopen = function() {
-            ws.send(JSON.stringify({
-              'somid': som.som,
-              'datasets': _.map(som.datasets, function(set) {
-                return set.getName();
-              }), //som.datasets,
-              'variables': {
-                'test': som.tinput,
-                'input': som.variables
-              }
-            }));
-          };
-        }
-
-        ws.onclose = function(evt) {
-          console.log("Plane WS closed", evt);
-        };
-
-        ws.onmessage = function(evt) {
-          var result = JSON.parse(evt.data);
-          if (result.result.code == 'error') {
-            defer.reject(result.result.message);
-          } else {
-            that.SOMPlanes[result.data.id] = result.data;
-            defer.resolve( angular.copy(result.data) );
+      var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.plane);
+      ws.onopen = function() {
+        ws.send(JSON.stringify({
+          'somid': that.som.id,
+          'datasets': that.som.datasets,
+          'variables': {
+            'test': testVar,
+            'input': that.som.variables
           }
-        };
-      }
+        }));
+      };
+
+      ws.onclose = function(evt) {
+        console.log("Plane WS closed", evt);
+      };
+
+      ws.onmessage = function(evt) {
+        var result = JSON.parse(evt.data);
+        if (result.result.code == 'error') {
+          defer.reject(result.result.message);
+        } else {
+          that.SOMPlanes[result.data.id] = result.data;
+          defer.resolve( angular.copy(result.data) );
+        }
+      };
       return defer.promise;
     };
 

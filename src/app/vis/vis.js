@@ -103,6 +103,11 @@
     // parent: 'vis',
     // abstract: true,
     data: { pageTitle: 'Self-organizing maps | Visualization' },
+    resolve: {
+      bottomWindowHandler: ['WindowHandler', function(WindowHandler) {
+        return WindowHandler.create();
+      }]
+    },
     views: {
       'submenu@vis': {
         templateUrl: 'vis/som/som.submenu.tpl.html'

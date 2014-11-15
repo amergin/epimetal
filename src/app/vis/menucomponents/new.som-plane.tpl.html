@@ -1,0 +1,26 @@
+<h4>Create a new SOM component plane</h4>
+<form class="form-horizontal" role="form" novalidate>
+	<fieldset>
+			<div class="form-group">
+				<label for="tinput" class="col-sm-4 control-label">Test variable</label>
+				<div class="col-sm-offset-4 col-sm-8">
+					<select
+					chosen
+					class="form-control" id="tinput" 
+					allow-single-deselect="true"
+					data-placeholder=" "
+					ng-model="planeInput.selection"
+					ng-options="o.name as o.name group by o.group.name for o in variables | orderBy:['group.order','name_order']"
+					width="'100%'"
+					required>
+					<option value=""></option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-4 col-sm-8">
+					<button type="submit" class="btn btn-primary" ng-disabled="!planeInput.selection" ng-click="addPlane(planeInput.selection)">Compute Plane</button>
+				</div>
+			</div>
+	</fieldset>
+</form>
