@@ -1,5 +1,5 @@
 var vis =
-  angular.module('plotter.vis.sidebar', 
+  angular.module('plotter.vis.menucomponents', 
     [
     'plotter.vis.plotting',
     'services.dataset',
@@ -11,10 +11,11 @@ var vis =
     ]);
 
 // directive for displaying the dataset table on sidebar
-vis.directive('dataset', function () {
+vis.directive('datasetForm', function () {
   return {
+    scope: {},
     restrict: 'C',
-    templateUrl: 'vis/sidebar/dataset.tpl.html',
+    templateUrl: 'vis/menucomponents/dataset.tpl.html',
     replace: true,
     controller: 'DatasetTableController'
   };
@@ -24,10 +25,12 @@ vis.directive('dataset', function () {
 vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService', 'constants', '$location', 'UrlHandler',
   function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService, constants, $location, UrlHandler) {
 
+    $scope.datasets = DatasetFactory.getSets();
+
     $scope.toggle = function(set) {
       set.toggle();
 
-      UrlHandler.updateDataset();
+      // UrlHandler.updateDataset();
 
       DatasetFactory.checkActiveVariables(set).then( function succFn(res) {
 
@@ -56,6 +59,7 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
       }).finally( function() {
       });
     };
+    console.log("dset ctrl", $scope.menuDatasets);
   }
 ]);
 
@@ -65,10 +69,10 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
 vis.directive('scatterplotForm', function () {
   return {
     restrict: 'C',
-    scope: true,
+    scope: {}, //true,
     replace: true,
     controller: 'ScatterplotFormController',
-    templateUrl: 'vis/sidebar/scatterplot.tpl.html',
+    templateUrl: 'vis/menucomponents/scatterplot.tpl.html',
     link: function (scope, elm, attrs) {
 
     }
@@ -80,6 +84,8 @@ vis.directive('scatterplotForm', function () {
 vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'DatasetFactory', '$injector', 'NotifyService',
   function ($scope, $rootScope, $q, DatasetFactory, $injector, NotifyService) {
     $scope.selection = {};
+
+    $scope.variables = DatasetFactory.variables();
 
     $scope.canEdit = function () {
       return DatasetFactory.activeSets().length > 0;
@@ -125,7 +131,7 @@ vis.directive('histogramForm', function () {
     scope: true,
     replace: true,
     controller: 'HistogramFormController',
-    templateUrl: 'vis/sidebar/histogram.tpl.html',
+    templateUrl: 'vis/menucomponents/histogram.tpl.html',
     link: function (scope, elm, attrs) {
 
     }
@@ -137,6 +143,8 @@ vis.directive('histogramForm', function () {
 vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService',
   function ($scope, $rootScope, DatasetFactory, $injector, NotifyService) {
     $scope.selection = {};
+
+    $scope.variables = DatasetFactory.variables();   
 
     $scope.canEdit = function () {
       return DatasetFactory.activeSets().length > 0;
@@ -288,7 +296,7 @@ vis.directive('somForm', function () {
     scope: true,
     replace: true,
     controller: 'SOMFormController',
-    templateUrl: 'vis/sidebar/som.tpl.html',
+    templateUrl: 'vis/menucomponents/som.tpl.html',
     link: function (scope, elm, attrs) {
 
     }
@@ -301,6 +309,8 @@ vis.controller('HeatmapFormController', ['$scope', '$rootScope', 'DatasetFactory
   function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService) {
     // $scope.variables = DatasetFactory.variables();
     $scope.selection = {};
+
+    $scope.variables = DatasetFactory.variables();
 
     $scope.canEdit = function () {
       return DatasetFactory.activeSets().length > 0;
@@ -345,7 +355,7 @@ vis.directive('heatmapForm', function () {
     scope: true,
     replace: true,
     controller: 'HeatmapFormController',
-    templateUrl: 'vis/sidebar/heatmap.tpl.html',
+    templateUrl: 'vis/menucomponents/heatmap.tpl.html',
     link: function (scope, elm, attrs) {
 
     }

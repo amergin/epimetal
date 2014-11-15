@@ -1,5 +1,5 @@
-<div class="well-small well">
-	<h4>New correlation heatmap</h4>
+<div class="" ng-controller="HeatmapFormController">
+	<h4>Correlation heatmap</h4>
 	<form class="form-horizontal" role="form" name="plot" novalidate>
 		<fieldset ng-disabled="!canEdit()">
 			<div class="form-group">
@@ -12,7 +12,7 @@
 					class="form-control" id="vars-heatmap"
 					data-placeholder=" "
 					ng-model="selection.x"
-					ng-options="o.name as o.name group by o.group.name for o in menuVariables | orderBy:['group.order','name_order']"
+					ng-options="o.name as o.name group by o.group.name for o in variables | orderBy:['group.order','name_order']"
 					required ng-disabled="!canEdit()"
 					width="'100%'">
 					<option value=""></option>

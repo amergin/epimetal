@@ -1,0 +1,8 @@
+<div ui-view="explore" ng-show="$state.includes('vis.explore')" class="am-fade"></div>
+<div ui-view="som" ng-show="$state.includes('vis.som')" class="am-fade"></div>
+<div ui-view="regression" ng-show="$state.includes('vis.regression')" class="am-fade"></div>
+
+<pre class="col-sm-12">
+	Active variables: {{activeVariables}}
+	Used variables: {{usedVariables}}
+</pre>

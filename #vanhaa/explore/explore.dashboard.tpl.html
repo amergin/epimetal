@@ -1,0 +1,34 @@
+<div disable-animate packery 
+packery-drag="{ handle: '.handle' }" 
+packery-resize="{
+    grid: [25, 25],
+    minHeight: 375,
+    minWidth: 475,
+    maxWidth: 1200,
+    maxHeight: 1200,
+    refreshPositions: true,
+    handles: {
+      'se': '#segrip'
+    }
+}" 
+packery-options="{ 
+transitionDuration: '0.5s',
+itemSelector: '.packery-brick',
+columnWidth: 50,
+gutter: '.gutter-sizer'
+}">
+	<div ng-repeat="window in windows" ng-controller="WinController" class="packery-brick window">
+		<div class="gutter-sizer"></div>
+		<div class="handle text-center">
+			<i class="ctrl fa fa-cog pull-left action-btn" enable-animate data-html="true" bs-dropdown="settingsDropdown" title="Settings"></i>
+			<a class="close ctrl ctrl-close" ng-click="close(window._winid)" title="Close this window">&times;</a>
+			<a class="btn btn-default btn-xs ctrl-filter" ng-click="resetFilter()" ng-show="window.showResetBtn">reset filter</a>
+		</div>
+		<div class="ui-resizable-handle ui-resizable-se" id="segrip"></div>
+		<div class="text-center plot-title"> 
+			{{headerText[0]}}
+			<strong>{{headerText[1]}}</strong>
+			{{headerText[2]}}
+		</div>
+	</div>
+</div>

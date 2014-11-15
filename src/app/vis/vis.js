@@ -15,18 +15,23 @@
 
  var vis = 
  angular.module( 'plotter.vis', [ 
-  'ui.router.state', 
+  'ui.router.state',
+  'ui.router.util',
+  'ct.ui.router.extras',
   'services.dataset', 
   'services.notify',
   'services.window',
   'wu.packery',
-  //'plotter.vis.windowing',
-  'plotter.vis.sidebar',
-  'plotter.vis.plotting',
+  'plotter.vis.explore',
+  'plotter.vis.som',
+  'plotter.vis.som.distributions',
+  'plotter.vis.regression',
+  'plotter.vis.menucomponents',
   'services.urlhandler',
   'plotter.vis.linkcreator',
   'plotter.vis.filterinfo',
-  'plotter.vis.sampleinfo'
+  'plotter.vis.sampleinfo',
+  'mgcrea.ngStrap.popover'
   ] );
 
 /**
@@ -34,17 +39,14 @@
  * will handle ensuring they are all available at run-time, but splitting it
  * this way makes each module more "self-contained".
  */
- vis.config(['$stateProvider', function ( $stateProvider ) {
+ vis.config(['$stateProvider', '$urlRouterProvider', function ( $stateProvider, $urlRouterProvider) {
 
   var vis = {
     name: 'vis',
-    url: '/vis/{path:.*}',
+    url: '/vis/',
     abstract: true,
     data: { pageTitle: 'Visualization' },
-    controller: 'VisCtrl',
     templateUrl: 'vis/vis.tpl.html',
-    reloadOnSearch: false,
-
     // important: the app will NOT change state to 'vis' until
     // these object promises have been resolved. Failure is generally indication
     // that the user is not logged in -> redirect to 'login' state.
@@ -55,58 +57,184 @@
       datasets: ['DatasetFactory', function(DatasetFactory) {
         return DatasetFactory.getDatasets();
       }],
-
       compatibility: ['CompatibilityService', function(CompatibilityService) {
         return CompatibilityService.browserCompatibility();
       }]
-    }
-  };
-
-  // since parent is abstract and this one has the 
-  // same url, default is always redirected to this child
-  var all = {
-    name: 'vis.all',
-    url: '',
-    // controller: ['$scope', '$stateParams', function($scope, $stateParams) { console.log($stateParams); }],
-    //templateUrl: 'vis/sidebar/sidebar.tpl.html',
-    data: { pageTitle: 'Visualization' },
-    reloadOnSearch: false,
-
+    },
     views: {
-      'sidebar': {
-        //controller: ['$location', function($location) { $location.url('/vis/'); }],
-        templateUrl: 'vis/sidebar/vis.sidebar.tpl.html',
+      'content': {
+        templateUrl: 'vis/vis.content.tpl.html',
+        controller: 'VisCtrl',
       },
-      'dashboard': {
-        templateUrl: 'vis/vis.dashboard.tpl.html'
-      },
-      // notice absolute addressing -> to the root
       'header@': {
-        templateUrl: 'vis/header.tpl.html'
+        templateUrl: 'vis/vis.header.tpl.html',
+        controller: 'HeaderCtrl'
       }
     }
   };
 
+  var explore = {
+    name: 'vis.explore',
+    url: 'explore',
+    parent: 'vis',
+    data: { pageTitle: 'Explore datasets and filter | Visualization' },
+    views: {
+      'explore@vis': {
+        controller: 'ExploreController',
+        templateUrl: 'vis/explore/explore.tpl.html'
+      },
+      'submenu@vis': {
+        controller: 'ExploreMenuCtrl',
+        templateUrl: 'vis/explore/explore.submenu.tpl.html'
+      }
+    },
+    deepStateRedirect: true,
+    sticky: true
+  };
+
+  var som = {
+    name: 'vis.som',
+    url: 'som',
+    // parent: 'vis',
+    // abstract: true,
+    data: { pageTitle: 'Self-organizing maps | Visualization' },
+    views: {
+      'submenu@vis': {
+        templateUrl: 'vis/som/som.submenu.tpl.html'
+        // controller: 'ExploreMenuCtrl'
+      },
+      'som@vis': {
+        templateUrl: 'vis/som/som.tpl.html'
+        // controller: 'ExploreMenuCtrl'
+      },
+      'som-bottom@vis.som': {
+        controller: 'SOMController',
+        templateUrl: 'vis/som/som.bottom.tpl.html'
+      }
+      // 'menu@vis.som': {
+      //   templateUrl: 'vis/som/som.menu.tpl.html'
+      // },      
+      // 'top@vis.som': {
+      //   templateUrl: 'vis/som/som.top.tpl.html'
+      // },
+      // 'componentplane@vis.som': {
+      //   templateUrl: 'vis/som/som.componentplane.tpl.html'
+      // }
+    },
+    deepStateRedirect: true,
+    sticky: true
+  };
+
+  $urlRouterProvider.when('/vis/som', '/vis/som/distributions');
+
+  var somDistributions = {
+    name: 'vis.som.distributions',
+    url: '/distributions',
+    // parent: 'vis.som',
+    data: { pageTitle: 'Compare distributions | Self-organizing maps | Visualization' },
+    views: {
+      'submenu-distributions@vis.som': {
+        // controller: 'SOMDistributionsController',
+        templateUrl: 'vis/som/distributions/som.submenu.tpl.html'
+      },
+      'top-distributions@vis.som': {
+        // controller: 'SOMDistributionsController',
+        templateUrl: 'vis/som/distributions/som.top.tpl.html'
+      },
+      'bottom-distributions@vis.som': {
+        // controller: 'SOMDistributionsController',
+        templateUrl: 'vis/som/distributions/som.bottom.tpl.html'
+      }
+      // 'header@vis.som': {
+      //   template: '<h2>Histogram view</h2>'
+      // }
+    },
+    deepStateRedirect: true,
+    sticky: true
+  };
+
+  var somProfiles = {
+    name: 'vis.som.profiles',
+    url: '/profiles',
+    // parent: 'vis.som',
+    data: { pageTitle: 'Compare profiles | Self-organizing maps | Visualization' },
+    views: {
+      'submenu-profiles@vis.som': {
+        // controller: 'SOMDistributionsController',
+        templateUrl: 'vis/som/profiles/som.submenu.tpl.html'
+      },
+      'top-profiles@vis.som': {
+        // controller: 'SOMDistributionsController',
+        templateUrl: 'vis/som/profiles/som.top.tpl.html'
+      },
+      'bottom-profiles@vis.som': {
+        // controller: 'SOMDistributionsController',
+        templateUrl: 'vis/som/profiles/som.bottom.tpl.html'
+      }
+      // 'header@vis.som': {
+      //   template: '<h2>Metabolic profile</h2>'
+      // }
+    },
+    deepStateRedirect: true,
+    sticky: true
+  };   
+
+  var regression = {
+    name: 'vis.regression',
+    url: 'regression',
+    // parent: 'vis',
+    data: { pageTitle: 'Regression analysis | Visualization' },
+    views: {
+      'submenu@vis': {
+        controller: 'RegressionController',
+        templateUrl: 'vis/regression/regression.submenu.tpl.html'
+      },
+      'regression@vis': {
+        templateUrl: 'vis/regression/regression.tpl.html'
+      }
+    },
+    sticky: true,
+    deepStateRedirect: true
+  };
+
+
   $stateProvider.state(vis);
-  $stateProvider.state(all);
+  $stateProvider.state(explore);
+  $stateProvider.state(som);
+  $stateProvider.state(somDistributions);
+  $stateProvider.state(somProfiles);
+  $stateProvider.state(regression);
 
 
 }]);
+
+
+ vis.controller( 'HeaderCtrl', ['$scope', 'DimensionService', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowService', 'variables', 'datasets',
+  function ( $scope, DimensionService, $stateParams, PlotService, UrlHandler, $injector, WindowService, variables, datasets) {
+
+    $scope.tabs = [
+    { 'title': 'Explore and filter', 'name': 'explore' },
+    { 'title': 'Self-organizing maps', 'name': 'som' },
+    { 'title': 'Regression analysis & associations', 'name': 'regression' }
+    ];
+    $scope.tabs.activeTab = 0;
+
+    console.log("header ctrl");
+
+  }]);
+
 
  vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowService', 'variables', 'datasets',
   function VisController( $scope, DimensionService, $stateParams, PlotService, UrlHandler, $injector, WindowService, variables, datasets) {
 
     $scope.menuDatasets = datasets;
     $scope.menuVariables = variables;
-    
-    $scope.visController = "visController";
-    console.log("viscontroller");
 
     $scope.usedVariables = DimensionService.getUsedVariables();
     $scope.activeVariables = DimensionService.getDimensions();
 
     // populate the view from current url 
-    UrlHandler.loadNewPageState( $stateParams.path, PlotService );
+    // UrlHandler.loadNewPageState( $stateParams.path, PlotService );
 
     $scope.showSidebar = true;
     var $rootScope = $injector.get('$rootScope');
@@ -125,4 +253,5 @@
 
     $scope.windows = WindowService.get();
 
+    console.log("viscontroller");
   }]);

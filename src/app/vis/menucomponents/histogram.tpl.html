@@ -1,5 +1,5 @@
-<div class="well-small well">
-	<h4>New histogram</h4>
+<div ng-controller="HistogramFormController">
+	<h4><i class="fa fa-bar-chart"></i> Histogram</h4>
 	<form class="form-horizontal" role="form" novalidate>
 		<fieldset ng-disabled="!canEdit()">
 			<div class="form-group">
@@ -11,7 +11,7 @@
 					allow-single-deselect="true"
 					data-placeholder=" "
 					ng-model="selection.x"
-					ng-options="o.name as o.name group by o.group.name for o in menuVariables | orderBy:['group.order','name_order']"
+					ng-options="o.name as o.name group by o.group.name for o in variables | orderBy:['group.order','name_order']"
 					ng-disabled="!canEdit()"
 					required
 					width="'100%'">

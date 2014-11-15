@@ -1,5 +1,5 @@
-<div class="well-small well">
-	<h4>New scatter plot</h4>
+<div ng-controller="ScatterplotFormController">
+	<h4>Scatter plot</h4>
 	<form class="form-horizontal" role="form" name="plot" novalidate>
 		<fieldset ng-disabled="!canEdit()">
 			<div class="form-group">
@@ -11,7 +11,7 @@
 					allow-single-deselect="true"
 					data-placeholder=" "
 					ng-model="selection.x"
-					ng-options="o.name as o.name group by o.group.name for o in menuVariables | orderBy:['group.order','name_order']"
+					ng-options="o.name as o.name group by o.group.name for o in variables | orderBy:['group.order','name_order']"
 					required
 					ng-disabled="!canEdit()"
 					width="'100%'">
@@ -28,7 +28,7 @@
 					class="form-control" id="ycoord-scatter" 
 					data-placeholder=" "
 					ng-model="selection.y"
-					ng-options="o.name as o.name group by o.group.name for o in menuVariables | orderBy:['group.order','name_order']"
+					ng-options="o.name as o.name group by o.group.name for o in variables | orderBy:['group.order','name_order']"
 					required
 					ng-disabled="!canEdit()"
 					width="'100%'">

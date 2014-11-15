@@ -4,321 +4,76 @@ var dimMod = angular.module('services.urlhandler', ['services.dataset', 'ui.rout
 dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFactory', '$state', '$rootScope',
   function($injector, constants, $location, DatasetFactory, $state, $rootScope) {
 
-    // regular expressions for url routing:
-    var regexpStrings = {
-      dataset: "(ds)(?:;set=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+))?\/",
-      scatterplot: "(?:(sca);var=([A-Za-z0-9_-]+),([A-Za-z0-9_-]+)(?:;p=(t|f))?)\/",
-      heatmap: "(?:(hea);var=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+)(?:;f=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+))?)\/",
-      histogram: "(his);var=([A-Za-z0-9_-]+)(?:;f=(\\d+\\.?\\d*)-(\\d+\\.?\\d*))?(?:;p=(t|f))?\/",
-      som: "(som);id=([0-9a-fA-F]{24})\/",
-      somplane: "(pln);id=([0-9a-fA-F]{24})\/"
-    };
 
-    var regexps = {
-      dataset: new RegExp(regexpStrings['dataset']),
-      scatterplot: new RegExp(regexpStrings['scatterplot'], 'g'),
-      heatmap: new RegExp(regexpStrings['heatmap'], 'g'),
-      histogram: new RegExp(regexpStrings['histogram'], 'g'),
-      som: new RegExp(regexpStrings['som'], 'g'),
-      somplane: new RegExp(regexpStrings['somplane'], 'g'),
-    };
+    function data() {
+      var _data = {
+        tabs: {
+          'explore': { 'active': true },
+          'som': {},
+          'regression': {}
+        },
+        datasets: [],
+        filters: {},
+        url: {}
+      };
+      _data['active'] = _data['tabs']['explore'];
 
-    var consts = {
-      varDelim: ',',
-      separator: ';',
-      error: {
-        title: 'Invalid URL',
-        message: 'The URL you followed is invalid. Please re-check the URL.'
-      }
-    };
+      _data.activeTab = function(id) {
+        if (!arguments.length) {
+          return _data['active'];
+        }
+        _data.activeTab()['active'] = false;
+        _data['tabs'][id]['active'] = true;
+        _data['active'] = _data['tabs'][id];
+        return _data;
+      };
 
-    var _loadingNewState = false;
+      _data.updateDataset = function() {
+        _data['datasets'] = DatasetFactory.getSets();
+      };
 
-    var that = this;
+      _data.window = function(id, d) {
+        var act = _data.activeTab();
+        if (!arguments.length) {
+          return act['windows'];
+        }
+        act['windows'][id] = d;
+        return _data;
+      };
 
-    this._createError = function() {
-      var NotifyService = $injector.get('NotifyService');
-      NotifyService.addTransient(consts.error.title, consts.error.message, 'danger');      
-    };
+      _data.removeWindow = function(id) {
+        var act = _data.activeTab();
+        delete act['windows'][id];
+        return _data;
+      };
 
-    this._activeDsetNames = function() {
-      return _.map(DatasetFactory.activeSets(), function(set) {
-        return set.getName();
-      }).join() || null;
-    };
+      return _data;
+    }
+
+    var details = data();
 
     // called on page load to extract the current state from parameters
     this.loadNewPageState = function(path, PlotService) {
-
-      if(path === "" || _.isNull(path)) {
-        return;
-      }
-
-      that._loadingNewState = true;
-
-      var activeVariables = [];
-      var windowsToCreate = [];
-      var illegalVars = false;
-
-      // 1. check/update the dataset info
-      var res = regexps['dataset'].exec(path);
-      if (_.isNull(res)) {
-        this._createError();
-        that.clear();
-        return;
-      }
-
-      var datasets = res[2].split(consts.varDelim);
-      if( _.first( datasets ) == 'null' ) { 
-        that.clear();
-        return;
-      }
-
-      _.each(datasets, function(name) {
-        var set = DatasetFactory.getSet(name);
-        if( _.isUndefined(set) ) { 
-          that._createError();
-          that.clear();
-          return;
-        }
-        set.toggle();
-      });
-      this.updateDataset(datasets);
-
-      // 2. gather active variables
-      _.each(regexps, function(regex, rname) {
-        if (rname == 'dataset') {
-          return;
-        }
-        _.each(regex.execAll(path), function(result) {
-          switch (result[1]) {
-            case 'his':
-              if (!DatasetFactory.legalVariables([result[2]])) {
-                illegalVars = true;
-              } else {
-                windowsToCreate.push({
-                  type: 'histogram',
-                  variables: { x: result[2] },
-                  filter: !_.isUndefined(result[3]) ? [+result[3], +result[4]] : null,
-                  pooled: !_.isUndefined(result[5]) && ( result[5] == 't' ) ? true : false
-                });
-                activeVariables.push(result[2]);
-              }
-              break;
-
-            case 'sca':
-              if (!DatasetFactory.legalVariables([result[2], result[3]])) {
-                illegalVars = true;
-              } else {
-                windowsToCreate.push({
-                  type: 'scatterplot',
-                  variables: { x: result[2], y: result[3] },
-                  pooled: !_.isUndefined(result[4]) && ( result[4] == 't' ) ? true : false
-                });
-                activeVariables.push(result[2], result[3]);
-              }
-              break;
-
-            case 'hea':
-              var vars = result[2].split(consts.varDelim);
-              if (!DatasetFactory.legalVariables(vars)) {
-                illegalVars = true;
-              } else {
-                windowsToCreate.push({
-                  type: 'heatmap',
-                  variables: {x: vars},
-                  filter: !_.isUndefined(result[3]) ? result[3].split(consts.varDelim) : null
-                });
-                activeVariables.push(vars);
-              }
-              break;
-
-            case 'som':
-              windowsToCreate.push({
-                'type': 'som',
-                'somid': result[2]
-              });
-              break;
-
-            case 'pln':
-              windowsToCreate.push({
-                'type': 'somplane',
-                'planeid': result[2]
-              });
-              break;
-
-          }
-        });
-      });
-
-      if (illegalVars) {
-        that._createError();
-        that.clear();
-        return;
-      }
-
-      activeVariables = _.unique(_.flatten(activeVariables));
-
-      // load active variables:
-      var NotifyService = $injector.get('NotifyService');
-      NotifyService.addSpinnerModal('Loading samples and drawing figures...');
-      DatasetFactory.getVariableData(activeVariables).then(function success(res) {
-
-        _.each(windowsToCreate, function(win) {
-          switch (win.type) {
-            case 'scatterplot':
-              PlotService.drawScatter(win);
-              break;
-
-            case 'heatmap':
-              PlotService.drawHeatmap(win);
-              break;
-
-            case 'histogram':
-              PlotService.drawHistogram(win);
-              break;
-
-            case 'som':
-              DatasetFactory.getSOM(win).then( function succFn(res) {
-                $rootScope.$emit('sidebar:addSom', res);
-              }, function errFn(res) {
-                that._createError();
-                that.clear();
-              }).finally( function() {
-                //that._loadingNewState = false;
-              });
-              break;
-
-            case 'somplane':
-              DatasetFactory.getPlane(win).then( function succFn(res) {
-                that._loadingNewState = true;
-                PlotService.drawSOM(res);
-              }, function errFn(res) {
-                that._createError();
-                that.clear();
-              }).finally( function() {
-                that._loadingNewState = false;
-              });
-          }
-        });
-        NotifyService.closeModal();
-
-      }, function err(res) {
-        NotifyService.closeModal();
-        this._createError();
-        that.clear();
-      })
-      .finally( function() {
-        that._loadingNewState = false;
-      });
-
     }; // function
 
     this.clear = function() {
-      that._loadingNewState = false;
-      $location.url( '/vis/' );
     };
 
     this.updateDataset = function() {
-
-      // switch url component
-      // var regexStr = "(ds)(?:;set=((?:[A-Za-z0-9_-]+,)+[A-Za-z0-9_-]+|[A-Za-z0-9_-]+))?\/";
-      // var regex = new RegExp( regexStr, 'g' );
-
-      // var activeSetNames = _.map( DatasetFactory.activeSets(), function(set) { return set.getName(); } ).join() || null;
-      var newUrl = '';
-
-      // previously untouched
-      if (_.isNull(decodeURIComponent($location.url()).match(regexps['dataset']))) {
-        newUrl = '/vis/' + 'ds;set=' + this._activeDsetNames() + "/";
-      } else {
-        // exists already, replace
-        newUrl = decodeURIComponent($location.url()).replace(regexps['dataset'], 'ds;set=' + this._activeDsetNames() + "/");
-      }
-      $location.url(newUrl);
+      details.updateDataset();
     };
 
     this.createWindow = function(type, config) {
+      console.log(type, config);
+      // details.window(config.winid, config);
+    };
 
-      if( that._loadingNewState ) { return; }
-
-      var str = '';
-      switch (type) {
-        case 'scatterplot':
-          str = $location.url() + 'sca;var=' + config.variables.x + "," + config.variables.y;
-          if( config.pooled ) {
-            str += ";p=t";
-          }
-          str += "/";
-          $location.url( str );
-          // $location.url($location.url() + 'sca;var=' + config.x + "," + config.y + "/");
-          break;
-
-        case 'histogram':
-          str += $location.url() + 'his;var=' + config.variables.x;
-          if( config.pooled ) {
-            str += ";p=t";
-          }
-          str += "/";
-          $location.url( str );
-          // $location.url($location.url() + 'his;var=' + config.x + "/");
-          break;
-
-        case 'heatmap':
-          $location.url($location.url() + 'hea;var=' + config.variables.x.join() + "/");
-          break;
-
-        case 'somplane':
-          $location.url($location.url() + 'pln;id=' + config.id + "/");
-          break;
-
-        case 'som':
-          $location.url($location.url() + 'som;id=' + config.id + "/");
-          break;
-      }
+    this.activeTab = function(id) {
+      details.activeTab(id);
     };
 
     this.removeWindow = function(type, selection, filter) {
-      var removed = false;
-      var newUrl = decodeURIComponent($location.url()).replace(regexps[type], function(a, b, c, d) {
-        switch (b) {
-          case 'his':
-            if (c == selection.x && !removed) {
-              removed = true;
-              return '';
-            }
-            return a;
-          case 'sca':
-            if (c == selection.x && d == selection.y && !removed) {
-              removed = true;
-              return '';
-            }
-            return a;
-          case 'hea':
-            var orig = _.sortBy(c.split(","));
-            var selec = _.sortBy(selection.x);
-            if ((_.difference(orig, selec).length === 0) && !removed) {
-              removed = true;
-              return "";
-            }
-            return a;
-
-          case 'pln':
-            if( !removed && _.isEqual(selection,c) ) {
-              removed = true;
-              return "";
-            }
-            return a;
-
-          case 'som':
-            if( !removed && _.isEqual(selection,c) ) {
-              removed = true;
-              return "";
-            }
-            return a;
-        }
-      });
-      $location.url(newUrl);
+      console.log(type,selection,filter);
     };
 
   }

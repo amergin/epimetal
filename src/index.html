@@ -24,24 +24,8 @@
 </head>
 
 <body>
-  <div class="container-fluid">
-    <div class="row">
-      <div ui-view="header"></div>
-    </div>
-
-    <div class="row content">
-          
-          <!-- Inject route here -->
-          <div ui-view></div>
-          <div class="text-center" ng-show="loading.spinner">
-            <i class="fa fa-spinner fa-5x fa-spin"></i>
-            <h3>Loading...</h3>
-          </div>
-    </div>
-
-
-  </div> 
-  <!-- end container -->
+  <div ui-view="header"></div>
+  <div class="container-fluid" id="main-content" ui-view="content"></div> 
 
   <footer>
     <p>Copyright Jussi Ekholm & <a href="http://computationalmedicine.fi/" target="_blank">Computational Medicine Research Group</a> 2013-2014, and the copyrights of the respective libraries used in developing this application.</p>
