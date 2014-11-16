@@ -4,6 +4,9 @@ from config import Config
 
 from melikerion_controller.run_config import Config as MelikerionConfig
 
+from mongoengine.errors import MultipleObjectsReturned
+from mongoengine.queryset import DoesNotExist
+
 from flask.ext.mongoengine import MongoEngine
 from orm_models import Sample, HeaderSample, HeaderGroup
 import zmq
@@ -47,6 +50,21 @@ def _checkVariables(variables):
 			return False
 	return True
 
+def _checkSamples(samples):
+	if not isinstance(variables, list):
+		return False
+
+def _getSamples(sampleNames, variables):
+	results = []
+	for sample in sampleNames:
+		try:
+			found = Sample.objects.get(sampleid=sample['sampleid'], dataset=sample['dataset']) #.only(*(_getModifiedParameters(variables)))
+			results.append(found)
+		except( DoesNotExist, MultipleObjectsReturned ):
+			pass
+	return sorted(results, key=lambda e: (e['sampleid'], e['dataset']) )
+	#Sample.objects.filter(dataset__in=datasets, sampleid__in=sampleNames).only(*(_getModifiedParameters(variables))).order_by('sampleid', 'dataset')
+
 def _getModifiedParameters(variables):
 	ret = ['sampleid', 'dataset']
 	prefix = 'variables.'
@@ -85,14 +103,16 @@ def createSOM(ws):
 		ws.send(response)
 		return
 
-	datasets = message.get('datasets')
+	#datasets = message.get('datasets')
 	variables = message.get('variables')
-	if not(datasets and variables) or not( _checkDatasets(datasets) and _checkVariables(variables) ):
+	sampleNames = message.get('samples')
+	if not(variables and sampleNames) or not( _checkVariables(variables) ):
 		response = { "result": { 'code': 'error', 'message': 'Incorrect parameters' }, 'data': [] }
 	else:
-		samples = Sample.objects.filter(dataset__in=datasets).only(*(_getModifiedParameters(variables))).order_by('sampleid', 'dataset')
+		samples = _getSamples(sampleNames, variables)
 		zmqSocketSOM.connect( melikerionConfig.getZMQVar('bind_som') )
-		zmqSocketSOM.send_json({ 'datasets': datasets, 'variables': variables, 'samples': _getFormattedSamples(samples, variables) })
+		#print "SENDING = ", { 'variables': variables, 'samples': _getFormattedSamples(samples, variables) }
+		zmqSocketSOM.send_json({ 'variables': variables, 'samples': _getFormattedSamples(samples, variables) })
 		response = zmqSocketSOM.recv_json()
 
 	ws.send(json.dumps(response))

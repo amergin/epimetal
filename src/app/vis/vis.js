@@ -80,7 +80,7 @@
     data: { pageTitle: 'Explore datasets and filter | Visualization' },
     resolve: {
       windowHandler: ['WindowHandler', function(WindowHandler) {
-        return WindowHandler.create();
+        return WindowHandler.create('vis.explore');
       }]
     },
     views: {
@@ -104,8 +104,9 @@
     // abstract: true,
     data: { pageTitle: 'Self-organizing maps | Visualization' },
     resolve: {
+      // bottom portion of the page only!
       bottomWindowHandler: ['WindowHandler', function(WindowHandler) {
-        return WindowHandler.create();
+        return WindowHandler.create('vis.som');
       }]
     },
     views: {
@@ -138,7 +139,7 @@
     data: { pageTitle: 'Compare distributions | Self-organizing maps | Visualization' },
     resolve: {
       windowHandler: ['WindowHandler', function(WindowHandler) {
-        return WindowHandler.create();
+        return WindowHandler.create('vis.som.distributions');
       }]
     },
     views: {
@@ -201,6 +202,17 @@
   $stateProvider.state(regression);
 
 
+}]);
+
+vis.run(['$rootScope', '$state', '$stateParams', '$location', '$timeout',
+function ($rootScope, $state, $stateParams, $location, $timeout) {
+  $rootScope.$on('$viewContentLoaded',function(event, toState, toParams, fromState, fromParams){
+    $timeout( function() {
+      $rootScope.$emit('scatterplot.redrawAll');
+      $rootScope.$emit('histogram.redraw');
+      $rootScope.$emit('heatmap.redraw');    
+    });
+  }, 50);
 }]);
 
 

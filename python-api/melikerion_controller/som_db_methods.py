@@ -20,19 +20,19 @@ def tooManyTasks(cfg):
 def getSOM(idStr):
 	return SOM.objects.filter(id=idStr).first()
 
-def getExistingSOM(variables, datasets):
+def getExistingSOM(variables, samples):
 	return SOM.objects.filter( \
 		variables__size=len(variables), variables__all=variables, \
-		datasets__size=len(datasets), datasets__all=datasets).first()
+		samples__size=len(samples), samples__all=samples).first()
 
-def createTask(datasets, variables):
-	task = SOMTask(datasets=datasets, variables=variables)
+def createTask(variables, ids):
+	task = SOMTask(variables=variables, samples=ids)
 	task.save()
 	return task
 
-def createSOM(datasets, variables, fileDict, bmus):
+def createSOM(samples, variables, fileDict, bmus):
 
-	doc = SOM(datasets=datasets, variables=variables, plane_bmu=bmus)
+	doc = SOM(samples=samples, variables=variables, plane_bmu=bmus)
 	for fileKey, filePath in fileDict.iteritems():
 		handle = open( filePath, 'r' )
 		doc[fileKey].put( handle )
@@ -47,7 +47,7 @@ def getErrorResponse(message):
 def getSuccessResponse(data):
 	return { 'result': { 'code': 'success'}, 'data': data }
 
-def taskExists(datasets, variables):
+def taskExists(variables, samples):
 	return len(SOMTask.objects.filter( \
 		variables__size=len(variables), variables__all=variables, \
-		datasets__size=len(datasets), datasets__all=datasets)) > 0
+		samples__size=len(samples), samples__all=samples)) > 0

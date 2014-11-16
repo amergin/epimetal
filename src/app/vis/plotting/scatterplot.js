@@ -1,6 +1,11 @@
-var visu = angular.module('plotter.vis.plotting.scatterplot', []);
-visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants',
-  function($scope, DatasetFactory, DimensionService, constants) {
+var visu = angular.module('plotter.vis.plotting.scatterplot', 
+  [
+  'ui.router',
+  'services.dimensions',
+  'services.dataset'
+  ]);
+visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$state',
+  function($scope, DatasetFactory, DimensionService, constants, $state) {
 
     $scope.dimension = DimensionService.getXYDimension($scope.window.variables);
 
@@ -103,27 +108,33 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
     $scope.zIndexCount = 1;
 
     $scope.$onRootScope('scatterplot.redraw', function(event, dset, action) {
-      if (action === 'disabled') {
-        $scope.disable(dset);
-      } else if (action === 'enabled') {
+      // only redraw if the dashboard is visible
+      if( $state.current.name === $scope.window.handler.getName() ) {
+        if (action === 'disabled') {
+          $scope.disable(dset);
+        } else if (action === 'enabled') {
 
-        var canvas = $scope.canvases[dset.getName()];
-        if (_.isUndefined(canvas)) {
-          // new, not drawn before
+          var canvas = $scope.canvases[dset.getName()];
+          if (_.isUndefined(canvas)) {
+            // new, not drawn before
 
-          // refresh calculations
-          _calcCanvasAttributes();
-          // add canvas as 'layer'
-          $scope._createCanvas(dset, ++$scope.zIndexCount);
-        } else {
-          $scope.enable(dset);
+            // refresh calculations
+            _calcCanvasAttributes();
+            // add canvas as 'layer'
+            $scope._createCanvas(dset, ++$scope.zIndexCount);
+          } else {
+            $scope.enable(dset);
+          }
+
         }
-
       }
     });
 
     $scope.$onRootScope('scatterplot.redrawAll', function(event) {
-      $scope.redrawAll();
+      // only redraw if the dashboard is visible
+      if( $state.current.name === $scope.window.handler.getName() ) {
+        $scope.redrawAll();
+      }
     });
 
 

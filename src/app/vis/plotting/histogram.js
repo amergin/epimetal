@@ -1,15 +1,22 @@
-var visu = angular.module('plotter.vis.plotting.histogram', []);
-visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants',
-  function HistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants) {
+var visu = angular.module('plotter.vis.plotting.histogram', 
+  [
+  'ui.router',
+  'services.dimensions',
+  'services.dataset'
+  ]);
+visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state',
+  function HistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state) {
 
     $scope.dimension = DimensionService.getDimension($scope.window.variables);
     $scope.prevFilter = null;
 
     $scope.$onRootScope('histogram.redraw', function(event, dset, action) {
-      $scope.computeExtent();
-      $scope.histogram.x(d3.scale.linear().domain($scope.extent).range([0, $scope.noBins]));
-      $scope.histogram.render();
-
+      if( $state.current.name === $scope.window.handler.getName() ) {
+        // only redraw if the dashboard is visible
+        $scope.computeExtent();
+        $scope.histogram.x(d3.scale.linear().domain($scope.extent).range([0, $scope.noBins]));
+        $scope.histogram.render();
+      }
     });
 
     $scope.headerText = ['Histogram of', $scope.window.variables.x, ''];

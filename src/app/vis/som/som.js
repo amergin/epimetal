@@ -49,12 +49,13 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
         // do nothing
       } else {
         $scope.savedSelection = angular.copy( $scope.currentSelection );
-        DatasetFactory.getSOM($scope.currentSelection.x).then(
-          function succFn(som) {
-            NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
-          }, function errFn(res) {
-            NotifyService.addTransient('SOM computation failed', res, 'danger');
-          });
+        DatasetFactory.updateSOMVariables($scope.currentSelection.x);
+        // DatasetFactory.getSOM($scope.currentSelection.x).then(
+        //   function succFn(som) {
+        //     NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
+        //   }, function errFn(res) {
+        //     NotifyService.addTransient('SOM computation failed', res, 'danger');
+        //   });
 
       }
       $scope.currentSelection = {};

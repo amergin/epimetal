@@ -112,7 +112,6 @@ App.controller('AppCtrl', ['$scope', '$location', '$templateCache', 'Compatibili
     });
 
     $scope.$on('$stateChangeError', function (event, toState, toParams, fromState, fromParams) {
-      console.log(toParams);
     });
 
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {

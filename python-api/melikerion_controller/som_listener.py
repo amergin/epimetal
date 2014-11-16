@@ -50,11 +50,10 @@ CONCURRENCY_WAIT_TIME = 240
 
 
 class SOMProcessHandler( object ):
-	def __init__(self, config, variables, datasets, samples):
+	def __init__(self, config, variables, samples):
 		self.cfg = config
-		self.samples = samples
 		self.variables = variables
-		self.datasets = datasets
+		self.samples = samples
 
 		# filled later on
 		self.path = None
@@ -85,9 +84,8 @@ class SOMProcessHandler( object ):
 
 	def start(self):
 		resultId = ''
-
 		try:
-			self.task = createTask(self.datasets, self.variables)
+			self.task = createTask(self.variables, self.samples.get('id'))
 			self.id = str(self.task.id)
 			resultId = self._execMelikerion()
 		except Exception, e:
@@ -152,7 +150,7 @@ class SOMProcessHandler( object ):
 		bmus = _createBMUs( bmuFilename, self.samples )
 
 		# Save som computations to db
-		self.somDoc = createSOM(self.datasets, self.variables, fileDict, bmus)
+		self.somDoc = createSOM(self.samples.get('id'), self.variables, fileDict, bmus)
 
 		# Delete working directory
 		self._delTaskDirectory()
@@ -178,7 +176,6 @@ class SOMWorker( object ):
 	# tests the validity of received parameters
 	def _testSOMParams(self, message):
 		variables = message.get('variables')
-		datasets = message.get('datasets')
 		samples = message.get('samples')
 		somId = message.get('somid')
 
@@ -190,16 +187,18 @@ class SOMWorker( object ):
 				return False
 			return True
 
-		if not variables or not datasets:
+		if not variables:
 			print "[Error] Incorrect syntax for request"
 			return False
-		if len(variables) is 0 or len(datasets) is 0:
-			print "[Error] Variables or datasets is empty."
+		if len(variables) is 0:
+			print "[Error] Variables empty."
 			return False
-
 		if not samples:
 			print "[Error] Samples not defined."
 			return False
+		if len(samples) is 0 or len(samples.get('id')) is 0:
+			print "[Error] Samples empty."
+			return false
 		for var in variables:
 			if not samples.get(var):
 				print "[Error] Samples for variable %s are not defined." %var
@@ -211,7 +210,7 @@ class SOMWorker( object ):
 
 		while True:
 			message = self.socket.recv_json()
-			print "message=", message
+			#print "message=", message
 			print "[Info] Received message..."
 
 			if tooManyTasks(self.cfg):
@@ -233,36 +232,35 @@ class SOMWorker( object ):
 						self.socket.send_json( getSuccessResponse( { 
 							'id': objIdStr, 
 							'variables': doc.variables, 
-							'datasets': doc.datasets,
+							#'samples': doc.samples,
 							'bmus': doc.plane_bmu
 						} ) )
 					continue
 
-				datasets = message.get('datasets')
 				variables = message.get('variables')
 				samples = message.get('samples')
-				if taskExists(datasets, variables):
+				if taskExists(variables, samples.get('id')):
 					print "[Info] Task exists, wait."
 					startTime = time()
 					waitTime = 0
-					while taskExists( datasets, variables ) and waitTime < CONCURRENCY_WAIT_TIME:
+					while taskExists( variables, samples.get('id') ) and waitTime < CONCURRENCY_WAIT_TIME:
 						sleep(3)
 						waitTime = time() - startTime
 
 
-				existing = getExistingSOM(variables, datasets)
+				existing = getExistingSOM(variables, samples.get('id'))
 				if existing:
 					self.socket.send_json( 
 						getSuccessResponse( 
 							{ 'id': str(existing.id), 
-							'variables': existing.variables, 
-							'datasets': existing.datasets,
+							'variables': existing.variables,
+							#'samples': existing.samples,
 							'bmus': existing.plane_bmu } ) )
 
 				else:
 					# nothing ready, have to compute
 					print "[Info] No pre-existing SOM computation, execute Melikerion."
-					handler = SOMProcessHandler(self.cfg, variables, datasets, samples)
+					handler = SOMProcessHandler(self.cfg, variables, samples)
 
 					thread = threading.Thread( target=handler.start )
 					thread.start()
@@ -275,7 +273,7 @@ class SOMWorker( object ):
 						somDoc = handler.getDocument()
 						self.socket.send_json( getSuccessResponse({ 
 							'variables': variables, 
-							'datasets': datasets, 
+							#'samples': samples, 
 							'id': str(somDoc.id),
 							'bmus': somDoc.plane_bmu
 						}) )

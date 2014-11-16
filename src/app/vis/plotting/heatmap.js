@@ -1,6 +1,10 @@
-var visu = angular.module('plotter.vis.plotting.heatmap', []);
-visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout) {
+var visu = angular.module('plotter.vis.plotting.heatmap', 
+  [
+  'ui.router',
+  'services.dimensions'
+  ]);
+visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$state',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $state) {
 
     $scope.resetFilter = function() {
       $scope.heatmap.filterAll();
@@ -237,15 +241,18 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
     });
 
     $scope.$onRootScope('heatmap.redraw', function(event, dset, action) {
-      $scope.computeVariables();
+      // only redraw if the dashboard is visible
+      if( $state.current.name === $scope.window.handler.getName() ) {
+        $scope.computeVariables();
 
-      // update the chart and redraw
-      $scope.heatmap.dimension($scope.coordDim);
-      $scope.heatmap.group($scope.coordGroup);
+        // update the chart and redraw
+        $scope.heatmap.dimension($scope.coordDim);
+        $scope.heatmap.group($scope.coordGroup);
 
-      // remember to clear any filters that may have been applied
-      $scope.heatmap.filterAll();
-      $scope.heatmap.render();
+        // remember to clear any filters that may have been applied
+        $scope.heatmap.filterAll();
+        $scope.heatmap.render();
+      }
     });
 
     $scope.filter = function() {

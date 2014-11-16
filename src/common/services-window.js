@@ -1,11 +1,11 @@
 var mod = angular.module('services.window', []);
 
 mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout',
-  function ($injector, constants, $rootScope, $timeout) {
+  function ($injector, constants, $rootScope, $timeout, name) {
 
-    function WindowHandler() {
-      console.log(name);
+    function WindowHandler(name) {
       var windows = [];
+      var _name = name;
       var that = this;
 
       this.add = function(config) {
@@ -14,6 +14,10 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
 
         $rootScope.$emit('variable:add', config.type, config.variables);
         return id;
+      };
+
+      this.getName = function() {
+        return _name;
       };
 
       this.remove = function(id) {
@@ -68,8 +72,8 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
     } // function
 
     return  {
-      create: function() {
-        return new WindowHandler();
+      create: function(name) {
+        return new WindowHandler(name);
       }
     };
 

@@ -1,10 +1,11 @@
 from mongoengine import Document, DynamicDocument, CASCADE, NULLIFY
-from mongoengine.fields import StringField, ListField, DynamicField, DictField, FileField, ReferenceField, DateTimeField
+from mongoengine.fields import StringField, ListField, DynamicField, DictField, FileField, ReferenceField, DateTimeField, GenericReferenceField
 from datetime import datetime
 
 class SOM(DynamicDocument):
-	datasets = ListField(required=True)#, unique_with='variables')
+	#datasets = ListField(required=True)#, unique_with='variables')
 	variables = ListField(required=True)
+	samples = ListField(required=True)
 	plane_bmu = DynamicField(required=True)
 
 	# file fields
@@ -16,7 +17,7 @@ class SOM(DynamicDocument):
 	meta = {
 	'indexes': [ 
 		{'fields': ['dataset'] },
-		{'fields': ['variables']}
+		{'fields': ['samples']}
 	] }
 
 class Plane(Document):
@@ -32,14 +33,14 @@ class Plane(Document):
 
 class SOMTask(Document):
 	created = DateTimeField(required=True, default=datetime.now)
-	datasets = ListField(required=True)
 	variables = ListField(required=True)
+	samples = ListField(required=True)
 
 	meta = {
 	'indexes': [ 
 		#{ 'fields': ('datasets', 'variables') },
 		{'fields': ['created'], 'expireAfterSeconds': 600},
-		{'fields': ['datasets'] },
+		{'fields': ['samples'] },
 		{'fields': ['variables'] }
 	] }
 
