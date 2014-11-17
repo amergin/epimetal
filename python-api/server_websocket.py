@@ -3,30 +3,65 @@ from flask_sockets import Sockets
 from config import Config
 
 from melikerion_controller.run_config import Config as MelikerionConfig
+from melikerion_controller.melikerion_orm_models import SOM, Plane
+from mongoengine.context_managers import switch_db
 
 from mongoengine.errors import MultipleObjectsReturned
 from mongoengine.queryset import DoesNotExist
+from mongoengine import register_connection
+
+from pymongo.errors import InvalidId
+from bson.objectid import ObjectId
 
 from flask.ext.mongoengine import MongoEngine
 from orm_models import Sample, HeaderSample, HeaderGroup
 import zmq
 import os
+import sys
 import json
 
 app = Flask(__name__)
 sockets = Sockets(app)
 config = Config('setup.config')
 melikerionConfig = MelikerionConfig('melikerion_controller/run.config')
-app.config.update(
-	DEBUG=True,
-	SECRET_KEY=os.urandom(24),
-	MONGODB_SETTINGS= {
+app.config['DEBUG'] = True
+app.config['SECRET_KEY'] = os.urandom(24)
+app.config['MONGODB_SETTINGS'] = {
 	'DB': config.getMongoVar('db'),
+	'alias': 'samples',
 	'HOST': config.getMongoVar('host'),
 	'PORT': int( config.getMongoVar('port') )
-	}
-)
-db = MongoEngine(app)
+}
+# }, {
+# 	'DB': melikerionConfig.getMongoVar('db'),
+# 	'alias': 'melikerion',
+# 	'HOST': melikerionConfig.getMongoVar('host'),
+# 	'PORT': int( melikerionConfig.getMongoVar('port') )
+# }]
+# app.config.update(
+# 	DEBUG=True,
+# 	SECRET_KEY=os.urandom(24)
+# 	MONGODB_SETTINGS= {
+# 	'DB': config.getMongoVar('db'),
+# 	'HOST': config.getMongoVar('host'),
+# 	'PORT': int( config.getMongoVar('port') )
+# 	}
+# )
+db = MongoEngine()
+db.init_app(app)
+#db = MongoEngine(app)
+
+register_connection(
+	'samples', 
+	name=config.getMongoVar('db'),
+	host=config.getMongoVar('host'),
+	port=int( config.getMongoVar('port') ) )
+
+register_connection(
+	'melikerion', 
+	name=melikerionConfig.getMongoVar('db'),
+	host=melikerionConfig.getMongoVar('host'),
+	port=int( melikerionConfig.getMongoVar('port') ) )
 
 # zmq stuff
 zmqContext = zmq.Context()
@@ -34,13 +69,13 @@ zmqSocketSOM = zmqContext.socket(zmq.REQ)
 zmqSocketPlane = zmqContext.socket(zmq.REQ)
 
 # Utilities
-def _checkDatasets(datasets):
+"""def _checkDatasets(datasets):
 	if not isinstance(datasets, list):
 		return False
 	for dset in datasets:
 		if not Sample.objects.filter(dataset=dset).count > 0:
 			return False
-	return True
+	return True"""
 
 def _checkVariables(variables):
 	if not isinstance(variables, list):
@@ -58,12 +93,11 @@ def _getSamples(sampleNames, variables):
 	results = []
 	for sample in sampleNames:
 		try:
-			found = Sample.objects.get(sampleid=sample['sampleid'], dataset=sample['dataset']) #.only(*(_getModifiedParameters(variables)))
+			found = Sample.objects.get(sampleid=sample.get('sampleid'), dataset=sample.get('dataset'))
 			results.append(found)
 		except( DoesNotExist, MultipleObjectsReturned ):
 			pass
 	return sorted(results, key=lambda e: (e['sampleid'], e['dataset']) )
-	#Sample.objects.filter(dataset__in=datasets, sampleid__in=sampleNames).only(*(_getModifiedParameters(variables))).order_by('sampleid', 'dataset')
 
 def _getModifiedParameters(variables):
 	ret = ['sampleid', 'dataset']
@@ -134,16 +168,16 @@ def createPlane(ws):
 		variables = message.get('variables')
 		testVariable = variables.get('test')
 		inputVariables = variables.get('input')
-		inputDatasets = message.get('datasets')
 		somId = message.get('somid')
-		if not( somId and variables and inputDatasets ) \
+		if not( somId and variables ) \
 		or not isinstance( inputVariables, list) \
-		or not _checkVariables(inputVariables + [testVariable]) \
-		or not _checkDatasets( inputDatasets ):
+		or not _checkVariables(inputVariables + [testVariable]):
 			response = json.dumps({ 'result': { 'code': 'error', 'message': 'Invalid parameters sent.' } })
 		else:
 			uniqueVars = list(set( inputVariables + [testVariable] ) )
-			samples = Sample.objects.filter( dataset__in=inputDatasets ).only( *_getModifiedParameters(uniqueVars) ).order_by('sampleid', 'dataset')
+			somInstance = SOM.objects.get(id=ObjectId(somId) )
+			samples = _getSamples( somInstance.samples, uniqueVars )
+
 			zmqSocketPlane.connect( melikerionConfig.getZMQVar('bind_plane') )
 			zmqSocketPlane.send_json({ 
 				'variables': { 'test': testVariable, 'input': inputVariables },
@@ -152,7 +186,10 @@ def createPlane(ws):
 			})
 			response = json.dumps(zmqSocketPlane.recv_json())
 		ws.send(response)
-	except: #ValueError, AttributeError:
+	except Exception, e:
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+		print(exc_type, fname, exc_tb.tb_lineno)
 		response = { 'result': { 'code': 'error', 'message': 'Invalid parameters sent.' } }
 		ws.send(json.dumps(response))
 

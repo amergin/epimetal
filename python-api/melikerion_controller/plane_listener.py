@@ -17,6 +17,7 @@ from time import time, sleep
 # from other custom python class files
 from run_config import Config
 from mongoengine import connect
+from mongoengine import register_connection
 from zmq_controller import ZMQController
 
 from plane_db_methods import *
@@ -81,6 +82,9 @@ class PlaneProcessHandler( object ):
 		_createBMUFile(bmuFilename, self.somDoc)
 
 		smFile = open( self.path + "/" + MELIKERION_SM_FILENAME, 'w' )
+		print "file=", smFile
+		print "somDoc id=", self.somDoc.id
+		print "som=", self.somDoc.som
 		smFile.write( self.somDoc.som.read() )
 		smFile.close()
 
@@ -104,18 +108,18 @@ class PlaneProcessHandler( object ):
 		shutil.rmtree(self.path)
 
 	def start(self):
-		try:
-			self.task = createTask(self.somDoc, self.testVar)
-			self.id = str(self.task.id)
-			self._execMelikerion()
-		except Exception, e:
-			print "[Error] Plane Listener threw exception:"
-			print e
-		finally:
-			# Delete working directory
-			self._delTaskDirectory()
-			# Delete the task document since it is completed
-			self.task.delete()
+		#try:
+		self.task = createTask(self.somDoc, self.testVar)
+		self.id = str(self.task.id)
+		self._execMelikerion()
+		# except Exception, e:
+		# 	print "[Error] Plane Listener threw exception:"
+		# 	print e
+		# finally:
+		# Delete working directory
+		self._delTaskDirectory()
+		# Delete the task document since it is completed
+		self.task.delete()
 
 	def getPlaneDoc(self):
 		return self.planeDoc
@@ -268,6 +272,9 @@ class PlaneWorker( object ):
 
 				# Does not exist, needs to be computed
 
+
+				print "somDOC=", somDoc
+				print "variables=", somDoc.variables
 				handler = PlaneProcessHandler( self.cfg, somDoc, variable, inputVariables, samples )
 				print "[Info] No pre-existing Plane computation, execute Melikerion."
 				thread = threading.Thread( target=handler.start )
@@ -304,6 +311,11 @@ if __name__ == "__main__":
 	config = Config(configFile)
 
 	# connect to mongodb
+	register_connection( 
+		'melikerion', 
+		name=config.getMongoVar('db'),
+		host=config.getMongoVar('host'),
+		port=int(config.getMongoVar('port')) )
 	connect( config.getMongoVar('db'), host=config.getMongoVar('host'), port=int(config.getMongoVar('port')) )
 
 	zmq = ZMQController('plane', config, PlaneWorker)

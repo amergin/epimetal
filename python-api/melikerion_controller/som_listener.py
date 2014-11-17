@@ -18,6 +18,7 @@ from time import time, sleep
 # from other custom python class files
 from run_config import Config
 from zmq_controller import ZMQController
+from mongoengine import register_connection
 
 from mongoengine import connect
 from som_db_methods import *
@@ -303,6 +304,11 @@ if __name__ == "__main__":
 	config = Config(configFile)
 
 	# connect to mongodb
+	register_connection( 
+		'melikerion', 
+		name=config.getMongoVar('db'),
+		host=config.getMongoVar('host'),
+		port=int(config.getMongoVar('port')) )
 	connect( config.getMongoVar('db'), host=config.getMongoVar('host'), port=int(config.getMongoVar('port')) )
 
 	zmq = ZMQController('som', config, SOMWorker)

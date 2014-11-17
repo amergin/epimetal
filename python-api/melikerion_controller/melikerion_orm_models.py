@@ -18,7 +18,9 @@ class SOM(DynamicDocument):
 	'indexes': [ 
 		{'fields': ['dataset'] },
 		{'fields': ['samples']}
-	] }
+	],
+	'db_alias': 'melikerion'
+	}
 
 class Plane(Document):
 	variable  = StringField(required=True, unique=True, unique_with='som')
@@ -29,7 +31,9 @@ class Plane(Document):
 	meta = {
 	'indexes': [ 
 		{'fields': ('som', 'variable'), 'unique': True}
-	] }
+	],
+	'db_alias': 'melikerion'	
+	}
 
 class SOMTask(Document):
 	created = DateTimeField(required=True, default=datetime.now)
@@ -42,7 +46,9 @@ class SOMTask(Document):
 		{'fields': ['created'], 'expireAfterSeconds': 600},
 		{'fields': ['samples'] },
 		{'fields': ['variables'] }
-	] }
+	],
+	'db_alias': 'melikerion'	
+	}
 
 class PlaneTask(Document):
 	created = DateTimeField(required=True, default=datetime.now)
@@ -56,4 +62,6 @@ class PlaneTask(Document):
 		{'fields': ['created'], 'expireAfterSeconds': 600},
 		{'fields': ['som'] },
 		{'fields': ['variable'] }
-	] }
+	],
+	'db_alias': 'melikerion'
+	}

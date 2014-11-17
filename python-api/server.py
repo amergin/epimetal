@@ -4,7 +4,9 @@ from config import Config
 import flask
 from flask import Flask, Request, request, Response, abort
 
+from mongoengine import register_connection
 from flask.ext.mongoengine import MongoEngine
+
 import json
 
 from orm_models import Sample, HeaderSample, HeaderGroup
@@ -15,15 +17,30 @@ from base64 import b64decode
 
 app = Flask(__name__)
 config = Config('setup.config')
-app.config.update(
-	DEBUG=True,
-	SECRET_KEY=os.urandom(24),
-	MONGODB_SETTINGS= {
+app.config['DEBUG'] = True
+app.config['SECRET_KEY'] = os.urandom(24)
+app.config['MONGODB_SETTINGS'] = {
 	'DB': config.getMongoVar('db'),
+	'alias': 'samples',
 	'HOST': config.getMongoVar('host'),
 	'PORT': int( config.getMongoVar('port') )
-	}
-)
+}
+
+register_connection(
+	'samples', 
+	name=config.getMongoVar('db'),
+	host=config.getMongoVar('host'),
+	port=int( config.getMongoVar('port') ) )
+
+# app.config.update(
+# 	DEBUG=True,
+# 	SECRET_KEY=os.urandom(24),
+# 	MONGODB_SETTINGS= {
+# 	'DB': config.getMongoVar('db'),
+# 	'HOST': config.getMongoVar('host'),
+# 	'PORT': int( config.getMongoVar('port') )
+# 	}
+# )
 db = MongoEngine(app)
 sockets = Sockets(app)
 

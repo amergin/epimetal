@@ -11,7 +11,9 @@ class Sample(DynamicDocument):
 	'indexes': [ 
 		{'fields': ('dataset', 'sampleid'), 'unique': True},
 		{'fields': ['dataset'] }
-	] }
+	],
+	'db_alias': 'samples'
+	}
 
 class HeaderGroup(Document):
 	name = StringField(unique=True)
@@ -23,7 +25,8 @@ class HeaderGroup(Document):
 		'indexes': [
 			{'fields': ['order'], 'unique': True },
 			{'fields': ['name'], 'unique': True }
-		]
+		],
+	'db_alias': 'samples'		
 	}
 
 class HeaderSample(Document):
@@ -36,6 +39,7 @@ class HeaderSample(Document):
 	'indexes': [
 		{'fields': ['group', 'name', 'unit', 'desc'] },
 		{'fields': ['name'], 'unique': True }
-		]
+		],
+	'db_alias': 'samples'		
 	}
 
