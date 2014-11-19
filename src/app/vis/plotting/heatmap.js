@@ -11,8 +11,9 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       dc.redrawAll(constants.groups.heatmap);
     };
 
-    $scope.headerText = ['Correlation heatmap of', $scope.window.variables.x.length + " variables", ''];
-    $scope.window.showResetBtn = false;
+    $scope.$parent.headerText = ['Correlation heatmap of', $scope.window.variables.x.length + " variables", ''];
+    $scope.$parent.showResetBtn = false;
+
     $scope.format = d3.format('.2g');
     $scope.filtered = true; // p-value limiting
 
@@ -224,19 +225,19 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
     $scope.computeVariables();
 
-    $scope.settingsDropdown.push({
+    $scope.$parent.settingsDropdown.push({
       'text': '<i class="fa fa-sliders"></i> Show correlations with p > <b>' + $scope.limitDisp + '</b>',
       'click': "filter()"
     });
 
     $scope.$watch('filtered', function(filt) {
-      var entry = _.last($scope.settingsDropdown).text;
+      var entry = _.last($scope.$parent.settingsDropdown).text;
       if(filt) { 
-        $scope.headerText[2] = '(p < ' + $scope.limitDisp + ')';
-        _.last($scope.settingsDropdown).text = entry.replace(/Hide/, 'Show');
+        $scope.$parent.headerText[2] = '(p < ' + $scope.limitDisp + ')';
+        _.last($scope.$parent.settingsDropdown).text = entry.replace(/Hide/, 'Show');
       } else {
-        $scope.headerText[2] = '';
-        _.last($scope.settingsDropdown).text = entry.replace(/Show/, 'Hide');
+        $scope.$parent.headerText[2] = '';
+        _.last($scope.$parent.settingsDropdown).text = entry.replace(/Show/, 'Hide');
       }
     });
 

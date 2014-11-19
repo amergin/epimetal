@@ -9,14 +9,9 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
     $scope.dimension = DimensionService.getXYDimension($scope.window.variables);
 
-    $scope.resetFilter = function() {
-      $scope.scatterplot.filterAll();
-      //dc.redrawAll();
-    };
 
-    $scope.showResetBtn = false;
-
-    $scope.headerText = ['Scatter plot of', $scope.window.variables.x + ", " + $scope.window.variables.y, ''];
+    $scope.$parent.showResetBtn = false;
+    $scope.$parent.headerText = ['Scatter plot of', $scope.window.variables.x + ", " + $scope.window.variables.y, ''];
 
     var _calcCanvasAttributes = function() {
       $scope.reduced = DimensionService.getReduceScatterplot($scope.dimension.group());
@@ -386,6 +381,7 @@ visu.directive('scatterplot', ['$timeout',
     var linkFn = function($scope, ele, iAttrs) {
 
       $scope.element = ele;
+      $scope.$parent.element = ele;
 
       $scope.width = ele.width() || 490;
       $scope.height = ele.height() || 345;

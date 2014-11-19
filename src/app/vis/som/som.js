@@ -3,7 +3,8 @@ var vis =
     [
     'plotter.vis.plotting',
     'services.dataset',
-    'services.notify' 
+    'services.notify',
+    'ui.layout'
     // 'services.window',
     // 'services.dimensions', 
     // 'localytics.directives',
@@ -87,5 +88,35 @@ mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$root
   function SOMBottomContentController($scope, $templateCache, $rootScope, bottomWindowHandler) {
     $scope.windowHandler = bottomWindowHandler;
     $scope.windows = $scope.windowHandler.get();
+
+    $scope.itemMapper = {
+        sizeX: 'window.size.x', 
+        sizeY: 'window.size.y',
+        row: 'window.position.row',
+        col: 'window.position.col'
+    };
+
+    $scope.gridOptions = {
+      pushing: true,
+      floating: true,
+      swapping: false,
+      margins: [10, 10],
+      outerMargin: true,
+      draggable: {
+        enabled: true,
+        handle: '.handle'
+      },
+      defaultSizeX: 4,
+      defaultSizeY: 4,
+      // minColumns: 40,
+      columns: 4 * 10,
+      width: 4 * 125 * 10,
+      colWidth: '125',
+      rowHeight: '100',
+      resizable: {
+           enabled: true,
+           handles: ['se']
+      }
+    };    
   }
 ]);

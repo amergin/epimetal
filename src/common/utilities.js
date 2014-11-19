@@ -15,6 +15,29 @@ module.directive('selectOnClick', function() {
   };
 });
 
+// for introducing a custom directive in a nested directive situation
+module.directive('replaceAndCompile', ['$compile', '$timeout', function($compile, $timeout) {
+  return {
+    scope: { 
+      name: '=reName', 
+      window: '=reWindow'
+    },
+    restrict: 'A',
+    link: {
+      post: function(scope, element, attrs) {
+        $timeout( function() {
+          var el = angular.element('<div/>')
+          .addClass(scope.window.type)
+          .addClass('figure');
+          element.parent().append(el);
+          $compile(el)(scope);
+          element.remove();
+        });
+      }
+    }
+  };
+}]);
+
 // disables angular-animate on elements. See
 //http://stackoverflow.com/questions/21249441/disable-nganimate-form-some-elements
 module.directive('disableAnimate', ['$animate', function($animate) {

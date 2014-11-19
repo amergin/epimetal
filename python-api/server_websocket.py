@@ -19,6 +19,7 @@ import zmq
 import os
 import sys
 import json
+import hashlib
 
 app = Flask(__name__)
 sockets = Sockets(app)
@@ -85,9 +86,28 @@ def _checkVariables(variables):
 			return False
 	return True
 
+def _getSOM(samples, variables):
+	def getHash(samples,variables):
+		idString = json.dumps(samples + variables, sort_keys=True, ensure_ascii=True, separators=(',',':'))
+		print "idstring=", idString
+		return hashlib.md5( idString ).hexdigest()
+	som = None
+	try:
+		print "hash=", getHash(samples,variables)
+		som = SOM.objects.get(hash=getHash(samples,variables))
+	except:
+		e = sys.exc_info()[0]
+		print "not found, error", e
+	finally:
+		return som
+
 def _checkSamples(samples):
-	if not isinstance(variables, list):
+	if not isinstance(samples, list):
 		return False
+
+def _sortArray(array):
+	return sorted(array, key=lambda e: (e['sampleid'], e['dataset']) )
+
 
 def _getSamples(sampleNames, variables):
 	results = []
@@ -97,7 +117,8 @@ def _getSamples(sampleNames, variables):
 			results.append(found)
 		except( DoesNotExist, MultipleObjectsReturned ):
 			pass
-	return sorted(results, key=lambda e: (e['sampleid'], e['dataset']) )
+	# important! hash depends on sort order!
+	return _sortArray(results)
 
 def _getModifiedParameters(variables):
 	ret = ['sampleid', 'dataset']
@@ -137,11 +158,21 @@ def createSOM(ws):
 		ws.send(response)
 		return
 
-	#datasets = message.get('datasets')
 	variables = message.get('variables')
 	sampleNames = message.get('samples')
-	if not(variables and sampleNames) or not( _checkVariables(variables) ):
+
+	if not(variables and sampleNames) or not( _checkVariables(variables) and _checkSamples(sampleNames) ):
 		response = { "result": { 'code': 'error', 'message': 'Incorrect parameters' }, 'data': [] }
+
+	sampleNames = _sortArray(sampleNames)
+
+	somInstance = _getSOM(sampleNames, variables)
+	if somInstance:
+		response = { "result": { 'code': 'success' }, 'data': { 
+		'variables': variables,
+		#'samples': samples,
+		'bmus': somInstance.plane_bmu
+		} }
 	else:
 		samples = _getSamples(sampleNames, variables)
 		zmqSocketSOM.connect( melikerionConfig.getZMQVar('bind_som') )

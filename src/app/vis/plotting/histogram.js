@@ -10,6 +10,11 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     $scope.dimension = DimensionService.getDimension($scope.window.variables);
     $scope.prevFilter = null;
 
+    $scope.resetFilter = function() {
+      $scope.histogram.filterAll();
+      dc.redrawAll(constants.groups.histogram);
+    };
+
     $scope.$onRootScope('histogram.redraw', function(event, dset, action) {
       if( $state.current.name === $scope.window.handler.getName() ) {
         // only redraw if the dashboard is visible
@@ -19,9 +24,9 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       }
     });
 
-    $scope.headerText = ['Histogram of', $scope.window.variables.x, ''];
-    $scope.window.showResetBtn = false;
-
+    // share information with the plot window
+    $scope.$parent.headerText = ['Histogram of', $scope.window.variables.x, ''];
+    $scope.$parent.showResetBtn = false;
 
     $scope.computeExtent = function() {
       var allValues = $scope.dimension.group().all().filter(function(d) {
@@ -54,11 +59,6 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
 
     $scope.datasetNames = DatasetFactory.getSetNames();
     $scope.colorScale = DatasetFactory.getColorScale();
-
-    $scope.resetFilter = function() {
-      $scope.histogram.filterAll();
-      dc.redrawAll(constants.groups.histogram);
-    };
 
     // see https://github.com/dc-js/dc.js/wiki/FAQ#filter-the-data-before-its-charted
     // this used to filter to only the one set & limit out NaN's
@@ -99,6 +99,7 @@ visu.directive('histogram', ['constants', '$timeout',
         .shareColors(true)
         .elasticY(true)
         .elasticX(false)
+        .brushOn(config.filterEnabled)
         .renderTitle(false)
         .title(function(d) {
           return 'Value: ' + constants.tickFormat(d.key) +
@@ -193,6 +194,9 @@ visu.directive('histogram', ['constants', '$timeout',
     };
 
     function postLink($scope, ele, attrs, ctrl) {
+
+      $scope.$parent.element = ele;
+
       var config = {
         dimension: $scope.dimension,
         element: ele,
@@ -205,7 +209,8 @@ visu.directive('histogram', ['constants', '$timeout',
         datasetNames: $scope.datasetNames,
         colorScale: $scope.colorScale,
         pooled: $scope.window.pooled || false,
-        filter: $scope.filterOnSet
+        filter: $scope.filterOnSet,
+        filterEnabled: $scope.window.filterEnabled
       };
 
       createSVG($scope, config);
@@ -224,7 +229,6 @@ visu.directive('histogram', ['constants', '$timeout',
     return {
       scope: false,
       restrict: 'C',
-      replace: true,
       controller: 'HistogramPlotController',
       link: {
         post: postLink

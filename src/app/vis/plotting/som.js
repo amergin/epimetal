@@ -8,7 +8,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
 
     var pvalFormat = d3.format('.2e');
-    $scope.headerText = ['Self-organizing map of', $scope.window.variable, "(P = " + pvalFormat($scope.window.plane.pvalue) + ")"];
+    $scope.$parent.headerText = ['Self-organizing map of', $scope.window.variable, "(P = " + pvalFormat($scope.window.plane.pvalue) + ")"];
 
     $scope.window.showResetBtn = false;
     $scope.dimension = DimensionService.getSOMDimension( $scope.window.som_id );
@@ -268,6 +268,7 @@ visu.directive('somplane', [
 
     var linkFn = function($scope, ele, iAttrs) {
 
+      $scope.$parent.element = ele;
       $scope.element = ele;
 
       $scope.width = 455;

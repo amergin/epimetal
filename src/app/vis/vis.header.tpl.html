@@ -15,7 +15,7 @@
   <!-- Collect the nav links, forms, and other content for toggling -->
   <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
     <ul class="nav navbar-nav">
-     <li ng-repeat="tab in tabs" ui-sref-active="active">
+     <li ng-repeat="tab in tabs" ng-class="{active:$state.includes('vis.' + tab.name)}">
       <a href ui-sref="{{ 'vis.' + tab.name }}" role="tab" data-toggle="tab">{{tab.title}}</a>
     </li>
   </ul>

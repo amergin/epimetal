@@ -21,7 +21,7 @@
   'services.dataset', 
   'services.notify',
   'services.window',
-  'wu.packery',
+  // 'wu.packery',
   'plotter.vis.explore',
   'plotter.vis.som',
   'plotter.vis.som.distributions',
@@ -46,7 +46,7 @@
     url: '/vis/',
     abstract: true,
     data: { pageTitle: 'Visualization' },
-    templateUrl: 'vis/vis.tpl.html',
+    // templateUrl: 'vis/vis.tpl.html',
     // important: the app will NOT change state to 'vis' until
     // these object promises have been resolved. Failure is generally indication
     // that the user is not logged in -> redirect to 'login' state.
@@ -112,7 +112,6 @@
     views: {
       'submenu@vis': {
         templateUrl: 'vis/som/som.submenu.tpl.html'
-        // controller: 'ExploreMenuCtrl'
       },
       'som@vis': {
         templateUrl: 'vis/som/som.tpl.html'
@@ -130,6 +129,7 @@
     deepStateRedirect: true,
     sticky: true
   };
+  // abstract-like state, route elsewhere
   $urlRouterProvider.when('/vis/som', '/vis/som/distributions');
 
   var somDistributions = {
@@ -216,8 +216,8 @@ function ($rootScope, $state, $stateParams, $location, $timeout) {
 }]);
 
 
- vis.controller( 'HeaderCtrl', ['$scope', '$stateParams', '$injector',
-  function ( $scope, $stateParams, $injector ) {
+ vis.controller( 'HeaderCtrl', ['$scope', '$stateParams', '$injector', '$state',
+  function ($scope, $stateParams, $injector, $state) {
 
     $scope.tabs = [
     { 'title': 'Explore and filter', 'name': 'explore' },
@@ -225,6 +225,9 @@ function ($rootScope, $state, $stateParams, $location, $timeout) {
     { 'title': 'Regression analysis & associations', 'name': 'regression' }
     ];
     $scope.tabs.activeTab = 0;
+
+    // quickfix: http://stackoverflow.com/questions/22054391/angular-ui-router-how-do-i-get-parent-view-to-be-active-when-navigating-to-ne
+    $scope.$state = $state;
 
     console.log("header ctrl");
 

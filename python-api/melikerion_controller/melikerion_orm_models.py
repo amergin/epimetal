@@ -6,6 +6,8 @@ class SOM(DynamicDocument):
 	#datasets = ListField(required=True)#, unique_with='variables')
 	variables = ListField(required=True)
 	samples = ListField(required=True)
+	# unique hash from variables + samples
+	hash = StringField(required=True)
 	plane_bmu = DynamicField(required=True)
 
 	# file fields
@@ -16,8 +18,8 @@ class SOM(DynamicDocument):
 
 	meta = {
 	'indexes': [ 
-		{'fields': ['dataset'] },
-		{'fields': ['samples']}
+		{ 'fields': ['dataset', 'samples'] },
+		{ 'fields': ['hash'], 'unique': True }
 	],
 	'db_alias': 'melikerion'
 	}

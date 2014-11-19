@@ -7,10 +7,18 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
       var windows = [];
       var _name = name;
       var that = this;
+      var _filtersEnabled = true;
 
       this.add = function(config) {
         var id = _.uniqueId('win_');
-        windows.push( angular.extend(config, { '_winid': id, handler: that }) );
+        windows.push( angular.extend(
+          config, 
+          { '_winid': id, 
+          handler: that,
+          position: { row: 0, col: 2 * windows.length },
+          size: { x: 4, y: 4 },
+          filterEnabled: _filtersEnabled
+        }) );
 
         $rootScope.$emit('variable:add', config.type, config.variables);
         return id;
@@ -18,6 +26,11 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
 
       this.getName = function() {
         return _name;
+      };
+
+      this.filtersEnabled = function(val) {
+        if(!arguments.length) { return _filtersEnabled; }
+        _filtersEnabled = val;
       };
 
       this.remove = function(id) {

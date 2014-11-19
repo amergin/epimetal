@@ -249,35 +249,35 @@ class SOMWorker( object ):
 						waitTime = time() - startTime
 
 
-				existing = getExistingSOM(variables, samples.get('id'))
+				""" existing = getExistingSOM(variables, samples.get('id'))
 				if existing:
 					self.socket.send_json( 
 						getSuccessResponse( 
 							{ 'id': str(existing.id), 
 							'variables': existing.variables,
 							#'samples': existing.samples,
-							'bmus': existing.plane_bmu } ) )
+							'bmus': existing.plane_bmu } ) ) """
 
+				#else:
+				# nothing ready, have to compute
+				print "[Info] No pre-existing SOM computation, execute Melikerion."
+				handler = SOMProcessHandler(self.cfg, variables, samples)
+
+				thread = threading.Thread( target=handler.start )
+				thread.start()
+				# block the response until the computation is complete
+				thread.join()
+				if not handler.resultIsSuccess():
+					self.socket.send_json( getErrorResponse('Internal error while executing Melikerion software.') )
 				else:
-					# nothing ready, have to compute
-					print "[Info] No pre-existing SOM computation, execute Melikerion."
-					handler = SOMProcessHandler(self.cfg, variables, samples)
-
-					thread = threading.Thread( target=handler.start )
-					thread.start()
-					# block the response until the computation is complete
-					thread.join()
-					if not handler.resultIsSuccess():
-						self.socket.send_json( getErrorResponse('Internal error while executing Melikerion software.') )
-					else:
-						# all OK, send response
-						somDoc = handler.getDocument()
-						self.socket.send_json( getSuccessResponse({ 
-							'variables': variables, 
-							#'samples': samples, 
-							'id': str(somDoc.id),
-							'bmus': somDoc.plane_bmu
-						}) )
+					# all OK, send response
+					somDoc = handler.getDocument()
+					self.socket.send_json( getSuccessResponse({ 
+						'variables': variables, 
+						#'samples': samples, 
+						'id': str(somDoc.id),
+						'bmus': somDoc.plane_bmu
+					}) )
 
 
 # Main function

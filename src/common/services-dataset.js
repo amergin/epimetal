@@ -290,8 +290,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
     service._getSOM = function() {
       if( _.isEmpty(that.somVariables) ) { return; }
-      console.log("Starting SOM computation!");
-
+      NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'success');
 
       function getSamples() {
         var DimensionService = $injector.get('DimensionService');
@@ -303,6 +302,9 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       }
 
       var samples = getSamples();
+
+      // at least 10 samples required
+      if( samples.length < 10 ) { return; }
 
       var selection = that.somVariables;
       var defer = $q.defer();

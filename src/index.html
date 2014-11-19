@@ -24,7 +24,31 @@
 </head>
 
 <body>
-  <div ui-view="header"></div>
+  <div ui-layout="{ flow : 'row', dividerSize: 1 }">
+    <!-- <div ui-layout-container size="100px"> -->
+      <div ui-view="header"></div>      
+    <!-- </div> -->
+    <div ui-layout-container id="main-content">
+      <div class="container-fluid" ui-view="content"></div>
+    </div>
+    <div ui-layout-container size="30px">
+      <footer>
+        <p>Copyright Jussi Ekholm & <a href="http://computationalmedicine.fi/" target="_blank">Computational Medicine Research Group</a> 2013-2014, and the copyrights of the respective libraries used in developing this application.</p>
+        <pre>
+          $state = {{$state.current.name}}
+          $stateParams = {{$stateParams}}
+        </pre>
+        <pre class="col-sm-12">
+          Active variables: {{activeVariables}}
+          Used variables: {{usedVariables}}
+        </pre>
+      </footer>
+    </div>
+
+
+  </div>
+
+<!--   <div ui-view="header"></div>
   <div class="container-fluid" id="main-content" ui-view="content"></div> 
 
   <footer>
@@ -33,7 +57,7 @@
       $state = {{$state.current.name}}
       $stateParams = {{$stateParams}}
     </pre>
-  </footer>
+  </footer> -->
 
 </body>
 

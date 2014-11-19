@@ -64,19 +64,26 @@ module.exports = {
     js: [
       // notice the order: jquery before angular!
       'vendor/jquery/dist/jquery.js',
+      // 'vendor/jquery-ui/jquery-ui.min.js',
+      // 'vendor/jquery-ui/ui/minified/core.min.js',
+      // 'vendor/jquery-ui/ui/minified/widget.min.js',
+      // 'vendor/jquery-ui/ui/minified/mouse.min.js',
+      // 'vendor/jquery-ui/ui/minified/resizable.min.js',
+      'vendor/javascript-detect-element-resize/jquery.resize.js',
       // resizeable x4
-      'vendor/jquery-ui/ui/minified/core.min.js',
-      'vendor/jquery-ui/ui/minified/widget.min.js',
-      'vendor/jquery-ui/ui/minified/mouse.min.js',
-      'vendor/jquery-ui/ui/minified/resizable.min.js',
+      // 'vendor/jquery-ui/ui/minified/core.min.js',
+      // 'vendor/jquery-ui/ui/minified/widget.min.js',
+      // 'vendor/jquery-ui/ui/minified/mouse.min.js',
+      // 'vendor/jquery-ui/ui/minified/resizable.min.js',
       'vendor/angular/angular.js',
       // html sanitizer for notify service
       'vendor/angular-sanitize/angular-sanitize.js',
       // animation framework
       'vendor/angular-animate/angular-animate.js',
       // windowing
-      'vendor/packery/dist/packery.pkgd.js',
-      'vendor/draggabilly/draggabilly.js',
+      'vendor/angular-gridster/dist/angular-gridster.min.js',
+      // 'vendor/packery/dist/packery.pkgd.js',
+      // 'vendor/draggabilly/draggabilly.js',
       // dropdowns x2
       'vendor/chosen/chosen.jquery.js',
       'vendor/angular-chosen-localytics/chosen.js',
@@ -94,12 +101,14 @@ module.exports = {
       // SOM figures
       'vendor/d3-plugins/hexbin/hexbin.js',
       // compatibility-service
-      'vendor/modernizr/modernizr.custom.min.js'
+      'vendor/modernizr/modernizr.custom.min.js',
+      'vendor/angular-ui-layout/ui-layout.js'
     ],
     css: [
       'vendor/dcjs/dc.css',
       'vendor/angular-motion/dist/angular-motion.min.css',
-      'vendor/bootstrap-additions/dist/bootstrap-additions.min.css'
+      'vendor/bootstrap-additions/dist/bootstrap-additions.min.css',
+      'vendor/angular-ui-layout/ui-layout.css'
       //'vendor/chosen/chosen.min.css'
     ],
     assets: [
