@@ -38,9 +38,10 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
       },
       defaultSizeX: 4,
       defaultSizeY: 4,
-      // minColumns: 40,
-      columns: 4 * 10, // x colWidth
+      columns: 4 * 10,
       width: 4 * 125 * 10,
+      // minColumns: 4 * 4,
+      // minRows: 4 * 4,
       colWidth: '125',
       rowHeight: '100',
       resizable: {

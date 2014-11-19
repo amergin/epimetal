@@ -24,14 +24,14 @@
 </head>
 
 <body>
-  <div ui-layout="{ flow : 'row', dividerSize: 1 }">
+  <div ui-layout="{ flow : 'row', dividerSize: 1 }" style="overflow-y: hidden;">
     <!-- <div ui-layout-container size="100px"> -->
       <div ui-view="header"></div>      
     <!-- </div> -->
     <div ui-layout-container id="main-content">
       <div class="container-fluid" ui-view="content"></div>
     </div>
-    <div ui-layout-container size="30px">
+    <div ui-layout-container size="30px" style="z-index:2; overflow: hidden; background-color: gray;">
       <footer>
         <p>Copyright Jussi Ekholm & <a href="http://computationalmedicine.fi/" target="_blank">Computational Medicine Research Group</a> 2013-2014, and the copyrights of the respective libraries used in developing this application.</p>
         <pre>
