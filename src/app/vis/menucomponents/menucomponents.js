@@ -22,16 +22,17 @@ vis.directive('datasetForm', function () {
 });
 
 // dataset table controller
-vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService', 'constants', '$location', 'UrlHandler',
-  function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService, constants, $location, UrlHandler) {
+vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService', 'constants', '$location', 'UrlHandler', 'WindowHandler',
+  function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService, constants, $location, UrlHandler, WindowHandler) {
 
     $scope.datasets = DatasetFactory.getSets();
 
     $scope.toggle = function(set) {
+      _.each( WindowHandler.getAll(), function(h) {
+        h.spinAll();
+      });
+
       set.toggle();
-
-      // UrlHandler.updateDataset();
-
       DatasetFactory.checkActiveVariables(set).then( function succFn(res) {
 
         if( res === 'enabled' || res === 'disabled' ) {
@@ -57,9 +58,11 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
         level = 'danger';
         NotifyService.addTransient(title, message, level);
       }).finally( function() {
+        _.each( WindowHandler.getAll(), function(h) {
+          h.stopAllSpins();
+        });
       });
     };
-    console.log("dset ctrl", $scope.menuDatasets);
   }
 ]);
 

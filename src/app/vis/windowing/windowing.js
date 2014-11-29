@@ -1,4 +1,4 @@
-var win = angular.module('plotter.vis.windowing', ['services.window', 'services.dataset', 'mgcrea.ngStrap.dropdown', 'mgcrea.ngStrap.tooltip']);
+var win = angular.module('plotter.vis.windowing', ['services.window', 'services.dataset', 'mgcrea.ngStrap.dropdown', 'mgcrea.ngStrap.tooltip', 'angularSpinner']);
 
 win.directive('windowHeader', function() {
   return {
@@ -15,11 +15,25 @@ win.directive('windowHeader', function() {
   };
 });
 
-win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q',
-  function($scope, constants, DatasetFactory, $q) {
+win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q', 'usSpinnerService',
+  function($scope, constants, DatasetFactory, $q, usSpinnerService) {
 
     $scope.close = function(windowHandler, id) {
       windowHandler.remove(id);
+    };
+
+    $scope.startSpin = function() {
+      var windowHandler = $scope.window.handler;
+      windowHandler.startSpin($scope.window['_winid']);
+    };
+
+    $scope.stopSpin = function() {
+      var windowHandler = $scope.window.handler;
+      windowHandler.stopSpin($scope.window['_winid']);
+    };
+
+    $scope.filter = function() {
+      console.log("filter");
     };
 
     $scope.rendered = false;

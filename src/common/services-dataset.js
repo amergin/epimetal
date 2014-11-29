@@ -1,4 +1,4 @@
-var serv = angular.module('services.dataset', ['services.notify']);
+var serv = angular.module('services.dataset', ['services.notify', 'ui.router.state']);
 
 serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootScope', 'NotifyService',
   function($http, $q, $injector, constants, $rootScope, NotifyService) {
@@ -26,7 +26,11 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
     // only one SOM can be active at a time; if this is empty that means 
     // a SOM has not yet been computed (waiting)
     that.som = {};
-    that.somVariables = [];
+    that.somSelection = {
+      variables: [],
+      samples: null
+    };
+    // that.somVariables = [];
     that.SOMPlanes = {};
 
 
@@ -277,19 +281,33 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
     service.updateSOMVariables = function(variables) {
       function sameVariables(variables) {
-        return _.isEmpty( _.difference(variables, that.somVariables) );
+        return _.isEmpty( _.difference(variables, that.somSelection.variables) );
       }
 
       if( sameVariables(variables) ) {
         return;
       }
+      that.somSelection['variables'] = variables;
 
-      that.somVariables = variables;
-      service._getSOM();
+      service.computeSOM(true);
+    };
+
+    service.computeSOM = function(force) {
+      var DimensionService = $injector.get('DimensionService');
+      var sampleDim = DimensionService.getSampleDimension();
+      var samples = sampleDim.top(Infinity);
+
+      if( samples.length > 0 && 
+        !_.isEmpty(that.somSelection.variables) &&
+        !_.isEqual( that.somSelection['samples'], samples.length ) ||
+        force
+        ) {
+        that.somSelection['samples'] = samples.length;
+        service._getSOM();
+      }
     };
 
     service._getSOM = function() {
-      if( _.isEmpty(that.somVariables) ) { return; }
       NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'success');
 
       function getSamples() {
@@ -306,7 +324,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       // at least 10 samples required
       if( samples.length < 10 ) { return; }
 
-      var selection = that.somVariables;
+      var selection = that.somSelection.variables;
       var defer = $q.defer();
 
       var datasets = _.map(service.activeSets(), function(set) {
@@ -350,6 +368,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
             // SOM comp is OK
             NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
             var som = result.data;
+            $rootScope.$emit('dataset:SOMUpdated', result.data);
             var DimensionService = $injector.get('DimensionService');
             DimensionService.addBMUs(som.id, som.bmus);
 
@@ -368,7 +387,6 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
     };
 
     service.getPlane = function(testVar) {
-
       var defer = $q.defer();
       var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.plane);
       ws.onopen = function() {
@@ -471,16 +489,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
     service.toggle = function(set) {
       var DimensionService = $injector.get('DimensionService');
       DimensionService.updateDatasetDimension();
-
-      if( !_.isEmpty(that.activeVariables) ) {
-        service._getSOM();
-      }
     };
-
-    $rootScope.$on('dc.histogram.filter', function(event) {
-      // recompute SOM
-      service._getSOM();
-    });
 
     service.activeSets = function() {
       return _.filter(that.sets, function(set) {

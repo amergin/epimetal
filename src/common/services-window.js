@@ -1,7 +1,9 @@
-var mod = angular.module('services.window', []);
+var mod = angular.module('services.window', ['angularSpinner']);
 
-mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout',
-  function ($injector, constants, $rootScope, $timeout, name) {
+mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout', 'usSpinnerService',
+  function ($injector, constants, $rootScope, $timeout, usSpinnerService, name) { // notice 'name'
+
+    var _handlers = [];
 
     function WindowHandler(name) {
       var windows = [];
@@ -15,7 +17,7 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
           config, 
           { '_winid': id, 
           handler: that,
-          position: { row: 0, col: 2 * windows.length },
+          position: { row: 0, col: 4 * windows.length },
           size: { x: 4, y: 4 },
           filterEnabled: _filtersEnabled
         }) );
@@ -26,6 +28,26 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
 
       this.getName = function() {
         return _name;
+      };
+
+      this.startSpin = function(id) {
+        usSpinnerService.spin(id);
+      };
+
+      this.stopSpin = function(id) {
+        usSpinnerService.stop(id);
+      };
+
+      this.spinAll = function() {
+        _.each(windows, function(win) {
+          usSpinnerService.spin(win['_winid']);
+        });
+      };
+
+      this.stopAllSpins = function() {
+        _.each(windows, function(win) {
+          usSpinnerService.stop(win['_winid']);
+        });
       };
 
       this.filtersEnabled = function(val) {
@@ -86,7 +108,12 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
 
     return  {
       create: function(name) {
-        return new WindowHandler(name);
+        var handler = new WindowHandler(name);
+        _handlers.push(handler);
+        return handler;
+      },
+      getAll: function() {
+        return _handlers;
       }
     };
 

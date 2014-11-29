@@ -23,7 +23,8 @@
     "packery": "~1.2.3",
     "draggabilly": "~1.1.0",
     "bootstrap-chosen": "*",
-    "angular-ui-layout": "bower"
+    "angular-ui-layout": "bower",
+    "angular-spinner": "~0.5.1"
   },
   "dependencies": {},
   "resolutions": {

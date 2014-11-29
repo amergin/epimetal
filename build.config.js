@@ -102,7 +102,9 @@ module.exports = {
       'vendor/d3-plugins/hexbin/hexbin.js',
       // compatibility-service
       'vendor/modernizr/modernizr.custom.min.js',
-      'vendor/angular-ui-layout/ui-layout.js'
+      'vendor/angular-ui-layout/ui-layout.js',
+      'vendor/spin.js/spin.js',
+      'vendor/angular-spinner/angular-spinner.min.js'
     ],
     css: [
       'vendor/dcjs/dc.css',

@@ -89,15 +89,14 @@ def _checkVariables(variables):
 def _getSOM(samples, variables):
 	def getHash(samples,variables):
 		idString = json.dumps(samples + variables, sort_keys=True, ensure_ascii=True, separators=(',',':'))
-		print "idstring=", idString
 		return hashlib.md5( idString ).hexdigest()
 	som = None
 	try:
-		print "hash=", getHash(samples,variables)
 		som = SOM.objects.get(hash=getHash(samples,variables))
 	except:
-		e = sys.exc_info()[0]
-		print "not found, error", e
+		pass
+		#e = sys.exc_info()[0]
+		#print "not found, error", e
 	finally:
 		return som
 
@@ -170,13 +169,13 @@ def createSOM(ws):
 	if somInstance:
 		response = { "result": { 'code': 'success' }, 'data': { 
 		'variables': variables,
+		'id': str(somInstance.id),
 		#'samples': samples,
 		'bmus': somInstance.plane_bmu
 		} }
 	else:
 		samples = _getSamples(sampleNames, variables)
 		zmqSocketSOM.connect( melikerionConfig.getZMQVar('bind_som') )
-		#print "SENDING = ", { 'variables': variables, 'samples': _getFormattedSamples(samples, variables) }
 		zmqSocketSOM.send_json({ 'variables': variables, 'samples': _getFormattedSamples(samples, variables) })
 		response = zmqSocketSOM.recv_json()
 

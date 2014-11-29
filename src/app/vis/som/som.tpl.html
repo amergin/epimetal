@@ -1,9 +1,9 @@
 <div ui-layout="{ flow : 'row', dividerSize: 10 }">
-	<div ui-layout-container min-size="375px" class="am-fade">
+	<div ui-layout-container class="am-fade">
 		<div ui-view="top-distributions" ng-show="$state.includes('vis.som.distributions')"></div>
 		<div ui-view="top-profiles" ng-show="$state.includes('vis.som.profiles')"></div>
 	</div>
-	<div ui-layout-container min-size="375px" class="am-fade" id="som-bottom">
+	<div ui-layout-container class="am-fade" id="som-bottom">
 		<div ui-view="som-bottom">
 				<div ui-view="som-bottom-menu"></div>
 				<div ui-view="som-bottom-content"></div>			

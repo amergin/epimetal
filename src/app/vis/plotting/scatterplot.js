@@ -386,17 +386,31 @@ visu.directive('scatterplot', ['$timeout',
       $scope.width = ele.width() || 490;
       $scope.height = ele.height() || 345;
 
-      // redraw on window resize
-      ele.parent().on('resize', function() {
-        $timeout( function() {
-          $scope.width = ele.width();
-          $scope.height = ele.height();
 
-          if( !_($scope.canvases).isEmpty() ) {
-            $scope.redrawAll();
-          }
-        }, 300);
-      });
+      $scope.$parent.$watch('window.size', function(nevVal, oldVal) {
+        if( angular.equals(nevVal, oldVal) ) {
+          return;
+        }
+        $scope.width = ele.width();
+        $scope.height = ele.height();
+
+        if( !_($scope.canvases).isEmpty() ) {
+          $scope.redrawAll();
+        }
+
+      }, true);
+
+      // // redraw on window resize
+      // ele.parent().on('resize', function() {
+      //   $timeout( function() {
+      //     $scope.width = ele.width();
+      //     $scope.height = ele.height();
+
+      //     if( !_($scope.canvases).isEmpty() ) {
+      //       $scope.redrawAll();
+      //     }
+      //   }, 300);
+      // });
 
 
       $scope.redrawAll();

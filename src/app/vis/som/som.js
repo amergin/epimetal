@@ -51,13 +51,6 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
       } else {
         $scope.savedSelection = angular.copy( $scope.currentSelection );
         DatasetFactory.updateSOMVariables($scope.currentSelection.x);
-        // DatasetFactory.getSOM($scope.currentSelection.x).then(
-        //   function succFn(som) {
-        //     NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
-        //   }, function errFn(res) {
-        //     NotifyService.addTransient('SOM computation failed', res, 'danger');
-        //   });
-
       }
       $scope.currentSelection = {};
     };
@@ -68,6 +61,7 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
 
     $scope.addPlane = function(testVar) {
       $scope.planeInput = {};
+      NotifyService.addTransient('Starting plane computation', 'The computation may take a while.', 'success');
       DatasetFactory.getPlane(testVar).then(
         function succFn(res) {
           PlotService.drawSOM(res, $scope.windowHandler);
@@ -84,10 +78,17 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
   }
 ]);
 
-mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$rootScope', 'bottomWindowHandler',
-  function SOMBottomContentController($scope, $templateCache, $rootScope, bottomWindowHandler) {
+mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$rootScope', 'bottomWindowHandler', 'DatasetFactory',
+  function SOMBottomContentController($scope, $templateCache, $rootScope, bottomWindowHandler, DatasetFactory) {
     $scope.windowHandler = bottomWindowHandler;
     $scope.windows = $scope.windowHandler.get();
+
+    $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
+      if( toState.name == 'vis.som.distributions' || toState.name == 'vis.som.profiles' ) {
+        // refresh SOM computation
+        DatasetFactory.computeSOM();
+      }
+    });
 
     $scope.itemMapper = {
         sizeX: 'window.size.x', 
@@ -114,7 +115,7 @@ mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$root
       colWidth: '125',
       rowHeight: '100',
       resizable: {
-           enabled: true,
+           enabled: false,
            handles: ['se']
       }
     };    

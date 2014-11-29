@@ -10,7 +10,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     $scope.dimension = DimensionService.getDimension($scope.window.variables);
     $scope.prevFilter = null;
 
-    $scope.resetFilter = function() {
+    $scope.$parent.resetFilter = function() {
       $scope.histogram.filterAll();
       dc.redrawAll(constants.groups.histogram);
     };
@@ -125,14 +125,18 @@ visu.directive('histogram', ['constants', '$timeout',
               $scope.window.showResetBtn = false;
               $rootScope.$emit('dc.histogram.filter', {'action': 'removed', 
                 'payload': { 'type': 'range', 'dimension': $scope.dimension, 
-                'chart': $scope.histogram, 'filter':  $scope.prevFilter, 'var': $scope.window.variables.x } });
+                'chart': $scope.histogram, 'filter':  $scope.prevFilter, 'var': $scope.window.variables.x,
+                'handler': $scope.window.handler
+              } });
               $scope.prevFilter = null;
             }
             else {
               $scope.window.showResetBtn = true;
               $rootScope.$emit('dc.histogram.filter', {'action': 'added', 
                 'payload': { 'type': 'range', 'dimension': $scope.dimension, 
-                'chart': $scope.histogram, 'filter':  filter, 'var': $scope.window.variables.x } });
+                'chart': $scope.histogram, 'filter':  filter, 'var': $scope.window.variables.x,
+                'handler': $scope.window.handler
+              } });
               $scope.prevFilter = filter;
             }
             $rootScope.$emit('scatterplot.redrawAll');
@@ -215,14 +219,49 @@ visu.directive('histogram', ['constants', '$timeout',
 
       createSVG($scope, config);
 
-      // redraw on window resize
-      ele.parent().on('resize', function() {
+      $scope.$parent.$watch('window.size', function(nevVal, oldVal) {
+        if( angular.equals(nevVal, oldVal) ) {
+          return;
+        }
+
         if( !_.isUndefined( $scope.histogram ) ) {
           dc.events.trigger( function() {
-            $scope.histogram.render();
-          });
+              $scope.histogram.render();
+            });
         }
-      });
+
+      }, true);
+
+      // $scope.$on('gridster-resized', function(newSizes){
+      //   console.log(arguments);
+      //   var newWidth = sizes[0];
+      //   var newHeight = sizes[1];
+      // });
+
+      // $scope.getSize = function() {
+      //   var ele = $scope.$parent.element;
+      //   return [ele.width(), ele.height()];
+      // };
+
+      // $scope.$watch($scope.getSize, function(newVal, oldVal) {
+      //   $timeout( function() {
+      //     if( oldVal == newVal ) {
+      //       return;
+      //     }
+      //     console.log("here");
+      //   });
+      // }, true);
+
+      // getSize on window resize
+      //ele.parent().on('resize', function() {
+      // angular.element(ele.parent()).on('resize', function() {
+      // ele.parent().bind('resize', function() {
+      //   if( !_.isUndefined( $scope.histogram ) ) {
+      //     dc.events.trigger( function() {
+      //       $scope.histogram.render();
+      //     });
+      //   }
+      // });
 
     }
 

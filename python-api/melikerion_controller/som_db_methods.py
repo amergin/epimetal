@@ -35,7 +35,6 @@ def createTask(variables, ids):
 def createSOM(samples, variables, fileDict, bmus):
 	def getHash(samples,variables):
 		idString = json.dumps(samples + variables, sort_keys=True, ensure_ascii=True, separators=(',',':'))
-		print "MELIK idstring=", idString
 		return hashlib.md5( idString ).hexdigest()
 	md5hash = getHash(samples,variables)
 	doc = SOM(samples=samples, variables=variables, plane_bmu=bmus, hash=md5hash)

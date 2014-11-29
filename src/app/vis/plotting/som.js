@@ -1,9 +1,36 @@
-var visu = angular.module('plotter.vis.plotting.som', []);
+var visu = angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dataset', 'angularSpinner']);
 visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope',
   function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope) {
 
     $scope.resetFilter = function() {
       removeFilters();
+    };
+
+    $rootScope.$on('dataset:SOMUpdated', function(event, som) {
+      $scope.$parent.startSpin();
+
+      DatasetFactory.getPlane($scope.window.variable).then( 
+        function succFn(res) {
+          console.log(res);
+          angular.extend($scope.window, res); // overrides old values, places new plane info/ids/...
+          $scope.redraw();
+      }, function errFn(res) {
+        NotifyService.addTransient('Plane computation failed', res, 'danger');
+      })
+      .finally( function() {
+        $scope.$parent.stopSpin();
+      });
+    });
+
+    $scope.redraw = function() {
+      // remove previous
+      $scope.element.empty();
+
+      $scope.drawSOMPlane(
+        $scope.window.plane, 
+        $scope.element, 
+        $scope.width, 
+        $scope.height);
     };
 
 
@@ -178,7 +205,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       } //for i
 
       //Create SVG element
-      var svg = d3.select(element[0]).append('svg') //d3.select("#chart").append("svg")
+      var svg = d3.select(element[0]).append('svg')
       .attr('xmlns', "http://www.w3.org/2000/svg")
         // .attr("width", width + margin.left + margin.right)
         // .attr("height", height + margin.top + margin.bottom)
@@ -274,13 +301,9 @@ visu.directive('somplane', [
       $scope.width = 455;
       $scope.height = 360;
 
-
-    // create anchor for heatmap
-    $scope.anchor = ele;
-
     $scope.drawSOMPlane(
       $scope.window.plane, 
-      $scope.anchor, 
+      $scope.element,
       $scope.width, 
       $scope.height);
 

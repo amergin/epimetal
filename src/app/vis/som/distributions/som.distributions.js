@@ -38,11 +38,11 @@ mod.controller('SOMDistributionsController', ['$scope', '$templateCache', '$root
       // minColumns: 40,
       columns: 4 * 10, // x colWidth
       width: 4 * 100 * 10,
-      rows: 4,
+      rows: 8,
       colWidth: '100',
       rowHeight: '88',
       resizable: {
-           enabled: true,
+           enabled: false,
            handles: ['se']
       }
     };

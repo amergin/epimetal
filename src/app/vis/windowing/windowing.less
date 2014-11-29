@@ -51,9 +51,8 @@
   visibility: hidden;
 }
 
-.gridster-item:hover gridster-item-resizable-handler {
+.gridster-item:hover .gridster-item-resizable-handler {
   visibility: visible;
-  z-index: 200; /* keep above 100 so it's not under canvas'es */  
 }
 
 
@@ -67,6 +66,7 @@
   bottom: 10px;
   right:10px;
   cursor: se-resize;
+  z-index: 200; /* keep above 100 so it's not under canvas'es */  
 }
 
 .gridster-item {

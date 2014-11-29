@@ -227,19 +227,30 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
     $scope.$parent.settingsDropdown.push({
       'text': '<i class="fa fa-sliders"></i> Show correlations with p > <b>' + $scope.limitDisp + '</b>',
-      'click': "filter()"
-    });
-
-    $scope.$watch('filtered', function(filt) {
-      var entry = _.last($scope.$parent.settingsDropdown).text;
-      if(filt) { 
-        $scope.$parent.headerText[2] = '(p < ' + $scope.limitDisp + ')';
-        _.last($scope.$parent.settingsDropdown).text = entry.replace(/Hide/, 'Show');
-      } else {
-        $scope.$parent.headerText[2] = '';
-        _.last($scope.$parent.settingsDropdown).text = entry.replace(/Show/, 'Hide');
+      'click': function() {
+        var entry = _.last($scope.$parent.settingsDropdown).text;
+        $scope.filtered = !$scope.filtered;
+        if($scope.filtered) { 
+          $scope.$parent.headerText[2] = '(p < ' + $scope.limitDisp + ')';
+          _.last($scope.$parent.settingsDropdown).text = entry.replace(/Hide/, 'Show');
+        } else {
+          $scope.$parent.headerText[2] = '';
+          _.last($scope.$parent.settingsDropdown).text = entry.replace(/Show/, 'Hide');
+        }
+        $scope.heatmap.render();
       }
     });
+
+    // $scope.$watch('filtered', function(filt) {
+    //   var entry = _.last($scope.$parent.settingsDropdown).text;
+    //   if(filt) { 
+    //     $scope.$parent.headerText[2] = '(p < ' + $scope.limitDisp + ')';
+    //     _.last($scope.$parent.settingsDropdown).text = entry.replace(/Hide/, 'Show');
+    //   } else {
+    //     $scope.$parent.headerText[2] = '';
+    //     _.last($scope.$parent.settingsDropdown).text = entry.replace(/Show/, 'Hide');
+    //   }
+    // });
 
     $scope.$onRootScope('heatmap.redraw', function(event, dset, action) {
       // only redraw if the dashboard is visible
@@ -295,14 +306,15 @@ visu.directive('heatmap', ['$compile',
         $scope.height );
 
 
-      // redraw on window resize
-      ele.parent().on('resize', function() {
+      $scope.$parent.$watch('window.size', function(nevVal, oldVal) {
+        if( angular.equals(nevVal, oldVal) ) {
+          return;
+        }
         if( !_.isUndefined( $scope.heatmap ) ) {
           $scope.heatmap.render();
           window.heatmap = $scope.heatmap;
         }
-      });
-
+      }, true);
 
     };
 
