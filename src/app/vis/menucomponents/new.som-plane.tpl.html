@@ -19,7 +19,7 @@
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-4 col-sm-8">
-					<button type="submit" class="btn btn-primary" ng-disabled="!planeInput.selection" ng-click="addPlane(planeInput.selection)">Compute Plane</button>
+					<button type="submit" class="btn btn-primary" ng-disabled="!planeInput.selection" ng-click="$parent.$hide(); addPlane(planeInput.selection)">Compute Plane</button>
 				</div>
 			</div>
 	</fieldset>

@@ -60,8 +60,9 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
     };
 
     $scope.addPlane = function(testVar) {
-      $scope.planeInput = {};
       NotifyService.addTransient('Starting plane computation', 'The computation may take a while.', 'success');
+
+      $scope.planeInput = {};
       DatasetFactory.getPlane(testVar).then(
         function succFn(res) {
           PlotService.drawSOM(res, $scope.windowHandler);
