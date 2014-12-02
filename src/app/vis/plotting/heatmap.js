@@ -283,11 +283,8 @@ visu.directive('heatmap', ['$compile',
 
     var linkFn = function($scope, ele, iAttrs) {
 
-      // if( $scope.window.size === 'double' ) {
-      //   ele.parent().addClass('window-double');
-      // }
+      $scope.$parent.element = ele;
 
-      // $scope.heatmapAnchor = ele;
       $scope.heatmapAnchor = d3.select(ele[0])
         .append('div')
         .attr('class', 'heatmap-chart-anchor')[0];

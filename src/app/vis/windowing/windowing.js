@@ -39,14 +39,9 @@ win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q', 
     $scope.rendered = false;
 
     $scope.exportSVG = function(win) {
-      var svg = $scope.element.find('svg')[0].cloneNode(true);
-      setNameSpaceOnEl(svg);
-      appendCSSRules(svg, getCssRules(svg));
-      // var b64str = btoa( svg.outerHTML );
-      // var serializer = new XMLSerializer();
-
-      // this is ugly but will do:
-      var b64str = btoa($('<div>').append($(svg).clone()).html());
+      var svgElement = $scope.element.find('svg')[0];
+      var exportStr = svgExport(svgElement).get();
+      var b64str = btoa(exportStr);
 
       var filename = win.type + "_of_" + (win.variable || win.variables.x) + "_on_" +
         _.map(DatasetFactory.activeSets(), function(set) {
@@ -55,8 +50,6 @@ win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q', 
 
       var url = constants.export.svg;
       sendFile(b64str, url, filename);
-
-      svg.remove();
     };
 
 
@@ -90,47 +83,9 @@ win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q', 
       form.remove();
     };
 
-
-    var getCssRules = function(dom) {
-      var used = "";
-      var sheets = document.styleSheets;
-      for (var i = 0; i < sheets.length; i++) {
-        var rules = sheets[i].cssRules;
-
-        // don't loop angular rules!
-        if (sheets[i].href == null) {
-          continue;
-        }
-
-        for (var j = 0; j < rules.length; j++) {
-          var rule = rules[j];
-          if (typeof(rule.style) != "undefined") {
-            var elems = dom.querySelectorAll(rule.selectorText);
-            if (elems.length > 0) {
-              used += rule.selectorText + " { " + rule.style.cssText + " }\n";
-            }
-          }
-        }
-      }
-      return used;
-    };
-
-
-    var appendCSSRules = function(dom, rules) {
-      var style = document.createElement('style');
-      style.setAttribute('type', 'text/css');
-      style.innerHTML = "<![CDATA[\n" + rules + "\n]]>";
-
-      var defs = document.createElement('defs');
-      defs.appendChild(style);
-      dom.insertBefore(defs, dom.firstChild);
-    };
-
-
     $scope.settingsDropdown = [];
 
     switch ($scope.window.type) {
-      case 'heatmap':
       case 'scatterplot':
         $scope.settingsDropdown.push({
           'text': '<i class="fa fa-download"></i> Export as PNG',
@@ -140,6 +95,7 @@ win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q', 
 
       case 'histogram':
       case 'somplane':
+      case 'heatmap':
         $scope.settingsDropdown.push({
           'text': '<i class="fa fa-download"></i> Export as PNG',
           'click': "exportPNG(window)"
@@ -156,12 +112,7 @@ win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q', 
       var svgToCanvas = function(svgElement) {
         var DOMURL = window.URL || window.webkitURL || window;
 
-        setNameSpaceOnEl(svgElement);
-        appendCSSRules(svgElement, getCssRules(svgElement));
-
-        // this is ugly but will do:
-        var svgXml = $('<div>').append($(svgElement).clone()).html();
-        var b64str = btoa(unescape(encodeURIComponent(svgXml)));
+        var svgXml = svgExport(svgElement).get();
 
         var image = new Image();
         var svg = new Blob([svgXml], {
@@ -182,31 +133,6 @@ win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q', 
         image.src = url;
         return defer.promise;
       };
-
-      // var svgToCanvas = function(svgElement) {
-      //   setNameSpaceOnEl(svgElement);
-      //   appendCSSRules(svgElement, getCssRules(svgElement));
-
-      //   var image = new Image();
-
-      //   // this is ugly but will do:
-      //   var svgXml = $('<div>').append($(svgElement).clone()).html();
-      //   var b64str = btoa(unescape(encodeURIComponent(svgXml)));
-      //   // var svgXml = new XMLSerializer().serializeToString(svgElement);
-
-      //   var defer = $q.defer();
-
-      //   image.onload = function() {
-      //     var canvas = document.createElement('canvas');
-      //     canvas.width = image.width;
-      //     canvas.height = image.height;
-      //     var context = canvas.getContext('2d');
-      //     context.drawImage(image, 0, 0);
-      //     defer.resolve(canvas);
-      //   };
-      //   image.src = 'data:image/svg+xml;base64,' + b64str;
-      //   return defer.promise;
-      // };
 
       // sets background color from transparent to white
       // see http://www.mikechambers.com/blog/2011/01/31/setting-the-background-color-when-generating-images-from-canvas-todataurl/
@@ -236,7 +162,8 @@ win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q', 
 
       var base64str,
         filename = win.type + "_of_",
-        url = constants.export.png;
+        url = constants.export.png,
+        svgElement;
 
       var getCombined = function(element) {
         combinedEl = document.createElement('canvas');
@@ -257,7 +184,7 @@ win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q', 
       };
 
       if (win.type == 'histogram' || win.type == 'somplane') {
-        var svgElement = $scope.element.find('svg')[0].cloneNode(true);
+        svgElement = $scope.element.find('svg')[0];
 
         filename += (win.variable || win.variables.x) + "_on_" + _.map(DatasetFactory.activeSets(), function(set) {
           return set.getName();
@@ -266,7 +193,6 @@ win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q', 
         svgToCanvas(svgElement).then(function(canvas) {
           base64str = canvasToBase64(canvas, '#FFFFFF');
           sendFile(base64str, url, filename);
-          svgElement.remove();
         });
       } else if (win.type == 'scatterplot') {
         // combine the canvas images:
@@ -278,8 +204,19 @@ win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q', 
           }).join("_");
 
         sendFile(base64str, url, filename);
-      }
+      } else if(win.type == 'heatmap') {
+        filename += win.variables.x.length + "_variables_" + "_on_" + _.map(DatasetFactory.activeSets(), function(set) {
+          return set.getName();
+        }).join("_");
 
+        svgElement = $scope.element.find('svg')[0];
+
+        svgToCanvas(svgElement).then(function(canvas) {
+          base64str = canvasToBase64(canvas, '#FFFFFF');
+          sendFile(base64str, url, filename);
+        });
+
+      }
     };
 
 
