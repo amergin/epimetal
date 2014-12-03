@@ -1,3 +1,0 @@
-lsyncd -log all -delay 4 -nodaemon -rsyncssh /home/jz/plotter/build/ jekholm@compmed.dyndns.org /share/homes/jekholm/public_html/build
-
-ssh  -L 7575:localhost:80 jekholm@compmed.dyndns.org

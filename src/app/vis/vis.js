@@ -234,8 +234,8 @@ function ($rootScope, $state, $stateParams, $location, $timeout) {
   }]);
 
 
- vis.controller( 'VisCtrl', ['$scope', 'DimensionService', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets',
-  function VisController( $scope, DimensionService, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets) {
+ vis.controller( 'VisCtrl', ['$scope', 'DimensionService', 'DatasetFactory', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets', '$q',
+  function VisController( $scope, DimensionService, DatasetFactory, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets, $q) {
 
     $scope.testVariable = 'parent test';
 
@@ -248,20 +248,63 @@ function ($rootScope, $state, $stateParams, $location, $timeout) {
     // populate the view from current url 
     // UrlHandler.loadNewPageState( $stateParams.path, PlotService );
 
-    $scope.showSidebar = true;
+
+    // initialize the default
     var $rootScope = $injector.get('$rootScope');
+    _.each( DatasetFactory.getSets(), function(set) {
+      set.toggle();
+      DatasetFactory.toggle(set);
+    });
 
-    $scope.toggleSidebar = function() {
-      $scope.showSidebar = !$scope.showSidebar;
-      var $timeout = $injector.get('$timeout');
-      $timeout( function() {
-        $rootScope.$emit('packery.layout');
+    var defaultVariables = ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'];
+    var planePromises = [];
+    var defaultSOMInputs = [
+      'XXL-VLDL-L',
+      'XL-VLDL-L',
+      'L-VLDL-L',
+      'M-VLDL-L',
+      'S-VLDL-L',
+      'XS-VLDL-L',
+      'IDL-L',
+      'L-LDL-L',
+      'M-LDL-L',
+      'S-LDL-L',
+      'XL-HDL-L',
+      'L-HDL-L',
+      'M-HDL-L',
+      'S-HDL-L',
+      'Serum-C',
+      'Serum-TG',
+      'HDL-C',
+      'LDL-C',
+      'Glc',
+      'Cit',
+      'Phe',
+      'Gp',
+      'Tyr',
+      'FAw3toFA',
+      'FAw6toFA',
+      'SFAtoFA'
+      ];
+
+
+
+    var inputPromise = DatasetFactory.getVariableData(defaultVariables);
+
+    // var computePlanes = function(defaultVariables) {
+    //   _.each( defaultVariables, function(v) {
+    //     planePromises.push( DatasetFactory.getPlane(v) );
+    //   });
+    // };
+
+    $q.all(inputPromise).then( function() {
+      DatasetFactory.updateSOMVariables(defaultSOMInputs);
+      DatasetFactory.computeSOM().then( function() {
+        // computePlanes(defaultVariables);
       });
-    };
+    });
 
-    $scope.sidebarInfo = function() {
-      return ( $scope.showSidebar ? 'Hide' : "Show" ) + " sidebar";
-    };
+
 
     console.log("viscontroller");
   }]);

@@ -6,6 +6,14 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       removeFilters();
     };
 
+    function removeFilters() {
+      var filters = angular.copy($scope.ownFilters);
+      _.each( filters, function(f,i) {
+        $scope.removeFilter(f, false);
+      });
+      _callRedraw();
+    }    
+
     $rootScope.$on('dataset:SOMUpdated', function(event, som) {
       $scope.$parent.startSpin();
 
@@ -50,78 +58,24 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       dc.redrawAll(constants.groups.heatmap);
     };
 
-    $scope.sort = function(d) {
-      d3.selectAll($scope.element).selectAll('.hexagon')
-      .sort(function (a, b) {            
-        // a is not the element, send "a" to the back
-        if( (a.i !== d.x ) || (a.j !== d.y) ) { return -1; }
-        // element found, bring to front
-        else { return 1; }
-      });
-    };
+    // $scope.sort = function(d) {
+    //   // d3.selectAll($scope.element).selectAll('.hexagon')
+    //   // .sort(function (a, b) {            
+    //   //   // a is not the element, send "a" to the back
+    //   //   if( (a.i !== d.x ) || (a.j !== d.y) ) { return -1; }
+    //   //   // element found, bring to front
+    //   //   else { return 1; }
+    //   // });
+    // };
 
-    $scope.addFilter = function(coord, redraw) {
-      DimensionService.addSOMFilter( $scope.window.som_id, coord );
+    $scope.addFilter = function(hexagons, circleId, redraw) {
+      DimensionService.addSOMFilter( $scope.window.som_id, hexagons, circleId );
       if(redraw) { _callRedraw(); }
     };
 
-    $scope.removeFilter = function(coord, redraw) {
-      DimensionService.removeSOMFilter( $scope.window.som_id, coord );
+    $scope.removeFilter = function(hexagons, circleId, redraw) {
+      DimensionService.removeSOMFilter( $scope.window.som_id, hexagons, circleId );
       if(redraw) { _callRedraw(); }
-    };
-
-    $scope.$watch('ownFilters', function(newColl, oldColl) {
-      if( newColl.length > 0) { $scope.window.showResetBtn = true; }
-      else { $scope.window.showResetBtn = false; }
-
-      if( newColl.length == oldColl.length ) { 
-        if( newColl.length === 0 ) { return; }
-        _.each(newColl, function(f) { 
-          $scope.sort(f);
-          selectHex(f);
-        } );
-        return;
-      }
-
-      if( newColl.length > oldColl.length ) {
-        // new element added
-        $scope.sort( _.last(newColl) );
-        selectHex( _.last(newColl) );
-      }
-      else {
-        // element(s) removed
-        var rem = _.filter(oldColl, function(obj){ return !_.findWhere(newColl, obj); });
-        _.each(rem, function(r) { deselectHex(r); } );
-      }
-
-    }, true); 
-
-    function removeFilters() {
-      var filters = angular.copy($scope.ownFilters);
-      _.each( filters, function(f,i) {
-        $scope.removeFilter(f, false);
-      });
-      _callRedraw();
-    }
-
-    var deselectHex = function(coord) {
-      d3.selectAll( $scope.element )
-      .selectAll('.hexagon-selected')
-      .filter( function(d, i) {
-        return (d.i == coord.x) && (d.j == coord.y);
-      })
-      .classed('hexagon-selected', false)
-      .classed('hexagon', true);
-    };
-
-    var selectHex = function(coord) {
-      d3.selectAll( $scope.element )
-      .selectAll('.hexagon')
-      .filter( function(d, i) {
-        return (d.i == coord.x) && (d.j == coord.y);
-      })
-      .classed('hexagon-selected', true)
-      .classed('hexagon', false);
     };
 
     $scope.$on('$destroy', function() {
@@ -198,9 +152,10 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         for (var j = 0; j < MapColumns; j++) {
           points.push({
             "xp": hexRadius * j * 1.75,
-            "yp": hexRadius * i * 1.5
+            "yp": hexRadius * i * 1.5,
+            'i': i,
+            'j': j
           });
-          //points.push([hexRadius * j * 1.75, hexRadius * i * 1.5]);
         } //for j
       } //for i
 
@@ -236,7 +191,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       .selectAll(".hexagon")
       .data(hexbin(points))
       .enter().append("path")
-      .attr("class", "hexagon ctrl")
+      .attr("class", "hexagon")
       .attr("d", function(d) {
         return "M" + d.x + "," + d.y + hexbin.hexagon();
       })
@@ -251,18 +206,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         return cell.color;
       })
       .on("mouseover", mover)
-      .on("mouseout", mout)
-      .on("click", function(d) {
-        if( !$(this).is('.hexagon-selected') ) {
-          $scope.addFilter({x: d.i, y: d.j}, true);
-        }
-        else {
-          $scope.removeFilter({x: d.i, y: d.j}, true);
-        }
-        $scope.$apply();
-      })
-      .append("svg:title")
-      .text('Click to filter');
+      .on("mouseout", mout);
 
       svg.append("g")
       .selectAll(".label")
@@ -281,6 +225,149 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       })
       .style("fill", function(d) { return d.color; })
       .text( function(d) { return labelFormat( +d.label ); });
+
+
+      $rootScope.$on('som:addFilter', function(eve, circleId, origin) {
+        addCircle( circleId, origin );
+      });
+
+      var addCircle = function(circleId, origin) {
+
+        var _circleConfig = {
+          fillOpacity: 0.40,
+          radius: hexRadius * 2
+        };
+
+        var circleX = function(x) {
+          return hexRadius * x * 1.75;
+        };
+
+        var circleY = function(y) {
+          return hexRadius * y * 1.5;
+        };
+
+
+        var resolveAreaCells = function(circle, event) {
+          var highlightHexagon = function(hexagon) {
+            // // find the one node
+            svg.selectAll('.hexagon').filter( function(d,i) { 
+              return d.i == hexagon.j && d.j == hexagon.i;
+            }).classed('selected', true);
+          };
+
+          var removeHighlights = function() {
+            svg.selectAll('.hexagon.selected').classed('selected', false);
+          };
+
+          removeHighlights();
+
+          var hexagons = [];
+          _.each(points, function(hexpoint) {
+            var euclidianDistance = d3.round( Math.sqrt( Math.pow(hexpoint.xp - circle.x, 2) + Math.pow(hexpoint.yp - circle.y, 2) ) );
+            if( euclidianDistance < circle.r ) {
+              hexagons.push(hexpoint);
+              highlightHexagon(hexpoint);
+            }
+          });
+
+          $scope.removeFilter(hexagons, circleId, false);
+          $scope.addFilter(hexagons, circleId, true);
+          // console.log("resolved cells", hexagons);
+        };
+
+        var innerDragMove = function(d) {
+          var x = Math.max(0, Math.min(width -margin.left - margin.right + d.r, d3.event.x)),
+          y = Math.max(0, Math.min(height - margin.top - margin.bottom, d3.event.y));
+
+          d.x = x;
+          d.y = y;
+          innerCircle.attr("cx", d.x);
+          innerCircle.attr("cy", d.y);
+          outerCircle.attr('cx', function(t) { t.x = x; return t.x; });
+          outerCircle.attr('cy', function(t) { t.y = y; return t.y; });
+
+          $rootScope.$emit('som:circleFilter:move', null, $scope.window._winid, d);
+        };
+
+        var innerCircleDrag = d3.behavior.drag()
+            .origin(Object)
+            .on("drag", innerDragMove)
+            .on("dragend", function(d) {
+              resolveAreaCells(d, d3.event);
+            });
+
+        $rootScope.$on('som:circleFilter:move', function(eve, circleId, winId, d) {
+          if( winId === $scope.window._winid ) { return; }
+
+          svg.selectAll('circle').filter( function(a) {
+            return a.id == d.id;
+          })
+          .attr('cx', function(t) { t.x = d.x; return t.x; })
+          .attr('cy', function(t) { t.y = d.y; return t.y; });
+        });
+
+        $rootScope.$on('som:circleFilter:resize', function(eve, circleId, winId, d) {
+          if( winId === $scope.window._winid ) { return; }          
+
+          svg.selectAll('circle').filter( function(a) {
+            return a.id == d.id;
+          })
+          .attr('r', function(t) { t.r = d.r; return t.r; })
+          .attr('r', function(t) { t.r = d.r; return t.r; });          
+        });
+
+        $rootScope.$on('som:circleFilter:remove', function(eve, circleId) {
+          svg.selectAll('circle').filter( function(a) {
+            return a.id == circleId;
+          }).remove();
+        });
+
+        var circleAnchor = svg.append('g');
+
+        var innerCircle = circleAnchor.append('circle')
+            .data([{ x: circleX(origin.n), y: circleY(origin.m), r: _circleConfig.radius, id: circleId }])
+            .attr('cx', function(d) { return d.x; })
+            .attr('cy', function(d) { return d.y; })
+            .attr('r', function(d) { return d.r; })
+            .attr('fill', 'lightgray')
+            .style('fill-opacity', 0)
+            // .on('mouseover', function(d) { return d3.select(this).style('fill-opacity', _circleConfig.fillOpacity + 0.5); } )
+            // .on('mouseout', function(d) { return d3.select(this).style('fill-opacity', _circleConfig.fillOpacity); } )
+            .call( _.throttle( innerCircleDrag ), 200 );
+
+
+        var outerCircleDrag = d3.behavior.drag()
+            .on("drag", function(d) {
+              var direction, newRadius;
+              var x = Math.abs( d3.event.x - d.x );
+              var y = Math.abs( d3.event.y - d.y );
+              direction = (x >= y) ? x : y;
+
+              newRadius = Math.max(hexRadius, Math.min(direction, hexRadius * 4));
+              d.r = newRadius;
+              outerCircle.attr('r', newRadius);
+              innerCircle.attr('r', function(t) { t.r = newRadius; return t.r; });
+
+              resolveAreaCells(d, d3.event);
+
+              $rootScope.$emit('som:circleFilter:resize', null, $scope.window._winid, d);              
+            });
+
+        var outerCircle = circleAnchor.append('circle')
+        .data([{ x: circleX(origin.n), y: circleY(origin.m), r: _circleConfig.radius + 3, id: circleId }])
+                        .attr('cx', function(d) { return d.x; })
+                        .attr('cy', function(d) { return d.y; })
+                        .attr('r', function(d) { return d.r; })
+                        .attr('stroke', 'black')
+                        .attr('stroke-width', 3)
+                        .attr('fill', 'none')
+                        .attr('cursor', 'ew-resize')
+                        .call( _.throttle( outerCircleDrag, 200) );
+
+        // finally, call resolve once to allow mapping of the cells to filter info's
+        resolveAreaCells( innerCircle.data()[0], null );
+
+      }; // addcircle
 
     };
 

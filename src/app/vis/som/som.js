@@ -11,13 +11,40 @@ var vis =
     // 'services.urlhandler'
     ]);
 
-mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootScope', 'NotifyService', 'variables', 'DatasetFactory', 'PlotService', 'bottomWindowHandler',
-  function SOMBottomMenuController($scope, $templateCache, $rootScope, NotifyService, variables, DatasetFactory, PlotService, bottomWindowHandler) {
+mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootScope', 'NotifyService', 'variables', 'DatasetFactory', 'PlotService', 'bottomWindowHandler', '$timeout',
+  function SOMBottomMenuController($scope, $templateCache, $rootScope, NotifyService, variables, DatasetFactory, PlotService, bottomWindowHandler, $timeout) {
     $scope.windowHandler = bottomWindowHandler;
 
     $scope.variables = variables;
     $scope.currentSelection = {};
-    $scope.savedSelection = {};
+    $scope.savedSelection = { x: [
+      'XXL-VLDL-L',
+      'XL-VLDL-L',
+      'L-VLDL-L',
+      'M-VLDL-L',
+      'S-VLDL-L',
+      'XS-VLDL-L',
+      'IDL-L',
+      'L-LDL-L',
+      'M-LDL-L',
+      'S-LDL-L',
+      'XL-HDL-L',
+      'L-HDL-L',
+      'M-HDL-L',
+      'S-HDL-L',
+      'Serum-C',
+      'Serum-TG',
+      'HDL-C',
+      'LDL-C',
+      'Glc',
+      'Cit',
+      'Phe',
+      'Gp',
+      'Tyr',
+      'FAw3toFA',
+      'FAw6toFA',
+      'SFAtoFA'
+      ] };
     $scope.planeInput = {};
 
     $scope.openSettings = function() {
@@ -63,19 +90,23 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
       NotifyService.addTransient('Starting plane computation', 'The computation may take a while.', 'success');
 
       $scope.planeInput = {};
-      DatasetFactory.getPlane(testVar).then(
-        function succFn(res) {
-          PlotService.drawSOM(res, $scope.windowHandler);
-          NotifyService.addTransient('Plane computation ready', 'The requested new plane has now been drawn.', 'success');
-          console.log(res);
 
-        },
-        function errFn(res) {
-          NotifyService.addTransient('Plane computation failed', res, 'danger');
-        }
-      );
+      PlotService.drawSOM({ variables: { x: testVar } }, $scope.windowHandler);
     };
 
+    $scope.addFilter = function() {
+      $rootScope.$emit('som:addFilter', 
+        _.uniqueId('circle'), 
+        { m: _.random(1,6), n: _.random(1,8) });
+    };
+
+    $timeout( function() {
+      PlotService.drawSOM({ variables: { x: 'Serum-C' } }, $scope.windowHandler);
+      PlotService.drawSOM({ variables: { x: 'Serum-TG' } }, $scope.windowHandler);
+      PlotService.drawSOM({ variables: { x: 'HDL-C' } }, $scope.windowHandler);
+      PlotService.drawSOM({ variables: { x: 'LDL-C' } }, $scope.windowHandler);
+      PlotService.drawSOM({ variables: { x: 'Glc' } }, $scope.windowHandler);
+    }, 5000);
   }
 ]);
 
@@ -112,9 +143,9 @@ mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$root
       defaultSizeY: 4,
       // minColumns: 40,
       columns: 4 * 10,
-      width: 4 * 125 * 10,
-      colWidth: '125',
-      rowHeight: '100',
+      width: 4 * 100 * 10,
+      colWidth: '100',
+      rowHeight: '88',
       resizable: {
            enabled: false,
            handles: ['se']

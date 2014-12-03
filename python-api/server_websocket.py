@@ -100,6 +100,17 @@ def _getSOM(samples, variables):
 	finally:
 		return som
 
+def _getPlane(somInstance, testVariable):
+	plane = None
+	plane = Plane.objects.get(som=somInstance, variable=testVariable)
+	return plane
+	# try:
+	# 	plane = Plane.objects.get(som=somInstance, variable=testVariable)
+	# except:
+	# 	print "[Info] Plane not found"
+	# finally:
+	# 	return plane
+
 def _checkSamples(samples):
 	if not isinstance(samples, list):
 		return False
@@ -185,27 +196,40 @@ def createSOM(ws):
 def createPlane(ws):
 	rawMessage = ws.receive()
 	response = None
-	try:
-		message = json.loads(rawMessage)
-		planeid = message.get('planeid')
-		if planeid:
-			zmqSocketPlane.connect(  melikerionConfig.getZMQVar('bind_plane') )
-			zmqSocketPlane.send_json({ 'planeid': planeid })
-			response = json.dumps(zmqSocketPlane.recv_json())
-			ws.send(response)
-			return
+	#try:
+	message = json.loads(rawMessage)
+	planeid = message.get('planeid')
+	if planeid:
+		zmqSocketPlane.connect(  melikerionConfig.getZMQVar('bind_plane') )
+		zmqSocketPlane.send_json({ 'planeid': planeid })
+		response = json.dumps(zmqSocketPlane.recv_json())
+		ws.send(response)
+		return
 
-		variables = message.get('variables')
-		testVariable = variables.get('test')
-		inputVariables = variables.get('input')
-		somId = message.get('somid')
-		if not( somId and variables ) \
-		or not isinstance( inputVariables, list) \
-		or not _checkVariables(inputVariables + [testVariable]):
-			response = json.dumps({ 'result': { 'code': 'error', 'message': 'Invalid parameters sent.' } })
+	variables = message.get('variables')
+	testVariable = variables.get('test')
+	inputVariables = variables.get('input')
+	somId = message.get('somid')
+	if not( somId and variables ) \
+	or not isinstance( inputVariables, list) \
+	or not _checkVariables(inputVariables + [testVariable]):
+		# print "variables=", _checkVariables(inputVariables + [testVariable])
+		response = json.dumps({ 'result': { 'code': 'error', 'message': 'Invalid parameters sent.' } })
+	else:
+		somInstance = SOM.objects.get(id=ObjectId(somId) )
+		planeInstance = _getPlane(somInstance, testVariable)
+		if planeInstance:
+			response = json.dumps({
+				'data': {
+				'variable': testVariable,
+				'plane': planeInstance.plane,
+				'id': str(planeInstance.id),
+				'som_id': str(somInstance.id)
+				},
+				'result': { 'code': 'success' }
+				})
 		else:
 			uniqueVars = list(set( inputVariables + [testVariable] ) )
-			somInstance = SOM.objects.get(id=ObjectId(somId) )
 			samples = _getSamples( somInstance.samples, uniqueVars )
 
 			zmqSocketPlane.connect( melikerionConfig.getZMQVar('bind_plane') )
@@ -215,13 +239,13 @@ def createPlane(ws):
 				'samples': _getFormattedSamples( samples, uniqueVars )
 			})
 			response = json.dumps(zmqSocketPlane.recv_json())
-		ws.send(response)
-	except Exception, e:
-		exc_type, exc_obj, exc_tb = sys.exc_info()
-		fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-		print(exc_type, fname, exc_tb.tb_lineno)
-		response = { 'result': { 'code': 'error', 'message': 'Invalid parameters sent.' } }
-		ws.send(json.dumps(response))
+	ws.send(response)
+	# except Exception, e:
+	# 	exc_type, exc_obj, exc_tb = sys.exc_info()
+	# 	fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+	# 	print(exc_type, fname, exc_tb.tb_lineno)
+	# 	response = { 'result': { 'code': 'error', 'message': 'Invalid parameters sent.' } }
+	# 	ws.send(json.dumps(response))
 
 #if __name__ == '__main__':
 	#app.run(host=config.getFlaskVar('host'), port=int(config.getFlaskVar('sockets_port')), debug=True)	

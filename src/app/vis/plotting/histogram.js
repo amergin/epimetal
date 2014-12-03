@@ -75,9 +75,9 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
   }
 ]);
 
-visu.directive('histogram', ['constants', '$timeout',
+visu.directive('histogram', ['constants', '$timeout', '$rootScope',
 
-  function(constants, $timeout) {
+  function(constants, $timeout, $rootScope) {
 
     var createSVG = function($scope, config) {
       // check css window rules before touching these
@@ -217,7 +217,10 @@ visu.directive('histogram', ['constants', '$timeout',
         filterEnabled: $scope.window.filterEnabled
       };
 
-      createSVG($scope, config);
+      $timeout( function() {
+        createSVG($scope, config);
+      });
+
 
       $scope.$parent.$watch('window.size', function(nevVal, oldVal) {
         if( angular.equals(nevVal, oldVal) ) {
@@ -226,8 +229,10 @@ visu.directive('histogram', ['constants', '$timeout',
 
         if( !_.isUndefined( $scope.histogram ) ) {
           dc.events.trigger( function() {
+            $timeout( function() {
               $scope.histogram.render();
             });
+          });
         }
 
       }, true);

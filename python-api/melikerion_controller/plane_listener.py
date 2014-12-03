@@ -82,9 +82,6 @@ class PlaneProcessHandler( object ):
 		_createBMUFile(bmuFilename, self.somDoc)
 
 		smFile = open( self.path + "/" + MELIKERION_SM_FILENAME, 'w' )
-		print "file=", smFile
-		print "somDoc id=", self.somDoc.id
-		print "som=", self.somDoc.som
 		smFile.write( self.somDoc.som.read() )
 		smFile.close()
 

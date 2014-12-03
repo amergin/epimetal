@@ -103,25 +103,8 @@ vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'Data
 
       var selection = angular.copy(select);
 
-      var _callback = function() {
-        var plottingDataPromise = DatasetFactory.getVariableData([selection.x, selection.y]);
-
-        plottingDataPromise.then(function (res) {
-          // draw the figure
-          NotifyService.closeModal();
-          var PlotService = $injector.get('PlotService');
-          PlotService.drawScatter({ variables: selection, pooled: selection.pooled}, $scope.handler);
-        }, function errorFn(variable) {
-          NotifyService.closeModal();
-
-          var title = 'Variable ' + variable + ' could not be loaded\n',
-          message = 'Please check the selected combination is valid for the selected datasets.',
-          level = 'danger';
-          NotifyService.addTransient(title, message, level);
-        });
-      };
-
-      NotifyService.addSpinnerModal('Loading...', _callback);
+      var PlotService = $injector.get('PlotService');
+      PlotService.drawScatter({ variables: selection, pooled: selection.pooled}, $scope.handler);
 
     };
 
@@ -166,25 +149,8 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
 
       var selection = angular.copy(select);
 
-      var _callback = function() {
-        var plottingDataPromise = DatasetFactory.getVariableData([selection.x]);
-        plottingDataPromise.then(function successFn(res) {
-            // draw the figure
-            NotifyService.closeModal();
-            var PlotService = $injector.get('PlotService');
-            PlotService.drawHistogram({variables: selection, pooled: selection.pooled }, $scope.handler);
-          },
-          function errorFn(variable) {
-            NotifyService.closeModal();
-
-            var title = 'Variable ' + variable + ' could not be loaded\n',
-            message = 'Please check the selected combination is valid for the selected datasets.',
-            level = 'danger';
-            NotifyService.addTransient(title, message, level);
-          });
-      };
-
-      NotifyService.addSpinnerModal('Loading...', _callback);
+      var PlotService = $injector.get('PlotService');
+      PlotService.drawHistogram({variables: selection, pooled: selection.pooled }, $scope.handler);
     };
 
   }
@@ -263,24 +229,7 @@ vis.controller('HeatmapFormController', ['$scope', '$rootScope', 'DatasetFactory
       $scope.$parent.$hide();
 
       var selection = angular.copy(select);
-
-      var _callback = function() {
-        var plottingDataPromise = DatasetFactory.getVariableData(selection.x);
-        plottingDataPromise.then(function (res) {
-          // draw the figure
-          NotifyService.closeModal();
-          PlotService.drawHeatmap({variables: selection}, $scope.handler);
-        }, function errorFn(variable) {
-          NotifyService.closeModal();
-          var title = 'Variable ' + variable + ' could not be loaded\n',
-          message = 'Please check the selected combination is valid for the selected datasets.',
-          level = 'danger';
-          NotifyService.addTransient(title, message, level);
-        });
-      };
-
-      NotifyService.addSpinnerModal('Loading...', _callback);
-
+      PlotService.drawHeatmap({variables: selection}, $scope.handler);
     };
   }
 ]);

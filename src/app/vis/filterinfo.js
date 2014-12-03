@@ -28,7 +28,7 @@ mod.controller('FilterInfoController', ['$scope', '$templateCache', 'DimensionSe
 
     $scope.filterOrder = function(filt) {
       if(filt.payload.type === 'som') {
-        return "som(" + filt.payload.coord.x + "," + filt.payload.coord.y + ")";
+        return "som(" + filt.payload.hexagons + ")";
       } else if(filt.payload.type === 'range') {
         return "range" + filt.payload.var;
       }
@@ -44,7 +44,8 @@ mod.controller('FilterInfoController', ['$scope', '$templateCache', 'DimensionSe
 
     $scope.close = function(filter, redraw) {
       if(filter.payload.type == 'som') {
-        DimensionService.removeSOMFilter(filter.payload.id, filter.payload.coord);
+        DimensionService.removeSOMFilter( filter.payload.id, filter.payload.hexagons, filter.payload.circle );
+        $rootScope.$emit('som:circleFilter:remove', filter.payload.circle);
       }
       else if(filter.payload.type == 'range') {
         filter.payload.chart.filterAll();

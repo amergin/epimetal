@@ -78,7 +78,7 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
 
         dimensions[somKey] = {
           count: 1,
-          filters: [],
+          filters: {},
           dimension: crossfilterInst.dimension( function(d) { 
             if( _.isUndefined( d['bmus'][somId] ) ) {
               return {
@@ -112,48 +112,54 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
       return false;
     };
 
-    var _applySOMFilter = function(somKey) {
-      if( _checkSOMFilterEmpty(somKey) ) {
-        // pass
-      }
-      else {
-        dimensions[somKey].dimension.filterFunction( function(d) {
+    // var _applySOMFilter = function(somKey) {
+    //   if( _checkSOMFilterEmpty(somKey) ) {
+    //     // pass
+    //   }
+    //   else {
+    //     dimensions[somKey].dimension.filterFunction( function(d) {
 
-          if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
-            // sample is not in the dataset included in the SOM computation,
-            // therefore do NOT filter it out
-            return true;
-          }
-          return _.any( dimensions[somKey].filters, function(f) {
-            return (f.x === d.x) && (f.y === d.y); 
-          });
-        });
-      }
-      $rootScope.$emit('dimension:SOMFilter');
-    };
+    //       if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
+    //         // sample is not in the dataset included in the SOM computation,
+    //         // therefore do NOT filter it out
+    //         return true;
+    //       }
+    //       return _.any( dimensions[somKey].filters, function(f) {
+    //         return (f.x === d.x) && (f.y === d.y); 
+    //       });
+    //     });
+    //   }
+    //   $rootScope.$emit('dimension:SOMFilter');
+    // };
 
     this.getSOMFilters = function(somId) {
       var somKey = 'som' + somId;
       return dimensions[somKey].filters;
     };
 
-    this.addSOMFilter = function(somId, coord) {
-      function updateDispFilter(coord, somId, somKey) {
+    this.addSOMFilter = function(somId, hexagons, circleId) {
+      function updateDispFilter(circleId, somId, somKey, hexagons) {
         dispFilters.push({'action': 'added', 
-          'payload': { 'type': 'som', 'coord': coord, 'id': somId }});
+          'payload': { 'type': 'som', 'circle': circleId, 'id': somId, 'hexagons': hexagons }});
+        console.log("dispFilters=", dispFilters);
       }
+
       var somKey = "som" + somId;
-      dimensions[somKey].filters.push( coord );
+      if( !dimensions[somKey].filters[circleId] ) {
+        dimensions[somKey].filters[circleId] = [];
+      }
+      dimensions[somKey].filters[circleId].push(hexagons);
 
-      updateDispFilter(coord, somId, somKey);
-
+      updateDispFilter(circleId, somId, somKey, hexagons.length);
       _applySOMFilter(somKey);
+
     };
 
-    this.removeSOMFilter = function(somId, coord) {
-      function updateDispFilter(coord, somId, somKey) {
+    this.removeSOMFilter = function(somId, hexagons, circleId) {
+      function updateDispFilter(circleId, somId, somKey) {
         var ind = Utils.indexOf( dispFilters, function(f,i) { 
-          return _.isEqual(f.payload, {'type': 'som', 'id': somId, 'coord': coord});
+          var plucked = _.pick(f.payload, _.chain(f.payload).keys().without('hexagons').value());
+          return _.isEqual(plucked, {'type': 'som', 'id': somId, 'circle': circleId });
         });
         if( ind != -1 ) {
           dispFilters.splice(ind,1);
@@ -161,15 +167,70 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
       }
 
       var somKey = "som" + somId;
-      var ind = Utils.indexOf( dimensions[somKey].filters, function(f,i) { 
-        return (f.x == coord.x) && (f.y == coord.y);
-      });
-      dimensions[somKey].filters.splice(ind,1);
+      dimensions[somKey].filters[circleId] = [];
 
-      updateDispFilter(coord, somId, somKey);
-
-      _applySOMFilter(somKey);
+      updateDispFilter(circleId, somId, somKey, hexagons);
+      // _applySOMFilter(somKey);
     };
+
+    var _applySOMFilter = function(somKey) {
+      if( _checkSOMFilterEmpty(somKey) ) {
+        // pass
+      }
+      else {
+        dimensions[somKey].dimension.filterFunction( function(d) {
+          if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
+            // sample is not in the dataset included in the SOM computation,
+            // therefore do NOT filter it out
+            return true;
+          }
+
+          var combined = _.uniq( _.flatten( _.values( dimensions[somKey].filters ) ), 
+            function(f) { return f.i + "|" + f.j; } );
+
+          return _.any( combined, function(h) { 
+            return ( (h.i === d.x) && (h.j === d.y) );
+          });
+
+        });
+      }
+      $rootScope.$emit('dimension:SOMFilter');
+    };
+
+
+    // this.addSOMFilter = function(somId, coord) {
+    //   function updateDispFilter(coord, somId, somKey) {
+    //     dispFilters.push({'action': 'added', 
+    //       'payload': { 'type': 'som', 'coord': coord, 'id': somId }});
+    //   }
+    //   var somKey = "som" + somId;
+    //   dimensions[somKey].filters.push( coord );
+
+    //   updateDispFilter(coord, somId, somKey);
+
+    //   _applySOMFilter(somKey);
+    // };
+
+    // this.removeSOMFilter = function(somId, coord) {
+    //   function updateDispFilter(coord, somId, somKey) {
+    //     var ind = Utils.indexOf( dispFilters, function(f,i) { 
+    //       return _.isEqual(f.payload, {'type': 'som', 'id': somId, 'coord': coord});
+    //     });
+    //     if( ind != -1 ) {
+    //       dispFilters.splice(ind,1);
+    //     }
+    //   }
+
+    //   var somKey = "som" + somId;
+    //   var ind = Utils.indexOf( dimensions[somKey].filters, function(f,i) { 
+    //     return (f.x == coord.x) && (f.y == coord.y);
+    //   });
+    //   dimensions[somKey].filters.splice(ind,1);
+
+    //   updateDispFilter(coord, somId, somKey);
+
+    //   _applySOMFilter(somKey);
+    // };
 
     this.getSampleDimension = function() {
       if( _.isUndefined( dimensions['_samples'] ) ) {

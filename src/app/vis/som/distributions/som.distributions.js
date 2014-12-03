@@ -10,8 +10,8 @@ var vis =
     // 'services.urlhandler'
     ]);
 
-mod.controller('SOMDistributionsController', ['$scope', '$templateCache', '$rootScope', 'windowHandler',
-  function SOMDistributionsController($scope, $templateCache, $rootScope, windowHandler) {
+mod.controller('SOMDistributionsController', ['$scope', '$templateCache', '$rootScope', 'windowHandler', 'PlotService',
+  function SOMDistributionsController($scope, $templateCache, $rootScope, windowHandler, PlotService) {
     $scope.windowHandler = windowHandler;
     $scope.windowHandler.filtersEnabled(false);
     $scope.windows  = $scope.windowHandler.get();    

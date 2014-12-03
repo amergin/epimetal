@@ -297,18 +297,19 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       var sampleDim = DimensionService.getSampleDimension();
       var samples = sampleDim.top(Infinity);
 
-      if( samples.length > 0 && 
+      if( _.isUndefined(force) ) { force = false; }
+
+      if( 
+        ( samples.length > 0 && 
         !_.isEmpty(that.somSelection.variables) &&
-        !_.isEqual( that.somSelection['samples'], samples.length ) ||
-        force
-        ) {
+        !_.isEqual( that.somSelection['samples'], samples.length )
+        ) || force ) {
         that.somSelection['samples'] = samples.length;
-        service._getSOM();
+        return service._getSOM();
       }
     };
 
     service._getSOM = function() {
-      NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'success');
 
       function getSamples() {
         var DimensionService = $injector.get('DimensionService');
@@ -323,9 +324,11 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
       // at least 10 samples required
       if( samples.length < 10 ) { return; }
+      var defer = $q.defer();
+
+      NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'success');
 
       var selection = that.somSelection.variables;
-      var defer = $q.defer();
 
       var datasets = _.map(service.activeSets(), function(set) {
         return set.getName();

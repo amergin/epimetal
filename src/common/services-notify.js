@@ -62,6 +62,8 @@ serv.factory('NotifyService', ['$injector',
 
       addSpinnerModal: function (message, callback) {
 
+        if( _.isNull( _modalInstanceRef ) ) { return; } 
+
         var $modal = $injector.get('$modal');
 
         var $scope = $injector.get('$rootScope').$new({ isolate: true });
@@ -88,6 +90,7 @@ serv.factory('NotifyService', ['$injector',
       closeModal: function () {
         var $timeout = $injector.get('$timeout');
         $timeout( function() {
+          if( _.isNull(_modalInstanceRef) ) { return; }
           _modalInstanceRef.hide();
         }, 100);
       }

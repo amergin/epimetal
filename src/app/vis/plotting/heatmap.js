@@ -17,18 +17,6 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
     $scope.format = d3.format('.2g');
     $scope.filtered = true; // p-value limiting
 
-    // .html('Hide correlations with p > {{limitDisp}}');
-
-    // create anchor for heatmap
-    // $scope.heatmapAnchor = d3.select($scope.element[0])
-    //   .append('div')
-    //   .attr('class', 'heatmap-chart-anchor')[0];
-
-    // $scope.colorbarAnchor = d3.select($scope.element[0])
-    //   .append('div')
-    //   .attr('class', 'heatmap-legend-anchor')[0][0];
-
-
     $scope.width = 420;
     $scope.height = 350;
     $scope.margins = {
