@@ -19,7 +19,6 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
       DatasetFactory.getPlane($scope.window.variable).then( 
         function succFn(res) {
-          console.log(res);
           angular.extend($scope.window, res); // overrides old values, places new plane info/ids/...
           $scope.redraw();
       }, function errFn(res) {
@@ -92,21 +91,21 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       ////////////// Initiate SVG and create hexagon centers ////////////////////
       ///////////////////////////////////////////////////////////////////////////
 
-      //Function to call when you mouseover a node
-      function mover(d) {
-        var el = d3.select(this)
-        .transition()
-        .duration(10)
-        .style("fill-opacity", 0.3);
-      }
+      // //Function to call when you mouseover a node
+      // function mover(d) {
+      //   var el = d3.select(this)
+      //   .transition()
+      //   .duration(10)
+      //   .style("fill-opacity", 0.3);
+      // }
 
-      //Mouseout function
-      function mout(d) {
-        var el = d3.select(this)
-        .transition()
-        .duration(500)
-        .style("fill-opacity", 1);
-      }
+      // //Mouseout function
+      // function mout(d) {
+      //   var el = d3.select(this)
+      //   .transition()
+      //   .duration(500)
+      //   .style("fill-opacity", 1);
+      // }
 
       //svg sizes and margins
       var margin = {
@@ -142,6 +141,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
       //Set the hexagon radius
       var hexbin = d3.hexbin()
+      .size([height, width])
       .radius(hexRadius)
       .x( function(d) { return d.xp; })
       .y( function(d) { return d.yp; });
@@ -204,9 +204,9 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           return cell.x === (d.i + 1) && cell.y === (d.j + 1);
         });
         return cell.color;
-      })
-      .on("mouseover", mover)
-      .on("mouseout", mout);
+      });
+      // .on("mouseover", mover)
+      // .on("mouseout", mout);
 
       svg.append("g")
       .selectAll(".label")
@@ -226,16 +226,20 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       .style("fill", function(d) { return d.color; })
       .text( function(d) { return labelFormat( +d.label ); });
 
+      // identical for every hex on the canvas
+      var hexagonPathStr = hexbin.hexagon();
+      // the six hex point coordinates, relative to hex origin
+      var hexagonPoints = _.map( hexagonPathStr.split(/l|m|z/g).slice(2,-1), function(s) { 
+          var points = s.split(',');
+          return { x: +points[0], y: +points[1] };
+        });
 
-      $rootScope.$on('som:addFilter', function(eve, circleId, origin) {
-        addCircle( circleId, origin );
-      });
 
       var addCircle = function(circleId, origin) {
 
         var _circleConfig = {
           fillOpacity: 0.40,
-          radius: hexRadius * 2
+          radius: { normal: hexRadius * 2, min: hexRadius * 2, max: hexRadius * 5 }
         };
 
         var circleX = function(x) {
@@ -259,12 +263,27 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
             svg.selectAll('.hexagon.selected').classed('selected', false);
           };
 
+          var hexagonInsideCircle = function(hexpoint, circle) {
+            var threshold = 3,
+            howManyPoints = _.chain(hexagonPoints)
+            .map( function(hp) { 
+              // absolute pixel mapping: account for the offset from hexpoint origin
+              var pointAbs = { x: hexpoint.xp + hp.x, y: hexpoint.yp + hp.y };
+              var euclidianDistance = Math.sqrt( Math.pow(pointAbs.x - circle.x, 2) + Math.pow(pointAbs.y - circle.y, 2) );
+              return euclidianDistance <= circle.r;
+            })
+            // reject if not true (=hexpoint inside the circle)
+            .reject( function(m) { return !m; }).value()
+            // get how many point hits were discovered
+            .length;
+            return howManyPoints >= threshold;
+          };
+
           removeHighlights();
 
           var hexagons = [];
           _.each(points, function(hexpoint) {
-            var euclidianDistance = d3.round( Math.sqrt( Math.pow(hexpoint.xp - circle.x, 2) + Math.pow(hexpoint.yp - circle.y, 2) ) );
-            if( euclidianDistance < circle.r ) {
+            if( hexagonInsideCircle(hexpoint, circle) ) {
               hexagons.push(hexpoint);
               highlightHexagon(hexpoint);
             }
@@ -272,7 +291,6 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
           $scope.removeFilter(hexagons, circleId, false);
           $scope.addFilter(hexagons, circleId, true);
-          // console.log("resolved cells", hexagons);
         };
 
         var innerDragMove = function(d) {
@@ -325,14 +343,12 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         var circleAnchor = svg.append('g');
 
         var innerCircle = circleAnchor.append('circle')
-            .data([{ x: circleX(origin.n), y: circleY(origin.m), r: _circleConfig.radius, id: circleId }])
+            .data([{ x: circleX(origin.n), y: circleY(origin.m), r: _circleConfig.radius.normal, id: circleId }])
             .attr('cx', function(d) { return d.x; })
             .attr('cy', function(d) { return d.y; })
             .attr('r', function(d) { return d.r; })
             .attr('fill', 'lightgray')
             .style('fill-opacity', 0)
-            // .on('mouseover', function(d) { return d3.select(this).style('fill-opacity', _circleConfig.fillOpacity + 0.5); } )
-            // .on('mouseout', function(d) { return d3.select(this).style('fill-opacity', _circleConfig.fillOpacity); } )
             .call( _.throttle( innerCircleDrag ), 200 );
 
 
@@ -343,7 +359,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
               var y = Math.abs( d3.event.y - d.y );
               direction = (x >= y) ? x : y;
 
-              newRadius = Math.max(hexRadius, Math.min(direction, hexRadius * 4));
+              newRadius = Math.max(_circleConfig.radius.min, Math.min(direction, _circleConfig.radius.max));
               d.r = newRadius;
               outerCircle.attr('r', newRadius);
               innerCircle.attr('r', function(t) { t.r = newRadius; return t.r; });
@@ -354,7 +370,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
             });
 
         var outerCircle = circleAnchor.append('circle')
-        .data([{ x: circleX(origin.n), y: circleY(origin.m), r: _circleConfig.radius + 3, id: circleId }])
+        .data([{ x: circleX(origin.n), y: circleY(origin.m), r: _circleConfig.radius.normal + 3, id: circleId }])
                         .attr('cx', function(d) { return d.x; })
                         .attr('cy', function(d) { return d.y; })
                         .attr('r', function(d) { return d.r; })
@@ -364,14 +380,17 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
                         .attr('cursor', 'ew-resize')
                         .call( _.throttle( outerCircleDrag, 200) );
 
-        // finally, call resolve once to allow mapping of the cells to filter info's
+        // finally, call resolve once to start filtering on this circle
         resolveAreaCells( innerCircle.data()[0], null );
 
       }; // addcircle
 
+      // add two filter circles
+      addCircle( 'circle1', { m: 1, n: 1 } );
+      addCircle( 'circle2', { m: 5, n: 7 } );
+
+
     };
-
-
   }]);
 
 

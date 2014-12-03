@@ -94,11 +94,11 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
       PlotService.drawSOM({ variables: { x: testVar } }, $scope.windowHandler);
     };
 
-    $scope.addFilter = function() {
-      $rootScope.$emit('som:addFilter', 
-        _.uniqueId('circle'), 
-        { m: _.random(1,6), n: _.random(1,8) });
-    };
+    // $scope.addFilter = function() {
+    //   $rootScope.$emit('som:addFilter', 
+    //     _.uniqueId('circle'), 
+    //     { m: _.random(1,6), n: _.random(1,8) });
+    // };
 
     $timeout( function() {
       PlotService.drawSOM({ variables: { x: 'Serum-C' } }, $scope.windowHandler);
