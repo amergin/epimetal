@@ -102,14 +102,12 @@ def _getSOM(samples, variables):
 
 def _getPlane(somInstance, testVariable):
 	plane = None
-	plane = Plane.objects.get(som=somInstance, variable=testVariable)
-	return plane
-	# try:
-	# 	plane = Plane.objects.get(som=somInstance, variable=testVariable)
-	# except:
-	# 	print "[Info] Plane not found"
-	# finally:
-	# 	return plane
+	try:
+		plane = Plane.objects.get(som=somInstance, variable=testVariable)
+	except:
+		print "[Info] Plane not found"
+	finally:
+		return plane
 
 def _checkSamples(samples):
 	if not isinstance(samples, list):

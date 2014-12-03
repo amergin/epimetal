@@ -30,6 +30,7 @@
   "resolutions": {
     "bootstrap": "^3.2.0",
     "angular": "1.2.26",
-    "angular-ui-router": "0.2.10"
+    "angular-ui-router": "0.2.10",
+    "angular-gridster": "0.10.4"
   }
 }

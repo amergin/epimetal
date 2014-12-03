@@ -29,7 +29,7 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
     $scope.gridOptions = {
       pushing: true,
       floating: true,
-      swapping: false,
+      swapping: true,
       margins: [10, 10],
       outerMargin: true,
       draggable: {

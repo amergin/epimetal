@@ -141,7 +141,6 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
       function updateDispFilter(circleId, somId, somKey, hexagons) {
         dispFilters.push({'action': 'added', 
           'payload': { 'type': 'som', 'circle': circleId, 'id': somId, 'hexagons': hexagons }});
-        console.log("dispFilters=", dispFilters);
       }
 
       var somKey = "som" + somId;
@@ -196,41 +195,6 @@ dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', 
       }
       $rootScope.$emit('dimension:SOMFilter');
     };
-
-
-    // this.addSOMFilter = function(somId, coord) {
-    //   function updateDispFilter(coord, somId, somKey) {
-    //     dispFilters.push({'action': 'added', 
-    //       'payload': { 'type': 'som', 'coord': coord, 'id': somId }});
-    //   }
-    //   var somKey = "som" + somId;
-    //   dimensions[somKey].filters.push( coord );
-
-    //   updateDispFilter(coord, somId, somKey);
-
-    //   _applySOMFilter(somKey);
-    // };
-
-    // this.removeSOMFilter = function(somId, coord) {
-    //   function updateDispFilter(coord, somId, somKey) {
-    //     var ind = Utils.indexOf( dispFilters, function(f,i) { 
-    //       return _.isEqual(f.payload, {'type': 'som', 'id': somId, 'coord': coord});
-    //     });
-    //     if( ind != -1 ) {
-    //       dispFilters.splice(ind,1);
-    //     }
-    //   }
-
-    //   var somKey = "som" + somId;
-    //   var ind = Utils.indexOf( dimensions[somKey].filters, function(f,i) { 
-    //     return (f.x == coord.x) && (f.y == coord.y);
-    //   });
-    //   dimensions[somKey].filters.splice(ind,1);
-
-    //   updateDispFilter(coord, somId, somKey);
-
-    //   _applySOMFilter(somKey);
-    // };
 
     this.getSampleDimension = function() {
       if( _.isUndefined( dimensions['_samples'] ) ) {
