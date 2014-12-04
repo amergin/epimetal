@@ -52,6 +52,7 @@ mod.controller('SOMDistributionsController', ['$scope', '$templateCache', '$root
 mod.controller('SOMMenuController', ['$scope', '$templateCache', '$rootScope', 'windowHandler',
   function SOMMenuController($scope, $templateCache, $rootScope, windowHandler) {
     $scope.windowHandler = windowHandler;
+    $scope.somSpecial = true;
   }
 ]);
 

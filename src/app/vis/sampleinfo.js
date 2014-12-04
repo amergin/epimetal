@@ -19,6 +19,6 @@ mod.directive('sampleInfo', ['$templateCache', '$compile', '$rootScope', '$injec
 
 mod.controller('SampleInfoController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants',
   function FilterInfoController($scope, $templateCache, DimensionService, $rootScope, constants) {
-    $scope.info = DimensionService.getSampleInfo();
+    $scope.info = DimensionService.getPrimary().getSampleInfo();
   }
 ]);

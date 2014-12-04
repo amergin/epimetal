@@ -8,12 +8,13 @@ var visu = angular.module('plotter.vis.plotting',
   'services.dimensions', 
   'services.dataset', 
   'services.urlhandler',
-  'services.window'
+  'services.window',
+  'services.som'
   ]);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'UrlHandler', 'NotifyService',
-  function($injector, DimensionService, DatasetFactory, UrlHandler, NotifyService) {
+visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'UrlHandler', 'NotifyService', 'SOMService',
+  function($injector, DimensionService, DatasetFactory, UrlHandler, NotifyService, SOMService) {
 
     this.drawScatter = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
@@ -48,6 +49,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         var type = 'histogram';
         config.size = 'normal';
         config.type = type;
+        config.somSpecial = config.somSpecial || false;
         windowHandler.add(config);
 
         UrlHandler.createWindow( type, config );
@@ -106,7 +108,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         UrlHandler.createWindow( 'somplane', config );
       };
 
-      DatasetFactory.getPlane(config.variables.x).then(
+      SOMService.getPlane(config.variables.x).then(
         function succFn(res) {
           NotifyService.addTransient('Plane computation ready', 'The requested new plane has now been drawn.', 'success');
           angular.extend(config, res);

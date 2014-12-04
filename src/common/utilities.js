@@ -43,16 +43,16 @@ module.directive('replaceAndCompile', ['$compile', '$timeout', function($compile
 module.directive('disableAnimate', ['$animate', function($animate) {
   return {
     link: function(scope, element) {
-        $animate.enabled(false, element);
+      $animate.enabled(false, element);
     },
     priority: 150
   };
 }]);
 
 module.directive('enableAnimate', ['$animate', function($animate) {
-    return function(scope, element) {
-        $animate.enabled(true, element);
-    };
+  return function(scope, element) {
+    $animate.enabled(true, element);
+  };
 }]);
 
 Utils.getVariables = function(windowType, selection, splitScatter) {
@@ -162,7 +162,7 @@ function normCumulativeApprox(x) {
     cm = 0;
 
   } else {
-  
+
     exponential = Math.exp(- (xabs*xabs) / 2);
 
     if(xabs < 7.07106781186547) {
@@ -206,3 +206,23 @@ Utils.calcPForPearsonR = function(r,n) {
   var zscore = atanh(absr) * Math.sqrt(n-3) ;
   return 2*normCumulativeApprox(-zscore);
 };
+
+// http://stackoverflow.com/a/23124958/1467417
+Utils.sortedJSON = function(obj) {
+  var sortByKeys = function(obj) {
+    if (!_.isObject(obj)) {
+      return obj;
+    }
+    var sorted = {};
+    _.each(_.keys(obj).sort(), function(key) {
+      sorted[key] = sortByKeys(obj[key]);
+    });
+    return sorted;
+  };
+
+  return JSON.stringify( sortByKeys(obj) );
+
+};
+
+
+

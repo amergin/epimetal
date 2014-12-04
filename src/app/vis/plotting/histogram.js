@@ -2,13 +2,21 @@ var visu = angular.module('plotter.vis.plotting.histogram',
   [
   'ui.router',
   'services.dimensions',
-  'services.dataset'
+  'services.dataset',
+  'services.som'
   ]);
-visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state',
-  function HistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state) {
+visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector',
+  function HistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector) {
 
-    $scope.dimension = DimensionService.getDimension($scope.window.variables);
+    $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
+
+    $scope.dimension = $scope.dimensionService.getDimension($scope.window.variables);
     $scope.prevFilter = null;
+
+    if( $scope.window.somSpecial ) {
+        $scope.primary = $injector.get('DimensionService').getPrimary();
+        $scope.totalDimension = $scope.primary.getDimension($scope.window.variables);      
+    }
 
     $scope.$parent.resetFilter = function() {
       $scope.histogram.filterAll();
@@ -32,6 +40,14 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       var allValues = $scope.dimension.group().all().filter(function(d) {
         return d.value > 0 && d.key != constants.nanValue;
       });
+
+      if( $scope.window.somSpecial ) {
+        var totalValues = $scope.totalDimension.group().all().filter( function(d) {
+          return d.value > 0 && d.key != constants.nanValue;
+        });
+        allValues = _.union(allValues, totalValues);
+      }
+
       $scope.extent = d3.extent(allValues, function(d) {
         return d.key;
       });
@@ -42,11 +58,26 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
         return Math.floor(d / $scope.binWidth) * $scope.binWidth;
       });
 
-      $scope.reduced = DimensionService.getReducedGroupHisto($scope.group, $scope.window.variables.x);
+      if( $scope.window.somSpecial ) {
+        // normal
+        $scope.reduced = $scope.dimensionService.getReducedGroupHistoDistributions($scope.group, $scope.window.variables.x);
+
+        $scope.totalGroup = $scope.totalDimension.group(function(d) {
+          return Math.floor(d / $scope.binWidth) * $scope.binWidth;
+        });
+        $scope.totalReduced = $scope.primary.getReducedGroupHisto($scope.totalGroup, $scope.window.variables.x);
+      }
+      else {
+        $scope.reduced = $scope.dimensionService.getReducedGroupHisto($scope.group, $scope.window.variables.x);
+      }
 
       // update individual charts to the newest info about the bins
       _.each($scope.barCharts, function(chart, name) {
-        chart.group($scope.filterOnSet($scope.reduced, name), name);
+        if(name === 'total') {
+          chat.group($scope.filterOnSet($scope.totalReduced, name), name);
+        } else {
+          chart.group($scope.filterOnSet($scope.reduced, name), name);
+        }
       });
 
       console.log("histogram extent is ", $scope.extent);
@@ -57,8 +88,17 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     // individual charts that are part of the composite chart
     $scope.barCharts = {};
 
-    $scope.datasetNames = DatasetFactory.getSetNames();
-    $scope.colorScale = DatasetFactory.getColorScale();
+    if( $scope.window.somSpecial ) {
+      var somId = $injector.get('SOMService').getSomId();
+      $scope.groupNames = _.keys($scope.dimensionService.getSOMFilters(somId)); //_.chain( $scope.dimensionService.getSOMFilters(somId) ).keys().union(['total']).reverse().value();
+      $scope.colorScale = $injector.get('SOMService').getColorScale();
+
+    } else {
+      $scope.groupNames = DatasetFactory.getSetNames();
+      $scope.colorScale = DatasetFactory.getColorScale();
+      
+    }
+
 
     // see https://github.com/dc-js/dc.js/wiki/FAQ#filter-the-data-before-its-charted
     // this used to filter to only the one set & limit out NaN's
@@ -167,7 +207,7 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope',
 
 
       // 2. for each of the additional stacks, create a child chart
-      _.each(config.datasetNames, function(name, ind) {
+      _.each(config.groupNames, function(name, ind) {
 
         var chart = dc.barChart($scope.histogram) //, constants.groups.histogram)
           .centerBar(true)
@@ -182,6 +222,24 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope',
         $scope.barCharts[name] = chart;
         charts.push(chart);
       });
+
+      if( $scope.window.somSpecial  ) {
+        var name = 'total';
+        var chart = dc.barChart($scope.histogram) //, constants.groups.histogram)
+          .centerBar(true)
+          .barPadding(0.15)
+          .brushOn(true)
+          .dimension($scope.totalDimension)
+          .group(config.filter($scope.totalReduced, name), name)
+          .valueAccessor(function(d) { // is y direction
+            return d.value.counts[name];
+          });
+        $scope.barCharts[name] = chart;
+        charts.push(chart);
+
+        // total to background
+        charts.reverse();
+      }
 
       // 3. compose & render the composite chart
       $scope.histogram.compose(charts);
@@ -210,7 +268,8 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope',
         binWidth: $scope.binWidth,
         groups: $scope.groups,
         reduced: $scope.reduced,
-        datasetNames: $scope.datasetNames,
+        groupNames: $scope.groupNames,
+        // datasetNames: $scope.datasetNames,
         colorScale: $scope.colorScale,
         pooled: $scope.window.pooled || false,
         filter: $scope.filterOnSet,

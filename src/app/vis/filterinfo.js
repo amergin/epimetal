@@ -20,8 +20,9 @@ mod.directive('filterInfo', ['$templateCache', '$compile', '$rootScope', '$injec
 mod.controller('FilterInfoController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants',
   function FilterInfoController($scope, $templateCache, DimensionService, $rootScope, constants) {
     var numFormat = d3.format('.2e');
+    var dimensionService = DimensionService.getPrimary();
 
-    $scope.filters = DimensionService.getFilters();
+    $scope.filters = dimensionService.getFilters();
     $scope.formatNumber = function(num) {
       return numFormat(num);
     };
@@ -44,7 +45,7 @@ mod.controller('FilterInfoController', ['$scope', '$templateCache', 'DimensionSe
 
     $scope.close = function(filter, redraw) {
       if(filter.payload.type == 'som') {
-        DimensionService.removeSOMFilter( filter.payload.id, filter.payload.hexagons, filter.payload.circle );
+        dimensionService.removeSOMFilter( filter.payload.id, filter.payload.hexagons, filter.payload.circle );
         $rootScope.$emit('som:circleFilter:remove', filter.payload.circle);
       }
       else if(filter.payload.type == 'range') {

@@ -151,7 +151,8 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       // console.log("testvars:", tmeanA, tmeanB, tstdA, tstdB, corr); // corr should be 1.0
 
 
-      $scope.sampDimension = DimensionService.getSampleDimension();
+      $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
+      $scope.sampDimension = $scope.dimensionService.getSampleDimension();
       var samples = $scope.sampDimension.top(Infinity);
 
       var variables = $scope.window.variables.x;

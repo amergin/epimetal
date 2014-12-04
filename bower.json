@@ -24,13 +24,13 @@
     "draggabilly": "~1.1.0",
     "bootstrap-chosen": "*",
     "angular-ui-layout": "master",
-    "angular-spinner": "~0.5.1"
+    "angular-spinner": "~0.5.1",
+    "spark-md5": "~0.0.5"
   },
   "dependencies": {},
   "resolutions": {
     "bootstrap": "^3.2.0",
     "angular": "1.2.26",
-    "angular-ui-router": "0.2.10",
-    "angular-gridster": "master"
+    "angular-ui-router": "0.2.10"
   }
 }

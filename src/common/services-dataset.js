@@ -7,7 +7,6 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
     var that = this;
     that.sets = {};
     that.variables = [];
-    that.variablesLookup = {};
     that.config = {
       datasetsURL: '/API/datasets',
       variablesURL: '/API/headers/NMR_results',
@@ -15,6 +14,9 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       multipleVariablesURL: '/API/list/'
     };
     that.colors = d3.scale.category20();
+
+    // primary from dimension service
+    that.dimensionService = null;
 
     // notice: these cannot be kept in DimensionService, since
     // not all variables rely on crossfilter-dimension setup!
@@ -160,7 +162,6 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
           that.variables = [];
           _.each(response.result, function(varNameObj, ind) {
             that.variables.push(varNameObj);
-            that.variablesLookup[varNameObj.name] = ind;
           });
           that.variables = _.sortBy(that.variables, function(obj) {
             return obj.desc || obj.name;
@@ -194,25 +195,13 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       return that.variables;
     };
 
-    service.legalVariables = function(array) {
-      var legal = true;
-      _.every(array, function(variable) {
-        if (_.isUndefined(that.variablesLookup[variable])) {
-          legal = false;
-          return false; // break
-        }
-        return true; // continue iter
-      });
-      return legal;
-    };
-
     // this function checks if new variables need to be fetched
     // for datasets that have not been previously selected
     // Called on dataset toggling!
     service.checkActiveVariables = function(set) {
 
       var defer = $q.defer();
-      var DimensionService = $injector.get('DimensionService');
+      // var DimensionService = $injector.get('DimensionService');
       var activeVars = service.getActiveVariables();
 
       // nothing to add if disabled
@@ -235,14 +224,14 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
           }
 
           _.each(activeVars, function(variable) {
-            var dataAdded = DimensionService.addVariableData(variable, samples);
+            var dataAdded = that.dimensionService.addVariableData(variable, samples);
             if (dataAdded) {
               dataWasAdded = true;
             }
           });
 
           if (dataWasAdded) {
-            DimensionService.rebuildInstance();
+            that.dimensionService.rebuildInstance();
           }
           defer.resolve('enabled');
 
@@ -264,160 +253,160 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
     //   }
     // };
 
-    var _findPlane = function(som) {
-      for (var key in that.SOMPlanes) {
-        var plane = that.SOMPlanes[key];
-        if (_.isEqual(plane.som_id, som.som) && _.isEqual(plane.variable, som.tinput)) {
-          return plane;
-        }
-      }
-    };
+    // var _findPlane = function(som) {
+    //   for (var key in that.SOMPlanes) {
+    //     var plane = that.SOMPlanes[key];
+    //     if (_.isEqual(plane.som_id, som.som) && _.isEqual(plane.variable, som.tinput)) {
+    //       return plane;
+    //     }
+    //   }
+    // };
 
-    service.getPlaneBySOM = function(somId) {
-      return _.filter( that.SOMPlanes, function(plane, key) {
-        return plane.som_id === somId;
-      });
-    };
+    // service.getPlaneBySOM = function(somId) {
+    //   return _.filter( that.SOMPlanes, function(plane, key) {
+    //     return plane.som_id === somId;
+    //   });
+    // };
 
-    service.updateSOMVariables = function(variables) {
-      function sameVariables(variables) {
-        return _.isEmpty( _.difference(variables, that.somSelection.variables) );
-      }
+    // service.updateSOMVariables = function(variables) {
+    //   function sameVariables(variables) {
+    //     return _.isEmpty( _.difference(variables, that.somSelection.variables) );
+    //   }
 
-      if( sameVariables(variables) ) {
-        return;
-      }
-      that.somSelection['variables'] = variables;
+    //   if( sameVariables(variables) ) {
+    //     return;
+    //   }
+    //   that.somSelection['variables'] = variables;
 
-      service.computeSOM(true);
-    };
+    //   service.computeSOM(true);
+    // };
 
-    service.computeSOM = function(force) {
-      var DimensionService = $injector.get('DimensionService');
-      var sampleDim = DimensionService.getSampleDimension();
-      var samples = sampleDim.top(Infinity);
+    // service.computeSOM = function(force) {
+    //   // var DimensionService = $injector.get('DimensionService');
+    //   var sampleDim = that.dimensionService.getSampleDimension();
+    //   var samples = sampleDim.top(Infinity);
 
-      if( _.isUndefined(force) ) { force = false; }
+    //   if( _.isUndefined(force) ) { force = false; }
 
-      if( 
-        ( samples.length > 0 && 
-        !_.isEmpty(that.somSelection.variables) &&
-        !_.isEqual( that.somSelection['samples'], samples.length )
-        ) || force ) {
-        that.somSelection['samples'] = samples.length;
-        return service._getSOM();
-      }
-    };
+    //   if( 
+    //     ( samples.length > 0 && 
+    //     !_.isEmpty(that.somSelection.variables) &&
+    //     !_.isEqual( that.somSelection['samples'], samples.length )
+    //     ) || force ) {
+    //     that.somSelection['samples'] = samples.length;
+    //     return service._getSOM();
+    //   }
+    // };
 
-    service._getSOM = function() {
+    // service._getSOM = function() {
 
-      function getSamples() {
-        var DimensionService = $injector.get('DimensionService');
-        var sampleDim = DimensionService.getSampleDimension();
+    //   function getSamples() {
+    //     // var DimensionService = $injector.get('DimensionService');
+    //     var sampleDim = that.dimensionService.getSampleDimension();
 
-        return _.map( sampleDim.top(Infinity), function(obj) {
-          return _.pick( obj, 'dataset', 'sampleid');
-        });
-      }
+    //     return _.map( sampleDim.top(Infinity), function(obj) {
+    //       return _.pick( obj, 'dataset', 'sampleid');
+    //     });
+    //   }
 
-      var samples = getSamples();
+    //   var samples = getSamples();
 
-      // at least 10 samples required
-      if( samples.length < 10 ) { return; }
-      var defer = $q.defer();
+    //   // at least 10 samples required
+    //   if( samples.length < 10 ) { return; }
+    //   var defer = $q.defer();
 
-      NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'success');
+    //   NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'success');
 
-      var selection = that.somSelection.variables;
+    //   var selection = that.somSelection.variables;
 
-      var datasets = _.map(service.activeSets(), function(set) {
-        return set.getName();
-      });
+    //   var datasets = _.map(service.activeSets(), function(set) {
+    //     return set.getName();
+    //   });
 
-        // remove previous computation
-        that.som = {};
+    //     // remove previous computation
+    //     that.som = {};
 
-        var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
+    //     var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
 
-        if(selection.somid) {
-          // som exists beforehand, it's queried by its id
-          ws.onopen = function() {
-            ws.send(JSON.stringify({
-              'somid': selection.somid
-            }));
-          };
-        } else {
-          // don't know whether som exists already
-          ws.onopen = function() {
-            ws.send(JSON.stringify({
-              // 'datasets': datasets,
-              'variables': selection,
-              'samples': samples
-            }));
-          };
-        }
+    //     if(selection.somid) {
+    //       // som exists beforehand, it's queried by its id
+    //       ws.onopen = function() {
+    //         ws.send(JSON.stringify({
+    //           'somid': selection.somid
+    //         }));
+    //       };
+    //     } else {
+    //       // don't know whether som exists already
+    //       ws.onopen = function() {
+    //         ws.send(JSON.stringify({
+    //           // 'datasets': datasets,
+    //           'variables': selection,
+    //           'samples': samples
+    //         }));
+    //       };
+    //     }
 
-        ws.onclose = function(evt) {
-          console.log("SOM WS closed", evt);
-        };
+    //     ws.onclose = function(evt) {
+    //       console.log("SOM WS closed", evt);
+    //     };
 
-        ws.onmessage = function(evt) {
-          var result = JSON.parse(evt.data);
-          if (result.result.code == 'error') {
-            // SOM computation failed
-            NotifyService.addTransient('SOM computation failed', result.result.message, 'danger');
-            defer.reject(result.result.message);
-          } else {
-            // SOM comp is OK
-            NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
-            var som = result.data;
-            $rootScope.$emit('dataset:SOMUpdated', result.data);
-            var DimensionService = $injector.get('DimensionService');
-            DimensionService.addBMUs(som.id, som.bmus);
+    //     ws.onmessage = function(evt) {
+    //       var result = JSON.parse(evt.data);
+    //       if (result.result.code == 'error') {
+    //         // SOM computation failed
+    //         NotifyService.addTransient('SOM computation failed', result.result.message, 'danger');
+    //         defer.reject(result.result.message);
+    //       } else {
+    //         // SOM comp is OK
+    //         NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
+    //         var som = result.data;
+    //         $rootScope.$emit('dataset:SOMUpdated', result.data);
+    //         // var DimensionService = $injector.get('DimensionService');
+    //         that.dimensionService.addBMUs(som.id, som.bmus);
 
 
-            // that.SOMs[som.id] = som;
-            that.som = som;
-            defer.resolve(som);
-          }
-        };
-      // }
-      return defer.promise;
-    };
+    //         // that.SOMs[som.id] = som;
+    //         that.som = som;
+    //         defer.resolve(som);
+    //       }
+    //     };
+    //   // }
+    //   return defer.promise;
+    // };
 
-    service.somReady = function() {
-      return !_.isEmpty(that.som);
-    };
+    // service.somReady = function() {
+    //   return !_.isEmpty(that.som);
+    // };
 
-    service.getPlane = function(testVar) {
-      var defer = $q.defer();
-      var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.plane);
-      ws.onopen = function() {
-        ws.send(JSON.stringify({
-          'somid': that.som.id,
-          'datasets': that.som.datasets,
-          'variables': {
-            'test': testVar,
-            'input': that.som.variables
-          }
-        }));
-      };
+    // service.getPlane = function(testVar) {
+    //   var defer = $q.defer();
+    //   var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.plane);
+    //   ws.onopen = function() {
+    //     ws.send(JSON.stringify({
+    //       'somid': that.som.id,
+    //       'datasets': that.som.datasets,
+    //       'variables': {
+    //         'test': testVar,
+    //         'input': that.som.variables
+    //       }
+    //     }));
+    //   };
 
-      ws.onclose = function(evt) {
-        console.log("Plane WS closed", evt);
-      };
+    //   ws.onclose = function(evt) {
+    //     console.log("Plane WS closed", evt);
+    //   };
 
-      ws.onmessage = function(evt) {
-        var result = JSON.parse(evt.data);
-        if (result.result.code == 'error') {
-          defer.reject(result.result.message);
-        } else {
-          that.SOMPlanes[result.data.id] = result.data;
-          defer.resolve( angular.copy(result.data) );
-        }
-      };
-      return defer.promise;
-    };
+    //   ws.onmessage = function(evt) {
+    //     var result = JSON.parse(evt.data);
+    //     if (result.result.code == 'error') {
+    //       defer.reject(result.result.message);
+    //     } else {
+    //       that.SOMPlanes[result.data.id] = result.data;
+    //       defer.resolve( angular.copy(result.data) );
+    //     }
+    //   };
+    //   return defer.promise;
+    // };
 
     // this is called whenever a plot is drawn to check if variable data
     // is to be fetched beforehand. 
@@ -429,7 +418,9 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       var defer = $q.defer();
       var activeSets = service.activeSets();
       var dataWasAdded = false;
+
       var DimensionService = $injector.get('DimensionService');
+
       var setPromises = [];
 
       if (_.isEmpty(variables)) {
@@ -450,7 +441,13 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
             }
 
             _.each(variables, function(vari) {
-              var dataAdded = DimensionService.addVariableData(vari, setSamples);
+              var dataAdded;
+              _.each( _.values( DimensionService.getAll()), function(dimSer) {
+                if( dimSer.instance.addVariableData(vari, setSamples) ) {
+                  dataAdded = true;
+                }
+              });
+              // var dataAdded = that.dimensionService.addVariableData(vari, setSamples);
               if (dataAdded) {
                 dataWasAdded = true;
               }
@@ -459,8 +456,13 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
           });
 
           if (dataWasAdded) {
+
+              _.each( _.values( DimensionService.getAll()), function(dimSer) {
+                dimSer.instance.rebuildInstance();
+              });
+
             // rebuilds crossfilter instance
-            DimensionService.rebuildInstance();
+            // that.dimensionService.rebuildInstance();
           }
           // result can be empty, it's the promise that counts, not the data delivered outwards
           defer.resolve();
@@ -490,8 +492,8 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
     };
 
     service.toggle = function(set) {
-      var DimensionService = $injector.get('DimensionService');
-      DimensionService.updateDatasetDimension();
+      // var DimensionService = $injector.get('DimensionService');
+      that.dimensionService.updateDatasetDimension();
     };
 
     service.activeSets = function() {
@@ -527,6 +529,10 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
           }
         }),
         undefined);
+    };
+
+    service.setDimensionService = function(dimensionService) {
+      that.dimensionService = dimensionService;
     };
 
     $rootScope.$on('variable:add', function(event, type, selection) {

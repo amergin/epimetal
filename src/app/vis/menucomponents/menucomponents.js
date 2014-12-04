@@ -116,7 +116,7 @@ vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'Data
 vis.directive('histogramForm', function () {
   return {
     restrict: 'C',
-    scope: { handler: '=' },
+    scope: { handler: '=', somSpecial: '@'},
     replace: true,
     controller: 'HistogramFormController',
     templateUrl: 'vis/menucomponents/histogram.tpl.html',
@@ -150,7 +150,7 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
       var selection = angular.copy(select);
 
       var PlotService = $injector.get('PlotService');
-      PlotService.drawHistogram({variables: selection, pooled: selection.pooled }, $scope.handler);
+      PlotService.drawHistogram({variables: selection, pooled: selection.pooled, somSpecial: $scope.somSpecial}, $scope.handler);
     };
 
   }

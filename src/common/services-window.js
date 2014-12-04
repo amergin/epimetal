@@ -3,13 +3,22 @@ var mod = angular.module('services.window', ['angularSpinner']);
 mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout', 'usSpinnerService',
   function ($injector, constants, $rootScope, $timeout, usSpinnerService, name) { // notice 'name'
 
-    var _handlers = [];
+    var _handlers = {};
 
     function WindowHandler(name) {
       var windows = [];
       var _name = name;
       var that = this;
       var _filtersEnabled = true;
+      var _dimensionService = null;
+
+      this.setDimensionService = function(service) {
+        _dimensionService = service;
+      };
+
+      this.getDimensionService = function() {
+        return _dimensionService;
+      };
 
       this.add = function(config) {
         var id = _.uniqueId('win_');
@@ -32,22 +41,26 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
 
       this.startSpin = function(id) {
         usSpinnerService.spin(id);
+        return that;
       };
 
       this.stopSpin = function(id) {
         usSpinnerService.stop(id);
+        return that;
       };
 
       this.spinAll = function() {
         _.each(windows, function(win) {
           usSpinnerService.spin(win['_winid']);
         });
+        return that;
       };
 
       this.stopAllSpins = function() {
         _.each(windows, function(win) {
           usSpinnerService.stop(win['_winid']);
         });
+        return that;
       };
 
       this.filtersEnabled = function(val) {
@@ -87,6 +100,7 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         }
 
         windows.splice(wind,1);
+        return that;
       }; 
 
       this.getId = function(key,val) {
@@ -109,8 +123,11 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
     return  {
       create: function(name) {
         var handler = new WindowHandler(name);
-        _handlers.push(handler);
+        _handlers[name] = handler;
         return handler;
+      },
+      get: function(name) {
+        return _handlers[name];
       },
       getAll: function() {
         return _handlers;

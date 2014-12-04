@@ -31,7 +31,9 @@
   'plotter.vis.linkcreator',
   'plotter.vis.filterinfo',
   'plotter.vis.sampleinfo',
-  'mgcrea.ngStrap.popover'
+  'mgcrea.ngStrap.popover',
+  'services.som',
+  'ui.layout'
   ] );
 
 /**
@@ -59,7 +61,19 @@
       }],
       compatibility: ['CompatibilityService', function(CompatibilityService) {
         return CompatibilityService.browserCompatibility();
+      }],
+      dimensionServices: ['DimensionService', 'DatasetFactory', 'SOMService', function(DimensionService, DatasetFactory, SOMService) {
+        var primary = DimensionService.create('vis.explore', true);
+        DatasetFactory.setDimensionService(primary);
+        var som = DimensionService.create('vis.som');
+        SOMService.setDimensionService(som);
+        var regression = DimensionService.create('vis.regression');
       }]
+      // defaultView: ['DatasetFactory', 'PlotService', 'SOMService', '$q', 'variables', 'datasets', 'compatibility', 'WindowHandler',
+      // function(DatasetFactory, PlotService, SOMService, $q, variables, datasets, compatibility, WindowHandler) {
+      //   var defer = $q.defer();
+      //   return defer.promise;
+      // }]
     },
     views: {
       'content': {
@@ -79,8 +93,10 @@
     parent: 'vis',
     data: { pageTitle: 'Explore datasets and filter | Visualization' },
     resolve: {
-      windowHandler: ['WindowHandler', function(WindowHandler) {
-        return WindowHandler.create('vis.explore');
+      windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
+        var handler = WindowHandler.create('vis.explore');
+        handler.setDimensionService( DimensionService.get('vis.explore') );
+        return handler;
       }]
     },
     views: {
@@ -104,9 +120,11 @@
     // abstract: true,
     data: { pageTitle: 'Self-organizing maps | Visualization' },
     resolve: {
-      // bottom portion of the page only!
-      bottomWindowHandler: ['WindowHandler', function(WindowHandler) {
-        return WindowHandler.create('vis.som');
+      // bottom portion of the page only!      
+      bottomWindowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
+        var handler = WindowHandler.create('vis.som');
+        handler.setDimensionService( DimensionService.get('vis.som') );
+        return handler;
       }]
     },
     views: {
@@ -138,8 +156,10 @@
     // parent: 'vis.som',
     data: { pageTitle: 'Compare distributions | Self-organizing maps | Visualization' },
     resolve: {
-      windowHandler: ['WindowHandler', function(WindowHandler) {
-        return WindowHandler.create('vis.som.distributions');
+      windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
+        var handler = WindowHandler.create('vis.som.distributions');
+        handler.setDimensionService( DimensionService.get('vis.som') );
+        return handler;
       }]
     },
     views: {
@@ -204,8 +224,8 @@
 
 }]);
 
-vis.run(['$rootScope', '$state', '$stateParams', '$location', '$timeout',
-function ($rootScope, $state, $stateParams, $location, $timeout) {
+vis.run(['$rootScope', '$state', '$stateParams', '$location', '$timeout', 'DimensionService', 'DatasetFactory', 'PlotService', '$q', 'WindowHandler', 'SOMService',
+function ($rootScope, $state, $stateParams, $location, $timeout, DimensionService, DatasetFactory, PlotService, $q, WindowHandler, SOMService) {
   $rootScope.$on('$viewContentLoaded',function(event, toState, toParams, fromState, fromParams){
     $timeout( function() {
       $rootScope.$emit('scatterplot.redrawAll');
@@ -213,6 +233,7 @@ function ($rootScope, $state, $stateParams, $location, $timeout) {
       $rootScope.$emit('heatmap.redraw');    
     });
   }, 50);
+
 }]);
 
 
@@ -234,77 +255,47 @@ function ($rootScope, $state, $stateParams, $location, $timeout) {
   }]);
 
 
- vis.controller( 'VisCtrl', ['$scope', 'DimensionService', 'DatasetFactory', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets', '$q',
-  function VisController( $scope, DimensionService, DatasetFactory, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets, $q) {
+ vis.controller( 'VisCtrl', ['$scope', 'DimensionService', 'DatasetFactory', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets', '$q', 'SOMService',
+  function VisController( $scope, DimensionService, DatasetFactory, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets, $q, SOMService) {
+    console.log("viscontroller");
 
-    $scope.testVariable = 'parent test';
+    $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
+      var name = 'vis.som';
+      switch(toState.name) {
+        case 'vis.som':
+        case 'vis.som.distributions':
+        case 'vis.som.profiles':
+        name = 'vis.som';
+        break;
+
+        case 'vis.explore':
+        name = 'vis.explore';
+        break;
+      }
+      DatasetFactory.setDimensionService( DimensionService.get(name) );
+
+    });
 
     $scope.menuDatasets = datasets;
     $scope.menuVariables = variables;
 
-    $scope.usedVariables = DimensionService.getUsedVariables();
-    $scope.activeVariables = DimensionService.getDimensions();
+    $scope.dimensionService = DimensionService.getPrimary();
+
+    $scope.usedVariables = $scope.dimensionService.getUsedVariables();
+    $scope.activeVariables = $scope.dimensionService.getDimensions();
+
+    var $rootScope = $injector.get('$rootScope');
+
+    // $rootScope.$on('$viewContentLoaded', function() {
+    //   console.log("loaded", arguments);
+    // });
 
     // populate the view from current url 
     // UrlHandler.loadNewPageState( $stateParams.path, PlotService );
 
+  _.each( DatasetFactory.getSets(), function(set) {
+    set.toggle();
+    DatasetFactory.toggle(set);
+  });
 
-    // initialize the default
-    var $rootScope = $injector.get('$rootScope');
-    _.each( DatasetFactory.getSets(), function(set) {
-      set.toggle();
-      DatasetFactory.toggle(set);
-    });
-
-    var defaultVariables = ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'];
-    var planePromises = [];
-    var defaultSOMInputs = [
-      'XXL-VLDL-L',
-      'XL-VLDL-L',
-      'L-VLDL-L',
-      'M-VLDL-L',
-      'S-VLDL-L',
-      'XS-VLDL-L',
-      'IDL-L',
-      'L-LDL-L',
-      'M-LDL-L',
-      'S-LDL-L',
-      'XL-HDL-L',
-      'L-HDL-L',
-      'M-HDL-L',
-      'S-HDL-L',
-      'Serum-C',
-      'Serum-TG',
-      'HDL-C',
-      'LDL-C',
-      'Glc',
-      'Cit',
-      'Phe',
-      'Gp',
-      'Tyr',
-      'FAw3toFA',
-      'FAw6toFA',
-      'SFAtoFA'
-      ];
-
-
-
-    var inputPromise = DatasetFactory.getVariableData(defaultVariables);
-
-    // var computePlanes = function(defaultVariables) {
-    //   _.each( defaultVariables, function(v) {
-    //     planePromises.push( DatasetFactory.getPlane(v) );
-    //   });
-    // };
-
-    $q.all(inputPromise).then( function() {
-      DatasetFactory.updateSOMVariables(defaultSOMInputs);
-      DatasetFactory.computeSOM().then( function() {
-        // computePlanes(defaultVariables);
-      });
-    });
-
-
-
-    console.log("viscontroller");
   }]);

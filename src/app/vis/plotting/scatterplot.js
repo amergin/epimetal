@@ -7,14 +7,15 @@ var visu = angular.module('plotter.vis.plotting.scatterplot',
 visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$state',
   function($scope, DatasetFactory, DimensionService, constants, $state) {
 
-    $scope.dimension = DimensionService.getXYDimension($scope.window.variables);
+    $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
+    $scope.dimension = $scope.dimensionService.getXYDimension($scope.window.variables);
 
 
     $scope.$parent.showResetBtn = false;
     $scope.$parent.headerText = ['Scatter plot of', $scope.window.variables.x + ", " + $scope.window.variables.y, ''];
 
     var _calcCanvasAttributes = function() {
-      $scope.reduced = DimensionService.getReduceScatterplot($scope.dimension.group());
+      $scope.reduced = $scope.dimensionService.getReduceScatterplot($scope.dimension.group());
 
       $scope.sets = DatasetFactory.activeSets();
       // min&max for all active datasets

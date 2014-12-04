@@ -104,7 +104,8 @@ module.exports = {
       'vendor/modernizr/modernizr.custom.min.js',
       'vendor/angular-ui-layout/src/ui-layout.js',
       'vendor/spin.js/spin.js',
-      'vendor/angular-spinner/angular-spinner.min.js'
+      'vendor/angular-spinner/angular-spinner.min.js',
+      'vendor/spark-md5/spark-md5.min.js'
     ],
     css: [
       'vendor/dcjs/dc.css',

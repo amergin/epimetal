@@ -1,6 +1,6 @@
 var visu = angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dataset', 'angularSpinner']);
-visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope) {
+visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'SOMService',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, SOMService) {
 
     $scope.resetFilter = function() {
       removeFilters();
@@ -17,7 +17,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
     $rootScope.$on('dataset:SOMUpdated', function(event, som) {
       $scope.$parent.startSpin();
 
-      DatasetFactory.getPlane($scope.window.variable).then( 
+      SOMService.getPlane($scope.window.variable).then( 
         function succFn(res) {
           angular.extend($scope.window, res); // overrides old values, places new plane info/ids/...
           $scope.redraw();
@@ -45,9 +45,11 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
     $scope.$parent.headerText = ['Self-organizing map of', $scope.window.variable, "(P = " + pvalFormat($scope.window.plane.pvalue) + ")"];
 
     $scope.window.showResetBtn = false;
-    $scope.dimension = DimensionService.getSOMDimension( $scope.window.som_id );
 
-    $scope.ownFilters = DimensionService.getSOMFilters($scope.window.som_id);
+    $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
+    $scope.dimension = $scope.dimensionService.getSOMDimension( $scope.window.som_id );
+
+    // $scope.ownFilters = DimensionService.getSOMFilters($scope.window.som_id);
 
     var _callRedraw = function() {
       $rootScope.$emit('scatterplot.redrawAll');
@@ -68,12 +70,12 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
     // };
 
     $scope.addFilter = function(hexagons, circleId, redraw) {
-      DimensionService.addSOMFilter( $scope.window.som_id, hexagons, circleId );
+      $scope.dimensionService.addSOMFilter( $scope.window.som_id, hexagons, circleId );
       if(redraw) { _callRedraw(); }
     };
 
     $scope.removeFilter = function(hexagons, circleId, redraw) {
-      DimensionService.removeSOMFilter( $scope.window.som_id, hexagons, circleId );
+      $scope.dimensionService.removeSOMFilter( $scope.window.som_id, hexagons, circleId );
       if(redraw) { _callRedraw(); }
     };
 
@@ -374,7 +376,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
                         .attr('cx', function(d) { return d.x; })
                         .attr('cy', function(d) { return d.y; })
                         .attr('r', function(d) { return d.r; })
-                        .attr('stroke', 'black')
+                        .attr('stroke', SOMService.getColor(circleId)) //'black')
                         .attr('stroke-width', 3)
                         .attr('fill', 'none')
                         .attr('cursor', 'ew-resize')

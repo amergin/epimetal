@@ -1,532 +1,670 @@
 var dimMod = angular.module('services.dimensions', ['services.dataset']);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-dimMod.service('DimensionService', ['$injector', 'constants', 'DatasetFactory', '$rootScope',
-  function ($injector, constants, DatasetFactory, $rootScope) {
+dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
+  function ($injector, constants, $rootScope) {
 
-    // dimensions created in this tool
-    var dimensions = {};
+    var _instances = {};
 
-    // for displaying active filters
-    var dispFilters = [];
+    function DimensionInstance(name) {
+      // dimensions created in this tool
+      var dimensions = {};
 
-    // for displaying active sample count
-    var dispSamples = {};
+      // for displaying active filters
+      var dispFilters = [];
 
-    // keep a record of added vars so dummy work is avoided
-    var usedVariables = {};
+      // for displaying active sample count
+      var dispSamples = {};
 
-    // initialized when samples arrive
-    var crossfilterInst = null;
+      // keep a record of added vars so dummy work is avoided
+      var usedVariables = {};
 
-    // current samples, formatted for crossfilter
-    var currSamples = {};
+      // initialized when samples arrive
+      var crossfilterInst = null;
 
-    var that = this;
+      // current samples, formatted for crossfilter
+      var currSamples = {};
 
-    // return one dimension. This is used for 
-    this.getDimension = function (selection) {
+      var that = this;
 
-      // call to return one dimension
-      var _getDimension = function (variable) {
-        var retDimension;
-        // dimension does not exist
-        if (_.isUndefined(dimensions[variable])) {
-          console.log("Dimension for ", variable, " created");
+      // instance name, should be unique
+      var _name = name || '';
 
-          retDimension = crossfilterInst.dimension(function (d) {
-            if( _(d.variables).isUndefined() ) {
-              return constants.nanValue;
-            }
-            else {
-              // a little checking to make sure NaN's are not returned
-              return +d.variables[variable] || constants.nanValue;
-            }
-          });
-          dimensions[variable] = {
+      this.getHash = function() {
+        // return crossfilterInst.size();
+        return that.getSampleDimension().top(Infinity).length;
+        // var spark = new SparkMD5();
+        // _.each( that.getSampleDimension().top(Infinity), function(d) {
+        //   spark.append( d.dataset + "|" + d.sampleid + "|" + _.values(d.variables).length );
+        // });
+        // return spark.end();
+
+        // return SparkMD5.hash( Utils.sortedJSON( this.getSampleDimension().top(Infinity) ) ); ///Utils.sortedJSON(currSamples) );
+      };
+
+      this.getName = function() {
+        return _name;
+      };
+
+      // return one dimension. 
+      this.getDimension = function (selection) {
+
+        // call to return one dimension
+        var _getDimension = function (variable) {
+          var retDimension;
+          // dimension does not exist
+          if (_.isUndefined(dimensions[variable])) {
+            console.log("Dimension for ", variable, " created");
+
+            retDimension = crossfilterInst.dimension(function (d) {
+              if( _(d.variables).isUndefined() ) {
+                return constants.nanValue;
+              }
+              else {
+                // a little checking to make sure NaN's are not returned
+                return +d.variables[variable] || constants.nanValue;
+              }
+            });
+            dimensions[variable] = {
+              count: 1,
+              dimension: retDimension
+            };
+          } else {
+            // already defined earlier
+            ++dimensions[variable].count;
+            retDimension = dimensions[variable]['dimension'];
+          }
+          return retDimension;
+        };
+
+        // only x
+        if (!_.isUndefined(selection.x)) {
+          return _getDimension(selection.x);
+        } else {
+          console.log("Error at getting dimension!");
+        }
+      };
+
+
+      this.getDatasetDimension = function() {
+        return dimensions['_dataset'];
+      };
+
+      this.getSOMDimension = function(somId) {
+        var somKey = "som" + somId;
+        if( _.isUndefined( dimensions[somKey] ) ) {
+
+          if( _.isNull( crossfilterInst ) ) { 
+            this.rebuildInstance();
+          }
+
+          dimensions[somKey] = {
             count: 1,
-            dimension: retDimension
+            filters: {},
+            dimension: crossfilterInst.dimension( function(d) { 
+              if( _.isUndefined( d['bmus'][somId] ) ) {
+                return {
+                  x: NaN,
+                  y: NaN,
+                  valueOf: function() { return constants.nanValue; }
+                };
+             }
+              return {
+                x: d['bmus'][somId].x,
+                y: d['bmus'][somId].y,
+                valueOf: function() {
+                  return ( d['bmus'][somId].x + d['bmus'][somId].y ) || constants.nanValue;
+                }
+              };
+            })
+          };
+        }
+        else {
+          ++dimensions[somKey].count;
+        }
+        return dimensions[somKey].dimension;
+      };
+
+      var _checkSOMFilterEmpty = function(somKey) {
+        if( _.isEmpty( dimensions[somKey].filters ) ) {
+          // all filters have been removed, remove the filter function
+          dimensions[somKey].dimension.filterAll();
+          return true;
+        }
+        return false;
+      };
+
+      this.getSOMFilters = function(somId) {
+        var somKey = 'som' + somId;
+        return dimensions[somKey].filters;
+      };
+
+      this.addSOMFilter = function(somId, hexagons, circleId) {
+        function updateDispFilter(circleId, somId, somKey, hexagons) {
+          dispFilters.push({'action': 'added', 
+            'payload': { 'type': 'som', 'circle': circleId, 'id': somId, 'hexagons': hexagons }});
+        }
+
+        var somKey = "som" + somId;
+        if( !dimensions[somKey].filters[circleId] ) {
+          dimensions[somKey].filters[circleId] = [];
+        }
+        dimensions[somKey].filters[circleId] = _.union( dimensions[somKey].filters[circleId], hexagons );
+        //.push(hexagons);
+
+        updateDispFilter(circleId, somId, somKey, hexagons.length);
+        _applySOMFilter(somKey);
+
+      };
+
+      this.removeSOMFilter = function(somId, hexagons, circleId) {
+        function updateDispFilter(circleId, somId, somKey) {
+          var ind = Utils.indexOf( dispFilters, function(f,i) { 
+            var plucked = _.pick(f.payload, _.chain(f.payload).keys().without('hexagons').value());
+            return _.isEqual(plucked, {'type': 'som', 'id': somId, 'circle': circleId });
+          });
+          if( ind != -1 ) {
+            dispFilters.splice(ind,1);
+          }
+        }
+
+        var somKey = "som" + somId;
+        dimensions[somKey].filters[circleId] = [];
+
+        updateDispFilter(circleId, somId, somKey, hexagons);
+        _applySOMFilter(somKey);
+      };
+
+      var _applySOMFilter = function(somKey) {
+        if( _checkSOMFilterEmpty(somKey) ) {
+          // pass
+        }
+        else {
+          dimensions[somKey].dimension.filterFunction( function(d) {
+            // if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
+            //   // sample is not in the dataset included in the SOM computation,
+            //   // therefore do NOT filter it out
+            //   return true;
+            // }
+            var combined = _.uniq( _.flatten( _.values( dimensions[somKey].filters ) ), 
+              function(f) { return f.i + "|" + f.j; } );
+
+            return _.any( combined, function(h) {
+              return ( (h.i === (d.y-1) ) && (h.j === (d.x-1) ) );
+            });
+
+          });
+        }
+        $rootScope.$emit('dimension:SOMFilter');
+      };
+
+      this.getSampleDimension = function() {
+        if( _.isUndefined( dimensions['_samples'] ) ) {
+          dimensions['_samples'] = {
+            count: 1,
+            dimension: crossfilterInst.dimension( function(d) { return d.dataset + "|" + d.id; } )
+          };
+        }
+        else {
+          ++dimensions['_samples'].count;
+        }
+        return dimensions['_samples'].dimension;
+      };
+
+      this.getSampleInfo = function() {
+        _updateSampleInfo();
+        return dispSamples;
+
+      };
+
+      var _updateSampleInfo = function() {
+        angular.copy( {
+          'active': crossfilterInst.groupAll().value()
+        }, 
+        dispSamples);
+      };
+
+      var sampleUpdates = ['dc.histogram.filter', 'dimension:dataset', 
+      'dimension:SOMFilter', 'dimension:crossfilter'];
+
+      _.each(sampleUpdates, function(name) {
+        $rootScope.$on(name, function() { _updateSampleInfo(); });
+      });
+
+      // call this to get combined dimension for x-y scatterplots
+      this.getXYDimension = function (selection) {
+        var varComb = selection.x + "|" + selection.y;
+        var _dim;
+
+        var indVal = 200;
+        window.output = [];
+
+        // dimension does not exist, create one
+        if (_.isUndefined(dimensions[varComb])) {
+
+          _dim = crossfilterInst.dimension(function (d) {
+            return {
+              x: +d.variables[selection.x],
+              y: +d.variables[selection.y],
+              // override prototype function to ensure the object is naturally ordered
+              valueOf: function () {
+                // the value is not important, only the resulting ordering is. 
+                // NaNs screw up ordering which will foil crossfilter instance!
+                return (+this.x) + (+this.y) || constants.nanValue;
+              }
+            };
+          });
+          dimensions[varComb] = {
+            count: 1,
+            dimension: _dim
           };
         } else {
           // already defined earlier
-          ++dimensions[variable].count;
-          retDimension = dimensions[variable]['dimension'];
+          ++dimensions[varComb].count;
+          _dim = dimensions[varComb]['dimension'];
         }
-        return retDimension;
+        return _dim;
       };
 
-      // only x
-      if (!_.isUndefined(selection.x)) {
-        return _getDimension(selection.x);
-      } else {
-        console.log("Error at getting dimension!");
-      }
-    };
-
-
-    this.getDatasetDimension = function() {
-      return dimensions['_dataset'];
-    };
-
-    this.getSOMDimension = function(somId) {
-      var somKey = "som" + somId;
-      if( _.isUndefined( dimensions[somKey] ) ) {
-
-        if( _.isNull( crossfilterInst ) ) { 
-          this.rebuildInstance();
-        }
-
-        dimensions[somKey] = {
-          count: 1,
-          filters: {},
-          dimension: crossfilterInst.dimension( function(d) { 
-            if( _.isUndefined( d['bmus'][somId] ) ) {
-              return {
-                x: NaN,
-                y: NaN,
-                valueOf: function() { return constants.nanValue; }
-              };
-           }
-            return {
-              x: d['bmus'][somId].x,
-              y: d['bmus'][somId].y,
-              valueOf: function() {
-                return ( d['bmus'][somId].x + d['bmus'][somId].y ) || constants.nanValue;
-              }
-            };
-          })
-        };
-      }
-      else {
-        ++dimensions[somKey].count;
-      }
-      return dimensions[somKey].dimension;
-    };
-
-    var _checkSOMFilterEmpty = function(somKey) {
-      if( _.isEmpty( dimensions[somKey].filters ) ) {
-        // all filters have been removed, remove the filter function
-        dimensions[somKey].dimension.filterAll();
-        return true;
-      }
-      return false;
-    };
-
-    // var _applySOMFilter = function(somKey) {
-    //   if( _checkSOMFilterEmpty(somKey) ) {
-    //     // pass
-    //   }
-    //   else {
-    //     dimensions[somKey].dimension.filterFunction( function(d) {
-
-    //       if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
-    //         // sample is not in the dataset included in the SOM computation,
-    //         // therefore do NOT filter it out
-    //         return true;
-    //       }
-    //       return _.any( dimensions[somKey].filters, function(f) {
-    //         return (f.x === d.x) && (f.y === d.y); 
-    //       });
-    //     });
-    //   }
-    //   $rootScope.$emit('dimension:SOMFilter');
-    // };
-
-    this.getSOMFilters = function(somId) {
-      var somKey = 'som' + somId;
-      return dimensions[somKey].filters;
-    };
-
-    this.addSOMFilter = function(somId, hexagons, circleId) {
-      function updateDispFilter(circleId, somId, somKey, hexagons) {
-        dispFilters.push({'action': 'added', 
-          'payload': { 'type': 'som', 'circle': circleId, 'id': somId, 'hexagons': hexagons }});
-      }
-
-      var somKey = "som" + somId;
-      if( !dimensions[somKey].filters[circleId] ) {
-        dimensions[somKey].filters[circleId] = [];
-      }
-      dimensions[somKey].filters[circleId].push(hexagons);
-
-      updateDispFilter(circleId, somId, somKey, hexagons.length);
-      _applySOMFilter(somKey);
-
-    };
-
-    this.removeSOMFilter = function(somId, hexagons, circleId) {
-      function updateDispFilter(circleId, somId, somKey) {
-        var ind = Utils.indexOf( dispFilters, function(f,i) { 
-          var plucked = _.pick(f.payload, _.chain(f.payload).keys().without('hexagons').value());
-          return _.isEqual(plucked, {'type': 'som', 'id': somId, 'circle': circleId });
+      $rootScope.$on('variable:remove', function(event, type, selection) {
+        _.each( Utils.getVariables(type,selection, true), function(variable) {
+          // heatmaps don't have a dimension
+          if( type === 'heatmap' ) { return; }
+          that._checkDimension(variable);
         });
-        if( ind != -1 ) {
-          dispFilters.splice(ind,1);
-        }
-      }
-
-      var somKey = "som" + somId;
-      dimensions[somKey].filters[circleId] = [];
-
-      updateDispFilter(circleId, somId, somKey, hexagons);
-      // _applySOMFilter(somKey);
-    };
-
-    var _applySOMFilter = function(somKey) {
-      if( _checkSOMFilterEmpty(somKey) ) {
-        // pass
-      }
-      else {
-        dimensions[somKey].dimension.filterFunction( function(d) {
-          if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
-            // sample is not in the dataset included in the SOM computation,
-            // therefore do NOT filter it out
-            return true;
-          }
-
-          var combined = _.uniq( _.flatten( _.values( dimensions[somKey].filters ) ), 
-            function(f) { return f.i + "|" + f.j; } );
-
-          return _.any( combined, function(h) { 
-            return ( (h.i === d.x) && (h.j === d.y) );
-          });
-
-        });
-      }
-      $rootScope.$emit('dimension:SOMFilter');
-    };
-
-    this.getSampleDimension = function() {
-      if( _.isUndefined( dimensions['_samples'] ) ) {
-        dimensions['_samples'] = {
-          count: 1,
-          dimension: crossfilterInst.dimension( function(d) { return d.dataset + "|" + d.id; } )
-        };
-      }
-      else {
-        ++dimensions['_samples'].count;
-      }
-      return dimensions['_samples'].dimension;
-    };
-
-    this.getSampleInfo = function() {
-      _updateSampleInfo();
-      return dispSamples;
-
-    };
-
-    var _updateSampleInfo = function() {
-      angular.copy( {
-        'active': crossfilterInst.groupAll().value()
-      }, 
-      dispSamples);
-    };
-
-    var sampleUpdates = ['dc.histogram.filter', 'dimension:dataset', 
-    'dimension:SOMFilter', 'dimension:crossfilter'];
-
-    _.each(sampleUpdates, function(name) {
-      $rootScope.$on(name, function() { _updateSampleInfo(); });
-    });
-
-    // call this to get combined dimension for x-y scatterplots
-    this.getXYDimension = function (selection) {
-      var varComb = selection.x + "|" + selection.y;
-      var _dim;
-
-      var indVal = 200;
-      window.output = [];
-
-      // dimension does not exist, create one
-      if (_.isUndefined(dimensions[varComb])) {
-
-        _dim = crossfilterInst.dimension(function (d) {
-          return {
-            x: +d.variables[selection.x],
-            y: +d.variables[selection.y],
-            // override prototype function to ensure the object is naturally ordered
-            valueOf: function () {
-              // the value is not important, only the resulting ordering is. 
-              // NaNs screw up ordering which will foil crossfilter instance!
-              return (+this.x) + (+this.y) || constants.nanValue;
-            }
-          };
-        });
-        dimensions[varComb] = {
-          count: 1,
-          dimension: _dim
-        };
-      } else {
-        // already defined earlier
-        ++dimensions[varComb].count;
-        _dim = dimensions[varComb]['dimension'];
-      }
-      return _dim;
-    };
-
-    $rootScope.$on('variable:remove', function(event, type, selection) {
-      _.each( Utils.getVariables(type,selection, true), function(variable) {
-        // heatmaps don't have a dimension
-        if( type === 'heatmap' ) { return; }
-        that._checkDimension(variable);
       });
-    });
 
-    $rootScope.$on('dimension:decreaseCount', function(eve, name) {
-      that._checkDimension(name);
-    });
+      $rootScope.$on('dimension:decreaseCount', function(eve, name) {
+        that._checkDimension(name);
+      });
 
-    // Notice: 'variable:add' message is not noted on this service,
-    // since all necessary plotters will request a dimension anyway -> handled there
+      // Notice: 'variable:add' message is not noted on this service,
+      // since all necessary plotters will request a dimension anyway -> handled there
 
-    this._checkDimension = function (variable) {
-        if( _.isUndefined( dimensions[variable] ) ) {
-          console.log("undefined dimension checked");
+      this._checkDimension = function (variable) {
+          if( _.isUndefined( dimensions[variable] ) ) {
+            console.log("undefined dimension checked");
+            return;
+          }
+          --dimensions[variable].count;
+
+          if( dimensions[variable].count === 0 ) {
+            if( !_.isUndefined(dimensions[variable].filters) ) {
+              _.each( angular.copy(dimensions[variable].filters), function(coord) {
+                that.removeSOMFilter(variable.replace(/som/, ''), coord);
+              });
+              dimensions[variable].dimension.filterAll();
+            }
+            dimensions[variable].dimension.dispose();
+            console.log('Deleting dimension', variable);
+            delete dimensions[variable];
+          }
+      };
+
+
+      // form a grouping using a custom reduce function
+      // NB! reduce functions will only affect the 
+      // grouping object VALUE part! (not the key part)  
+      this.getReduceScatterplot = function (dimensionGroup) {
+
+        var reduceAdd = function (p, v) {
+          p.counts[v.dataset] = p.counts[v.dataset] + 1;
+          p.dataset = v.dataset;
+          p.sampleid = v.sampleid;
+          return p;
+        };
+
+        var reduceRemove = function (p, v) {
+          p.counts[v.dataset] = p.counts[v.dataset] - 1;
+          p.dataset = v.dataset;
+          p.sampleid = v.sampleid;
+          return p;
+        };
+
+        var reduceInitial = function () {
+          var DatasetFactory = $injector.get('DatasetFactory');
+          var setNames = DatasetFactory.getSetNames();
+          var p = {
+            counts: {}
+          };
+
+          _.each(setNames, function (name) {
+            p.counts[name] = 0;
+          });
+          return p;
+        };
+
+        return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
+      };
+
+      this.getReducedGroupHisto = function (dimensionGroup, variable) {
+
+        var reduceAdd = function (p, v) {
+          p.counts[v.dataset] = p.counts[v.dataset] + 1;
+          p.counts.total = p.counts.total + 1;
+          // p.sums[v.dataset] = p.sums[v.dataset] + v.variables[variable];
+          // p.sums.total = p.sums.total + v.variables[variable];
+
+          p.dataset = v.dataset;
+          //p.sampleid = v.sampleid;
+          return p;
+        };
+
+        var reduceRemove = function (p, v) {
+          p.counts[v.dataset] = p.counts[v.dataset] - 1;
+          p.counts.total = p.counts.total - 1;
+          // p.sums[v.dataset] = p.sums[v.dataset] - v.variables[variable];
+          // p.sums.total = p.sums.total - v.variables[variable];
+
+          p.dataset = v.dataset;
+          //p.sampleid = v.sampleid;
+          return p;
+        };
+
+        var reduceInitial = function () {
+          var DatasetFactory = $injector.get('DatasetFactory');
+          var setNames = DatasetFactory.getSetNames();
+          var p = {
+            sums: {},
+            counts: {}
+          };
+
+          _.each(setNames, function (name) {
+            p.sums[name] = 0;
+            p.counts[name] = 0;
+          });
+          p.sums.total = 0;
+          p.counts.total = 0;
+          return p;
+        };
+
+        return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
+      };
+
+      this.getReducedGroupHistoDistributions = function (dimensionGroup, variable) {
+        var SOMService = $injector.get('SOMService');
+        var totalBmus = SOMService.getBMUs();
+        var somId = SOMService.getSomId();
+        var circleFilters = that.getSOMFilters( somId );
+        var groupNames = _.keys(circleFilters);
+
+        var inWhatCircle = function(sample) {
+          var includedInCircle = function(sample, circleId) {
+            var circleBMUs = circleFilters[circleId];
+            var bmu = sample.bmus[somId];
+            return _.any( circleBMUs, function(b) { return b.i === (bmu.y-1) && b.j === (bmu.x-1); } );
+          };
+
+          for( var i = 0; i < groupNames.length; ++i ) {
+            var name = groupNames[i];
+            if( includedInCircle(sample, name) ) {
+              return name;
+            }
+          }
+          return '';
+        };
+
+
+        var reduceAdd = function (p, v) {
+          _.each( groupNames, function(name) {
+            var inGroup = inWhatCircle(v);
+            if( inGroup === '' ) { 
+            // pass
+            }
+            else {
+              p.counts[inGroup] = p.counts[inGroup] + 1;
+              v.group = inGroup;
+            }
+          });
+          p.counts.total = p.counts.total + 1;
+
+          // p.dataset = v.dataset;
+          return p;
+        };
+
+        var reduceRemove = function (p, v) {
+          if( _.isUndefined(v.group) ) {
+            console.log("WARNING, GROUP NOT DEFINED", v, p);
+          }
+          var inGroup = inWhatCircle(v);
+          p.counts[inGroup] = p.counts[inGroup] - 1;
+          p.counts.total = p.counts.total - 1;
+
+          // p.dataset = v.dataset;
+          return p;
+        };
+
+        var reduceInitial = function () {
+          // var DatasetFactory = $injector.get('DatasetFactory');
+          // var setNames = DatasetFactory.getSetNames();
+          var p = {
+            sums: {},
+            counts: {}
+          };
+
+          _.each(groupNames, function (name) {
+            p.sums[name] = 0;
+            p.counts[name] = 0;
+          });
+          p.sums.total = 0;
+          p.counts.total = 0;
+          return p;
+        };
+
+        return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
+      };
+
+
+
+      // adds BMU information for each sample in SOM
+      this.addBMUs = function(somId, bmuSamples) {
+        _.each( bmuSamples, function(samp) {
+          var key = _getSampleKey(samp.sample.dataset, samp.sample.sampleid);
+          if( _.isUndefined( currSamples[key] ) ) {
+            currSamples[key] = {};
+
+            // add dataset and sampleid fields
+            angular.extend( currSamples[key], samp.sample );
+          }
+          if( _.isUndefined( currSamples[key]['bmus'] ) ) {
+            currSamples[key]['bmus'] = {};
+          }
+          // add bmu info
+          currSamples[key]['bmus'][somId] = { x: samp.x, y: samp.y };
+        });
+
+        this.rebuildInstance();
+        // Context: datasets 1&3 have samples used to plot histogram.
+        // SOM is constructed of using datasets 1&2. As a result,
+        // DSETs 1&3 should be active, DSET2 is dummy and has no samples.
+        // Update by applying datasetfilter function
+        this.updateDatasetDimension();
+      };
+
+      // receives new variable data
+      this.addVariableData = function (variable, samples) {
+
+        var dataWasAdded = true;
+
+        usedVariables[variable] = true;
+
+        _.every(samples, function (samp) {
+
+          var key = _getSampleKey(samp.dataset, samp.sampleid);
+
+          if (_.isUndefined(currSamples[key])) {
+            currSamples[ key ] = samp;
+            currSamples[ key ]['bmus'] = {};
+          } else {
+            if( _.isUndefined( currSamples[key].variables ) ) {
+              currSamples[key].variables = {};
+            }
+
+            if( !_.isUndefined( currSamples[key].variables[ variable ] ) ) {
+              // dummy work for the whole gang
+              dataWasAdded = false;
+              return false; // stop iteration
+            }
+
+            angular.extend( currSamples[key].variables, samp.variables );
+          }
+          return true;
+        });
+        return dataWasAdded;
+      };
+
+      var _createDatasetDimension = function () {
+        if (!_.isUndefined(dimensions['_dataset'])) {
           return;
         }
-        --dimensions[variable].count;
-
-        if( dimensions[variable].count === 0 ) {
-          if( !_.isUndefined(dimensions[variable].filters) ) {
-            _.each( angular.copy(dimensions[variable].filters), function(coord) {
-              that.removeSOMFilter(variable.replace(/som/, ''), coord);
-            });
-            dimensions[variable].dimension.filterAll();
-          }
-          dimensions[variable].dimension.dispose();
-          console.log('Deleting dimension', variable);
-          delete dimensions[variable];
-        }
-    };
-
-
-    // form a grouping using a custom reduce function
-    // NB! reduce functions will only affect the 
-    // grouping object VALUE part! (not the key part)  
-    this.getReduceScatterplot = function (dimensionGroup) {
-
-      var reduceAdd = function (p, v) {
-        p.counts[v.dataset] = p.counts[v.dataset] + 1;
-        p.dataset = v.dataset;
-        p.sampleid = v.sampleid;
-        return p;
-      };
-
-      var reduceRemove = function (p, v) {
-        p.counts[v.dataset] = p.counts[v.dataset] - 1;
-        p.dataset = v.dataset;
-        p.sampleid = v.sampleid;
-        return p;
-      };
-
-      var reduceInitial = function () {
-        var DatasetFactory = $injector.get('DatasetFactory');
-        var setNames = DatasetFactory.getSetNames();
-        var p = {
-          counts: {}
-        };
-
-        _.each(setNames, function (name) {
-          p.counts[name] = 0;
+        dimensions['_dataset'] = crossfilterInst.dimension(function (s) {
+          return s.dataset;
         });
-        return p;
       };
 
-      return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
-    };
-
-    this.getReducedGroupHisto = function (dimensionGroup, variable) {
-
-      var reduceAdd = function (p, v) {
-        p.counts[v.dataset] = p.counts[v.dataset] + 1;
-        p.counts.total = p.counts.total + 1;
-        // p.sums[v.dataset] = p.sums[v.dataset] + v.variables[variable];
-        // p.sums.total = p.sums.total + v.variables[variable];
-
-        p.dataset = v.dataset;
-        //p.sampleid = v.sampleid;
-        return p;
-      };
-
-      var reduceRemove = function (p, v) {
-        p.counts[v.dataset] = p.counts[v.dataset] - 1;
-        p.counts.total = p.counts.total - 1;
-        // p.sums[v.dataset] = p.sums[v.dataset] - v.variables[variable];
-        // p.sums.total = p.sums.total - v.variables[variable];
-
-        p.dataset = v.dataset;
-        //p.sampleid = v.sampleid;
-        return p;
-      };
-
-      var reduceInitial = function () {
-        var DatasetFactory = $injector.get('DatasetFactory');
-        var setNames = DatasetFactory.getSetNames();
-        var p = {
-          sums: {},
-          counts: {}
-        };
-
-        _.each(setNames, function (name) {
-          p.sums[name] = 0;
-          p.counts[name] = 0;
-        });
-        p.sums.total = 0;
-        p.counts.total = 0;
-        return p;
-      };
-
-      return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
-    };
-
-    // adds BMU information for each sample in SOM
-    this.addBMUs = function(somId, bmuSamples) {
-      _.each( bmuSamples, function(samp) {
-        var key = _getSampleKey(samp.sample.dataset, samp.sample.sampleid);
-        if( _.isUndefined( currSamples[key] ) ) {
-          currSamples[key] = {};
-
-          // add dataset and sampleid fields
-          angular.extend( currSamples[key], samp.sample );
-        }
-        if( _.isUndefined( currSamples[key]['bmus'] ) ) {
-          currSamples[key]['bmus'] = {};
-        }
-        // add bmu info
-        currSamples[key]['bmus'][somId] = { x: samp.x, y: samp.y };
-      });
-
-      this.rebuildInstance();
-      // Context: datasets 1&3 have samples used to plot histogram.
-      // SOM is constructed of using datasets 1&2. As a result,
-      // DSETs 1&3 should be active, DSET2 is dummy and has no samples.
-      // Update by applying datasetfilter function
-      this.updateDatasetDimension();
-    };
-
-    // receives new variable data
-    this.addVariableData = function (variable, samples) {
-
-      var dataWasAdded = true;
-
-      usedVariables[variable] = true;
-
-      _.every(samples, function (samp) {
-
-        var key = _getSampleKey(samp.dataset, samp.sampleid);
-
-        if (_.isUndefined(currSamples[key])) {
-          currSamples[ key ] = samp;
-          currSamples[ key ]['bmus'] = {};
+      // rebuilds crossfilter instance (called after adding new variable data)
+      this.rebuildInstance = function () {
+        console.log("Crossfilter instance rebuild called on", this.getName());
+        // called for the first time, create instance
+        if (crossfilterInst === null) {
+          crossfilterInst = crossfilter(_.values(currSamples));
+          _createDatasetDimension();
         } else {
-          if( _.isUndefined( currSamples[key].variables ) ) {
-            currSamples[key].variables = {};
+          // already defined, just need to reboot it
+          // Important: remove ALL samples regardless of the current filters
+          // (requires custom build of crossfilter.js, see:
+          // https://github.com/square/crossfilter/issues/109#issuecomment-45359642)
+          crossfilterInst.remove( function() { return false; } );
+          crossfilterInst.add(_.values(currSamples));
+        }
+        $rootScope.$emit('dimension:crossfilter');
+      };
+
+      this.updateDatasetDimension = function () {
+
+        if( _.isUndefined( dimensions['_dataset'] ) ) { return; }
+
+        var DatasetFactory = $injector.get('DatasetFactory');
+        var activeSets = DatasetFactory.activeSets();
+
+        dimensions['_dataset'].filterFunction(function (dsetName) {
+          return _.any(activeSets, function (set) { 
+            return set.getName() === dsetName; 
+          });
+        });
+        $rootScope.$emit('dimension:dataset');
+      };
+
+      this.deleteDimension = function(variable) {
+        if( _.isUndefined( dimensions[variable] ) ) { return; }
+        dimensions[variable].dispose();
+        delete dimensions[variable];
+      };
+
+      // important! these values are not *necessarily* the same as the ones
+      // currently shown: Example:
+      // - plot variables A,B
+      // - close windows for variables A,B
+      // - plot something else involving variable C
+      // now usedVariables would have A,B,C but only C is an *active* variable
+      // This is because the once-fetched sample data is not purged, only the dimension
+      this.getUsedVariables = function() {
+        return usedVariables;
+      };
+
+      this.getDimensions = function() {
+        return dimensions;
+      };
+
+      this.getFilters = function() {
+        return dispFilters;
+      };
+
+      this.copy = function() {
+        return angular.copy( this.getSampleDimension().top(Infinity) );
+      };
+
+      this.restart = function(copy) {
+        var getKey = function(samp) {
+          return samp.dataset + "|" + samp.sampleid;
+        };
+
+        currSamples = {};
+        _.each( copy, function(samp) {
+          currSamples[ getKey(samp) ] = samp;
+        });
+        this.rebuildInstance();
+      };
+
+      // if histogram is filtered, display/remove the filter in the display array
+      $rootScope.$on('dc.histogram.filter', function(eve, info) {
+
+          // could also be moved from one range to another
+          var ind = Utils.indexOf( dispFilters, function(f,i) { 
+            return _.isEqual( f.payload.dimension, info.payload.dimension );
+          });
+          if( ind != -1 ) {
+            dispFilters.splice(ind,1);
           }
 
-          if( !_.isUndefined( currSamples[key].variables[ variable ] ) ) {
-            // dummy work for the whole gang
-            dataWasAdded = false;
-            return false; // stop iteration
-          }
-
-          angular.extend( currSamples[key].variables, samp.variables );
-        }
-        return true;
+          if( info.action !== 'removed' ) { dispFilters.push(info); }
       });
-      return dataWasAdded;
-    };
 
-    var _createDatasetDimension = function () {
-      if (!_.isUndefined(dimensions['_dataset'])) {
-        return;
-      }
-      dimensions['_dataset'] = crossfilterInst.dimension(function (s) {
-        return s.dataset;
-      });
-    };
+      // start by initializing crossfilter
+      that.rebuildInstance();
 
-    // rebuilds crossfilter instance (called after adding new variable data)
-    this.rebuildInstance = function () {
-      console.log("Crossfilter instance rebuild called");
-      // called for the first time, create instance
-      if (crossfilterInst === null) {
-        crossfilterInst = crossfilter(_.values(currSamples));
-        _createDatasetDimension();
-      } else {
-        // already defined, just need to reboot it
-        // Important: remove ALL samples regardless of the current filters
-        // (requires custom build of crossfilter.js, see:
-        // https://github.com/square/crossfilter/issues/109#issuecomment-45359642)
-        crossfilterInst.remove( function() { return false; } );
-        crossfilterInst.add(_.values(currSamples));
-      }
-      $rootScope.$emit('dimension:crossfilter');
-    };
+      // HELPER FUNCTIONS
+      var _getSampleKey = function(dataset, id) {
+        var separator = "|";
+        return dataset + separator + id;
+      };
 
-    this.updateDatasetDimension = function () {
+    } // DimensionInstance
 
-      if( _.isUndefined( dimensions['_dataset'] ) ) { return; }
 
-      var DatasetFactory = $injector.get('DatasetFactory');
-      var activeSets = DatasetFactory.activeSets();
+    return {
+      create: function(name, primary) {
+        var instance = new DimensionInstance(name);
+        _instances[name] = {
+          instance: instance,
+          primary: primary || false
+        };
+        return instance;
+      },
+      get: function(name) {
+        return _instances[name].instance;
+      },
+      getAll: function() {
+        return _instances;
+      },
+      compare: function(nameA, nameB) {
+        var a = _instances[nameA],
+        b = _instances[nameB];
 
-      dimensions['_dataset'].filterFunction(function (dsetName) {
-        return _.any(activeSets, function (set) { 
-          return set.getName() === dsetName; 
-        });
-      });
-      $rootScope.$emit('dimension:dataset');
-    };
-
-    this.deleteDimension = function(variable) {
-      if( _.isUndefined( dimensions[variable] ) ) { return; }
-      dimensions[variable].dispose();
-      delete dimensions[variable];
-    };
-
-    // important! these values are not *necessarily* the same as the ones
-    // currently shown: Example:
-    // - plot variables A,B
-    // - close windows for variables A,B
-    // - plot something else involving variable C
-    // now usedVariables would have A,B,C but only C is an *active* variable
-    // This is because the once-fetched sample data is not purged, only the dimension
-    this.getUsedVariables = function() {
-      return usedVariables;
-    };
-
-    this.getDimensions = function() {
-      return dimensions;
-    };
-
-    this.getFilters = function() {
-      return dispFilters;
-    };
-
-    // if histogram is filtered, display/remove the filter in the display array
-    $rootScope.$on('dc.histogram.filter', function(eve, info) {
-
-        // could also be moved from one range to another
-        var ind = Utils.indexOf( dispFilters, function(f,i) { 
-          return _.isEqual( f.payload.dimension, info.payload.dimension );
-        });
-        if( ind != -1 ) {
-          dispFilters.splice(ind,1);
+        if( !a || !b) {
+          throw "Invalid name(s) provided";
         }
 
-        if( info.action !== 'removed' ) { dispFilters.push(info); }
-    });
+        return _.isEqual( a.instance.getHash(), b.istance.getHash() );
+      },
+      getPrimary: function() {
+        return _.chain(_instances)
+        .values()
+        .filter( function(obj, ind, arr) { return obj.primary === true; } )
+        .first()
+        .value()
+        .instance;
+      },
+      equal: function(a, b) {
+        return _.isEqual( a.getHash(), b.getHash() );
+      },
+      restart: function(restartInstance, sourceInstance) {
+        var copy = sourceInstance.copy();
+        restartInstance.restart(copy);
+        console.log("after restart:", restartInstance.getSampleDimension().top(Infinity).length);
+      }
 
-
-    // start by initializing crossfilter
-    that.rebuildInstance();
-
-
-  // HELPER FUNCTIONS
-  var _getSampleKey = function(dataset, id) {
-    var separator = "|";
-    return dataset + separator + id;
-  };
+    };
 
   }
 ]);

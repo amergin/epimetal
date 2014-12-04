@@ -8,9 +8,6 @@ win.directive('windowHeader', function() {
     templateUrl: 'vis/windowing/window.common.tpl.html',
     // Linker function
     link: function(scope, element, attrs) {
-      // element.bind('click', function() {
-      //   this.select();
-      // });
     }
   };
 });

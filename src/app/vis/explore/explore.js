@@ -12,8 +12,8 @@ var vis =
     'utilities'
     ]);
 
-mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', 'windowHandler', 'PlotService',
-  function ExploreController($scope, $templateCache, $rootScope, windowHandler, PlotService) {
+mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', 'windowHandler', 'DatasetFactory', '$q', 'PlotService', 'WindowHandler', 'SOMService',
+  function ExploreController($scope, $templateCache, $rootScope, windowHandler, DatasetFactory, $q, PlotService, WindowHandler, SOMService) {
     console.log("explore ctrl");
 
     $scope.windowHandler = windowHandler;
@@ -48,11 +48,53 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
       }
     };
 
-    PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'Serum-C' } }, $scope.windowHandler);
-    PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'Serum-TG' } }, $scope.windowHandler);
-    PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'HDL-C' } }, $scope.windowHandler);
-    PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'LDL-C' } }, $scope.windowHandler);
-    PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'Glc' } }, $scope.windowHandler);
+
+  var defaultVariables = ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'];
+  var planePromises = [];
+  var defaultSOMInputs = [
+    'XXL-VLDL-L',
+    'XL-VLDL-L',
+    'L-VLDL-L',
+    'M-VLDL-L',
+    'S-VLDL-L',
+    'XS-VLDL-L',
+    'IDL-L',
+    'L-LDL-L',
+    'M-LDL-L',
+    'S-LDL-L',
+    'XL-HDL-L',
+    'L-HDL-L',
+    'M-HDL-L',
+    'S-HDL-L',
+    'Serum-C',
+    'Serum-TG',
+    'HDL-C',
+    'LDL-C',
+    'Glc',
+    'Cit',
+    'Phe',
+    'Gp',
+    'Tyr',
+    'FAw3toFA',
+    'FAw6toFA',
+    'SFAtoFA'
+    ];
+
+    var inputPromise = DatasetFactory.getVariableData(defaultVariables);
+
+    inputPromise.then( function() {
+
+      _.each( defaultVariables, function(variable) {
+        PlotService.drawHistogram({ pooled: undefined,  variables: { x: variable } }, windowHandler);
+      });
+
+    });
+
+    // PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'Serum-C' } }, $scope.windowHandler);
+    // PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'Serum-TG' } }, $scope.windowHandler);
+    // PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'HDL-C' } }, $scope.windowHandler);
+    // PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'LDL-C' } }, $scope.windowHandler);
+    // PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'Glc' } }, $scope.windowHandler);
     
   }
 ]);
