@@ -21,9 +21,9 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
 
     $scope.itemMapper = {
         sizeX: 'window.size.x', 
-        sizeY: 'window.size.y',
-        row: 'window.position.row',
-        col: 'window.position.col'
+        sizeY: 'window.size.y'
+        // row: 'window.position.row',
+        // col: 'window.position.col'
     };
 
     $scope.gridOptions = {
@@ -40,7 +40,7 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
       defaultSizeY: 4,
       columns: 4 * 10,
       width: 4 * 125 * 10,
-      colWidth: '125',
+      colWidth: 125,
       rowHeight: '100',
       resizable: {
            enabled: true,

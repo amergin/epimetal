@@ -239,7 +239,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
         var _circleConfig = {
           fillOpacity: 0.40,
-          radius: { normal: hexRadius * 2, min: hexRadius * 2, max: hexRadius * 5 }
+          radius: { normal: hexRadius * 3, min: hexRadius * 2, max: hexRadius * 5 }
         };
 
         var circleX = function(x) {

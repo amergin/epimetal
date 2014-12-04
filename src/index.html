@@ -25,13 +25,13 @@
 
 <body>
   <div ui-layout="{ flow : 'row', dividerSize: 1 }" style="overflow-y: hidden;">
-    <!-- <div ui-layout-container size="100px"> -->
+    <div ui-layout-container size="100px">
       <div ui-view="header"></div>      
-    <!-- </div> -->
-    <div ui-layout-container id="main-content">
+    </div>
+    <div ui-layout-container id="main-content" class="horizontal-scrollbar" style="overflow-x: auto;" min-size="850px">
       <div class="container-fluid" ui-view="content"></div>
     </div>
-    <div ui-layout-container size="30px" style="z-index:2; overflow: hidden; background-color: gray;">
+<!--     <div ui-layout-container size="30px" style="z-index:2; overflow: hidden; background-color: lightgray;">
       <footer>
         <p>Copyright Jussi Ekholm & <a href="http://computationalmedicine.fi/" target="_blank">Computational Medicine Research Group</a> 2013-2014, and the copyrights of the respective libraries used in developing this application.</p>
         <pre>
@@ -43,24 +43,9 @@
           Used variables: {{usedVariables}}
         </pre>
       </footer>
-    </div>
+    </div> -->
 
 
   </div>
-
-<!--   <div ui-view="header"></div>
-  <div class="container-fluid" id="main-content" ui-view="content"></div> 
-
-  <footer>
-    <p>Copyright Jussi Ekholm & <a href="http://computationalmedicine.fi/" target="_blank">Computational Medicine Research Group</a> 2013-2014, and the copyrights of the respective libraries used in developing this application.</p>
-    <pre>
-      $state = {{$state.current.name}}
-      $stateParams = {{$stateParams}}
-    </pre>
-  </footer> -->
-
 </body>
-
-
-
 </html>

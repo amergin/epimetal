@@ -81,7 +81,7 @@ module.exports = {
       // animation framework
       'vendor/angular-animate/angular-animate.js',
       // windowing
-      'vendor/angular-gridster/dist/angular-gridster.min.js',
+      'vendor/angular-gridster/src/angular-gridster.js',
       // 'vendor/packery/dist/packery.pkgd.js',
       // 'vendor/draggabilly/draggabilly.js',
       // dropdowns x2
@@ -102,7 +102,7 @@ module.exports = {
       'vendor/d3-plugins/hexbin/hexbin.js',
       // compatibility-service
       'vendor/modernizr/modernizr.custom.min.js',
-      'vendor/angular-ui-layout/ui-layout.js',
+      'vendor/angular-ui-layout/src/ui-layout.js',
       'vendor/spin.js/spin.js',
       'vendor/angular-spinner/angular-spinner.min.js'
     ],
@@ -110,7 +110,7 @@ module.exports = {
       'vendor/dcjs/dc.css',
       'vendor/angular-motion/dist/angular-motion.min.css',
       'vendor/bootstrap-additions/dist/bootstrap-additions.min.css',
-      'vendor/angular-ui-layout/ui-layout.css'
+      'vendor/angular-ui-layout/src/ui-layout.css'
       //'vendor/chosen/chosen.min.css'
     ],
     assets: [
