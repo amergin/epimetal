@@ -36,9 +36,9 @@ mod.controller('FilterInfoController', ['$scope', '$templateCache', 'DimensionSe
     };
 
     var _redraw = function() {
-      $rootScope.$emit('scatterplot.redrawAll');
-      $rootScope.$emit('histogram.redraw');
-      $rootScope.$emit('heatmap.redraw');
+      // $rootScope.$emit('scatterplot.redrawAll');
+      // $rootScope.$emit('histogram.redraw');
+      // $rootScope.$emit('heatmap.redraw');
       dc.redrawAll(constants.groups.scatterplot);
       dc.redrawAll(constants.groups.heatmap);
     };

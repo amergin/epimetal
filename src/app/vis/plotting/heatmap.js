@@ -3,8 +3,8 @@ var visu = angular.module('plotter.vis.plotting.heatmap',
   'ui.router',
   'services.dimensions'
   ]);
-visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$state',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $state) {
+visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope) {
 
     $scope.resetFilter = function() {
       $scope.heatmap.filterAll();
@@ -222,20 +222,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       }
     });
 
-    // $scope.$watch('filtered', function(filt) {
-    //   var entry = _.last($scope.$parent.settingsDropdown).text;
-    //   if(filt) { 
-    //     $scope.$parent.headerText[2] = '(p < ' + $scope.limitDisp + ')';
-    //     _.last($scope.$parent.settingsDropdown).text = entry.replace(/Hide/, 'Show');
-    //   } else {
-    //     $scope.$parent.headerText[2] = '';
-    //     _.last($scope.$parent.settingsDropdown).text = entry.replace(/Show/, 'Hide');
-    //   }
-    // });
-
-    $scope.$onRootScope('heatmap.redraw', function(event, dset, action) {
-      // only redraw if the dashboard is visible
-      if( $state.current.name === $scope.window.handler.getName() ) {
+    $scope.redraw = function() {
         $scope.computeVariables();
 
         // update the chart and redraw
@@ -244,7 +231,19 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
         // remember to clear any filters that may have been applied
         $scope.heatmap.filterAll();
-        $scope.heatmap.render();
+        $scope.heatmap.render();      
+    };
+
+    $rootScope.$on('window-handler.redraw', function(event, winHandler, config) {
+      if( winHandler == $scope.window.handler ) {
+        $timeout( function() {
+          if(config.compute) {
+            $scope.redraw();
+          }
+          else {
+            $scope.heatmap.render();
+          }
+        });
       }
     });
 

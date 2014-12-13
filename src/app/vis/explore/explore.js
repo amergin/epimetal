@@ -32,6 +32,13 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
       }, 200 );
     };
 
+    // $rootScope.$on('tab.changed', function(event, tabName) {
+    //   if( tabName == $scope.windowHandler.getName() ) {
+    //     console.log("tab.changed triggered for", tabName);
+    //     $scope.windowHandler.redrawAll();
+    //   }
+    // });
+
 
     $scope.gridOptions = {
       pushing: true,

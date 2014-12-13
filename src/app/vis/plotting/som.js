@@ -52,9 +52,9 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
     // $scope.ownFilters = DimensionService.getSOMFilters($scope.window.som_id);
 
     var _callRedraw = function() {
-      $rootScope.$emit('scatterplot.redrawAll');
-      $rootScope.$emit('histogram.redraw');
-      $rootScope.$emit('heatmap.redraw');
+      // $rootScope.$emit('scatterplot.redrawAll');
+      // $rootScope.$emit('histogram.redraw');
+      // $rootScope.$emit('heatmap.redraw');
       dc.redrawAll(constants.groups.scatterplot);
       dc.redrawAll(constants.groups.heatmap);
     };

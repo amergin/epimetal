@@ -42,11 +42,9 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
           DatasetFactory.toggle(set);
 
           // important!
-          $rootScope.$emit('scatterplot.redraw', set, res);
-          $rootScope.$emit('histogram.redraw', set, res);
-          $rootScope.$emit('heatmap.redraw', set, res);
-          dc.redrawAll(constants.groups.scatterplot);
-          dc.redrawAll(constants.groups.heatmap);
+          WindowHandler.redrawVisible({ compute: true, dset: set, action: res });
+          // dc.redrawAll(constants.groups.scatterplot);
+          // dc.redrawAll(constants.groups.heatmap);
         }
         else if( res === 'empty' ) {
           DatasetFactory.toggle(set);

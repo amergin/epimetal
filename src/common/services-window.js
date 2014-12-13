@@ -1,7 +1,7 @@
 var mod = angular.module('services.window', ['angularSpinner']);
 
-mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout', 'usSpinnerService',
-  function ($injector, constants, $rootScope, $timeout, usSpinnerService, name) { // notice 'name'
+mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout', 'usSpinnerService', '$state',
+  function ($injector, constants, $rootScope, $timeout, usSpinnerService, $state, name) { // notice 'name'
 
     var _handlers = {};
 
@@ -11,13 +11,29 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
       var that = this;
       var _filtersEnabled = true;
       var _dimensionService = null;
+      var _ignoreRedraws = false;
 
       this.setDimensionService = function(service) {
         _dimensionService = service;
       };
 
+      this.ignoreRedraws = function(set) {
+        if(!arguments.length) { return _ignoreRedraws; }
+        _ignoreRedraws = set;
+      };
+
+      this.getService = function() {
+        return $injector.get('WindowHandler');
+      };
+
       this.getDimensionService = function() {
         return _dimensionService;
+      };
+
+      this.redrawAll = function(config) {
+        if( that.ignoreRedraws() ) { return; }
+        console.log("window handler ", that.getName(), " redrawing all");
+        $rootScope.$emit('window-handler.redraw', that, config);
       };
 
       this.add = function(config) {
@@ -131,7 +147,28 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
       },
       getAll: function() {
         return _handlers;
+      },
+      // redraws all visible handlers
+      redrawVisible: function(config) {
+        var visibles = this.getVisible();
+        _.each(visibles, function(hand) {
+          hand.redrawAll(config);
+        });
+      },
+
+      getVisible: function() {
+        var res = [];
+        var re = /((?:\w+).(?:\w+))(?:.\w+)?/i;
+        var current = $state.current.name;
+        var parent = _.last( re.exec(current) );
+        _.each( _handlers, function(hand) {
+          if( hand.getName() == parent ) {
+            res.push(hand);
+          }
+        });    
+        return res;    
       }
+
     };
 
 

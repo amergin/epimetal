@@ -4,8 +4,8 @@ var visu = angular.module('plotter.vis.plotting.scatterplot',
   'services.dimensions',
   'services.dataset'
   ]);
-visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$state', '$rootScope',
-  function($scope, DatasetFactory, DimensionService, constants, $state, $rootScope) {
+visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$state', '$rootScope', '$timeout',
+  function($scope, DatasetFactory, DimensionService, constants, $state, $rootScope, $timeout) {
 
     $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
     $scope.dimension = $scope.dimensionService.getXYDimension($scope.window.variables);
@@ -113,35 +113,44 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       }
     });
 
-    $scope.$onRootScope('scatterplot.redraw', function(event, dset, action) {
-      // only redraw if the dashboard is visible
-      if( $state.current.name === $scope.window.handler.getName() ) {
-        if (action === 'disabled') {
-          $scope.disable(dset);
-        } else if (action === 'enabled') {
+    $rootScope.$on('window-handler.redraw', function(event, winHandler, config) {
+      if( winHandler == $scope.window.handler ) {
+        $timeout( function() {
+            var action = config.action,
+            dset = config.dset,
+            compute = config.compute;
 
-          var canvas = $scope.canvases[dset.getName()];
-          if (_.isUndefined(canvas)) {
-            // new, not drawn before
-
-            // refresh calculations
-            _calcCanvasAttributes();
-            // add canvas as 'layer'
-            $scope._createCanvas(dset, ++$scope.zIndexCount);
-          } else {
-            $scope.enable(dset);
+          if( !action && !dset && compute ) {
+            $scope.redrawAll();
           }
+          else {
+            if (action === 'disabled') {
+              $scope.disable(dset);
+            } else if (action === 'enabled') {
 
-        }
+              var canvas = $scope.canvases[dset.getName()];
+              if (_.isUndefined(canvas)) {
+                // new, not drawn before
+
+                // refresh calculations
+                _calcCanvasAttributes();
+                // add canvas as 'layer'
+                $scope._createCanvas(dset, ++$scope.zIndexCount);
+              } else {
+                $scope.enable(dset);
+              }
+            }
+          }
+        });
       }
     });
 
-    $scope.$onRootScope('scatterplot.redrawAll', function(event) {
-      // only redraw if the dashboard is visible
-      if( $state.current.name === $scope.window.handler.getName() ) {
-        $scope.redrawAll();
-      }
-    });
+    // $scope.$onRootScope('scatterplot.redrawAll', function(event) {
+    //   // only redraw if the dashboard is visible
+    //   if( $state.current.name === $scope.window.handler.getName() ) {
+    //     $scope.redrawAll();
+    //   }
+    // });
 
 
 

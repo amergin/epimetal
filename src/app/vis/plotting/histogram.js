@@ -3,10 +3,11 @@ var visu = angular.module('plotter.vis.plotting.histogram',
   'ui.router',
   'services.dimensions',
   'services.dataset',
-  'services.som'
+  'services.som',
+  'services.window'
   ]);
-visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector',
-  function HistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector) {
+visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout',
+  function HistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout) {
 
     $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
 
@@ -24,20 +25,36 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     };
 
     $scope.redraw = function() {
+      if( $state.current.name === $scope.window.handler.getName() ) {
+        // only redraw if the dashboard is visible
         $scope.computeExtent();
         $scope.histogram.x(d3.scale.linear().domain($scope.extent).range([0, $scope.noBins]));
         // $scope.barWidth = d3.round( ($scope.$parent.element.width() / $scope.noBins) * 3 + 40 );
         // $scope.histogram.xUnits( $scope.barWidth );
         // console.log( "width=", $scope.barWidth, $scope.$parent.element.width(), $scope.noBins);
         $scope.histogram.render();
+      }
     };
 
-    $scope.$onRootScope('histogram.redraw', function(event, dset, action) {
-      // only redraw if the dashboard is visible
-      if( $state.current.name === $scope.window.handler.getName() ) {
-        dc.events.trigger(function(){
+    $rootScope.$on('histogram.redraw', function(event, dset, action) {
+      dc.events.trigger(function(){
+        $timeout( function() {
           $scope.redraw();
-        }, 100);
+        });
+      }, 100);
+    });
+
+    $rootScope.$on('window-handler.redraw', function(event, winHandler, config) {
+      if( winHandler == $scope.window.handler ) {
+        if( config.omit == 'histogram' ) { return; }
+        $timeout( function() {
+          if(config.compute) {
+            $scope.redraw();
+          }
+          else {
+            $scope.histogram.render();
+          }
+        });
       }
     });
 
@@ -179,15 +196,16 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope',
             }
             else {
               $scope.window.showResetBtn = true;
-              $rootScope.$emit('dc.histogram.filter', {'action': 'added', 
-                'payload': { 'type': 'range', 'dimension': $scope.dimension, 
-                'chart': $scope.histogram, 'filter':  filter, 'var': $scope.window.variables.x,
-                'handler': $scope.window.handler
-              } });
+              // $rootScope.$emit('dc.histogram.filter', {'action': 'added', 
+              //   'payload': { 'type': 'range', 'dimension': $scope.dimension, 
+              //   'chart': $scope.histogram, 'filter':  filter, 'var': $scope.window.variables.x,
+              //   'handler': $scope.window.handler
+              // } });
               $scope.prevFilter = filter;
             }
-            $rootScope.$emit('scatterplot.redrawAll');
-            $rootScope.$emit('heatmap.redraw');
+            $scope.window.handler.getService().redrawVisible({ compute: true, omit: 'histogram' });
+            // $rootScope.$emit('scatterplot.redrawAll');
+            // $rootScope.$emit('heatmap.redraw');
           });
         })
         .renderlet( function(chart) {
@@ -287,28 +305,11 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope',
         createSVG($scope, config);
       });
 
-
-      $scope.$parent.$watch('window.size', function(nevVal, oldVal) {
-        if( angular.equals(nevVal, oldVal) ) {
-          return;
-        }
-
-        if( !_.isUndefined( $scope.histogram ) ) {
-          dc.events.trigger( function() {
-            $timeout( function() {
-              $scope.histogram.render();
-            });
-          });
-        }
-
-      }, true);
-
       $rootScope.$on('gridster.resize', function(eve, $element) {
         if( $element.is( $scope.$parent.element.parent() ) ) {
-          $scope.histogram.render();
-          // $timeout( function() {
-          //   $scope.redraw();
-          // });
+          $timeout( function() {
+            $scope.histogram.render();
+          });
         }
       });
 

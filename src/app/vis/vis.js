@@ -224,17 +224,9 @@
 
 }]);
 
-vis.run(['$rootScope', '$state', '$stateParams', '$location', '$timeout', 'DimensionService', 'DatasetFactory', 'PlotService', '$q', 'WindowHandler', 'SOMService',
-function ($rootScope, $state, $stateParams, $location, $timeout, DimensionService, DatasetFactory, PlotService, $q, WindowHandler, SOMService) {
-  $rootScope.$on('$viewContentLoaded',function(event, toState, toParams, fromState, fromParams){
-    $timeout( function() {
-      $rootScope.$emit('scatterplot.redrawAll');
-      $rootScope.$emit('histogram.redraw');
-      $rootScope.$emit('heatmap.redraw');    
-    });
-  }, 50);
-
-}]);
+// vis.run(['$rootScope', '$state', '$stateParams', '$location', '$timeout', 'DimensionService', 'DatasetFactory', 'PlotService', '$q', 'WindowHandler', 'SOMService',
+// function ($rootScope, $state, $stateParams, $location, $timeout, DimensionService, DatasetFactory, PlotService, $q, WindowHandler, SOMService) {
+// }]);
 
 
  vis.controller( 'HeaderCtrl', ['$scope', '$stateParams', '$injector', '$state',
@@ -259,6 +251,8 @@ function ($rootScope, $state, $stateParams, $location, $timeout, DimensionServic
   function VisController( $scope, DimensionService, DatasetFactory, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets, $q, SOMService) {
     console.log("viscontroller");
 
+    var $rootScope = $injector.get('$rootScope');
+
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
       var name = 'vis.som';
       switch(toState.name) {
@@ -273,7 +267,7 @@ function ($rootScope, $state, $stateParams, $location, $timeout, DimensionServic
         break;
       }
       DatasetFactory.setDimensionService( DimensionService.get(name) );
-
+      $rootScope.$emit('tab.changed', name);
     });
 
     $scope.menuDatasets = datasets;
@@ -284,7 +278,7 @@ function ($rootScope, $state, $stateParams, $location, $timeout, DimensionServic
     $scope.usedVariables = $scope.dimensionService.getUsedVariables();
     $scope.activeVariables = $scope.dimensionService.getDimensions();
 
-    var $rootScope = $injector.get('$rootScope');
+
 
     // $rootScope.$on('$viewContentLoaded', function() {
     //   console.log("loaded", arguments);
@@ -297,5 +291,14 @@ function ($rootScope, $state, $stateParams, $location, $timeout, DimensionServic
     set.toggle();
     DatasetFactory.toggle(set);
   });
+
+    $rootScope.$on('tab.changed', function(event, tabName) {
+      _.each( WindowHandler.getVisible(), function(hand) {
+        console.log("tab.changed triggered for", tabName);
+        hand.redrawAll({ 'compute': false });
+      });
+    });
+
+
 
   }]);
