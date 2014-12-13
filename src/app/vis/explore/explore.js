@@ -12,19 +12,26 @@ var vis =
     'utilities'
     ]);
 
-mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', 'windowHandler', 'DatasetFactory', '$q', 'PlotService', 'WindowHandler', 'SOMService',
-  function ExploreController($scope, $templateCache, $rootScope, windowHandler, DatasetFactory, $q, PlotService, WindowHandler, SOMService) {
+mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', 'windowHandler', 'DatasetFactory', '$q', 'PlotService', 'WindowHandler', 'SOMService', '$timeout',
+  function ExploreController($scope, $templateCache, $rootScope, windowHandler, DatasetFactory, $q, PlotService, WindowHandler, SOMService, $timeout) {
     console.log("explore ctrl");
 
     $scope.windowHandler = windowHandler;
     $scope.windows  = $scope.windowHandler.get();
 
     $scope.itemMapper = {
-        sizeX: 'window.size.x', 
+        sizeX: 'window.size.x',
         sizeY: 'window.size.y'
         // row: 'window.position.row',
         // col: 'window.position.col'
     };
+
+    var emitResize = function($element) {
+      dc.events.trigger( function() {
+        $rootScope.$emit('gridster.resize', $element);
+      }, 200 );
+    };
+
 
     $scope.gridOptions = {
       pushing: true,
@@ -42,9 +49,22 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
       width: 4 * 125 * 10,
       colWidth: 125,
       rowHeight: '100',
+      minSizeX: 3,
+      maxSizeX: 8,
+      minSizeY: 3,
+      maxSizeY: 8,
       resizable: {
            enabled: true,
-           handles: ['se']
+           handles: ['se'],
+           start: function(event, $element, widget) { console.log("resize start"); },
+           resize: function(event, $element, widget) { 
+            event.stopImmediatePropagation();
+            emitResize($element); 
+            },
+           stop: function(event, $element, widget) { 
+            event.stopImmediatePropagation();
+            emitResize($element);
+          }
       }
     };
 

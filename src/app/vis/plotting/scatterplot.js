@@ -4,8 +4,8 @@ var visu = angular.module('plotter.vis.plotting.scatterplot',
   'services.dimensions',
   'services.dataset'
   ]);
-visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$state',
-  function($scope, DatasetFactory, DimensionService, constants, $state) {
+visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$state', '$rootScope',
+  function($scope, DatasetFactory, DimensionService, constants, $state, $rootScope) {
 
     $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
     $scope.dimension = $scope.dimensionService.getXYDimension($scope.window.variables);
@@ -102,6 +102,16 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
     $scope.margins = [10, 10, 45, 55];
     $scope.zIndexCount = 1;
+
+    $rootScope.$on('gridster.resize', function(event, $element) {
+      if( $element.is( $scope.$parent.element.parent() ) ) {
+        $scope.width = $scope.$parent.element.width();
+        $scope.height = $scope.$parent.element.height();
+        if( !_($scope.canvases).isEmpty() ) {
+          $scope.redrawAll();
+        }
+      }
+    });
 
     $scope.$onRootScope('scatterplot.redraw', function(event, dset, action) {
       // only redraw if the dashboard is visible
@@ -386,33 +396,6 @@ visu.directive('scatterplot', ['$timeout',
 
       $scope.width = ele.width() || 490;
       $scope.height = ele.height() || 345;
-
-
-      $scope.$parent.$watch('window.size', function(nevVal, oldVal) {
-        if( angular.equals(nevVal, oldVal) ) {
-          return;
-        }
-        $scope.width = ele.width();
-        $scope.height = ele.height();
-
-        if( !_($scope.canvases).isEmpty() ) {
-          $scope.redrawAll();
-        }
-
-      }, true);
-
-      // // redraw on window resize
-      // ele.parent().on('resize', function() {
-      //   $timeout( function() {
-      //     $scope.width = ele.width();
-      //     $scope.height = ele.height();
-
-      //     if( !_($scope.canvases).isEmpty() ) {
-      //       $scope.redrawAll();
-      //     }
-      //   }, 300);
-      // });
-
 
       $scope.redrawAll();
     };

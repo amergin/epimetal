@@ -26,14 +26,6 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       left: 80
     };
 
-    if ($scope.window.size == 'double') {
-      $scope.width = $scope.width * 2.2;
-      $scope.height = $scope.height * 2;
-      _.object(_.map($scope.margins, function(val, key) {
-        return [key, val * 2];
-      }));
-    }
-
     $scope.drawHeatmap = function(element, dimension, group, margins, width, height) {
 
       var _drawLegend = function(element, scale, height) {
@@ -266,9 +258,9 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
 
 
-visu.directive('heatmap', ['$compile',
+visu.directive('heatmap', ['$compile', '$rootScope',
 
-  function($compile) {
+  function($compile, $rootScope) {
 
     var linkFn = function($scope, ele, iAttrs) {
 
@@ -291,16 +283,21 @@ visu.directive('heatmap', ['$compile',
         $scope.width, 
         $scope.height );
 
-
-      $scope.$parent.$watch('window.size', function(nevVal, oldVal) {
-        if( angular.equals(nevVal, oldVal) ) {
-          return;
-        }
-        if( !_.isUndefined( $scope.heatmap ) ) {
+      $rootScope.$on('gridster.resize', function(event,$element) {
+        if( $element.is( $scope.$parent.element.parent() ) ) {
           $scope.heatmap.render();
-          window.heatmap = $scope.heatmap;
         }
-      }, true);
+      });
+
+
+      // $scope.$parent.$watch('window.size', function(nevVal, oldVal) {
+      //   if( angular.equals(nevVal, oldVal) ) {
+      //     return;
+      //   }
+      //   if( !_.isUndefined( $scope.heatmap ) ) {
+      //     $scope.heatmap.render();
+      //   }
+      // }, true);
 
     };
 

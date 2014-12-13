@@ -23,12 +23,21 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       dc.redrawAll(constants.groups.histogram);
     };
 
-    $scope.$onRootScope('histogram.redraw', function(event, dset, action) {
-      if( $state.current.name === $scope.window.handler.getName() ) {
-        // only redraw if the dashboard is visible
+    $scope.redraw = function() {
         $scope.computeExtent();
         $scope.histogram.x(d3.scale.linear().domain($scope.extent).range([0, $scope.noBins]));
+        // $scope.barWidth = d3.round( ($scope.$parent.element.width() / $scope.noBins) * 3 + 40 );
+        // $scope.histogram.xUnits( $scope.barWidth );
+        // console.log( "width=", $scope.barWidth, $scope.$parent.element.width(), $scope.noBins);
         $scope.histogram.render();
+    };
+
+    $scope.$onRootScope('histogram.redraw', function(event, dset, action) {
+      // only redraw if the dashboard is visible
+      if( $state.current.name === $scope.window.handler.getName() ) {
+        dc.events.trigger(function(){
+          $scope.redraw();
+        }, 100);
       }
     });
 
@@ -149,9 +158,7 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope',
             "Count: " + d.value.counts[d.value.dataset];
         })
         .x(d3.scale.linear().domain(config.extent).range([0, config.noBins]))
-        .xUnits(function() {
-          return _xBarWidth;
-        })
+        .xUnits( function() { return _xBarWidth; } )
         .margins({
           top: 15,
           right: 10,
@@ -296,36 +303,14 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope',
 
       }, true);
 
-      // $scope.$on('gridster-resized', function(newSizes){
-      //   console.log(arguments);
-      //   var newWidth = sizes[0];
-      //   var newHeight = sizes[1];
-      // });
-
-      // $scope.getSize = function() {
-      //   var ele = $scope.$parent.element;
-      //   return [ele.width(), ele.height()];
-      // };
-
-      // $scope.$watch($scope.getSize, function(newVal, oldVal) {
-      //   $timeout( function() {
-      //     if( oldVal == newVal ) {
-      //       return;
-      //     }
-      //     console.log("here");
-      //   });
-      // }, true);
-
-      // getSize on window resize
-      //ele.parent().on('resize', function() {
-      // angular.element(ele.parent()).on('resize', function() {
-      // ele.parent().bind('resize', function() {
-      //   if( !_.isUndefined( $scope.histogram ) ) {
-      //     dc.events.trigger( function() {
-      //       $scope.histogram.render();
-      //     });
-      //   }
-      // });
+      $rootScope.$on('gridster.resize', function(eve, $element) {
+        if( $element.is( $scope.$parent.element.parent() ) ) {
+          $scope.histogram.render();
+          // $timeout( function() {
+          //   $scope.redraw();
+          // });
+        }
+      });
 
     }
 

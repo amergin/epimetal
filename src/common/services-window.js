@@ -26,8 +26,8 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
           config, 
           { '_winid': id, 
           handler: that,
-          position: { row: 0, col: 4 * windows.length },
-          size: { x: 4, y: 4 },
+          // position: { row: 0, col: 4 * windows.length },
+          // size: { x: 4, y: 4 },
           filterEnabled: _filtersEnabled
         }) );
 
