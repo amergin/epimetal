@@ -36,15 +36,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       }
     };
 
-    $rootScope.$on('histogram.redraw', function(event, dset, action) {
-      dc.events.trigger(function(){
-        $timeout( function() {
-          $scope.redraw();
-        });
-      }, 100);
-    });
-
-    $rootScope.$on('window-handler.redraw', function(event, winHandler, config) {
+    $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
       if( winHandler == $scope.window.handler ) {
         if( config.omit == 'histogram' ) { return; }
         $timeout( function() {
@@ -57,6 +49,15 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
         });
       }
     });
+
+    $rootScope.$on('window-handler.redraw', function(event, winHandler) {
+      if( winHandler == $scope.window.handler ) {
+        $timeout( function() {
+          $scope.histogram.redraw();
+        });
+      }
+    });
+
 
     // share information with the plot window
     $scope.$parent.headerText = ['Histogram of', $scope.window.variables.x, ''];
@@ -71,7 +72,8 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
         var totalValues = $scope.totalDimension.group().all().filter( function(d) {
           return d.value > 0 && d.key != constants.nanValue;
         });
-        allValues = _.union(allValues, totalValues);
+        _.chain(allValues).union(totalValues).flatten().uniq( function() { }
+        // allValues = _.union(allValues, totalValues);
       }
 
       $scope.extent = d3.extent(allValues, function(d) {
@@ -100,7 +102,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       // update individual charts to the newest info about the bins
       _.each($scope.barCharts, function(chart, name) {
         if(name === 'total') {
-          chat.group($scope.filterOnSet($scope.totalReduced, name), name);
+          chart.group($scope.filterOnSet($scope.totalReduced, name), name);
         } else {
           chart.group($scope.filterOnSet($scope.reduced, name), name);
         }
@@ -116,7 +118,8 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
 
     if( $scope.window.somSpecial ) {
       var somId = $injector.get('SOMService').getSomId();
-      $scope.groupNames = _.keys($scope.dimensionService.getSOMFilters(somId)); //_.chain( $scope.dimensionService.getSOMFilters(somId) ).keys().union(['total']).reverse().value();
+      var filters = $injector.get('FilterService').getSOMFilters(somId);
+      $scope.groupNames = _.keys(filters);
       $scope.colorScale = $injector.get('SOMService').getColorScale();
 
     } else {
@@ -141,9 +144,9 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
   }
 ]);
 
-visu.directive('histogram', ['constants', '$timeout', '$rootScope',
+visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
 
-  function(constants, $timeout, $rootScope) {
+  function(constants, $timeout, $rootScope, $injector) {
 
     var createSVG = function($scope, config) {
       // check css window rules before touching these
@@ -155,7 +158,8 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope',
       // collect charts here
       var charts = [];
 
-      //var tickFormat = d3.format(".2s");
+      // work-around, weird scope issue on filters ?!
+      $scope.FilterService = $injector.get('FilterService');
 
       // 1. create composite chart
       $scope.histogram = dc.compositeChart(config.element[0], constants.groups.histogram)
@@ -184,29 +188,28 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope',
         })
         .xAxisLabel(config.variableX)
         .on("filtered", function(chart, filter) {
-          $timeout( function() {
-            if (_.isNull(filter) || _.isNull(chart.filter())) {
-              $scope.window.showResetBtn = false;
-              $rootScope.$emit('dc.histogram.filter', {'action': 'removed', 
-                'payload': { 'type': 'range', 'dimension': $scope.dimension, 
-                'chart': $scope.histogram, 'filter':  $scope.prevFilter, 'var': $scope.window.variables.x,
-                'handler': $scope.window.handler
-              } });
-              $scope.prevFilter = null;
-            }
-            else {
-              $scope.window.showResetBtn = true;
-              // $rootScope.$emit('dc.histogram.filter', {'action': 'added', 
-              //   'payload': { 'type': 'range', 'dimension': $scope.dimension, 
-              //   'chart': $scope.histogram, 'filter':  filter, 'var': $scope.window.variables.x,
-              //   'handler': $scope.window.handler
-              // } });
-              $scope.prevFilter = filter;
-            }
-            $scope.window.handler.getService().redrawVisible({ compute: true, omit: 'histogram' });
-            // $rootScope.$emit('scatterplot.redrawAll');
-            // $rootScope.$emit('heatmap.redraw');
-          });
+          dc.events.trigger( function() {
+
+            $timeout( function() {
+              var filterRemoved = _.isNull(filter) && _.isNull(chart.filter());
+
+              if( filterRemoved ) {
+                $scope.window.showResetBtn = false;
+                $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
+              } else {
+                $scope.window.showResetBtn = true;
+                // remove filter (perhaps slided to another position)
+                $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
+                $scope.FilterService.addHistogramFilter( { 'type': 'range', 'filter': filter, 
+                  'var': $scope.window.variables.x, 'id': $scope.window._winid,
+                  'chart': $scope.histogram
+                });
+              }
+              $scope.window.handler.getService().reRenderVisible({ compute: true, omit: 'histogram' });
+
+            });
+
+          }, 100);
         })
         .renderlet( function(chart) {
           if( config.pooled ) {

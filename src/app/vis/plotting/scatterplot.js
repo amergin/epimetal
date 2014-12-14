@@ -113,7 +113,15 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       }
     });
 
-    $rootScope.$on('window-handler.redraw', function(event, winHandler, config) {
+    $rootScope.$on('window-handler.redraw', function(event, winHandler) {
+      if( winHandler == $scope.window.handler ) {
+        $timeout( function() {
+          // nothing to do
+        });
+      }
+    });
+
+    $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
       if( winHandler == $scope.window.handler ) {
         $timeout( function() {
             var action = config.action,

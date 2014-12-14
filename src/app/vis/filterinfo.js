@@ -1,7 +1,7 @@
-var mod = angular.module('plotter.vis.filterinfo', ['services.dimensions']);
+var mod = angular.module('plotter.vis.filterinfo', ['services.dimensions', 'services.filter']);
 
-mod.directive('filterInfo', ['$templateCache', '$compile', '$rootScope', '$injector',
-  function($templateCache, $compile, $rootScope, $injector) {
+mod.directive('filterInfo', ['$templateCache', '$compile', '$rootScope', '$injector', 'FilterService',
+  function($templateCache, $compile, $rootScope, $injector, FilterService) {
     return {
       restrict: 'C',
       scope: false,
@@ -17,49 +17,45 @@ mod.directive('filterInfo', ['$templateCache', '$compile', '$rootScope', '$injec
   }
 ]);
 
-mod.controller('FilterInfoController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants',
-  function FilterInfoController($scope, $templateCache, DimensionService, $rootScope, constants) {
+mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService', '$rootScope', 'constants', 'FilterService',
+  function FilterInfoController($scope, $injector, DimensionService, $rootScope, constants, FilterService) {
     var numFormat = d3.format('.2e');
     var dimensionService = DimensionService.getPrimary();
 
-    $scope.filters = dimensionService.getFilters();
+    $scope.filters = [];
+    $scope.$watch( function() { return FilterService.getFilters(); },
+      function(val) { 
+        angular.copy(val, $scope.filters); 
+      }, true );
+
+    $scope.getAmount = function() {
+      return $scope.filters.length;
+    };
+
     $scope.formatNumber = function(num) {
       return numFormat(num);
     };
 
     $scope.filterOrder = function(filt) {
-      if(filt.payload.type === 'som') {
-        return "som(" + filt.payload.hexagons + ")";
-      } else if(filt.payload.type === 'range') {
-        return "range" + filt.payload.var;
+      if(filt.type === 'som') {
+        return "som(" + filt.hexagons + ")";
+      } else if(filt.type === 'range') {
+        return "range" + filt.var;
       }
-    };
-
-    var _redraw = function() {
-      // $rootScope.$emit('scatterplot.redrawAll');
-      // $rootScope.$emit('histogram.redraw');
-      // $rootScope.$emit('heatmap.redraw');
-      dc.redrawAll(constants.groups.scatterplot);
-      dc.redrawAll(constants.groups.heatmap);
     };
 
     $scope.close = function(filter, redraw) {
-      if(filter.payload.type == 'som') {
-        dimensionService.removeSOMFilter( filter.payload.id, filter.payload.hexagons, filter.payload.circle );
-        $rootScope.$emit('som:circleFilter:remove', filter.payload.circle);
+      if(filter.type == 'range') {
+        FilterService.removeHistogramFilter(filter, redraw);
       }
-      else if(filter.payload.type == 'range') {
-        filter.payload.chart.filterAll();
-      }
-
-      if(redraw) { _redraw(); }
     };
 
     $scope.reset = function() {
       _.each( angular.copy($scope.filters), function(f) {
         $scope.close(f, false);
       });
-      _redraw();
+      // redraw only after all have been deleted
+      $injector.get('WindowHandler').redrawVisible();
     };
   }
 ]);

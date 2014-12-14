@@ -15,8 +15,10 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
 
     var _colors = d3.scale.category10();
 
-    this.somReady = function() {
-      return !_.isEmpty(that.som);
+    this.somReady = function(samples) {
+      var empty = _.isEmpty(that.som);
+      if(!empty && samples) { return samples.length == this.som.bmus.length; }
+      return !empty;
     };
 
     this.getColor = function(circleId) {
@@ -75,7 +77,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
         console.log('SOM already computed');
         defer.resolve('SOM already computed');
       }
-      else if( that.somReady() ) {
+      else if( that.somReady(samples) ) {
         console.log('SOM already computed');
         defer.resolve('SOM already computed');
       }

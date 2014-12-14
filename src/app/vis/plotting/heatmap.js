@@ -234,7 +234,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         $scope.heatmap.render();      
     };
 
-    $rootScope.$on('window-handler.redraw', function(event, winHandler, config) {
+    $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
       if( winHandler == $scope.window.handler ) {
         $timeout( function() {
           if(config.compute) {
@@ -246,6 +246,14 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         });
       }
     });
+
+    $rootScope.$on('window-handler.redraw', function(event, winHandler) {
+      if( winHandler == $scope.window.handler ) {
+        $timeout( function() {
+          $scope.heatmap.redraw();
+        });
+      }
+    });    
 
     $scope.filter = function() {
       $scope.filtered = !$scope.filtered;
@@ -287,16 +295,6 @@ visu.directive('heatmap', ['$compile', '$rootScope',
           $scope.heatmap.render();
         }
       });
-
-
-      // $scope.$parent.$watch('window.size', function(nevVal, oldVal) {
-      //   if( angular.equals(nevVal, oldVal) ) {
-      //     return;
-      //   }
-      //   if( !_.isUndefined( $scope.heatmap ) ) {
-      //     $scope.heatmap.render();
-      //   }
-      // }, true);
 
     };
 

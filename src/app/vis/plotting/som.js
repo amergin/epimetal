@@ -1,6 +1,6 @@
 var visu = angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dataset', 'angularSpinner']);
-visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'SOMService',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, SOMService) {
+visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'SOMService', 'FilterService',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, SOMService, FilterService) {
 
     $scope.resetFilter = function() {
       removeFilters();
@@ -55,8 +55,8 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       // $rootScope.$emit('scatterplot.redrawAll');
       // $rootScope.$emit('histogram.redraw');
       // $rootScope.$emit('heatmap.redraw');
-      dc.redrawAll(constants.groups.scatterplot);
-      dc.redrawAll(constants.groups.heatmap);
+      // dc.redrawAll(constants.groups.scatterplot);
+      // dc.redrawAll(constants.groups.heatmap);
     };
 
     // $scope.sort = function(d) {
@@ -69,14 +69,8 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
     //   // });
     // };
 
-    $scope.addFilter = function(hexagons, circleId, redraw) {
-      $scope.dimensionService.addSOMFilter( $scope.window.som_id, hexagons, circleId );
-      if(redraw) { _callRedraw(); }
-    };
-
-    $scope.removeFilter = function(hexagons, circleId, redraw) {
-      $scope.dimensionService.removeSOMFilter( $scope.window.som_id, hexagons, circleId );
-      if(redraw) { _callRedraw(); }
+    $scope.updateFilter = function(hexagons, circleId) {
+      FilterService.updateSOMFilter({ 'som_id': $scope.window.som_id, 'hexagons': hexagons, 'circle': circleId });
     };
 
     $scope.$on('$destroy', function() {
@@ -281,6 +275,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
             return howManyPoints >= threshold;
           };
 
+          console.log("resolveAreaCells called");
           removeHighlights();
 
           var hexagons = [];
@@ -291,9 +286,14 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
             }
           });
 
-          $scope.removeFilter(hexagons, circleId, false);
-          $scope.addFilter(hexagons, circleId, true);
+          $scope.updateFilter(hexagons, circleId);
+
+          // var deb = _.debounce( $scope.updateFilter, 300 );
+          // deb(hexagons, circleId);
+          // $scope.updateFilter(hexagons, circleId);
         };
+
+        var resolveArea = _.throttle( resolveAreaCells, 1500 );
 
         var innerDragMove = function(d) {
           var x = Math.max(0, Math.min(width -margin.left - margin.right + d.r, d3.event.x)),
@@ -306,14 +306,16 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           outerCircle.attr('cx', function(t) { t.x = x; return t.x; });
           outerCircle.attr('cy', function(t) { t.y = y; return t.y; });
 
-          $rootScope.$emit('som:circleFilter:move', null, $scope.window._winid, d);
+          $scope.$emit('som:circleFilter:move', null, $scope.window._winid, d);
         };
 
         var innerCircleDrag = d3.behavior.drag()
             .origin(Object)
             .on("drag", innerDragMove)
             .on("dragend", function(d) {
-              resolveAreaCells(d, d3.event);
+              // var resolveArea = _.debounce( resolveAreaCells, 1500 );
+              resolveArea(d, d3.event);
+              // resolveAreaCells(d, d3.event);
             });
 
         $rootScope.$on('som:circleFilter:move', function(eve, circleId, winId, d) {
@@ -351,7 +353,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
             .attr('r', function(d) { return d.r; })
             .attr('fill', 'lightgray')
             .style('fill-opacity', 0)
-            .call( _.throttle( innerCircleDrag ), 200 );
+            .call( innerCircleDrag );//_.throttle( innerCircleDrag ), 200 );
 
 
         var outerCircleDrag = d3.behavior.drag()
@@ -366,9 +368,11 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
               outerCircle.attr('r', newRadius);
               innerCircle.attr('r', function(t) { t.r = newRadius; return t.r; });
 
-              resolveAreaCells(d, d3.event);
+              // var resolveArea = _.debounce( resolveAreaCells, 1500 );
+              resolveArea(d, d3.event);
+              // resolveAreaCells(d, d3.event);
 
-              $rootScope.$emit('som:circleFilter:resize', null, $scope.window._winid, d);              
+              $scope.$emit('som:circleFilter:resize', null, $scope.window._winid, d);              
             });
 
         var outerCircle = circleAnchor.append('circle')
@@ -380,10 +384,11 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
                         .attr('stroke-width', 3)
                         .attr('fill', 'none')
                         .attr('cursor', 'ew-resize')
-                        .call( _.throttle( outerCircleDrag, 200) );
+                        .call( outerCircleDrag );//_.throttle( outerCircleDrag, 200) );
 
         // finally, call resolve once to start filtering on this circle
-        resolveAreaCells( innerCircle.data()[0], null );
+        resolveArea( innerCircle.data()[0], null );
+        // resolveAreaCells( innerCircle.data()[0], null );
 
       }; // addcircle
 

@@ -30,10 +30,14 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         return _dimensionService;
       };
 
-      this.redrawAll = function(config) {
+      this.rerenderAll = function(config) {
         if( that.ignoreRedraws() ) { return; }
-        console.log("window handler ", that.getName(), " redrawing all");
-        $rootScope.$emit('window-handler.redraw', that, config);
+        $rootScope.$emit('window-handler.rerender', that, config);
+      };
+
+      this.redrawAll = function() {
+        if( that.ignoreRedraws() ) { return; }
+         $rootScope.$emit('window-handler.redraw', that);
       };
 
       this.add = function(config) {
@@ -149,20 +153,28 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         return _handlers;
       },
       // redraws all visible handlers
-      redrawVisible: function(config) {
+      reRenderVisible: function(config) {
         var visibles = this.getVisible();
         _.each(visibles, function(hand) {
-          hand.redrawAll(config);
+          hand.rerenderAll(config);
         });
       },
 
+      redrawVisible: function() {
+        var visibles = this.getVisible();
+        _.each( visibles, function(hand) {
+          hand.redrawAll();
+        });
+      },
+      
       getVisible: function() {
         var res = [];
         var re = /((?:\w+).(?:\w+))(?:.\w+)?/i;
         var current = $state.current.name;
         var parent = _.last( re.exec(current) );
         _.each( _handlers, function(hand) {
-          if( hand.getName() == parent ) {
+          var name = _.chain( re.exec( hand.getName() ) ).last().value();
+          if( name == parent ) {
             res.push(hand);
           }
         });    

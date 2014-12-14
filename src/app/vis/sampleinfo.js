@@ -1,4 +1,4 @@
-var mod = angular.module('plotter.vis.sampleinfo', ['services.dimensions']);
+var mod = angular.module('plotter.vis.sampleinfo', ['services.dimensions', 'services.filter']);
 
 mod.directive('sampleInfo', ['$templateCache', '$compile', '$rootScope', '$injector',
   function($templateCache, $compile, $rootScope, $injector) {
@@ -17,8 +17,15 @@ mod.directive('sampleInfo', ['$templateCache', '$compile', '$rootScope', '$injec
   }
 ]);
 
-mod.controller('SampleInfoController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants',
-  function FilterInfoController($scope, $templateCache, DimensionService, $rootScope, constants) {
-    $scope.info = DimensionService.getPrimary().getSampleInfo();
+mod.controller('SampleInfoController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants', 'FilterService',
+  function FilterInfoController($scope, $templateCache, DimensionService, $rootScope, constants, FilterService) {
+
+    // update value on change
+    $scope.$watch( function() {
+      return FilterService.getInfo();
+    }, function(val) {
+      $scope.info = val;
+    });
+
   }
 ]);

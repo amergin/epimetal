@@ -51,34 +51,7 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
     $scope.savedSelection = {
       x: SOMService.getVariables()
     };
-    // $scope.savedSelection = { x: [
-    //   'XXL-VLDL-L',
-    //   'XL-VLDL-L',
-    //   'L-VLDL-L',
-    //   'M-VLDL-L',
-    //   'S-VLDL-L',
-    //   'XS-VLDL-L',
-    //   'IDL-L',
-    //   'L-LDL-L',
-    //   'M-LDL-L',
-    //   'S-LDL-L',
-    //   'XL-HDL-L',
-    //   'L-HDL-L',
-    //   'M-HDL-L',
-    //   'S-HDL-L',
-    //   'Serum-C',
-    //   'Serum-TG',
-    //   'HDL-C',
-    //   'LDL-C',
-    //   'Glc',
-    //   'Cit',
-    //   'Phe',
-    //   'Gp',
-    //   'Tyr',
-    //   'FAw3toFA',
-    //   'FAw6toFA',
-    //   'SFAtoFA'
-    //   ] };
+
     $scope.planeInput = {};
 
     $scope.openSettings = function() {
@@ -112,7 +85,7 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
         // do nothing
       } else {
         $scope.savedSelection = angular.copy( $scope.currentSelection );
-        SOMService.updateSOMVariables($scope.currentSelection.x);
+        SOMService.updateVariables($scope.currentSelection.x);
       }
       $scope.currentSelection = {};
     };
@@ -139,15 +112,7 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
         });
       });
     }, 4000);
-
-
-    // $timeout( function() {
-    //   PlotService.drawSOM({ variables: { x: 'Serum-C' } }, $scope.windowHandler);
-    //   PlotService.drawSOM({ variables: { x: 'Serum-TG' } }, $scope.windowHandler);
-    //   PlotService.drawSOM({ variables: { x: 'HDL-C' } }, $scope.windowHandler);
-    //   PlotService.drawSOM({ variables: { x: 'LDL-C' } }, $scope.windowHandler);
-    //   PlotService.drawSOM({ variables: { x: 'Glc' } }, $scope.windowHandler);
-    // }, 5000);
+    
   }
 ]);
 

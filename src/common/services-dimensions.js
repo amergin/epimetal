@@ -134,44 +134,13 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
         return false;
       };
 
-      this.getSOMFilters = function(somId) {
-        var somKey = 'som' + somId;
-        return dimensions[somKey].filters;
-      };
-
-      this.addSOMFilter = function(somId, hexagons, circleId) {
-        function updateDispFilter(circleId, somId, somKey, hexagons) {
-          dispFilters.push({'action': 'added', 
-            'payload': { 'type': 'som', 'circle': circleId, 'id': somId, 'hexagons': hexagons }});
-        }
-
+      this.updateSOMFilter = function(somId, circleId, content) {
         var somKey = "som" + somId;
         if( !dimensions[somKey].filters[circleId] ) {
           dimensions[somKey].filters[circleId] = [];
         }
-        dimensions[somKey].filters[circleId] = _.union( dimensions[somKey].filters[circleId], hexagons );
-        //.push(hexagons);
 
-        updateDispFilter(circleId, somId, somKey, hexagons.length);
-        _applySOMFilter(somKey);
-
-      };
-
-      this.removeSOMFilter = function(somId, hexagons, circleId) {
-        function updateDispFilter(circleId, somId, somKey) {
-          var ind = Utils.indexOf( dispFilters, function(f,i) { 
-            var plucked = _.pick(f.payload, _.chain(f.payload).keys().without('hexagons').value());
-            return _.isEqual(plucked, {'type': 'som', 'id': somId, 'circle': circleId });
-          });
-          if( ind != -1 ) {
-            dispFilters.splice(ind,1);
-          }
-        }
-
-        var somKey = "som" + somId;
-        dimensions[somKey].filters[circleId] = [];
-
-        updateDispFilter(circleId, somId, somKey, hexagons);
+        dimensions[somKey].filters[circleId] = content;
         _applySOMFilter(somKey);
       };
 
@@ -342,22 +311,12 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
         var reduceAdd = function (p, v) {
           p.counts[v.dataset] = p.counts[v.dataset] + 1;
           p.counts.total = p.counts.total + 1;
-          // p.sums[v.dataset] = p.sums[v.dataset] + v.variables[variable];
-          // p.sums.total = p.sums.total + v.variables[variable];
-
-          p.dataset = v.dataset;
-          //p.sampleid = v.sampleid;
           return p;
         };
 
         var reduceRemove = function (p, v) {
           p.counts[v.dataset] = p.counts[v.dataset] - 1;
           p.counts.total = p.counts.total - 1;
-          // p.sums[v.dataset] = p.sums[v.dataset] - v.variables[variable];
-          // p.sums.total = p.sums.total - v.variables[variable];
-
-          p.dataset = v.dataset;
-          //p.sampleid = v.sampleid;
           return p;
         };
 
@@ -365,15 +324,12 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
           var DatasetFactory = $injector.get('DatasetFactory');
           var setNames = DatasetFactory.getSetNames();
           var p = {
-            sums: {},
             counts: {}
           };
 
           _.each(setNames, function (name) {
-            p.sums[name] = 0;
             p.counts[name] = 0;
           });
-          p.sums.total = 0;
           p.counts.total = 0;
           return p;
         };
@@ -385,7 +341,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
         var SOMService = $injector.get('SOMService');
         var totalBmus = SOMService.getBMUs();
         var somId = SOMService.getSomId();
-        var circleFilters = that.getSOMFilters( somId );
+        var circleFilters = $injector.get('FilterService').getSOMFilters(somId); //that.getSOMFilters( somId );
         var groupNames = _.keys(circleFilters);
 
         var inWhatCircle = function(sample) {
@@ -395,30 +351,36 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
             return _.any( circleBMUs, function(b) { return b.i === (bmu.y-1) && b.j === (bmu.x-1); } );
           };
 
+          // should usually be just one name, but it's possible that in several
+          var names = [];
+
           for( var i = 0; i < groupNames.length; ++i ) {
             var name = groupNames[i];
             if( includedInCircle(sample, name) ) {
-              return name;
+              names.push(name);
+              // return name;
             }
           }
-          return '';
+          return names;
+          // return '';
         };
 
 
         var reduceAdd = function (p, v) {
           _.each( groupNames, function(name) {
-            var inGroup = inWhatCircle(v);
-            if( inGroup === '' ) { 
-            // pass
+            var inGroups = inWhatCircle(v);
+            // var inGroup = inWhatCircle(v);
+            if( inGroups.length === 0 ) {
+              // pass
             }
             else {
-              p.counts[inGroup] = p.counts[inGroup] + 1;
-              v.group = inGroup;
+              _.each(inGroups, function(name) {
+                p.counts[name] = p.counts[name] + 1;
+                v.group = name;
+              });
             }
           });
           p.counts.total = p.counts.total + 1;
-
-          // p.dataset = v.dataset;
           return p;
         };
 
@@ -429,8 +391,6 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
           var inGroup = inWhatCircle(v);
           p.counts[inGroup] = p.counts[inGroup] - 1;
           p.counts.total = p.counts.total - 1;
-
-          // p.dataset = v.dataset;
           return p;
         };
 
@@ -438,15 +398,12 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
           // var DatasetFactory = $injector.get('DatasetFactory');
           // var setNames = DatasetFactory.getSetNames();
           var p = {
-            sums: {},
             counts: {}
           };
 
           _.each(groupNames, function (name) {
-            p.sums[name] = 0;
             p.counts[name] = 0;
           });
-          p.sums.total = 0;
           p.counts.total = 0;
           return p;
         };
@@ -595,20 +552,6 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
         });
         this.rebuildInstance();
       };
-
-      // if histogram is filtered, display/remove the filter in the display array
-      $rootScope.$on('dc.histogram.filter', function(eve, info) {
-
-          // could also be moved from one range to another
-          var ind = Utils.indexOf( dispFilters, function(f,i) { 
-            return _.isEqual( f.payload.dimension, info.payload.dimension );
-          });
-          if( ind != -1 ) {
-            dispFilters.splice(ind,1);
-          }
-
-          if( info.action !== 'removed' ) { dispFilters.push(info); }
-      });
 
       // start by initializing crossfilter
       that.rebuildInstance();
