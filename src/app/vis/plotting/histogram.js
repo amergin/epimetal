@@ -72,8 +72,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
         var totalValues = $scope.totalDimension.group().all().filter( function(d) {
           return d.value > 0 && d.key != constants.nanValue;
         });
-        _.chain(allValues).union(totalValues).flatten().uniq( function() { }
-        // allValues = _.union(allValues, totalValues);
+        allValues = _.chain(allValues).union(totalValues).flatten().value();
       }
 
       $scope.extent = d3.extent(allValues, function(d) {
