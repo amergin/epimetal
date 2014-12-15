@@ -42,8 +42,8 @@ mod.run(['SOMService', 'DimensionService', function(SOMService, DimensionService
 
 }]);
 
-mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootScope', 'NotifyService', 'variables', 'DatasetFactory', 'SOMService', 'PlotService', 'bottomWindowHandler', '$timeout',
-  function SOMBottomMenuController($scope, $templateCache, $rootScope, NotifyService, variables, DatasetFactory, SOMService, PlotService, bottomWindowHandler, $timeout) {
+mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootScope', 'NotifyService', 'variables', 'DatasetFactory', 'SOMService', 'PlotService', 'bottomWindowHandler', '$timeout', 'DimensionService',
+  function SOMBottomMenuController($scope, $templateCache, $rootScope, NotifyService, variables, DatasetFactory, SOMService, PlotService, bottomWindowHandler, $timeout, DimensionService) {
     $scope.windowHandler = bottomWindowHandler;
 
     $scope.variables = variables;
@@ -53,6 +53,45 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
     };
 
     $scope.planeInput = {};
+
+    // $scope.checkDefaults = _.once( function() {
+
+    //   _.each( defaultVariables, function(variable) {
+    //     PlotService.drawSOM({ variables: { x: variable } }, bottomWindowHandler);
+    //   });
+
+    // });
+
+    // $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
+    //   var compareAndRestart = function() {
+    //       var primary  = DimensionService.getPrimary();
+    //       var current = $scope.windowHandler.getDimensionService();
+    //       if( !DimensionService.equal( primary, current ) ) {
+    //         console.log("dimension instances not equal, need to restart");
+    //         DimensionService.restart( current, primary );
+    //         SOMService.getSOM().then( function(res) {
+    //           $scope.checkDefaults();
+    //         });
+    //       }
+    //   };
+
+    //   // don't double compute -> vis.som.* should handle
+    //   if( toState === 'vis.som' ) { return; }
+
+    //   switch(fromState.name) {
+    //     case '':
+    //     if( toState.name == 'vis.som.distributions' || toState.name == 'vis.som.profiles' ) {
+    //       compareAndRestart();
+    //     }
+    //     break;
+        
+    //     case 'vis.explore':
+    //     compareAndRestart();
+    //     break;
+    //   }
+    // });
+
+
 
     $scope.openSettings = function() {
       $scope.currentSelection = angular.copy( $scope.savedSelection );
@@ -105,30 +144,43 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
 
     var defaultVariables = ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'];
 
-    $timeout( function() {
-      SOMService.getSOM().then( function succFn() {
-        _.each( defaultVariables, function(variable) {
-          PlotService.drawSOM({ variables: { x: variable } }, bottomWindowHandler);
-        });
-      });
-    }, 4000);
+    // $timeout( function() {
+    //   SOMService.getSOM().then( function succFn() {
+    //     _.each( defaultVariables, function(variable) {
+    //       PlotService.drawSOM({ variables: { x: variable } }, bottomWindowHandler);
+    //     });
+    //   });
+    // }, 4000);
     
   }
 ]);
 
-mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$rootScope', 'bottomWindowHandler', 'DatasetFactory', 'DimensionService', 'SOMService',
-  function SOMBottomContentController($scope, $templateCache, $rootScope, bottomWindowHandler, DatasetFactory, DimensionService, SOMService) {
+mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$rootScope', 'bottomWindowHandler', 'DatasetFactory', 'DimensionService', 'SOMService', 'PlotService',
+  function SOMBottomContentController($scope, $templateCache, $rootScope, bottomWindowHandler, DatasetFactory, DimensionService, SOMService, PlotService) {
     $scope.windowHandler = bottomWindowHandler;
     $scope.windows = $scope.windowHandler.get();
+
+    var defaultVariables = ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'];
+
+    $scope.checkDefaults = _.once( function() {
+      _.each( defaultVariables, function(variable) {
+        PlotService.drawSOM({ variables: { x: variable } }, bottomWindowHandler);
+      });
+    });
+
+    $scope.defaultComputed = false;
 
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
       var compareAndRestart = function() {
           var primary  = DimensionService.getPrimary();
           var current = $scope.windowHandler.getDimensionService();
-          if( !DimensionService.equal( primary, current ) ) {
+          if( !$scope.defaultComputed || !DimensionService.equal( primary, current ) ) {
+            $scope.defaultComputed = true;
             console.log("dimension instances not equal, need to restart");
             DimensionService.restart( current, primary );
-            SOMService.getSOM();
+            SOMService.getSOM().then( function() {
+              $scope.checkDefaults();
+            });
           }
       };
 
