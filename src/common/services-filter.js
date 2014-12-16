@@ -17,11 +17,30 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
     });
 
     var _filterReturnHandle = [];
+    var _groupedBMUs;
 
     var service = {};
 
+    var inWhatCircles = function(bmu) {
+      var includedInCircle = function(bmu, circle) {
+        // var circleBMUs = service.getSOMFilter(circleId);
+        return _.any( circle.hexagons(), function(b) { return b.i === (bmu.y-1) && b.j === (bmu.x-1); } );
+      };
+
+      // should usually be just one name, but it's possible that in several
+      var names = [];
+
+      _.each( service.getSOMFilters(), function(circle) {
+        if( includedInCircle(bmu, circle) ) {
+          names.push( circle.id() );
+        }
+      });
+      return names;
+    };
+
     $rootScope.$on('tab.changed', function(event, tabName) {
       _activeDimensionService = DimensionService.get(tabName);
+      // _groupedBMUs = _activeDimensionService.getReducedGroupHistoDistributions( _activeDimensionService.getSOMDimension().group() );
     });
 
     service.getInfo = function() {
@@ -38,6 +57,20 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
 
     service.getSOMFilterColors = function() {
       return _colors;
+    };
+
+    service.getCircleFilterInfo = function() {
+      _groupedBMUs = _activeDimensionService.getReducedGroupHistoDistributions( _activeDimensionService.getSOMDimension().group() );
+      var ret = [];
+      _.each( service.getSOMFilters(), function(circle) {
+        var sum = d3.sum( _groupedBMUs.all(), function(d) { return d.value.counts[ circle.id() ] || 0; } );
+        if( sum > 5000 ) {
+          console.log("sum OVER", _groupedBMUs.all());
+        }
+        ret.push({ circle: circle, count: sum });
+        // ret[circle.name()] = d3.sum( _groupedBMUs.all(), function(d) { return d.value.counts[ circle.id() ] || 0; } );
+      });
+      return ret;
     };
 
     service.addHistogramFilter = function(config) {
@@ -116,7 +149,7 @@ function CircleFilter(id, $injector) {
     if(!arguments.length) { return _hexagons; }
     _hexagons = hexagons;
     _injector.get('WindowHandler').reRenderVisible({ 'compute': true });
-    _injector.get('DimensionService').get('vis.som').updateSOMFilter( _filter.id(), _hexagons ); //config.som_id, config.circle, config.hexagons );
+    _injector.get('DimensionService').get('vis.som').updateSOMFilter( _filter.id(), _hexagons );
 
 
     return _filter;

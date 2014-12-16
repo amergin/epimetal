@@ -74,15 +74,26 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
       return $scope.canEdit() && !_.isEmpty($scope.currentSelection.x) && ($scope.currentSelection.x.length >= 3);
     };
 
-    $scope.getFilterInfo = function() {
-      // var filters = FilterService.getSOMFilters();
-      // // _.each(filters, function(fi) {
-        
-      // // });
-      // var dimension = $scope.windowHandler.getDimensionService().getSOMDimension();
-      // return dimension.groupAll().length;
-      // // FilterService.get
-    };
+    $scope.filterInfo = [];
+    $scope.$watch( function() {
+      return FilterService.getCircleFilterInfo();
+    }, function(val) {
+      angular.copy(val, $scope.filterInfo); 
+    }, true);
+
+    // $scope.getFilterInfo = function() {
+    //   // angular.copy( FilterService.getCircleFilterInfo(), $scope.filterInfo );
+    //   return $scope.filterInfo;
+    //   // return JSON.stringify( FilterService.getCircleFilterInfo() );
+    //   // var circle = FilterService.getSOMFilter('circle1');
+    //   // var info = FilterService.getCircleFilterInfo( circle.id() );
+    //   // return JSON.stringify( info.all() );
+    //   // var str = '';
+    //   // _.each( FilterService.getSOMFilters(), function(circle) {
+    //   //   str += FilterService.getCircleFilterInfo( circle.id() );
+    //   // });
+    //   // return str;
+    // };
 
     $scope.canOpenPlane = function() {
       return SOMService.somReady();

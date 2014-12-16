@@ -24,7 +24,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
     };
 
     service.getBMUs = function() {
-      return that.som.bmus;
+      return that.som.bmus || [];
     };
 
     service.getSomId = function() {

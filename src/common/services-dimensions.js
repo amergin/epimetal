@@ -329,7 +329,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
         return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
       };
 
-      this.getReducedGroupHistoDistributions = function (dimensionGroup, variable) {
+      this.getReducedGroupHistoDistributions = function (dimensionGroup) {
         var SOMService = $injector.get('SOMService');
         var totalBmus = SOMService.getBMUs();
         var circleFilters = $injector.get('FilterService').getSOMFilters();
@@ -380,7 +380,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
 
         var reduceRemove = function (p, v) {
           if( _.isUndefined(v.groups) ) {
-            console.log("WARNING, GROUP NOT DEFINED", v, p);
+            // console.log("WARNING, GROUP NOT DEFINED", v, p);
           }
           var inGroups = v.groups;
           // var inGroup = inWhatCircle(v);
