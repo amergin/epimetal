@@ -64,15 +64,16 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     $scope.$parent.showResetBtn = false;
 
     $scope.computeExtent = function() {
-      var allValues = $scope.dimension.group().all().filter(function(d) {
-        return d.value > 0 && d.key != constants.nanValue;
-      });
-
+      var allValues;
       if( $scope.window.somSpecial ) {
-        var totalValues = $scope.totalDimension.group().all().filter( function(d) {
+        allValues = $scope.totalDimension.group().all().filter( function(d) {
           return d.value > 0 && d.key != constants.nanValue;
         });
-        allValues = _.chain(allValues).union(totalValues).flatten().value();
+      }
+      else {
+        allValues = $scope.dimension.group().all().filter(function(d) {
+          return d.value > 0 && d.key != constants.nanValue;
+        });
       }
 
       $scope.extent = d3.extent(allValues, function(d) {
@@ -86,12 +87,13 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       });
 
       if( $scope.window.somSpecial ) {
-        // normal
+        // circle
         $scope.reduced = $scope.dimensionService.getReducedGroupHistoDistributions($scope.group, $scope.window.variables.x);
 
         $scope.totalGroup = $scope.totalDimension.group(function(d) {
           return Math.floor(d / $scope.binWidth) * $scope.binWidth;
         });
+        // total
         $scope.totalReduced = $scope.primary.getReducedGroupHisto($scope.totalGroup, $scope.window.variables.x);
       }
       else {
@@ -118,15 +120,13 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     if( $scope.window.somSpecial ) {
       var somId = $injector.get('SOMService').getSomId();
       var filters = $injector.get('FilterService').getSOMFilters(somId);
-      $scope.groupNames = _.keys(filters);
-      $scope.colorScale = $injector.get('SOMService').getColorScale();
+      $scope.groupNames = _.map(filters, function(f) { return f.id(); } );
+      $scope.colorScale = $injector.get('FilterService').getSOMFilterColors();
 
     } else {
       $scope.groupNames = DatasetFactory.getSetNames();
-      $scope.colorScale = DatasetFactory.getColorScale();
-      
+      $scope.colorScale = DatasetFactory.getColorScale();      
     }
-
 
     // see https://github.com/dc-js/dc.js/wiki/FAQ#filter-the-data-before-its-charted
     // this used to filter to only the one set & limit out NaN's

@@ -15,32 +15,27 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
 
     var _colors = d3.scale.category10();
 
-    this.somReady = function(samples) {
+    var service = {};
+
+    service.somReady = function(samples) {
       var empty = _.isEmpty(that.som);
-      if(!empty && samples) { return samples.length == this.som.bmus.length; }
+      if(!empty && samples) { return samples.length == that.som.bmus.length; }
       return !empty;
     };
 
-    this.getColor = function(circleId) {
-      return _colors(circleId);
-    };
-    this.getColorScale = function() {
-      return _colors;
-    };
-
-    this.getBMUs = function() {
+    service.getBMUs = function() {
       return that.som.bmus;
     };
 
-    this.getSomId = function() {
+    service.getSomId = function() {
       return that.som.id;
     };
 
-    this.setDimensionService = function(dimensionService) {
+    service.setDimensionService = function(dimensionService) {
       that.dimensionService = dimensionService;
     };
 
-    this.updateVariables = function(variables) {
+    service.updateVariables = function(variables) {
       function sameVariables(variables) {
         return _.isEmpty( _.difference(variables, that.somSelection.variables) );
       }
@@ -51,11 +46,11 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
       that.somSelection['variables'] = variables;
     };
 
-    that.getVariables = function() {
+    service.getVariables = function() {
       return angular.copy(that.somSelection.variables);
     };
 
-    this.getSOM = function() {
+    service.getSOM = function() {
       var defer = $q.defer();
 
       function getSamples() {
@@ -77,7 +72,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
         console.log('SOM already computed');
         defer.resolve('SOM already computed');
       }
-      else if( that.somReady(samples) ) {
+      else if( service.somReady(samples) ) {
         console.log('SOM already computed');
         defer.resolve('SOM already computed');
       }
@@ -130,7 +125,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
       return defer.promise;
     };
 
-    this.getPlane = function(testVar) {
+    service.getPlane = function(testVar) {
       var defer = $q.defer();
       var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.plane);
       ws.onopen = function() {
@@ -160,6 +155,6 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
       return defer.promise;
     };    
 
-    return this;
+    return service;
   }
 ]);

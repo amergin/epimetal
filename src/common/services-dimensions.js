@@ -10,9 +10,6 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
       // dimensions created in this tool
       var dimensions = {};
 
-      // for displaying active filters
-      var dispFilters = [];
-
       // for displaying active sample count
       var dispSamples = {};
 
@@ -90,32 +87,27 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
         return dimensions['_dataset'];
       };
 
-      this.getSOMDimension = function(somId) {
-        var somKey = "som" + somId;
+      this.getSOMDimension = function() {
+        var somKey = "som";// + somId;
         if( _.isUndefined( dimensions[somKey] ) ) {
-
-          if( _.isNull( crossfilterInst ) ) { 
-            this.rebuildInstance();
-          }
-
           dimensions[somKey] = {
             count: 1,
             filters: {},
             dimension: crossfilterInst.dimension( function(d) { 
-              if( _.isUndefined( d['bmus'][somId] ) ) {
+              if( _.isEmpty( d['bmus'] ) ) {
                 return {
                   x: NaN,
                   y: NaN,
                   valueOf: function() { return constants.nanValue; }
                 };
              }
-              return {
-                x: d['bmus'][somId].x,
-                y: d['bmus'][somId].y,
-                valueOf: function() {
-                  return ( d['bmus'][somId].x + d['bmus'][somId].y ) || constants.nanValue;
-                }
-              };
+            return {
+              x: d['bmus'].x,
+              y: d['bmus'].y,
+              valueOf: function() {
+                return ( d['bmus'].x + d['bmus'].y ) || constants.nanValue;
+              }
+            };
             })
           };
         }
@@ -134,8 +126,8 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
         return false;
       };
 
-      this.updateSOMFilter = function(somId, circleId, content) {
-        var somKey = "som" + somId;
+      this.updateSOMFilter = function(circleId, content) { //somId, circleId, content) {
+        var somKey = "som"; // + somId;
         if( !dimensions[somKey].filters[circleId] ) {
           dimensions[somKey].filters[circleId] = [];
         }
@@ -340,15 +332,16 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
       this.getReducedGroupHistoDistributions = function (dimensionGroup, variable) {
         var SOMService = $injector.get('SOMService');
         var totalBmus = SOMService.getBMUs();
-        var somId = SOMService.getSomId();
-        var circleFilters = $injector.get('FilterService').getSOMFilters(somId); //that.getSOMFilters( somId );
-        var groupNames = _.keys(circleFilters);
+        var circleFilters = $injector.get('FilterService').getSOMFilters();
+        var groupNames = _.map( circleFilters, function(cf) { return cf.id(); } );
+        var circleFiltersById = _.object( groupNames, circleFilters );
 
         var inWhatCircle = function(sample) {
           var includedInCircle = function(sample, circleId) {
-            var circleBMUs = circleFilters[circleId];
-            var bmu = sample.bmus[somId];
-            return _.any( circleBMUs, function(b) { return b.i === (bmu.y-1) && b.j === (bmu.x-1); } );
+            var circleBMUs = circleFiltersById[circleId];
+            // var circleBMUs = circleFilters[circleId];
+            var bmu = sample.bmus;
+            return _.any( circleBMUs.hexagons(), function(b) { return b.i === (bmu.y-1) && b.j === (bmu.x-1); } );
           };
 
           // should usually be just one name, but it's possible that in several
@@ -374,23 +367,29 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
               // pass
             }
             else {
+              v.groups = inGroups;
               _.each(inGroups, function(name) {
                 p.counts[name] = p.counts[name] + 1;
-                v.group = name;
+                // v.group = name;
               });
             }
           });
-          p.counts.total = p.counts.total + 1;
+          // p.counts.total = p.counts.total + 1;
           return p;
         };
 
         var reduceRemove = function (p, v) {
-          if( _.isUndefined(v.group) ) {
+          if( _.isUndefined(v.groups) ) {
             console.log("WARNING, GROUP NOT DEFINED", v, p);
           }
-          var inGroup = inWhatCircle(v);
-          p.counts[inGroup] = p.counts[inGroup] - 1;
-          p.counts.total = p.counts.total - 1;
+          var inGroups = v.groups;
+          // var inGroup = inWhatCircle(v);
+          _.each( inGroups, function(name) {
+            p.counts[name] = p.counts[name] - 1;
+          });
+          // error here!
+          // p.counts[inGroup] = p.counts[inGroup] - 1;
+          // p.counts.total = p.counts.total - 1;
           return p;
         };
 
@@ -404,7 +403,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
           _.each(groupNames, function (name) {
             p.counts[name] = 0;
           });
-          p.counts.total = 0;
+          // p.counts.total = 0;
           return p;
         };
 
@@ -427,7 +426,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
             currSamples[key]['bmus'] = {};
           }
           // add bmu info
-          currSamples[key]['bmus'][somId] = { x: samp.x, y: samp.y };
+          currSamples[key]['bmus'] = { x: samp.x, y: samp.y };
         });
 
         this.rebuildInstance();
@@ -435,7 +434,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
         // SOM is constructed of using datasets 1&2. As a result,
         // DSETs 1&3 should be active, DSET2 is dummy and has no samples.
         // Update by applying datasetfilter function
-        this.updateDatasetDimension();
+        // this.updateDatasetDimension();
       };
 
       // receives new variable data
@@ -470,36 +469,40 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
         return dataWasAdded;
       };
 
-      var _createDatasetDimension = function () {
-        if (!_.isUndefined(dimensions['_dataset'])) {
-          return;
-        }
+      var createDatasetDimension = _.once( function () {
         dimensions['_dataset'] = crossfilterInst.dimension(function (s) {
           return s.dataset;
         });
-      };
+      } );
+
+      var createCrossfilterInst = _.once( function() {
+        crossfilterInst = crossfilter(_.values(currSamples));
+      });
+
+      var createSOMDimension = _.once( function() {
+        that.getSOMDimension();
+      });
 
       // rebuilds crossfilter instance (called after adding new variable data)
       this.rebuildInstance = function () {
         console.log("Crossfilter instance rebuild called on", this.getName());
         // called for the first time, create instance
-        if (crossfilterInst === null) {
-          crossfilterInst = crossfilter(_.values(currSamples));
-          _createDatasetDimension();
-        } else {
+        // if (crossfilterInst === null) {
+        //   crossfilterInst = crossfilter(_.values(currSamples));
+        //   _createDatasetDimension();
+        // } else {
           // already defined, just need to reboot it
           // Important: remove ALL samples regardless of the current filters
           // (requires custom build of crossfilter.js, see:
           // https://github.com/square/crossfilter/issues/109#issuecomment-45359642)
           crossfilterInst.remove( function() { return false; } );
           crossfilterInst.add(_.values(currSamples));
-        }
+        // }
         $rootScope.$emit('dimension:crossfilter');
       };
 
       this.updateDatasetDimension = function () {
-
-        if( _.isUndefined( dimensions['_dataset'] ) ) { return; }
+        // if( _.isUndefined( dimensions['_dataset'] ) ) { return; }
 
         var DatasetFactory = $injector.get('DatasetFactory');
         var activeSets = DatasetFactory.activeSets();
@@ -533,12 +536,15 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
         return dimensions;
       };
 
-      this.getFilters = function() {
-        return dispFilters;
-      };
-
       this.copy = function() {
         return angular.copy( this.getSampleDimension().top(Infinity) );
+      };
+
+      this.clearFilters = function() {
+        _.each( dimensions, function(val, key) {
+          if( key == '_dataset' ) { val.filterAll(); return; }
+          val.dimension.filterAll();
+        });
       };
 
       this.restart = function(copy) {
@@ -546,15 +552,19 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
           return samp.dataset + "|" + samp.sampleid;
         };
 
-        currSamples = {};
         _.each( copy, function(samp) {
-          currSamples[ getKey(samp) ] = samp;
+          if( _.isUndefined( currSamples[ getKey(samp) ] ) ) { currSamples[ getKey(samp) ] = {}; }
+          _.extend( currSamples[ getKey(samp) ], samp );
+          // angular.extend( currSamples[ getKey(samp) ], samp );
         });
         this.rebuildInstance();
+        this.clearFilters();
       };
 
       // start by initializing crossfilter
-      that.rebuildInstance();
+      createCrossfilterInst();
+      createDatasetDimension();
+      createSOMDimension();
 
       // HELPER FUNCTIONS
       var _getSampleKey = function(dataset, id) {
@@ -572,6 +582,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
           instance: instance,
           primary: primary || false
         };
+        console.log("creating a new DimensionService, name is ", instance.getName());
         return instance;
       },
       get: function(name) {

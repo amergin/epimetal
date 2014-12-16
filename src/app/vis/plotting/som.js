@@ -49,34 +49,16 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
     $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
     $scope.dimension = $scope.dimensionService.getSOMDimension( $scope.window.som_id );
 
-    // $scope.ownFilters = DimensionService.getSOMFilters($scope.window.som_id);
-
-    var _callRedraw = function() {
-      // $rootScope.$emit('scatterplot.redrawAll');
-      // $rootScope.$emit('histogram.redraw');
-      // $rootScope.$emit('heatmap.redraw');
-      // dc.redrawAll(constants.groups.scatterplot);
-      // dc.redrawAll(constants.groups.heatmap);
-    };
-
-    // $scope.sort = function(d) {
-    //   // d3.selectAll($scope.element).selectAll('.hexagon')
-    //   // .sort(function (a, b) {            
-    //   //   // a is not the element, send "a" to the back
-    //   //   if( (a.i !== d.x ) || (a.j !== d.y) ) { return -1; }
-    //   //   // element found, bring to front
-    //   //   else { return 1; }
-    //   // });
-    // };
 
     $scope.updateFilter = function(hexagons, circleId) {
-      FilterService.updateSOMFilter({ 'som_id': $scope.window.som_id, 'hexagons': hexagons, 'circle': circleId });
+      FilterService.getSOMFilter(circleId).hexagons(hexagons);
+      // FilterService.updateSOMFilter({ 'som_id': $scope.window.som_id, 'hexagons': hexagons, 'circle': circleId });
     };
 
     $scope.$on('$destroy', function() {
-      $timeout( function() {
-        _callRedraw();
-      });
+      // $timeout( function() {
+      //   _callRedraw();
+      // });
     });
 
     $scope.drawSOMPlane = function(plane, element, width, height) {
@@ -110,13 +92,6 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         right: 30,
         left: 30
       };
-
-      //The next lines should be run, but this seems to go wrong on the first load in bl.ocks.org
-      //var width = $(window).width() - margin.left - margin.right - 40;
-      //var height = $(window).height() - margin.top - margin.bottom - 80;
-      //So I set it fixed to
-      // var width = 850;
-      // var height = 350;
 
       //The number of columns and rows of the heatmap
       var MapColumns = plane.size.n;
@@ -158,8 +133,6 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       //Create SVG element
       var svg = d3.select(element[0]).append('svg')
       .attr('xmlns', "http://www.w3.org/2000/svg")
-        // .attr("width", width + margin.left + margin.right)
-        // .attr("height", height + margin.top + margin.bottom)
         .attr("viewBox", "0 0 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom) )
         .attr("preserveAspectRatio", "xMidYMid meet")
         .attr("width", "100%")
@@ -209,7 +182,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       .data(plane.labels)
       .enter()
       .append("text")
-      .attr("class", "label")
+      .attr("class", "label noselect")
       .attr("x", function(d) { 
         var x = d.x-1;
         var y = d.y-1;
@@ -231,7 +204,9 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         });
 
 
-      var addCircle = function(circleId, origin) {
+      var addCircle = function( circle, origin ) { //circleId, dispName, origin) {
+
+        var circleId = circle.id();
 
         var _circleConfig = {
           fillOpacity: 0.40,
@@ -266,7 +241,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
               // absolute pixel mapping: account for the offset from hexpoint origin
               var pointAbs = { x: hexpoint.xp + hp.x, y: hexpoint.yp + hp.y };
               var euclidianDistance = Math.sqrt( Math.pow(pointAbs.x - circle.x, 2) + Math.pow(pointAbs.y - circle.y, 2) );
-              return euclidianDistance <= circle.r;
+              return euclidianDistance < circle.r;
             })
             // reject if not true (=hexpoint inside the circle)
             .reject( function(m) { return !m; }).value()
@@ -293,7 +268,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           // $scope.updateFilter(hexagons, circleId);
         };
 
-        var resolveArea = _.throttle( resolveAreaCells, 1500 );
+        var resolveArea = _.throttle( resolveAreaCells, 900, { leading: false });
 
         var innerDragMove = function(d) {
           var x = Math.max(0, Math.min(width -margin.left - margin.right + d.r, d3.event.x)),
@@ -305,17 +280,17 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           innerCircle.attr("cy", d.y);
           outerCircle.attr('cx', function(t) { t.x = x; return t.x; });
           outerCircle.attr('cy', function(t) { t.y = y; return t.y; });
+          circleText.attr('x', function(t) { t.x = x; return t.x; });
+          circleText.attr('y', function(t) { t.y = y; return t.y; });
 
-          $scope.$emit('som:circleFilter:move', null, $scope.window._winid, d);
+          $rootScope.$emit('som:circleFilter:move', null, $scope.window._winid, d);
         };
 
         var innerCircleDrag = d3.behavior.drag()
             .origin(Object)
             .on("drag", innerDragMove)
             .on("dragend", function(d) {
-              // var resolveArea = _.debounce( resolveAreaCells, 1500 );
               resolveArea(d, d3.event);
-              // resolveAreaCells(d, d3.event);
             });
 
         $rootScope.$on('som:circleFilter:move', function(eve, circleId, winId, d) {
@@ -326,6 +301,10 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           })
           .attr('cx', function(t) { t.x = d.x; return t.x; })
           .attr('cy', function(t) { t.y = d.y; return t.y; });
+
+          svg.selectAll('text.circle-filter').filter( function(a) { return a.id == d.id; } )
+          .attr('x', function(t) { t.x = d.x; return t.x; })
+          .attr('y', function(t) { t.y = d.y; return t.y; });
         });
 
         $rootScope.$on('som:circleFilter:resize', function(eve, circleId, winId, d) {
@@ -334,26 +313,39 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           svg.selectAll('circle').filter( function(a) {
             return a.id == d.id;
           })
-          .attr('r', function(t) { t.r = d.r; return t.r; })
-          .attr('r', function(t) { t.r = d.r; return t.r; });          
+          .attr('r', function(t) { t.r = d.r; return t.r; });
         });
 
-        $rootScope.$on('som:circleFilter:remove', function(eve, circleId) {
-          svg.selectAll('circle').filter( function(a) {
-            return a.id == circleId;
-          }).remove();
-        });
+        // $rootScope.$on('som:circleFilter:remove', function(eve, circleId) {
+        //   svg.selectAll('circle').filter( function(a) {
+        //     return a.id == circleId;
+        //   }).remove();
+        // });
 
-        var circleAnchor = svg.append('g');
+        var circleAnchor = svg.append('g')
+            .data([{ x: circleX(origin.n), y: circleY(origin.m), r: _circleConfig.radius.normal, id: circleId }]);
 
         var innerCircle = circleAnchor.append('circle')
-            .data([{ x: circleX(origin.n), y: circleY(origin.m), r: _circleConfig.radius.normal, id: circleId }])
             .attr('cx', function(d) { return d.x; })
             .attr('cy', function(d) { return d.y; })
             .attr('r', function(d) { return d.r; })
             .attr('fill', 'lightgray')
             .style('fill-opacity', 0)
-            .call( innerCircleDrag );//_.throttle( innerCircleDrag ), 200 );
+            .call( innerCircleDrag );
+
+        var circleText = circleAnchor
+            .append('text')
+            .attr('x', function(d) {
+              return d.x;
+            })
+            .attr('y', function(d) {
+              return d.y;
+            })
+            .attr('text-anchor', 'middle')
+            .attr('alignment-baseline', 'middle')
+            .attr('class', 'circle-filter noselect')
+            .style('fill', circle.color())
+            .text( circle.name() );
 
 
         var outerCircleDrag = d3.behavior.drag()
@@ -368,11 +360,8 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
               outerCircle.attr('r', newRadius);
               innerCircle.attr('r', function(t) { t.r = newRadius; return t.r; });
 
-              // var resolveArea = _.debounce( resolveAreaCells, 1500 );
               resolveArea(d, d3.event);
-              // resolveAreaCells(d, d3.event);
-
-              $scope.$emit('som:circleFilter:resize', null, $scope.window._winid, d);              
+              $rootScope.$emit('som:circleFilter:resize', null, $scope.window._winid, d);              
             });
 
         var outerCircle = circleAnchor.append('circle')
@@ -380,22 +369,21 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
                         .attr('cx', function(d) { return d.x; })
                         .attr('cy', function(d) { return d.y; })
                         .attr('r', function(d) { return d.r; })
-                        .attr('stroke', SOMService.getColor(circleId)) //'black')
+                        .attr('stroke', circle.color())
                         .attr('stroke-width', 3)
                         .attr('fill', 'none')
                         .attr('cursor', 'ew-resize')
-                        .call( outerCircleDrag );//_.throttle( outerCircleDrag, 200) );
+                        .call( outerCircleDrag );
 
-        // finally, call resolve once to start filtering on this circle
         resolveArea( innerCircle.data()[0], null );
-        // resolveAreaCells( innerCircle.data()[0], null );
 
       }; // addcircle
 
       // add two filter circles
-      addCircle( 'circle1', { m: 1, n: 1 } );
-      addCircle( 'circle2', { m: 5, n: 7 } );
-
+      var origins = [{ m: 1, n: 1 }, { m: 5, n: 7 }];
+      _.each( FilterService.getSOMFilters(), function(filt, ind) {
+        addCircle( filt, origins[ind] );
+      });
 
     };
   }]);
@@ -411,8 +399,8 @@ visu.directive('somplane', [
       $scope.$parent.element = ele;
       $scope.element = ele;
 
-      $scope.width = 455;
-      $scope.height = 360;
+      $scope.width = ele.parent().width(); //455;
+      $scope.height = ele.parent().height(); //360;
 
     $scope.drawSOMPlane(
       $scope.window.plane, 

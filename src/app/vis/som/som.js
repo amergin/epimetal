@@ -42,8 +42,8 @@ mod.run(['SOMService', 'DimensionService', function(SOMService, DimensionService
 
 }]);
 
-mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootScope', 'NotifyService', 'variables', 'DatasetFactory', 'SOMService', 'PlotService', 'bottomWindowHandler', '$timeout', 'DimensionService',
-  function SOMBottomMenuController($scope, $templateCache, $rootScope, NotifyService, variables, DatasetFactory, SOMService, PlotService, bottomWindowHandler, $timeout, DimensionService) {
+mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootScope', 'NotifyService', 'variables', 'DatasetFactory', 'SOMService', 'PlotService', 'bottomWindowHandler', '$timeout', 'DimensionService', 'FilterService',
+  function SOMBottomMenuController($scope, $templateCache, $rootScope, NotifyService, variables, DatasetFactory, SOMService, PlotService, bottomWindowHandler, $timeout, DimensionService, FilterService) {
     $scope.windowHandler = bottomWindowHandler;
 
     $scope.variables = variables;
@@ -53,45 +53,6 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
     };
 
     $scope.planeInput = {};
-
-    // $scope.checkDefaults = _.once( function() {
-
-    //   _.each( defaultVariables, function(variable) {
-    //     PlotService.drawSOM({ variables: { x: variable } }, bottomWindowHandler);
-    //   });
-
-    // });
-
-    // $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
-    //   var compareAndRestart = function() {
-    //       var primary  = DimensionService.getPrimary();
-    //       var current = $scope.windowHandler.getDimensionService();
-    //       if( !DimensionService.equal( primary, current ) ) {
-    //         console.log("dimension instances not equal, need to restart");
-    //         DimensionService.restart( current, primary );
-    //         SOMService.getSOM().then( function(res) {
-    //           $scope.checkDefaults();
-    //         });
-    //       }
-    //   };
-
-    //   // don't double compute -> vis.som.* should handle
-    //   if( toState === 'vis.som' ) { return; }
-
-    //   switch(fromState.name) {
-    //     case '':
-    //     if( toState.name == 'vis.som.distributions' || toState.name == 'vis.som.profiles' ) {
-    //       compareAndRestart();
-    //     }
-    //     break;
-        
-    //     case 'vis.explore':
-    //     compareAndRestart();
-    //     break;
-    //   }
-    // });
-
-
 
     $scope.openSettings = function() {
       $scope.currentSelection = angular.copy( $scope.savedSelection );
@@ -111,6 +72,16 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
 
     $scope.canSubmitSOM = function () {
       return $scope.canEdit() && !_.isEmpty($scope.currentSelection.x) && ($scope.currentSelection.x.length >= 3);
+    };
+
+    $scope.getFilterInfo = function() {
+      // var filters = FilterService.getSOMFilters();
+      // // _.each(filters, function(fi) {
+        
+      // // });
+      // var dimension = $scope.windowHandler.getDimensionService().getSOMDimension();
+      // return dimension.groupAll().length;
+      // // FilterService.get
     };
 
     $scope.canOpenPlane = function() {
@@ -223,7 +194,7 @@ mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$root
       columns: 4 * 10,
       width: 4 * 100 * 10,
       colWidth: '100',
-      rowHeight: '88',
+      rowHeight: '79',
       resizable: {
            enabled: false,
            handles: ['se']

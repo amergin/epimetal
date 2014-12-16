@@ -3,14 +3,20 @@ var mod = angular.module('services.filter', ['services.dimensions', 'services.wi
 mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout', '$state', 'WindowHandler',
   function ($injector, constants, $rootScope, $timeout, usSpinnerService, $state, WindowHandler) {
 
-    var _activeDimensionService = null;
+    var DimensionService = $injector.get('DimensionService');
+    var _activeDimensionService = DimensionService.getPrimary();
     var _filters = {
       'histogram': [],
-      'som': {}
+      'som': [ new CircleFilter('circle1', $injector).name('A'), new CircleFilter('circle2', $injector).name('B') ]
     };
-    var _filterReturnHandle = [];
 
-    var DimensionService = $injector.get('DimensionService');
+    var _colors = d3.scale.category10();
+
+    _.each( _filters.som, function(filt) {
+      filt.color( _colors(filt.id()) );
+    });
+
+    var _filterReturnHandle = [];
 
     var service = {};
 
@@ -19,25 +25,23 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
     });
 
     service.getInfo = function() {
-      return _activeDimensionService.getSampleInfo();
+      return DimensionService.getPrimary().getSampleInfo();
     };
 
-    service.getSOMFilters = function(somId) {
-      return _filters['som'][somId];
+    service.getSOMFilters = function() {
+      return _filters.som;
     };
 
-    service.updateSOMFilter = function(config) {
-      var type = 'som';
-      checkDefined( config.som_id, _filters[type], Object);
-      checkDefined( config.circle, _filters[type][config.som_id], Object);
-      _filters[type][config.som_id][config.circle] = config.hexagons;
-      _activeDimensionService.updateSOMFilter( config.som_id, config.circle, config.hexagons );
-      $injector.get('WindowHandler').reRenderVisible({ 'compute': true });
+    service.getSOMFilter = function(id) {
+      return _.find( _filters.som, function(cf) { return cf.id() == id; } );
+    };
+
+    service.getSOMFilterColors = function() {
+      return _colors;
     };
 
     service.addHistogramFilter = function(config) {
       var type = 'histogram';
-      // checkDefined(type, _filters, Array);
       _filters[type].push(config);
       updateReturnFilters();
       console.log("after add", _filters[type]);
@@ -78,12 +82,51 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       angular.copy( _.chain(_filters).values().flatten().value(), _filterReturnHandle );
     };
 
-    var checkDefined = function(val, object, objectType) {
-      if( _.isUndefined( object[val] ) ) {
-        object[val] = objectType();
-      }
-    };
+    // var checkDefined = function(val, object, objectType) {
+    //   if( _.isUndefined( object[val] ) ) {
+    //     object[val] = objectType();
+    //   }
+    // };
 
     return service;
   }
 ]);
+
+function CircleFilter(id, $injector) {
+
+  var _name = name,
+  _id = id,
+  _color,
+  _hexagons = [],
+  _injector = $injector,
+  that = this,
+  _filter = {};
+
+  _filter.name = function(name) {
+    if(!arguments.length) { return _name; }
+    _name = name;
+    return _filter;
+  };
+
+  _filter.id = function() {
+    return _id;
+  };
+
+  _filter.hexagons = function(hexagons) {
+    if(!arguments.length) { return _hexagons; }
+    _hexagons = hexagons;
+    _injector.get('WindowHandler').reRenderVisible({ 'compute': true });
+    _injector.get('DimensionService').get('vis.som').updateSOMFilter( _filter.id(), _hexagons ); //config.som_id, config.circle, config.hexagons );
+
+
+    return _filter;
+  };
+
+  _filter.color = function(color) {
+    if(!arguments.length) { return _color; }
+    _color = color;
+    return _filter;
+  };
+
+  return _filter;
+}
