@@ -14,8 +14,9 @@ serv.factory('NotifyService', ['$injector',
         var $alert = $injector.get('$alert');
         var myAlert = $alert({
           title: title,
-          content: message, 
-          placement: 'top-right',
+          content: message,
+          container: '.alert-area',
+          // placement: 'top-right',
           animation: 'am-fade-and-slide-top',
           type: level,
           show: true
@@ -27,7 +28,8 @@ serv.factory('NotifyService', ['$injector',
         var myAlert = $alert({
           title: title + "\n",
           content: message, 
-          placement: 'top-right',
+          container: '.alert-area',
+          // placement: 'top-right',
           animation: 'am-fade-and-slide-top',
           type: level,
           show: true,

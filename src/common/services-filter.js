@@ -7,18 +7,19 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
     var _activeDimensionService = DimensionService.getPrimary();
     var _filters = {
       'histogram': [],
-      'som': [ new CircleFilter('circle1', $injector).name('A'), new CircleFilter('circle2', $injector).name('B') ]
+      'som': [ { type: 'som', circle: new CircleFilter('circle1', $injector).name('A') },
+       { type: 'som', circle: new CircleFilter('circle2', $injector).name('B') } ]
     };
 
     var _colors = d3.scale.category10();
 
     _.each( _filters.som, function(filt) {
-      filt.color( _colors(filt.id()) );
+      filt.circle.color( _colors(filt.circle.id()) );
     });
 
     var getCircleFilterInitial = function() {
-      var initial = _.map( _filters.som, function(circle) {
-        return { circle: circle, count: 0 };
+      var initial = _.map( _filters.som, function(filt) {
+        return { circle: filt.circle, count: 0 };
       });
       return initial;
     };
@@ -32,16 +33,20 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       _activeDimensionService = DimensionService.get(tabName);
     });
 
+    service.canEdit = function() {
+      return _activeDimensionService == DimensionService.getPrimary();
+    };
+
     service.getInfo = function() {
       return DimensionService.getPrimary().getSampleInfo();
     };
 
     service.getSOMFilters = function() {
-      return _filters.som;
+      return _.map( _filters.som, function(filt) { return filt.circle; }); //_filters.som;
     };
 
     service.getSOMFilter = function(id) {
-      return _.find( _filters.som, function(cf) { return cf.id() == id; } );
+      return _.find( _filters.som, function(cf) { return cf.circle.id() == id; } ).circle;
     };
 
     service.getSOMFilterColors = function() {
@@ -127,11 +132,12 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
         handle = getCircleFilterInitial();
       }
       angular.copy(handle, _circleFilterReturnHandle);
+      updateReturnFilters();
     };
 
     var updateReturnFilters = function() {
         angular.copy( _.chain(_filters).values().flatten().value(), _filterReturnHandle );
-      };
+    };
 
     return service;
   }
