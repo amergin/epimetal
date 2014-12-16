@@ -16,31 +16,20 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       filt.color( _colors(filt.id()) );
     });
 
+    var getCircleFilterInitial = function() {
+      var initial = _.map( _filters.som, function(circle) {
+        return { circle: circle, count: 0 };
+      });
+      return initial;
+    };
+
     var _filterReturnHandle = [];
-    var _groupedBMUs;
+    var _circleFilterReturnHandle = getCircleFilterInitial();
 
     var service = {};
 
-    var inWhatCircles = function(bmu) {
-      var includedInCircle = function(bmu, circle) {
-        // var circleBMUs = service.getSOMFilter(circleId);
-        return _.any( circle.hexagons(), function(b) { return b.i === (bmu.y-1) && b.j === (bmu.x-1); } );
-      };
-
-      // should usually be just one name, but it's possible that in several
-      var names = [];
-
-      _.each( service.getSOMFilters(), function(circle) {
-        if( includedInCircle(bmu, circle) ) {
-          names.push( circle.id() );
-        }
-      });
-      return names;
-    };
-
     $rootScope.$on('tab.changed', function(event, tabName) {
       _activeDimensionService = DimensionService.get(tabName);
-      // _groupedBMUs = _activeDimensionService.getReducedGroupHistoDistributions( _activeDimensionService.getSOMDimension().group() );
     });
 
     service.getInfo = function() {
@@ -60,24 +49,13 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
     };
 
     service.getCircleFilterInfo = function() {
-      _groupedBMUs = _activeDimensionService.getReducedGroupHistoDistributions( _activeDimensionService.getSOMDimension().group() );
-      var ret = [];
-      _.each( service.getSOMFilters(), function(circle) {
-        var sum = d3.sum( _groupedBMUs.all(), function(d) { return d.value.counts[ circle.id() ] || 0; } );
-        if( sum > 5000 ) {
-          console.log("sum OVER", _groupedBMUs.all());
-        }
-        ret.push({ circle: circle, count: sum });
-        // ret[circle.name()] = d3.sum( _groupedBMUs.all(), function(d) { return d.value.counts[ circle.id() ] || 0; } );
-      });
-      return ret;
+      return _circleFilterReturnHandle;
     };
 
     service.addHistogramFilter = function(config) {
       var type = 'histogram';
       _filters[type].push(config);
       updateReturnFilters();
-      console.log("after add", _filters[type]);
     };
 
     service.removeHistogramFilter = function(filter, redraw) {
@@ -96,7 +74,6 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
         $injector.get('WindowHandler').redrawVisible();
       }
       updateReturnFilters();
-      console.log("after del", _filters['histogram']);
     };
 
     var getUniqueHexagons = function(current, added) {
@@ -110,20 +87,55 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       return _filterReturnHandle;
     };
 
-    var updateReturnFilters = function() {
-      // _filterReturnHandle = angular.copy(_.chain(_filters).values().flatten().value() 
-      angular.copy( _.chain(_filters).values().flatten().value(), _filterReturnHandle );
+    service.updateCircleFilters = function() {
+      var inWhatCircles = function(bmu) {
+        var includedInCircle = function(bmu, circle) {
+          return _.any( circle.hexagons(), function(b) { return b.i === (bmu.key.y-1) && b.j === (bmu.key.x-1); } );
+        };
+
+        // should usually be just one name, but it's possible that in several
+        var names = [];
+
+        _.each( service.getSOMFilters(), function(circle) {
+          if( includedInCircle(bmu, circle) ) {
+            names.push( circle.id() );
+          }
+        });
+        return names;
+      };
+
+      var resolveAmounts = function() {
+        var handle = [];
+        var groupedBMUs = _activeDimensionService.getSOMDimension().group();
+        var counts = {};
+        _.each( groupedBMUs.all(), function(group) {
+          var inGroups = inWhatCircles(group);
+          _.each( inGroups, function(name) {
+            counts[name] = counts[name] ? (counts[name] + group.value) : group.value;
+          });
+        });
+
+        _.each( service.getSOMFilters(), function(circle) {
+          handle.push({ circle: circle, count: counts[circle.id()] || 0 });
+        });
+
+        return handle;
+      };
+
+      var handle = resolveAmounts(handle);
+      if( _.isEmpty(handle) ) {
+        handle = getCircleFilterInitial();
+      }
+      angular.copy(handle, _circleFilterReturnHandle);
     };
 
-    // var checkDefined = function(val, object, objectType) {
-    //   if( _.isUndefined( object[val] ) ) {
-    //     object[val] = objectType();
-    //   }
-    // };
+    var updateReturnFilters = function() {
+        angular.copy( _.chain(_filters).values().flatten().value(), _filterReturnHandle );
+      };
 
     return service;
   }
-]);
+  ]);
 
 function CircleFilter(id, $injector) {
 

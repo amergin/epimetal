@@ -78,7 +78,7 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
     $scope.$watch( function() {
       return FilterService.getCircleFilterInfo();
     }, function(val) {
-      angular.copy(val, $scope.filterInfo); 
+      $scope.filterInfo = val;
     }, true);
 
     // $scope.getFilterInfo = function() {
@@ -150,14 +150,11 @@ mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$root
       });
     });
 
-    $scope.defaultComputed = false;
-
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
       var compareAndRestart = function() {
           var primary  = DimensionService.getPrimary();
           var current = $scope.windowHandler.getDimensionService();
-          if( !$scope.defaultComputed || !DimensionService.equal( primary, current ) ) {
-            $scope.defaultComputed = true;
+          if( !SOMService.somReady() || !DimensionService.equal( primary, current ) ) {
             console.log("dimension instances not equal, need to restart");
             DimensionService.restart( current, primary );
             SOMService.getSOM().then( function() {

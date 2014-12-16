@@ -4,16 +4,13 @@
 			<span>New component plane</span>
 			<i class="fa fa-caret-down"></i>
 		</button>
-<!-- 		<span ng-repeat="filter in filterInfo" ng-style="{ 'color': filter.circle.color() }">
-			Filter {{filter.circle.name()}}: <b>{{filter.count}}</b> samples
-		</span> -->
 	</div>
 	<div class="col-sm-2" ng-repeat="filter in filterInfo">
 		<ul class="list-group">
-		  <li class="list-group-item">
-		    <span class="badge am-fade">{{filter.count}}</span>
-		    <strong ng-style="{ 'color': filter.circle.color() }">Filter {{filter.circle.name()}}</strong>
-		  </li>
+			<li class="list-group-item">
+				<span class="badge am-fade">{{filter.count}}</span>
+				<strong ng-style="{ 'color': filter.circle.color() }">Filter {{filter.circle.name()}}</strong>
+			</li>
 		</ul>
 	</div>
 	

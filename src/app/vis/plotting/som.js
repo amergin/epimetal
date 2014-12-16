@@ -52,6 +52,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
     $scope.updateFilter = function(hexagons, circleId) {
       FilterService.getSOMFilter(circleId).hexagons(hexagons);
+      FilterService.updateCircleFilters();
       // FilterService.updateSOMFilter({ 'som_id': $scope.window.som_id, 'hexagons': hexagons, 'circle': circleId });
     };
 
@@ -63,7 +64,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
     $scope.drawSOMPlane = function(plane, element, width, height) {
 
-      var labelFormat = d3.format('.3f');
+      var labelFormat = d3.format('.2f');
 
       ///////////////////////////////////////////////////////////////////////////
       ////////////// Initiate SVG and create hexagon centers ////////////////////
@@ -183,6 +184,8 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       .enter()
       .append("text")
       .attr("class", "label noselect")
+      .attr('text-anchor', 'middle')
+      .attr('alignment-baseline', 'middle')
       .attr("x", function(d) { 
         var x = d.x-1;
         var y = d.y-1;
@@ -375,6 +378,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
                         .attr('cursor', 'ew-resize')
                         .call( outerCircleDrag );
 
+        // resolve intitial
         resolveArea( innerCircle.data()[0], null );
 
       }; // addcircle

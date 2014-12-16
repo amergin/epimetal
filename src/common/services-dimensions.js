@@ -28,20 +28,13 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
       var _name = name || '';
 
       this.getHash = function() {
-        // return crossfilterInst.size();
-        return that.getSampleDimension().top(Infinity).length;
-        // var spark = new SparkMD5();
-        // _.each( that.getSampleDimension().top(Infinity), function(d) {
-        //   spark.append( d.dataset + "|" + d.sampleid + "|" + _.values(d.variables).length );
-        // });
-        // return spark.end();
+        return that.getSampleDimension().groupAll().value();
+        // return that.getSampleDimension().top(Infinity).length;
+};
 
-        // return SparkMD5.hash( Utils.sortedJSON( this.getSampleDimension().top(Infinity) ) ); ///Utils.sortedJSON(currSamples) );
-      };
-
-      this.getName = function() {
-        return _name;
-      };
+this.getName = function() {
+  return _name;
+};
 
       // return one dimension. 
       this.getDimension = function (selection) {
@@ -100,14 +93,14 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
                   y: NaN,
                   valueOf: function() { return constants.nanValue; }
                 };
-             }
-            return {
-              x: d['bmus'].x,
-              y: d['bmus'].y,
-              valueOf: function() {
-                return ( d['bmus'].x + d['bmus'].y ) || constants.nanValue;
               }
-            };
+              return {
+                x: d['bmus'].x,
+                y: d['bmus'].y,
+                valueOf: function() {
+                  return ( d['bmus'].x + d['bmus'].y ) || constants.nanValue;
+                }
+              };
             })
           };
         }
@@ -147,14 +140,24 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
             //   // therefore do NOT filter it out
             //   return true;
             // }
-            var combined = _.uniq( _.flatten( _.values( dimensions[somKey].filters ) ), 
-              function(f) { return f.i + "|" + f.j; } );
+            var combined = _.chain(dimensions[somKey].filters)
+            .values()
+            .flatten()
+            .uniq( function(f) { return f.i + "|" + f.j; } )
+            .value();
 
-            return _.any( combined, function(h) {
-              return ( (h.i === (d.y-1) ) && (h.j === (d.x-1) ) );
+          if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
+            var retval = _.any( combined, function(h) {
+            return ( (h.i === (d.y-1) ) && (h.j === (d.x-1) ) );
             });
+            console.log("!! nan encountered, returns=", retval);
+          }
 
+          return _.any( combined, function(h) {
+            return ( (h.i === (d.y-1) ) && (h.j === (d.x-1) ) );
           });
+
+        });
         }
         $rootScope.$emit('dimension:SOMFilter');
       };
@@ -243,23 +246,23 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
       // since all necessary plotters will request a dimension anyway -> handled there
 
       this._checkDimension = function (variable) {
-          if( _.isUndefined( dimensions[variable] ) ) {
-            console.log("undefined dimension checked");
-            return;
-          }
-          --dimensions[variable].count;
+        if( _.isUndefined( dimensions[variable] ) ) {
+          console.log("undefined dimension checked");
+          return;
+        }
+        --dimensions[variable].count;
 
-          if( dimensions[variable].count === 0 ) {
-            if( !_.isUndefined(dimensions[variable].filters) ) {
-              _.each( angular.copy(dimensions[variable].filters), function(coord) {
-                that.removeSOMFilter(variable.replace(/som/, ''), coord);
-              });
-              dimensions[variable].dimension.filterAll();
-            }
-            dimensions[variable].dimension.dispose();
-            console.log('Deleting dimension', variable);
-            delete dimensions[variable];
+        if( dimensions[variable].count === 0 ) {
+          if( !_.isUndefined(dimensions[variable].filters) ) {
+            _.each( angular.copy(dimensions[variable].filters), function(coord) {
+              that.removeSOMFilter(variable.replace(/som/, ''), coord);
+            });
+            dimensions[variable].dimension.filterAll();
           }
+          dimensions[variable].dimension.dispose();
+          console.log('Deleting dimension', variable);
+          delete dimensions[variable];
+        }
       };
 
 
@@ -336,12 +339,12 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
         var groupNames = _.map( circleFilters, function(cf) { return cf.id(); } );
         var circleFiltersById = _.object( groupNames, circleFilters );
 
-        var inWhatCircle = function(sample) {
+        var inWhatCircles = function(sample) {
           var includedInCircle = function(sample, circleId) {
             var circleBMUs = circleFiltersById[circleId];
             // var circleBMUs = circleFilters[circleId];
             var bmu = sample.bmus;
-            return _.any( circleBMUs.hexagons(), function(b) { return b.i === (bmu.y-1) && b.j === (bmu.x-1); } );
+            return _.any( circleBMUs.hexagons(), function(b) { return b.j === (bmu.x-1) && b.i === (bmu.y-1); } );
           };
 
           // should usually be just one name, but it's possible that in several
@@ -361,7 +364,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
 
         var reduceAdd = function (p, v) {
           _.each( groupNames, function(name) {
-            var inGroups = inWhatCircle(v);
+            var inGroups = inWhatCircles(v);
             // var inGroup = inWhatCircle(v);
             if( inGroups.length === 0 ) {
               // pass
@@ -370,11 +373,10 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
               v.groups = inGroups;
               _.each(inGroups, function(name) {
                 p.counts[name] = p.counts[name] + 1;
-                // v.group = name;
               });
             }
           });
-          // p.counts.total = p.counts.total + 1;
+          p.counts.total = p.counts.total + 1;
           return p;
         };
 
@@ -382,11 +384,18 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
           if( _.isUndefined(v.groups) ) {
             // console.log("WARNING, GROUP NOT DEFINED", v, p);
           }
-          var inGroups = v.groups;
-          // var inGroup = inWhatCircle(v);
+          var inGroups = inWhatCircles(v);
           _.each( inGroups, function(name) {
             p.counts[name] = p.counts[name] - 1;
           });
+          p.counts.total = p.counts.total - 1;
+
+
+          // var inGroups = v.groups;
+          // // var inGroup = inWhatCircle(v);
+          // _.each( inGroups, function(name) {
+          //   p.counts[name] = p.counts[name] - 1;
+          // });
           // error here!
           // p.counts[inGroup] = p.counts[inGroup] - 1;
           // p.counts.total = p.counts.total - 1;
@@ -394,16 +403,13 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
         };
 
         var reduceInitial = function () {
-          // var DatasetFactory = $injector.get('DatasetFactory');
-          // var setNames = DatasetFactory.getSetNames();
           var p = {
-            counts: {}
+            counts: { total: 0 }
           };
 
           _.each(groupNames, function (name) {
             p.counts[name] = 0;
           });
-          // p.counts.total = 0;
           return p;
         };
 
@@ -495,8 +501,8 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
           // Important: remove ALL samples regardless of the current filters
           // (requires custom build of crossfilter.js, see:
           // https://github.com/square/crossfilter/issues/109#issuecomment-45359642)
-          crossfilterInst.remove( function() { return false; } );
-          crossfilterInst.add(_.values(currSamples));
+        crossfilterInst.remove( function() { return false; } );
+        crossfilterInst.add(_.values(currSamples));
         // }
         $rootScope.$emit('dimension:crossfilter');
       };
@@ -552,11 +558,11 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
           return samp.dataset + "|" + samp.sampleid;
         };
 
+        currSamples = {};
         _.each( copy, function(samp) {
-          if( _.isUndefined( currSamples[ getKey(samp) ] ) ) { currSamples[ getKey(samp) ] = {}; }
-          _.extend( currSamples[ getKey(samp) ], samp );
-          // angular.extend( currSamples[ getKey(samp) ], samp );
+          currSamples[ getKey(samp) ] = samp;
         });
+
         this.rebuildInstance();
         this.clearFilters();
       };
@@ -621,4 +627,4 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
     };
 
   }
-]);
+  ]);
