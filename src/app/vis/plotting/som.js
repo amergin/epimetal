@@ -254,13 +254,13 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           };
 
           console.log("resolveAreaCells called");
-          removeHighlights();
+          // removeHighlights();
 
           var hexagons = [];
           _.each(points, function(hexpoint) {
             if( hexagonInsideCircle(hexpoint, circle) ) {
               hexagons.push(hexpoint);
-              highlightHexagon(hexpoint);
+              // highlightHexagon(hexpoint);
             }
           });
 

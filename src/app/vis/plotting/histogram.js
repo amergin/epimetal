@@ -171,11 +171,9 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
         .brushOn(config.filterEnabled)
         .renderTitle(false)
         .title(function(d) {
-          return 'Value: ' + constants.tickFormat(d.key) +
-            "\n" +
-            "Dataset: " + d.value.dataset +
-            "\n" +
-            "Count: " + d.value.counts[d.value.dataset];
+          return ['Value: ' + constants.tickFormat(d.key),
+           'Total count: ' + d.value.counts.total || 0
+          ].join("\n");
         })
         .x(d3.scale.linear().domain(config.extent).range([0, config.noBins]))
         .xUnits( function() { return _xBarWidth; } )
