@@ -1,8 +1,8 @@
-var dimMod = angular.module('services.dimensions', ['services.dataset']);
+var dimMod = angular.module('services.dimensions', ['services.dataset', 'ui.router.state']);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
-  function ($injector, constants, $rootScope) {
+dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$state',
+  function ($injector, constants, $rootScope, $state) {
 
     var _instances = {};
 
@@ -28,13 +28,23 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope',
       var _name = name || '';
 
       this.getHash = function() {
-        return that.getSampleDimension().groupAll().value();
-        // return that.getSampleDimension().top(Infinity).length;
-};
+        var re = /((?:\w+).(?:\w+))(?:.\w+)?/i;
+        var current = $state.current.name;
+        var parent = _.last( re.exec(current) );
 
-this.getName = function() {
-  return _name;
-};
+        if( $injector.get('DimensionService').getPrimary().getName() == that.getName() ) { //parent ) {
+          return that.getSampleDimension().groupAll().value();
+        }
+        else {
+          return crossfilterInst.size();
+        }
+        // return String( crossfilterInst.size() ) + "|" + String( that.getSampleDimension().groupAll().value() );
+        // return that.getSampleDimension().groupAll().value();
+      };
+
+      this.getName = function() {
+        return _name;
+      };
 
       // return one dimension. 
       this.getDimension = function (selection) {
@@ -146,18 +156,19 @@ this.getName = function() {
             .uniq( function(f) { return f.i + "|" + f.j; } )
             .value();
 
-          if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
-            var retval = _.any( combined, function(h) {
-            return ( (h.i === (d.y-1) ) && (h.j === (d.x-1) ) );
+            if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
+              // var retval = _.any( combined, function(h) {
+              //   return ( (h.i === (d.y-1) ) && (h.j === (d.x-1) ) );
+              // });
+              console.log("!! nan encountered");
+              return false;
+            }
+
+            return _.any( combined, function(h) {
+              return ( (h.i === (d.y-1) ) && (h.j === (d.x-1) ) );
             });
-            console.log("!! nan encountered, returns=", retval);
-          }
 
-          return _.any( combined, function(h) {
-            return ( (h.i === (d.y-1) ) && (h.j === (d.x-1) ) );
           });
-
-        });
         }
         $rootScope.$emit('dimension:SOMFilter');
       };
@@ -492,24 +503,12 @@ this.getName = function() {
       // rebuilds crossfilter instance (called after adding new variable data)
       this.rebuildInstance = function () {
         console.log("Crossfilter instance rebuild called on", this.getName());
-        // called for the first time, create instance
-        // if (crossfilterInst === null) {
-        //   crossfilterInst = crossfilter(_.values(currSamples));
-        //   _createDatasetDimension();
-        // } else {
-          // already defined, just need to reboot it
-          // Important: remove ALL samples regardless of the current filters
-          // (requires custom build of crossfilter.js, see:
-          // https://github.com/square/crossfilter/issues/109#issuecomment-45359642)
         crossfilterInst.remove( function() { return false; } );
         crossfilterInst.add(_.values(currSamples));
-        // }
         $rootScope.$emit('dimension:crossfilter');
       };
 
       this.updateDatasetDimension = function () {
-        // if( _.isUndefined( dimensions['_dataset'] ) ) { return; }
-
         var DatasetFactory = $injector.get('DatasetFactory');
         var activeSets = DatasetFactory.activeSets();
 
@@ -597,16 +596,16 @@ this.getName = function() {
       getAll: function() {
         return _instances;
       },
-      compare: function(nameA, nameB) {
-        var a = _instances[nameA],
-        b = _instances[nameB];
+      // compare: function(nameA, nameB) {
+      //   var a = _instances[nameA],
+      //   b = _instances[nameB];
 
-        if( !a || !b) {
-          throw "Invalid name(s) provided";
-        }
+      //   if( !a || !b) {
+      //     throw "Invalid name(s) provided";
+      //   }
 
-        return _.isEqual( a.instance.getHash(), b.istance.getHash() );
-      },
+      //   return _.isEqual( a.instance.getHash(), b.istance.getHash() );
+      // },
       getPrimary: function() {
         return _.chain(_instances)
         .values()
@@ -616,6 +615,10 @@ this.getName = function() {
         .instance;
       },
       equal: function(a, b) {
+        console.log( "EQUAL = ", _.isEqual( a.getHash(), b.getHash() ), a.getHash(), b.getHash() );
+        if( _.isUndefined( b.getHash() ) ) {
+          console.log("UNDEFINED");
+        }
         return _.isEqual( a.getHash(), b.getHash() );
       },
       restart: function(restartInstance, sourceInstance) {

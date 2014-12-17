@@ -11,7 +11,7 @@
 	        </tr>
 	      </thead>
 	      <tbody>
-	        <tr ng-repeat="filter in $parent.filteredFilters = ( filters | orderBy:filterOrder | filter:showFilter )"  class="am-fade-and-slide-top">
+	        <tr ng-repeat="filter in filteredFilters = ( filters | orderBy:filterOrder | filter:showFilter )"  class="am-fade-and-slide-top">
 	          <td  class="col-sm-9" ng-switch="filter.type">
 					<span ng-switch-when="som">
 						<span ng-style="{ 'color': filter.circle.color() }">Circle filter {{filter.circle.name()}}</span> 

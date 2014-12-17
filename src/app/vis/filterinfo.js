@@ -28,8 +28,6 @@ mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService
         angular.copy(val, $scope.filters); 
       }, true );
 
-    $scope.filteredFilters = [];
-
     $scope.getAmount = function() {
       var re = /((?:\w+).(?:\w+))(?:.\w+)?/i;
       var parent = _.last( re.exec( $state.current.name ) );
@@ -41,7 +39,6 @@ mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService
         return false; })
       .size()
       .value();
-      // return $scope.filteredFilters.length; //$scope.filters.length;
     };
 
     $scope.formatNumber = function(num) {
@@ -104,7 +101,6 @@ mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService
       _.each( angular.copy($scope.filters), function(f) {
         $scope.close(f, false);
       });
-      // redraw only after all have been deleted
       $injector.get('WindowHandler').redrawVisible();
     };
   }

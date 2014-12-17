@@ -207,7 +207,15 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         });
 
 
-      var addCircle = function( circle, origin ) { //circleId, dispName, origin) {
+      var circleX = function(x) {
+        return hexRadius * x * 1.75;
+      };
+
+      var circleY = function(y) {
+        return hexRadius * y * 1.5;
+      };
+
+      var addCircle = function( circle, origin ) {
 
         var circleId = circle.id();
 
@@ -215,15 +223,6 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           fillOpacity: 0.40,
           radius: { normal: hexRadius * 3, min: hexRadius * 2, max: hexRadius * 5 }
         };
-
-        var circleX = function(x) {
-          return hexRadius * x * 1.75;
-        };
-
-        var circleY = function(y) {
-          return hexRadius * y * 1.5;
-        };
-
 
         var resolveAreaCells = function(circle, event) {
           var highlightHexagon = function(hexagon) {
@@ -285,6 +284,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           outerCircle.attr('cy', function(t) { t.y = y; return t.y; });
           circleText.attr('x', function(t) { t.x = x; return t.x; });
           circleText.attr('y', function(t) { t.y = y; return t.y; });
+          circle.position(d);
 
           $rootScope.$emit('som:circleFilter:move', null, $scope.window._winid, d);
         };
@@ -326,7 +326,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         // });
 
         var circleAnchor = svg.append('g')
-            .data([{ x: circleX(origin.n), y: circleY(origin.m), r: _circleConfig.radius.normal, id: circleId }]);
+            .data([{ x: origin.x, y: origin.y, r: circle.radius() || _circleConfig.radius.normal, id: circleId }]);
 
         var innerCircle = circleAnchor.append('circle')
             .attr('cx', function(d) { return d.x; })
@@ -362,13 +362,14 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
               d.r = newRadius;
               outerCircle.attr('r', newRadius);
               innerCircle.attr('r', function(t) { t.r = newRadius; return t.r; });
+              circle.radius(newRadius);
 
               resolveArea(d, d3.event);
               $rootScope.$emit('som:circleFilter:resize', null, $scope.window._winid, d);              
             });
 
         var outerCircle = circleAnchor.append('circle')
-        .data([{ x: circleX(origin.n), y: circleY(origin.m), r: _circleConfig.radius.normal + 3, id: circleId }])
+        .data([{ x: origin.x, y: origin.y, r: (circle.radius() || _circleConfig.radius.normal) + 3, id: circleId }])
                         .attr('cx', function(d) { return d.x; })
                         .attr('cy', function(d) { return d.y; })
                         .attr('r', function(d) { return d.r; })
@@ -384,9 +385,9 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       }; // addcircle
 
       // add two filter circles
-      var origins = [{ m: 1, n: 1 }, { m: 5, n: 7 }];
+      var origins = [{ y: circleY(1), x: circleX(1) }, { y: circleY(5), x: circleX(7) }];
       _.each( FilterService.getSOMFilters(), function(filt, ind) {
-        addCircle( filt, origins[ind] );
+        addCircle( filt, filt.position() || origins[ind] );
       });
 
     };

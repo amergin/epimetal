@@ -150,6 +150,8 @@ function CircleFilter(id, $injector) {
   _color,
   _hexagons = [],
   _injector = $injector,
+  _radius,
+  _position,
   that = this,
   _filter = {};
 
@@ -168,8 +170,18 @@ function CircleFilter(id, $injector) {
     _hexagons = hexagons;
     _injector.get('WindowHandler').reRenderVisible({ 'compute': true });
     _injector.get('DimensionService').get('vis.som').updateSOMFilter( _filter.id(), _hexagons );
+    return _filter;
+  };
 
+  _filter.radius = function(radius) {
+    if(!arguments.length) { return _radius; }
+    _radius = radius;
+    return _filter;
+  };
 
+  _filter.position = function(position) {
+    if(!arguments.length) { return _position; }
+    _position = position;
     return _filter;
   };
 

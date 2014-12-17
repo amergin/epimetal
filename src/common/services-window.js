@@ -1,4 +1,4 @@
-var mod = angular.module('services.window', ['angularSpinner']);
+var mod = angular.module('services.window', ['angularSpinner', 'ui.router.state']);
 
 mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout', 'usSpinnerService', '$state',
   function ($injector, constants, $rootScope, $timeout, usSpinnerService, $state, name) { // notice 'name'
