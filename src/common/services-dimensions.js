@@ -386,8 +386,6 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
           return bmu.x + "|" + bmu.y;
         };
 
-        // var circlesCalculated = false;
-
         var reduceAdd = function (p, v) {
           p.samples[getId(v)] = true;
           var bmuId = getBMUstr(v.bmus);
@@ -401,12 +399,12 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             });
 
           }
-          circlesCalculated = true;
           return p;
         };
 
         var reduceRemove = function (p, v) {
           p.samples[getId(v)] = false;
+          return p;
         };
 
         var reduceInitial = function () {
@@ -468,14 +466,6 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             obj.mean = obj.mean + delta/obj.n;
             obj.M2 = obj.M2 + delta*(value-obj.mean);
           }
-          // _.each(variables, function(variable) {
-          //   var obj = p[variable];
-          //   obj.n = obj.n + 1;
-          //   var value = v.variables[variable];
-          //   var delta = value - obj.mean;
-          //   obj.mean = obj.mean + delta/obj.n;
-          //   obj.M2 = obj.M2 + delta*(value-obj.mean);
-          // });
           return p;
         };
 
@@ -490,14 +480,6 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             obj.mean = obj.mean - delta/obj.n;
             obj.M2 = obj.M2 - delta*(value - obj.mean);
           }
-          // _.each(variables, function(variable) {
-          //   var obj = p[variable];
-          //   obj.n = obj.n - 1;
-          //   var value = v.variables[variable];
-          //   var delta = value - obj.mean;
-          //   obj.mean = obj.mean - delta/obj.n;
-          //   obj.M2 = obj.M2 - delta*(value - obj.mean);
-          // });
           return p;
         };
 
