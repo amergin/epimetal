@@ -25,6 +25,7 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
         if( config.omit == 'histogram' ) { return; }
         $timeout( function() {
           if(config.compute) {
+            $scope.compute();
             $scope.histogram.redraw();
             // $scope.redraw();
           }
@@ -45,29 +46,6 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
     });
 
     $scope.compute = function() {
-      $scope.somDimension = $scope.dimensionService.getSOMDimension();
-      $scope.bmuLookup = $scope.dimensionService.getReducedBMUinCircle( $scope.somDimension.groupAll() );
-      $scope.bmuLookupObj = $scope.bmuLookup.value();
-
-      var getBMUstr = function(bmu) {
-        return bmu.x + "|" + bmu.y;
-      };
-
-      // optimize this!
-      // var inWhatCircles = function(d) {
-      //   if( !_.isUndefined(d.bmu) ) {
-      //     var id = getBMUstr(d.bmu);
-      //     var lookup = $scope.bmuLookupObj.bmus[id];
-      //     if( !lookup ) {
-      //       return [];
-      //     } else {
-      //       return lookup;
-      //     }
-      //   } else {
-      //     return [];
-      //   }
-      // };
-
       var inWhatCircles = function(d) {
         if( !_.isUndefined(d.bmu) ) {
           var ret = [];
@@ -84,23 +62,35 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
 
       $scope.dimension = $scope.dimensionService.getVariableBMUDimension();
 
-      $scope.groups = {};
+      var groups = {};
       _.each( $scope.window.variables.x, function(variable) {
         var group = $scope.dimension.group( function(d) {
-          // var circles = inWhatCircles(d);
           return {
-            // d: d,
             variable: variable,
-            circles: function() { return inWhatCircles(d); },
-            valueOf: function() {
-              return String(this.circles());
-              // return variable + "|" + circles.join(",");
-            }
+            circles: d.circles(),
+            valueOf: function() { return d.valueOf(); }
           };
         });
+        // var group = $scope.dimension.group( function(d) {
+        //   // return variable + "|" + String(inWhatCircles(d));
+        //   return {
+        //     variable: variable,
+        //     circles: function() {
+        //       var cir =  inWhatCircles(d);
+        //       // console.log("inWhatCircles = ", cir, "in BMU = ", JSON.stringify(d.bmu));
+        //       return cir;
+        //     },
+        //     valueOf: function() {
+        //       return variable + this.circles(); //String(this.circles());
+        //       // return variable + "|" + circles.join(",");
+        //     }
+        //   };
+        // });
 
-        $scope.groups[variable] = $scope.dimensionService.getReducedMean(group, variable);
+        groups[variable] = $scope.dimensionService.getReducedMean(group, variable);
       });
+      
+      $scope.groups = angular.copy(groups);
 
       $scope.totalDimension = DimensionService.getPrimary().getSampleDimension();
       $scope.totalGroup = $scope.totalDimension.groupAll();
@@ -117,9 +107,37 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
     $scope.filterOnSet = function(group, name) {
       return {
         'all': function() {
-          return group.all().filter(function(d) {
-            return (d.key.variable == name ) && d.key.circles().length > 0;
-          });
+
+          var lookup = {},
+          ret = [];
+
+          // form lookup
+          _.chain(group.all())
+          .reject(function(g) { return g.value.n === 0 || g.key.circles.length === 0; })
+          .each( function(grp) {
+            _.each(grp.key.circles, function(circle) {
+              if( !lookup[circle] ) { lookup[circle] = []; }
+              lookup[circle].push( grp );
+            });
+          }).value();
+
+          // resolve lookup to ready groups that dc.js understands
+          ret = _.chain(lookup).map( function(groups, circleId) {
+            var obj = { 
+              key: { variable: name, circle: FilterService.getSOMFilter(circleId) }, 
+              value: { mean: 0, n: 0 } 
+            };
+            _.each(groups, function(grp) {
+              // actually a sum
+              obj.value.mean += (grp.value.mean * grp.value.n);
+              obj.value.n += grp.value.n;
+            });
+            // form actual mean
+            obj.value.mean = obj.value.mean / obj.value.n;
+            return obj;
+          }).value();
+
+          return ret;
         }
       };
     };
@@ -144,8 +162,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
       // work-around, weird scope issue on filters ?!
       $scope.FilterService = $injector.get('FilterService');
 
-      var getLabel = function(variable, circleId) {
-        var circle = FilterService.getSOMFilter( circleId );
+      var getLabel = function(variable, circle) {
         return variable + " (" + circle.name() + ")";
       };
 
@@ -153,8 +170,8 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         var ret = [];
         _.each(config.groups, function(group, name) {
           _.each( $scope.filterOnSet(group, name).all(), function(obj) {
-            var circles = obj.key.circles();
-            ret.push( getLabel(obj.key.variable, _.first(circles) ) );
+            var circle = obj.key.circle;
+            ret.push( getLabel(obj.key.variable, circle) );
           });
         });
         return ret;
@@ -164,7 +181,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
 
       // 1. create composite chart
       $scope.histogram = dc.compositeChart(config.element[0]) //, constants.groups.histogram)
-        // .dimension(config.dimension)
+        .dimension(config.dimension)
         .width(null)
         .height(null)
         .shareColors(true)
@@ -178,7 +195,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
           var totalVal = config.totalReduced.value()[variable];
           var value = d.value.valueOf();
           var totalStd = d3.round(totalVal.valueOf().stddev, 3);
-          var circle = FilterService.getSOMFilter( _.first(d.key.circles()) );
+          var circle = d.key.circle;
           return [
           'Circle filter: ' + circle.name(),
           'Variable: ' + variable,
@@ -186,7 +203,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
           'STD (all samples): ' + totalStd
           ].join("\n");
         })
-        .x( d3.scale.ordinal().domain(labels) )//config.groupNames) )
+        .x( d3.scale.ordinal().domain(labels) )
         .xUnits(dc.units.ordinal)
         .margins({
           top: 10,
@@ -212,12 +229,13 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
           .x( d3.scale.ordinal().domain(labels))
           .barPadding(0.15)
           .colorAccessor( function(d) {
-            return d.key.circles()[0];
+            return d.key.circle.id();
           })
           .brushOn(false)
           .dimension(config.dimension)
           .group(config.filter(group, variable), variable)
           .valueAccessor(function(d) { // is y direction
+            console.log("N=", d.value.n, JSON.stringify(d), " in group = ", getLabel(d.key.variable, d.key.circle) );
             var mean = d.value.mean;
             var constant = 100;
             var totalVal = config.totalReduced.value()[variable];
@@ -226,7 +244,9 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
             return ( mean - totalMean ) / totalStd * constant; 
           })
           .keyAccessor(function(d) {
-            return getLabel(d.key.variable, _.first(d.key.circles())); //d.key.variable;
+            var circle = d.key.circle,
+            variable = d.key.variable;
+            return getLabel(variable, circle);
           });
 
         $scope.barCharts[variable] = chart;

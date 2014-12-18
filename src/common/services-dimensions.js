@@ -92,28 +92,38 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
 
       this.getVariableBMUDimension = function() {
         var key = "variable|" + "bmu";
+        var FilterService = $injector.get('FilterService');
         if( _.isUndefined( dimensions[key] ) ) {
           dimensions[key] = {
             count: 1,
             dimension: crossfilterInst.dimension( function(d) {
               return {
-                // variables: d.variables,
-                id: d.dataset + "|" + d.sampleid,
-                // value: d.variables[variable] || constants.nanValue,
-                bmu: d['bmus'] || { x: NaN, y: NaN, valueOf: function() { return constants.nanValue; } },
+                circles: function() {
+                  return FilterService.inWhatCircles(d.bmus);
+                },
                 valueOf: function() {
-                  return d.dataset + "|" + d.sampleid;
-                  // var x, y;
-                  // if( _.isUndefined( d.bmus ) ) {
-                  //   x = constants.nanValue;
-                  //   y = constants.nanValue;
-                  // } else {
-                  //   x = d.bmus.x;
-                  //   y = d.bmus.y;
-                  // }
-                  // return x + "|" + y;
+                  return String(this.circles());
                 }
               };
+              // return {
+              //   // variables: d.variables,
+              //   id: d.dataset + "|" + d.sampleid,
+              //   // value: d.variables[variable] || constants.nanValue,
+              //   bmu: d['bmus'] || { x: NaN, y: NaN, valueOf: function() { return constants.nanValue; } },
+              //   valueOf: function() {
+              //     var x, y;
+              //     if( _.isUndefined( d.bmus ) ) {
+              //       x = constants.nanValue;
+              //       y = constants.nanValue;
+              //     } else {
+              //       x = d.bmus.x;
+              //       y = d.bmus.y;
+              //     }
+              //     // should be fast operation, O(1)
+              //     return FilterService.inWhatCircles(bmu);
+              //     // return x + "|" + y;
+              //   }
+              // };
             })
           };
         }
@@ -134,14 +144,15 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
                 return {
                   x: NaN,
                   y: NaN,
-                  valueOf: function() { return constants.nanValue; }
+                  valueOf: function() { return String(constants.nanValue); } //constants.nanValue; }
                 };
               }
               return {
                 x: d['bmus'].x,
                 y: d['bmus'].y,
                 valueOf: function() {
-                  return ( d['bmus'].x + d['bmus'].y ) || constants.nanValue;
+                  return d['bmus'].x + "|" + d['bmus'].y || String(constants.nanValue);
+                  //return ( d['bmus'].x + d['bmus'].y ) || constants.nanValue;
                 }
               };
             })
@@ -178,11 +189,6 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         }
         else {
           dimensions[somKey].dimension.filterFunction( function(d) {
-            // if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
-            //   // sample is not in the dataset included in the SOM computation,
-            //   // therefore do NOT filter it out
-            //   return true;
-            // }
             var combined = _.chain(dimensions[somKey].filters)
             .values()
             .flatten()
@@ -190,9 +196,6 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             .value();
 
             if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
-              // var retval = _.any( combined, function(h) {
-              //   return ( (h.i === (d.y-1) ) && (h.j === (d.x-1) ) );
-              // });
               console.log("!! nan encountered");
               return false;
             }
@@ -438,6 +441,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
           if( p.n === 0 || _.isNull(p.mean) ) {
             console.log("debug");
           }
+          // console.log("reduceAdd", p.n);
           // console.log("varValue = ", varValue, "delta = ", delta, "p = ", JSON.stringify(p));            
           return p;
         };
@@ -460,6 +464,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
           if( p.n === 0 || _.isNull(p.mean) ) {
             console.log("debug");
           }
+          // console.log("reduceRemove", p.n);
           // console.log("varValue = ", varValue, "delta = ", delta, "p = ", JSON.stringify(p));          
           return p;
         };

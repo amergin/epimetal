@@ -12,6 +12,7 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
     };
 
     var _colors = d3.scale.category10();
+    var _bmusLookup = {};
 
     _.each( _filters.som, function(filt) {
       filt.circle.color( _colors(filt.circle.id()) );
@@ -92,17 +93,22 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       return _filterReturnHandle;
     };
 
+    var bmuStrId = function(bmu) {
+      return bmu.x + "|" + bmu.y;
+    };
+
+    service.inWhatCircles = function(bmu) {
+      var lookup = _bmusLookup[bmuStrId(bmu)];
+      return lookup ? lookup.circles : [];
+    };
+
     service.updateCircleFilters = function() {
       var inWhatCircles = function(bmu) {
-        // var includedInCircle = function(bmu, circle) {
-        //   return _.any( circle.hexagons(), function(b) { return b.i === (bmu.key.y-1) && b.j === (bmu.key.x-1); } );
-        // };
-
         // should usually be just one name, but it's possible that in several
         var names = [];
 
         _.each( service.getSOMFilters(), function(circle) {
-          if( circle.contains(bmu.key) ) { //includedInCircle(bmu, circle) ) {
+          if( circle.contains(bmu.key) ) {
             names.push( circle.id() );
           }
         });
@@ -115,6 +121,7 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
         var counts = {};
         _.each( groupedBMUs.all(), function(group) {
           var inGroups = inWhatCircles(group);
+          _bmusLookup[bmuStrId(group.key)] = { bmu: group.key, circles: inGroups };
           _.each( inGroups, function(name) {
             counts[name] = counts[name] ? (counts[name] + group.value) : group.value;
           });
