@@ -181,13 +181,20 @@
     url: '/profiles',
     // parent: 'vis.som',
     data: { pageTitle: 'Compare profiles | Self-organizing maps | Visualization' },
+    resolve: {
+      windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
+        var handler = WindowHandler.create('vis.som.profiles');
+        handler.setDimensionService( DimensionService.get('vis.som') );
+        return handler;
+      }]
+    },
     views: {
       'submenu-profiles@vis.som': {
-        // controller: 'SOMDistributionsController',
+        controller: 'SOMProfilesMenuController',
         templateUrl: 'vis/som/profiles/som.submenu.tpl.html'
       },
       'top-profiles@vis.som': {
-        // controller: 'SOMDistributionsController',
+        controller: 'SOMProfilesController',
         templateUrl: 'vis/som/profiles/som.top.tpl.html'
       }
     },

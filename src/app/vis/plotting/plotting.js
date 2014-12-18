@@ -5,6 +5,7 @@ var visu = angular.module('plotter.vis.plotting',
   'plotter.vis.plotting.scatterplot', 
   'plotter.vis.plotting.heatmap',
   'plotter.vis.plotting.som',
+  'plotter.vis.plotting.profile-histogram',
   'services.dimensions', 
   'services.dataset', 
   'services.urlhandler',
@@ -99,6 +100,32 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         });
 
     };
+
+    this.drawProfileHistogram = function(config, windowHandler) {
+      var draw = function() {
+        var type = 'profile-histogram';
+        config.type = type;
+        windowHandler.add(config);
+        UrlHandler.createWindow( type, config );
+      };
+
+      NotifyService.addSpinnerModal('Loading...');//, _callback);
+      var plottingDataPromise = DatasetFactory.getVariableData(config.variables.x);
+      plottingDataPromise.then(function successFn(res) {
+          // draw the figure
+          NotifyService.closeModal();
+          draw(config, windowHandler);
+        },
+        function errorFn(variable) {
+          NotifyService.closeModal();
+
+          var title = 'Variable ' + variable + ' could not be loaded\n',
+          message = 'Please check the selected combination is valid for the selected datasets.',
+          level = 'danger';
+          NotifyService.addTransient(title, message, level);
+        });
+
+    };    
 
     this.drawSOM = function(config, windowHandler) {
       var draw = function(config, windowHandler) {

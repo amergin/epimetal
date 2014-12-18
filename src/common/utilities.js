@@ -56,19 +56,21 @@ module.directive('enableAnimate', ['$animate', function($animate) {
 }]);
 
 Utils.getVariables = function(windowType, selection, splitScatter) {
-  if (windowType === 'scatterplot') {
-    if (splitScatter) {
-      return [selection.x + "|" + selection.y];
-    }
-    return [selection.x, selection.y];
-  } else if (windowType === 'histogram') {
-    return [selection.x];
-  } else if (windowType === 'heatmap') {
-    return selection.x;
-  } else if (windowType === 'somplane') {
-    return [];
-  } else {
-    console.log("Undefined type!");
+  switch(windowType) {
+    case 'scatterplot':
+      if (splitScatter) {
+        return [selection.x + "|" + selection.y];
+      }
+      return [selection.x, selection.y];
+    case 'histogram':
+      return [selection.x];
+    case 'heatmap':
+    case 'profile-histogram':
+      return selection.x;
+    case 'somplane':
+      return [];
+    default:
+      console.log('Undefined type!');
   }
 };
 

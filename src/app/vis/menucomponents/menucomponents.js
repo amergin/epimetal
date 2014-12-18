@@ -86,7 +86,7 @@ vis.controller('ScatterplotFormController', ['$scope', '$rootScope', '$q', 'Data
   function ($scope, $rootScope, $q, DatasetFactory, $injector, NotifyService) {
     $scope.selection = {};
 
-    $scope.variables = DatasetFactory.variables();
+    DatasetFactory.getVariables().then( function(res) { $scope.variables = res; } );
 
     $scope.canEdit = function () {
       return DatasetFactory.activeSets().length > 0;
@@ -132,7 +132,7 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
 
     $scope.selection = {};
 
-    $scope.variables = DatasetFactory.variables();   
+    DatasetFactory.getVariables().then( function(res) { $scope.variables = res; } );
 
     $scope.canEdit = function () {
       return DatasetFactory.activeSets().length > 0;
@@ -161,7 +161,8 @@ vis.controller('SOMFormController',
     $scope.selection = {};
 
     $scope.datasets = DatasetFactory.getSets();
-    $scope.variables = DatasetFactory.variables();
+
+    DatasetFactory.getVariables().then( function(res) { $scope.variables = res; } );
 
     $scope.canEdit = function () {
       return DatasetFactory.activeSets().length > 0;
@@ -206,10 +207,9 @@ vis.directive('somForm', function () {
 // controller for the histogram form
 vis.controller('HeatmapFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'PlotService',
   function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService) {
-    // $scope.variables = DatasetFactory.variables();
     $scope.selection = {};
 
-    $scope.variables = DatasetFactory.variables();
+    DatasetFactory.getVariables().then( function(res) { $scope.variables = res; } );
 
     $scope.canEdit = function () {
       return DatasetFactory.activeSets().length > 0;

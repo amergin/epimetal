@@ -24,17 +24,49 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
     // API loading.
     that.activeVariables = {};
 
-    // that.SOMs = {};
-    // only one SOM can be active at a time; if this is empty that means 
-    // a SOM has not yet been computed (waiting)
-    that.som = {};
-    that.somSelection = {
-      variables: [],
-      samples: null
-    };
-    // that.somVariables = [];
-    that.SOMPlanes = {};
+    var initVariables = _.once(function() {
+      var defer = $q.defer();
+      $http.get(that.config.variablesURL)
+        .success(function(response) {
+          console.log("Load variable list");
+          // empty just in case it's not empty
+          var res = [];
+          _.each(response.result, function(varNameObj, ind) {
+            res.push(varNameObj);
+          });
+          res = _.sortBy(res, function(obj) {
+            return obj.desc || obj.name;
+          });
+          that.variables = angular.copy(res);
+          defer.resolve(that.variables);
+        })
+        .error( function() {
+          that.variables = angular.copy([]);
+          NotifyService.addSticky('Error!', 'Something went wrong while fetching variables. Please reload the page', 'danger');
+          defer.reject('Something went wrong while fetching variables. Please reload the page');
+        });
+      return defer.promise;
+    });
 
+    var initDatasets = _.once(function() {
+      var deferred = $q.defer();
+      var res = {};
+      $http.get(that.config.datasetsURL)
+        .success(function(response) {
+          console.log("load dataset names");
+          _.each(response.result, function(nameObj) {
+            // create a dataset stub
+            res[nameObj.name] = new Dataset(nameObj.name, that.colors(nameObj.name), nameObj.size);
+            // that.sets[nameObj.name] = new Dataset(nameObj.name, that.colors(nameObj.name), nameObj.size);
+          });
+          that.sets = angular.copy(res);
+          deferred.resolve(that.sets);
+        })
+        .error(function() {
+          deferred.reject('Error in fetching dataset list');
+        });
+      return deferred.promise;      
+    });
 
 
     // --------------------------------------
@@ -154,45 +186,27 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
     };
 
     service.getVariables = function() {
-      var deferred = $q.defer();
-      $http.get(that.config.variablesURL)
-        .success(function(response) {
-          console.log("Load variable list");
-          // empty just in case it's not empty
-          that.variables = [];
-          _.each(response.result, function(varNameObj, ind) {
-            that.variables.push(varNameObj);
-          });
-          that.variables = _.sortBy(that.variables, function(obj) {
-            return obj.desc || obj.name;
-          });
-          deferred.resolve(that.variables);
-        })
-        .error(function(response) {
-          deferred.reject('Error in fetching variable list');
-        });
-      return deferred.promise;
+      return initVariables();
     };
 
     service.getDatasets = function() {
-      var deferred = $q.defer();
-      $http.get(that.config.datasetsURL)
-        .success(function(response) {
-          console.log("load dataset names");
-          _.each(response.result, function(nameObj) {
-            // create a dataset stub
-            that.sets[nameObj.name] = new Dataset(nameObj.name, that.colors(nameObj.name), nameObj.size);
-          });
-          deferred.resolve(that.sets);
-        })
-        .error(function() {
-          deferred.reject('Error in fetching dataset list');
-        });
-      return deferred.promise;
+      return initDatasets();
     };
 
-    service.variables = function() {
-      return that.variables;
+    var getProfiles = _.once(function() {
+      var getTotalLipids = function() {
+        // get variables ending with '-L'
+        var re = /^((?:[a-z|-]+)-L)$/i;
+        return _.chain(that.variables)
+        .filter(function(d) { return re.test(d.name); })
+        .map(function(d) { return d.name; } )
+        .value();
+      };
+      return [ { name: 'Total lipids', variables: getTotalLipids() }  ];      
+    });
+
+    service.getProfiles = function() {
+      return getProfiles();
     };
 
     // this function checks if new variables need to be fetched
@@ -243,170 +257,6 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
       return defer.promise;
     };
-
-    // var _findSOM = function(selection, datasets) {
-    //   for (var key in that.SOMs) {
-    //     var som = that.SOMs[key];
-    //     if (_.isEqual(som.variables, selection) && _.isEqual(som.datasets, datasets)) {
-    //       return som;
-    //     }
-    //   }
-    // };
-
-    // var _findPlane = function(som) {
-    //   for (var key in that.SOMPlanes) {
-    //     var plane = that.SOMPlanes[key];
-    //     if (_.isEqual(plane.som_id, som.som) && _.isEqual(plane.variable, som.tinput)) {
-    //       return plane;
-    //     }
-    //   }
-    // };
-
-    // service.getPlaneBySOM = function(somId) {
-    //   return _.filter( that.SOMPlanes, function(plane, key) {
-    //     return plane.som_id === somId;
-    //   });
-    // };
-
-    // service.updateSOMVariables = function(variables) {
-    //   function sameVariables(variables) {
-    //     return _.isEmpty( _.difference(variables, that.somSelection.variables) );
-    //   }
-
-    //   if( sameVariables(variables) ) {
-    //     return;
-    //   }
-    //   that.somSelection['variables'] = variables;
-
-    //   service.computeSOM(true);
-    // };
-
-    // service.computeSOM = function(force) {
-    //   // var DimensionService = $injector.get('DimensionService');
-    //   var sampleDim = that.dimensionService.getSampleDimension();
-    //   var samples = sampleDim.top(Infinity);
-
-    //   if( _.isUndefined(force) ) { force = false; }
-
-    //   if( 
-    //     ( samples.length > 0 && 
-    //     !_.isEmpty(that.somSelection.variables) &&
-    //     !_.isEqual( that.somSelection['samples'], samples.length )
-    //     ) || force ) {
-    //     that.somSelection['samples'] = samples.length;
-    //     return service._getSOM();
-    //   }
-    // };
-
-    // service._getSOM = function() {
-
-    //   function getSamples() {
-    //     // var DimensionService = $injector.get('DimensionService');
-    //     var sampleDim = that.dimensionService.getSampleDimension();
-
-    //     return _.map( sampleDim.top(Infinity), function(obj) {
-    //       return _.pick( obj, 'dataset', 'sampleid');
-    //     });
-    //   }
-
-    //   var samples = getSamples();
-
-    //   // at least 10 samples required
-    //   if( samples.length < 10 ) { return; }
-    //   var defer = $q.defer();
-
-    //   NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'success');
-
-    //   var selection = that.somSelection.variables;
-
-    //   var datasets = _.map(service.activeSets(), function(set) {
-    //     return set.getName();
-    //   });
-
-    //     // remove previous computation
-    //     that.som = {};
-
-    //     var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
-
-    //     if(selection.somid) {
-    //       // som exists beforehand, it's queried by its id
-    //       ws.onopen = function() {
-    //         ws.send(JSON.stringify({
-    //           'somid': selection.somid
-    //         }));
-    //       };
-    //     } else {
-    //       // don't know whether som exists already
-    //       ws.onopen = function() {
-    //         ws.send(JSON.stringify({
-    //           // 'datasets': datasets,
-    //           'variables': selection,
-    //           'samples': samples
-    //         }));
-    //       };
-    //     }
-
-    //     ws.onclose = function(evt) {
-    //       console.log("SOM WS closed", evt);
-    //     };
-
-    //     ws.onmessage = function(evt) {
-    //       var result = JSON.parse(evt.data);
-    //       if (result.result.code == 'error') {
-    //         // SOM computation failed
-    //         NotifyService.addTransient('SOM computation failed', result.result.message, 'danger');
-    //         defer.reject(result.result.message);
-    //       } else {
-    //         // SOM comp is OK
-    //         NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
-    //         var som = result.data;
-    //         $rootScope.$emit('dataset:SOMUpdated', result.data);
-    //         // var DimensionService = $injector.get('DimensionService');
-    //         that.dimensionService.addBMUs(som.id, som.bmus);
-
-
-    //         // that.SOMs[som.id] = som;
-    //         that.som = som;
-    //         defer.resolve(som);
-    //       }
-    //     };
-    //   // }
-    //   return defer.promise;
-    // };
-
-    // service.somReady = function() {
-    //   return !_.isEmpty(that.som);
-    // };
-
-    // service.getPlane = function(testVar) {
-    //   var defer = $q.defer();
-    //   var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.plane);
-    //   ws.onopen = function() {
-    //     ws.send(JSON.stringify({
-    //       'somid': that.som.id,
-    //       'datasets': that.som.datasets,
-    //       'variables': {
-    //         'test': testVar,
-    //         'input': that.som.variables
-    //       }
-    //     }));
-    //   };
-
-    //   ws.onclose = function(evt) {
-    //     console.log("Plane WS closed", evt);
-    //   };
-
-    //   ws.onmessage = function(evt) {
-    //     var result = JSON.parse(evt.data);
-    //     if (result.result.code == 'error') {
-    //       defer.reject(result.result.message);
-    //     } else {
-    //       that.SOMPlanes[result.data.id] = result.data;
-    //       defer.resolve( angular.copy(result.data) );
-    //     }
-    //   };
-    //   return defer.promise;
-    // };
 
     // this is called whenever a plot is drawn to check if variable data
     // is to be fetched beforehand. 

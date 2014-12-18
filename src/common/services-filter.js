@@ -185,6 +185,13 @@ function CircleFilter(id, $injector) {
     return _filter;
   };
 
+  // is sample included in this circle?
+  _filter.contains = function(bmu) {
+    return _.any( _filter.hexagons(), function(hex) {
+      return (hex.i === (bmu.y-1)) && (hex.j === (bmu.x-1));
+    });
+  };
+
   _filter.color = function(color) {
     if(!arguments.length) { return _color; }
     _color = color;
