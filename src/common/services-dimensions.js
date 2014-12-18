@@ -387,6 +387,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         };
 
         var reduceAdd = function (p, v) {
+          console.log("bmu-add");
           p.samples[getId(v)] = true;
           var bmuId = getBMUstr(v.bmus);
           if( _.isUndefined(p.bmus[bmuId]) ) {
@@ -394,6 +395,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             // determine in which circle(s) the bmu belongs to:
             _.each( circleFilters, function(circle) {
               if( circle.contains(v.bmus) ) {
+                console.log( "hex = ", JSON.stringify(v.bmus), "belongs to circle = ", circle.id() );
                 p.bmus[bmuId].push( circle.id() );
               }
             });
@@ -403,6 +405,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         };
 
         var reduceRemove = function (p, v) {
+          console.log("bmu-remove");          
           p.samples[getId(v)] = false;
           return p;
         };
@@ -421,19 +424,43 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Decremental_algorithm
         var reduceAdd = function (p, v) {
           p.n = p.n + 1;
-          var varValue = v.variables[variable];
-          if( _.isString(varValue) ) { return p; }
-          var delta = varValue - p.mean;
-          p.mean = p.mean + delta/p.n;
+          var varValue = +v.variables[variable];
+          var delta;
+          if( !_.isNaN(varValue) ) { // && _.isNumber(varValue) ) {
+            delta = varValue - p.mean;
+            // var delta = varValue - p.mean;
+            if( delta === 0 || p.n === 0 ) { return p; }
+            p.mean = p.mean + delta/p.n;
+          }
+          else {
+            // console.log("ELSE!", varValue);
+          }
+          if( p.n === 0 || _.isNull(p.mean) ) {
+            console.log("debug");
+          }
+          // console.log("varValue = ", varValue, "delta = ", delta, "p = ", JSON.stringify(p));            
           return p;
         };
 
         var reduceRemove = function (p, v) {
           p.n = p.n - 1;
-          var varValue = v.variables[variable];
-          if( _.isString(varValue) ) { return p; }
-          var delta = varValue - p.mean;
-          p.mean = p.mean - delta/p.n;
+          var varValue = +v.variables[variable];
+          var delta;
+          if( p.n === 0 ) {
+            console.log("predebug");
+          }
+          if( !_.isNaN(varValue) ) { //_.isNumber(varValue) ) {
+            delta = varValue - p.mean;
+            // var delta = varValue - p.mean;
+            if( delta === 0 || p.n === 0 ) { return p; }            
+            p.mean = p.mean - delta/p.n;
+          } else {
+            // console.log("ELSE!", varValue);
+          }
+          if( p.n === 0 || _.isNull(p.mean) ) {
+            console.log("debug");
+          }
+          // console.log("varValue = ", varValue, "delta = ", delta, "p = ", JSON.stringify(p));          
           return p;
         };
 
@@ -460,8 +487,8 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             var variable = variables[i];
             var obj = p[variable];
             obj.n = obj.n + 1;
-            var value = v.variables[variable];
-            if( _.isString(value) ) { return p; }
+            var value = +v.variables[variable];
+            if( _.isNaN(value) ) { return p; }
             var delta = value - obj.mean;
             obj.mean = obj.mean + delta/obj.n;
             obj.M2 = obj.M2 + delta*(value-obj.mean);
@@ -474,8 +501,8 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             var variable = variables[i];
             var obj = p[variable];
             obj.n = obj.n - 1;
-            var value = v.variables[variable];
-            if( _.isString(value) ) { return p; }
+            var value = +v.variables[variable];
+            if( _.isNaN(value) ) { return p; }
             var delta = value - obj.mean;
             obj.mean = obj.mean - delta/obj.n;
             obj.M2 = obj.M2 - delta*(value - obj.mean);

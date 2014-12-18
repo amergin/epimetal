@@ -94,15 +94,15 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
 
     service.updateCircleFilters = function() {
       var inWhatCircles = function(bmu) {
-        var includedInCircle = function(bmu, circle) {
-          return _.any( circle.hexagons(), function(b) { return b.i === (bmu.key.y-1) && b.j === (bmu.key.x-1); } );
-        };
+        // var includedInCircle = function(bmu, circle) {
+        //   return _.any( circle.hexagons(), function(b) { return b.i === (bmu.key.y-1) && b.j === (bmu.key.x-1); } );
+        // };
 
         // should usually be just one name, but it's possible that in several
         var names = [];
 
         _.each( service.getSOMFilters(), function(circle) {
-          if( includedInCircle(bmu, circle) ) {
+          if( circle.contains(bmu.key) ) { //includedInCircle(bmu, circle) ) {
             names.push( circle.id() );
           }
         });
