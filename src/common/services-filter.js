@@ -99,6 +99,7 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
 
     service.inWhatCircles = function(bmu) {
       var lookup = _bmusLookup[bmuStrId(bmu)];
+      // console.log("inWhatCircles reports = ", JSON.stringify(lookup), "for BMU = ", JSON.stringify(bmu));
       return lookup ? lookup.circles : [];
     };
 
@@ -108,7 +109,7 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
         var names = [];
 
         _.each( service.getSOMFilters(), function(circle) {
-          if( circle.contains(bmu.key) ) {
+          if( circle.contains(bmu) ) {
             names.push( circle.id() );
           }
         });
@@ -120,7 +121,7 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
         var groupedBMUs = _activeDimensionService.getSOMDimension().group();
         var counts = {};
         _.each( groupedBMUs.all(), function(group) {
-          var inGroups = inWhatCircles(group);
+          var inGroups = inWhatCircles(group.key);
           _bmusLookup[bmuStrId(group.key)] = { bmu: group.key, circles: inGroups };
           _.each( inGroups, function(name) {
             counts[name] = counts[name] ? (counts[name] + group.value) : group.value;

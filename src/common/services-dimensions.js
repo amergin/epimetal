@@ -90,40 +90,95 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         return dimensions['_dataset'];
       };
 
-      this.getVariableBMUDimension = function() {
+      this.getVariableBMUDimension = function(force) {
         var key = "variable|" + "bmu";
         var FilterService = $injector.get('FilterService');
-        if( _.isUndefined( dimensions[key] ) ) {
+        if( force ) {
+          console.log("forced");
+          if( !_.isUndefined( dimensions[key].dimension ) ) {
+            console.log("disposed");
+            dimensions[key].dimension.dispose();
+          }
+          console.log("new one created");
+          dimensions[key].dimension = crossfilterInst.dimension( function(d) {
+            return {
+              bmu: d.bmus,
+              circles: function(d) {
+                return FilterService.inWhatCircles(this.bmu);
+              },
+              valueOf: function() {
+                return String(this.circles());
+              }
+            };
+
+
+            // TOIMII:
+            // return {
+            //   circles: FilterService.inWhatCircles(d.bmus),
+            //   valueOf: function() {
+            //     return String(this.circles);
+            //   }
+            // };
+
+              // return {
+              //   x: d['bmus'].x,
+              //   y: d['bmus'].y,
+              //   valueOf: function() {
+              //     // IMPORTANT!
+              //     return d['bmus'].x + "|" + d['bmus'].y || String(constants.nanValue) + "|" + String(constants.nanValue);
+              //     //return ( d['bmus'].x + d['bmus'].y ) || constants.nanValue;
+              //   }
+              // };
+
+          });
+        }
+        else if( _.isUndefined( dimensions[key] ) ) {
           dimensions[key] = {
             count: 1,
             dimension: crossfilterInst.dimension( function(d) {
-              return {
-                circles: function() {
-                  return FilterService.inWhatCircles(d.bmus);
-                },
-                valueOf: function() {
-                  return String(this.circles());
-                }
-              };
               // return {
-              //   // variables: d.variables,
-              //   id: d.dataset + "|" + d.sampleid,
-              //   // value: d.variables[variable] || constants.nanValue,
-              //   bmu: d['bmus'] || { x: NaN, y: NaN, valueOf: function() { return constants.nanValue; } },
+              //   bmu: d.bmus,
+              //   circles: function(d) {
+              //     return FilterService.inWhatCircles(this.bmu);
+              //   },
               //   valueOf: function() {
-              //     var x, y;
-              //     if( _.isUndefined( d.bmus ) ) {
-              //       x = constants.nanValue;
-              //       y = constants.nanValue;
-              //     } else {
-              //       x = d.bmus.x;
-              //       y = d.bmus.y;
-              //     }
-              //     // should be fast operation, O(1)
-              //     return FilterService.inWhatCircles(bmu);
-              //     // return x + "|" + y;
+              //     return String(this.circles());
               //   }
               // };
+
+              // return {
+              //   circles: FilterService.inWhatCircles(d.bmus),
+              //   valueOf: function() { return String(this.circles); }
+              // };
+              // return {
+              //   circles: function() {
+              //     return FilterService.inWhatCircles(d.bmus);
+              //   },
+              //   valueOf: function() {
+              //     // MUST be a string!
+              //     return  d.bmus.x + "|" + d.bmus.y; // String(this.circles());
+              //   }
+              // };
+
+              // return {
+              //   bmu: d.bmus,
+              //   circles: FilterService.inWhatCircles(d.bmus),
+              //   // circles: function() {
+              //   //   return FilterService.inWhatCircles(this.bmu);
+              //   // },
+              //   valueOf: function() {
+              //     return this.circles; //String(this.circles());
+              //   }
+              // };
+
+
+              return {
+                bmu: d.bmus,
+                valueOf: function() {
+                  var ret = _.isUndefined(d.bmus) ? String(constants.nanValue) + "|" + String(constants.nanValue) : d.bmus.x + "|" + d.bmus.y;
+                  return ret;
+                }
+              };
             })
           };
         }
@@ -151,7 +206,8 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
                 x: d['bmus'].x,
                 y: d['bmus'].y,
                 valueOf: function() {
-                  return d['bmus'].x + "|" + d['bmus'].y || String(constants.nanValue);
+                  // IMPORTANT!
+                  return d['bmus'].x + "|" + d['bmus'].y || String(constants.nanValue) + "|" + String(constants.nanValue);
                   //return ( d['bmus'].x + d['bmus'].y ) || constants.nanValue;
                 }
               };
