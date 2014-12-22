@@ -92,7 +92,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       $scope.noBins = _.max([_.min([Math.floor($scope.dimension.group().size() / 20), 50]), 20]);
       $scope.binWidth = ($scope.extent[1] - $scope.extent[0]) / $scope.noBins;
       $scope.group = $scope.dimension.group(function(d) {
-        return d3.round( Math.floor(d / $scope.binWidth) * $scope.binWidth, 3);
+        return Math.floor(d / $scope.binWidth) * $scope.binWidth;
       });
 
       if( $scope.window.somSpecial ) {
@@ -100,7 +100,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
         $scope.reduced = $scope.dimensionService.getReducedGroupHistoDistributions($scope.group, $scope.window.variables.x);
 
         $scope.totalGroup = $scope.totalDimension.group(function(d) {
-          return d3.round(Math.floor(d / $scope.binWidth) * $scope.binWidth, 3);
+          return Math.floor(d / $scope.binWidth) * $scope.binWidth;
         });
         // total
         $scope.totalReduced = $scope.primary.getReducedGroupHisto($scope.totalGroup, $scope.window.variables.x);
