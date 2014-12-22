@@ -25,13 +25,10 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     };
 
     $scope.redraw = function() {
+      // only redraw if the dashboard is visible
       if( $state.current.name === $scope.window.handler.getName() ) {
-        // only redraw if the dashboard is visible
         $scope.computeExtent();
         $scope.histogram.x(d3.scale.linear().domain($scope.extent).range([0, $scope.noBins]));
-        // $scope.barWidth = d3.round( ($scope.$parent.element.width() / $scope.noBins) * 3 + 40 );
-        // $scope.histogram.xUnits( $scope.barWidth );
-        // console.log( "width=", $scope.barWidth, $scope.$parent.element.width(), $scope.noBins);
         $scope.histogram.render();
       }
     };
@@ -44,7 +41,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
             $scope.redraw();
           }
           else {
-            $scope.histogram.render();
+            $scope.histogram.redraw();
           }
         });
       }
@@ -64,6 +61,18 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     $scope.$parent.showResetBtn = false;
 
     $scope.computeExtent = function() {
+
+      // get rid of the existing ones
+      if( !_.isUndefined($scope.group) ) {
+        // redraw going on
+        $scope.group.dispose();
+        $scope.reduced.dispose();
+
+        if($scope.somSpecial) {
+          $scope.totalReduced.dispose();
+        }
+      }
+
       var allValues;
       if( $scope.window.somSpecial ) {
         allValues = $scope.totalDimension.group().all().filter( function(d) {
@@ -80,10 +89,10 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
         return d.key;
       });
 
-      $scope.noBins = _.max([_.min([Math.floor($scope.dimension.group().all().length / 20), 50]), 20]);
+      $scope.noBins = _.max([_.min([Math.floor($scope.dimension.group().size() / 20), 50]), 20]);
       $scope.binWidth = ($scope.extent[1] - $scope.extent[0]) / $scope.noBins;
       $scope.group = $scope.dimension.group(function(d) {
-        return Math.floor(d / $scope.binWidth) * $scope.binWidth;
+        return d3.round( Math.floor(d / $scope.binWidth) * $scope.binWidth, 3);
       });
 
       if( $scope.window.somSpecial ) {
@@ -91,7 +100,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
         $scope.reduced = $scope.dimensionService.getReducedGroupHistoDistributions($scope.group, $scope.window.variables.x);
 
         $scope.totalGroup = $scope.totalDimension.group(function(d) {
-          return Math.floor(d / $scope.binWidth) * $scope.binWidth;
+          return d3.round(Math.floor(d / $scope.binWidth) * $scope.binWidth, 3);
         });
         // total
         $scope.totalReduced = $scope.primary.getReducedGroupHisto($scope.totalGroup, $scope.window.variables.x);

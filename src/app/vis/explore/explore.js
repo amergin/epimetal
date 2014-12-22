@@ -107,7 +107,7 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
     'SFAtoFA'
     ];
 
-    var inputPromise = DatasetFactory.getVariableData(defaultVariables);
+    var inputPromise = DatasetFactory.getVariableData(defaultVariables, $scope.windowHandler);
 
     inputPromise.then( function() {
 

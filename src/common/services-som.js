@@ -59,24 +59,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
         });
       }
 
-      var samples = getSamples();
-      var DatasetFactory = $injector.get('DatasetFactory');
-      var DimensionService = $injector.get('DimensionService');
-      var primary = DimensionService.getPrimary();
-
-
-      if( samples.length < 10 ) {
-        defer.reject('Under 10 samples provided for SOM computation.');
-      }
-      else if( !_.isUndefined(that.som.bmus) && primary.getSampleDimension().top(Infinity).length == that.som.bmus.length ) {
-        console.log('SOM already computed');
-        defer.resolve('SOM already computed');
-      }
-      else if( service.somReady(samples) ) {
-        console.log('SOM already computed');
-        defer.resolve('SOM already computed');
-      }
-      else {
+      function doCall(samples) {
         NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'success');
 
         var selection = that.somSelection.variables;
@@ -120,7 +103,30 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
             defer.resolve(som);
           }
         };
+      }
 
+      var samples = getSamples();
+      var DatasetFactory = $injector.get('DatasetFactory');
+      var DimensionService = $injector.get('DimensionService');
+      var primary = DimensionService.getPrimary();
+
+
+      if( samples.length < 10 ) {
+        defer.reject('Under 10 samples provided for SOM computation.');
+      }
+      else if( service.somReady(samples) ) {
+        console.log('SOM already computed');
+        defer.resolve('SOM already computed');        
+      }
+      else {
+        var primarySamplesCount = primary.getSize() > 0 ? primary.getSampleDimension().groupAll().reduceCount().value() : 0;
+        var bmuCount = that.som.bmus ? that.som.bmus.length : 0;
+        if( primarySamplesCount == bmuCount ) {
+          console.log('SOM already computed');
+          defer.resolve('SOM already computed');
+        } else {
+          doCall(samples);
+        }
       }
       return defer.promise;
     };

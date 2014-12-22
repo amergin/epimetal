@@ -32,6 +32,7 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
 
     $rootScope.$on('tab.changed', function(event, tabName) {
       _activeDimensionService = DimensionService.get(tabName);
+      service.updateCircleFilters();
     });
 
     service.canEdit = function() {

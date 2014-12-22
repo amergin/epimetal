@@ -33,7 +33,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         var parent = _.last( re.exec(current) );
 
         if( $injector.get('DimensionService').getPrimary().getName() == that.getName() ) { //parent ) {
-          return that.getSampleDimension().groupAll().value();
+          return crossfilterInst.size() > 0 ? that.getSampleDimension().groupAll().value() : 0;
         }
         else {
           return crossfilterInst.size();
@@ -44,6 +44,10 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
 
       this.getName = function() {
         return _name;
+      };
+
+      this.getSize = function() {
+        return crossfilterInst.size();
       };
 
       // return one dimension. 
@@ -252,7 +256,6 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             .value();
 
             if( _.isNaN( d.x ) || _.isNaN( d.y ) ) {
-              console.log("!! nan encountered");
               return false;
             }
 
@@ -269,7 +272,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         if( _.isUndefined( dimensions['_samples'] ) ) {
           dimensions['_samples'] = {
             count: 1,
-            dimension: crossfilterInst.dimension( function(d) { return d.dataset + "|" + d.id; } )
+            dimension: crossfilterInst.dimension( function(d) { return d.dataset + "|" + d.sampleid; } )
           };
         }
         else {
@@ -484,44 +487,27 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         var reduceAdd = function (p, v) {
           p.n = p.n + 1;
           var varValue = +v.variables[variable];
-          var delta;
-          if( !_.isNaN(varValue) ) { // && _.isNumber(varValue) ) {
-            delta = varValue - p.mean;
-            // var delta = varValue - p.mean;
+          if( !_.isNaN(varValue) ) {
+            var delta = varValue - p.mean;
             if( delta === 0 || p.n === 0 ) { return p; }
             p.mean = p.mean + delta/p.n;
           }
           else {
             // console.log("ELSE!", varValue);
           }
-          if( p.n === 0 || _.isNull(p.mean) ) {
-            console.log("debug");
-          }
-          // console.log("reduceAdd", p.n);
-          // console.log("varValue = ", varValue, "delta = ", delta, "p = ", JSON.stringify(p));            
           return p;
         };
 
         var reduceRemove = function (p, v) {
           p.n = p.n - 1;
           var varValue = +v.variables[variable];
-          var delta;
-          if( p.n === 0 ) {
-            console.log("predebug");
-          }
           if( !_.isNaN(varValue) ) { //_.isNumber(varValue) ) {
-            delta = varValue - p.mean;
-            // var delta = varValue - p.mean;
+            var delta = varValue - p.mean;
             if( delta === 0 || p.n === 0 ) { return p; }            
             p.mean = p.mean - delta/p.n;
           } else {
             // console.log("ELSE!", varValue);
           }
-          if( p.n === 0 || _.isNull(p.mean) ) {
-            console.log("debug");
-          }
-          // console.log("reduceRemove", p.n);
-          // console.log("varValue = ", varValue, "delta = ", delta, "p = ", JSON.stringify(p));          
           return p;
         };
 
@@ -634,40 +620,19 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
       //   return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
       // };
 
-      this.getReducedGroupHistoDistributions = function (dimensionGroup) {
-        var SOMService = $injector.get('SOMService');
-        var totalBmus = SOMService.getBMUs();
-        var circleFilters = $injector.get('FilterService').getSOMFilters();
+      this.getReducedGroupHistoDistributions = function (dimensionGroup, variable) {
+        var FilterService = $injector.get('FilterService');
+        var circleFilters = FilterService.getSOMFilters();
         var groupNames = _.map( circleFilters, function(cf) { return cf.id(); } );
-        var circleFiltersById = _.object( groupNames, circleFilters );
-
-        var inWhatCircles = function(sample) {
-          var includedInCircle = function(sample, circleId) {
-            var circleBMUs = circleFiltersById[circleId];
-            // var circleBMUs = circleFilters[circleId];
-            var bmu = sample.bmus;
-            return _.any( circleBMUs.hexagons(), function(b) { return b.j === (bmu.x-1) && b.i === (bmu.y-1); } );
-          };
-
-          // should usually be just one name, but it's possible that in several
-          var names = [];
-
-          for( var i = 0; i < groupNames.length; ++i ) {
-            var name = groupNames[i];
-            if( includedInCircle(sample, name) ) {
-              names.push(name);
-              // return name;
-            }
-          }
-          return names;
-          // return '';
-        };
-
 
         var reduceAdd = function (p, v) {
+          var variableVal = +v.variables[variable];
+          if( _.isNaN(variableVal) ) {
+            return p;
+          }
+
           _.each( groupNames, function(name) {
-            var inGroups = inWhatCircles(v);
-            // var inGroup = inWhatCircle(v);
+            var inGroups = FilterService.inWhatCircles(v.bmus);
             if( inGroups.length === 0 ) {
               // pass
             }
@@ -683,10 +648,16 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         };
 
         var reduceRemove = function (p, v) {
+          var variableVal = +v.variables[variable];
+          if( _.isNaN(variableVal) ) {
+            return p;
+          }
+
           if( _.isUndefined(v.groups) ) {
             // console.log("WARNING, GROUP NOT DEFINED", v, p);
           }
-          var inGroups = inWhatCircles(v);
+          // compute again as a precaution
+          var inGroups = FilterService.inWhatCircles(v.bmus);
           _.each( inGroups, function(name) {
             p.counts[name] = p.counts[name] - 1;
           });

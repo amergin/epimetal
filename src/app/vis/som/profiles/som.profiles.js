@@ -31,6 +31,8 @@ mod.controller('SOMProfilesMenuController', ['$scope', '$templateCache', '$rootS
 
     $scope.$watch('profile', function(profile) {
       if( _.isEmpty(profile) ) { return; }
+      var activeSampleSize = $scope.windowHandler.getDimensionService().getSampleDimension().group().reduceCount().size();
+      if( activeSampleSize === 0 ) { return; }
       PlotService.drawProfileHistogram({ variables: { x: profile.variables } }, $scope.windowHandler);
     });
   }

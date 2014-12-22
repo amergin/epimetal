@@ -137,8 +137,8 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
   }
 ]);
 
-mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$rootScope', 'bottomWindowHandler', 'DatasetFactory', 'DimensionService', 'SOMService', 'PlotService',
-  function SOMBottomContentController($scope, $templateCache, $rootScope, bottomWindowHandler, DatasetFactory, DimensionService, SOMService, PlotService) {
+mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$rootScope', 'bottomWindowHandler', 'DatasetFactory', 'DimensionService', 'SOMService', 'PlotService', 'NotifyService',
+  function SOMBottomContentController($scope, $templateCache, $rootScope, bottomWindowHandler, DatasetFactory, DimensionService, SOMService, PlotService, NotifyService) {
     $scope.windowHandler = bottomWindowHandler;
     $scope.windows = $scope.windowHandler.get();
 
@@ -154,12 +154,16 @@ mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$root
       var compareAndRestart = function() {
           var primary  = DimensionService.getPrimary();
           var current = $scope.windowHandler.getDimensionService();
-          if( !SOMService.somReady() || !DimensionService.equal( primary, current ) ) {
+          if( !DimensionService.equal( primary, current ) ) {
             console.log("dimension instances not equal, need to restart");
             DimensionService.restart( current, primary );
-            SOMService.getSOM().then( function() {
+            SOMService.getSOM().then( function succFn() {
               $scope.checkDefaults();
+            }, function errFn(msg) {
+              NotifyService.addTransient('Error', msg, 'warning');
             });
+          } else {
+            console.log("dimension instances equal, do not restart");
           }
       };
 

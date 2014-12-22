@@ -264,7 +264,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
     // 1. select three datasets
     // 2. select varA for histogram
     // 3. plot -> this is called
-    service.getVariableData = function(variables) {
+    service.getVariableData = function(variables, windowHandler) {
       var defer = $q.defer();
       var activeSets = service.activeSets();
       var dataWasAdded = false;
@@ -291,12 +291,13 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
             }
 
             _.each(variables, function(vari) {
-              var dataAdded;
-              _.each( _.values( DimensionService.getAll()), function(dimSer) {
-                if( dimSer.instance.addVariableData(vari, setSamples) ) {
-                  dataAdded = true;
-                }
-              });
+              // var dataAdded;
+              // _.each( _.values( DimensionService.getAll()), function(dimSer) {
+              //   if( dimSer.instance.addVariableData(vari, setSamples) ) {
+              //     dataAdded = true;
+              //   }
+              // });
+              var dataAdded = windowHandler.getDimensionService().addVariableData(vari, setSamples);
               // var dataAdded = that.dimensionService.addVariableData(vari, setSamples);
               if (dataAdded) {
                 dataWasAdded = true;
@@ -307,9 +308,11 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
           if (dataWasAdded) {
 
-              _.each( _.values( DimensionService.getAll()), function(dimSer) {
-                dimSer.instance.rebuildInstance();
-              });
+            windowHandler.getDimensionService().rebuildInstance();
+
+              // _.each( _.values( DimensionService.getAll()), function(dimSer) {
+              //   dimSer.instance.rebuildInstance();
+              // });
 
             // rebuilds crossfilter instance
             // that.dimensionService.rebuildInstance();

@@ -149,6 +149,12 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
       get: function(name) {
         return _handlers[name];
       },
+      getPrimary: function(name) {
+        return _.chain(_handlers).values().find( function(h) {
+          var DimensionService = $injector.get('DimensionService');
+          return h.getDimensionService() == DimensionService.getPrimary();
+        }).value();
+      },
       getAll: function() {
         return _handlers;
       },

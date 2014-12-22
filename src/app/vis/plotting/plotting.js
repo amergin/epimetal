@@ -14,8 +14,8 @@ var visu = angular.module('plotter.vis.plotting',
   ]);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'UrlHandler', 'NotifyService', 'SOMService',
-  function($injector, DimensionService, DatasetFactory, UrlHandler, NotifyService, SOMService) {
+visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'UrlHandler', 'NotifyService', 'SOMService', '$q',
+  function($injector, DimensionService, DatasetFactory, UrlHandler, NotifyService, SOMService, $q) {
 
     this.drawScatter = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
@@ -28,7 +28,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
 
       NotifyService.addSpinnerModal('Loading...');
 
-      var plottingDataPromise = DatasetFactory.getVariableData([config.variables.x, config.variables.y]);
+      var plottingDataPromise = DatasetFactory.getVariableData([config.variables.x, config.variables.y], windowHandler);
       plottingDataPromise.then(function successFn(res) {
           // draw the figure
           draw(config, windowHandler);
@@ -58,8 +58,18 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
 
       NotifyService.addSpinnerModal('Loading...');//, _callback);
 
-      var plottingDataPromise = DatasetFactory.getVariableData([config.variables.x]);
-      plottingDataPromise.then(function successFn(res) {
+      var promises = [];
+      var plottingDataPromise = DatasetFactory.getVariableData([config.variables.x], windowHandler);
+      promises.push(plottingDataPromise);
+
+      if( config.somSpecial ) {
+        // need from primary as well
+        var primaryHandler = windowHandler.getService().getPrimary();
+        var primaryPromise = DatasetFactory.getVariableData([config.variables.x], primaryHandler);
+        promises.push(primaryPromise);
+      }
+
+      $q.all(promises).then(function successFn(res) {
           // draw the figure
           NotifyService.closeModal();
           draw(config, windowHandler);
@@ -84,7 +94,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
       };
 
       NotifyService.addSpinnerModal('Loading...');//, _callback);
-      var plottingDataPromise = DatasetFactory.getVariableData(config.variables.x);
+      var plottingDataPromise = DatasetFactory.getVariableData(config.variables.x, windowHandler);
       plottingDataPromise.then(function successFn(res) {
           // draw the figure
           NotifyService.closeModal();
@@ -110,8 +120,13 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
       };
 
       NotifyService.addSpinnerModal('Loading...');//, _callback);
-      var plottingDataPromise = DatasetFactory.getVariableData(config.variables.x);
-      plottingDataPromise.then(function successFn(res) {
+      // will need the data for the SOM dimensionservice 
+      var promiseSOM = DatasetFactory.getVariableData(config.variables.x, windowHandler);
+      // also for primary, for computing std etc. values
+      var primaryHandler = windowHandler.getService().getPrimary();
+      var promisePrimary = DatasetFactory.getVariableData(config.variables.x, primaryHandler);
+
+      $q.all([promiseSOM, promisePrimary]).then(function successFn(res) {
           // draw the figure
           NotifyService.closeModal();
           draw(config, windowHandler);
@@ -124,7 +139,6 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           level = 'danger';
           NotifyService.addTransient(title, message, level);
         });
-
     };    
 
     this.drawSOM = function(config, windowHandler) {
@@ -135,6 +149,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         UrlHandler.createWindow( 'somplane', config );
       };
 
+      NotifyService.addTransient('', 'Starting plane computation', 'info');
       SOMService.getPlane(config.variables.x).then(
         function succFn(res) {
           NotifyService.addTransient('Plane computation ready', 'The requested new plane has now been drawn.', 'success');

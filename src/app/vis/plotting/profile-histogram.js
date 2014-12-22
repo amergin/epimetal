@@ -16,7 +16,7 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
       // only redraw if the dashboard is visible
       if( $state.current.name === $scope.window.handler.getName() ) {
         $scope.compute();
-        $scope.histogram.render();
+        $scope.histogram.redraw();
       }
     };
 
@@ -28,7 +28,9 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
             $scope.redraw();
           }
           else {
-            $scope.histogram.redraw();
+            if( $scope.histogram ) {
+              $scope.histogram.redraw();
+            }
             //$scope.histogram.render();
           }
         });
@@ -56,26 +58,27 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
       };
     };
 
+    $scope.dimension = $scope.dimensionService.getVariableBMUDimension();
+    $scope.groups = {};
+
     $scope.compute = function() {
-      var inWhatCircles = function(d) {
-        if( !_.isUndefined(d.bmu) ) {
-          var ret = [];
-          _.each( FilterService.getSOMFilters(), function(circle) {
-            if( circle.contains(d.bmu) ) {
-              ret.push(circle.id());
-            }
-          });
-          return ret;
-        } else {
-          return [];
-        }
-      };
+      // var inWhatCircles = function(d) {
+      //   if( !_.isUndefined(d.bmu) ) {
+      //     var ret = [];
+      //     _.each( FilterService.getSOMFilters(), function(circle) {
+      //       if( circle.contains(d.bmu) ) {
+      //         ret.push(circle.id());
+      //       }
+      //     });
+      //     return ret;
+      //   } else {
+      //     return [];
+      //   }
+      // };
 
       // notice that you CANNOT use SOMDimension here! it will not apply the filter on its dimension
       // to restrict out to proper amount of samples!
-      $scope.dimension = $scope.dimensionService.getVariableBMUDimension();
-      delete $scope.groups;
-      $scope.groups = {};
+
 
       _.each( $scope.window.variables.x, function(variable) {
 
@@ -223,9 +226,10 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         .brushOn(false)
         .renderTitle(false)
         .colors(config.colorScale)
-        .onClick( function(chart) {
-          console.log("clicked", chart, arguments);
-        })
+        // .onClick( function(chart) {
+        //   console.log("clicked", chart, arguments);
+        //   return null;
+        // })
         .title(function(d) {
           var variable = d.key.variable;
           var totalVal = config.totalReduced.value()[variable];
@@ -237,7 +241,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
           'Variable: ' + variable,
           'Mean of ' + variable + ": " + d3.round(value.mean, 3),
           'STD (all samples): ' + totalStd,
-          'Sample count : ' + d.value.n || 0
+          'Sample count: ' + d.value.n || 0
           ].join("\n");
         })
         .x( d3.scale.ordinal().domain(labels) )
@@ -301,10 +305,19 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
 
       $scope.$parent.element = ele;
 
-      $scope.config = $scope.getConfig(ele);
+      var config = {
+        dimension: $scope.dimension,
+        element: ele,
+        groups: $scope.groups,
+        groupNames: $scope.window.variables.x,
+        colorScale: $scope.colorScale,
+        filter: $scope.filterOnSet,
+        filterEnabled: $scope.window.filterEnabled,
+        totalReduced: $scope.totalReduced
+      };
 
       $timeout( function() {
-        createSVG($scope, $scope.config);
+        createSVG($scope, config);
       });
 
     }
