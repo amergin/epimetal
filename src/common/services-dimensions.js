@@ -719,11 +719,24 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
       // receives new variable data
       this.addVariableData = function (variable, samples) {
 
+        var addSamples;
+
+        // workaround: for secondary, don't add samples not in your scope:
+        if( _service.getPrimary() !== that ) {
+          addSamples = _.filter(samples, function(s) { 
+            var id = _getSampleKey(s.dataset, s.sampleid);
+            return currSamples[id];
+          });
+        }
+        else {
+          addSamples = samples;
+        }
+
         var dataWasAdded = true;
 
         usedVariables[variable] = true;
 
-        _.every(samples, function (samp) {
+        _.every(addSamples, function (samp) {
 
           var key = _getSampleKey(samp.dataset, samp.sampleid);
 
@@ -842,7 +855,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
     } // DimensionInstance
 
 
-    return {
+    var _service = {
       create: function(name, primary) {
         var instance = new DimensionInstance(name);
         _instances[name] = {
@@ -885,6 +898,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
       }
 
     };
+    return _service;
 
   }
   ]);
