@@ -104,7 +104,7 @@
         controller: 'ExploreController',
         templateUrl: 'vis/explore/explore.tpl.html'
       },
-      'submenu': {
+      'submenu-explore@vis': {
         controller: 'ExploreMenuCtrl',
         templateUrl: 'vis/explore/explore.submenu.tpl.html'
       }
@@ -120,7 +120,7 @@
     // abstract: true,
     data: { pageTitle: 'Self-organizing maps | Visualization' },
     resolve: {
-      // bottom portion of the page only!      
+      // bottom portion of the page only!
       bottomWindowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
         var handler = WindowHandler.create('vis.som');
         handler.setDimensionService( DimensionService.get('vis.som') );
@@ -128,7 +128,7 @@
       }]
     },
     views: {
-      'submenu@vis': {
+      'submenu-som@vis': {
         templateUrl: 'vis/som/som.submenu.tpl.html'
       },
       'som@vis': {
@@ -208,12 +208,12 @@
     // parent: 'vis',
     data: { pageTitle: 'Regression analysis | Visualization' },
     views: {
-      'submenu@vis': {
-        controller: 'RegressionController',
+      'submenu-regression@vis': {
         templateUrl: 'vis/regression/regression.submenu.tpl.html'
       },
       'regression@vis': {
-        templateUrl: 'vis/regression/regression.tpl.html'
+        templateUrl: 'vis/regression/regression.tpl.html',
+        controller: 'RegressionController'
       }
     },
     sticky: true,

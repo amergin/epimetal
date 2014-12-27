@@ -45,18 +45,6 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
       }
     });
 
-    $scope.getConfig = function(ele) {
-      return {
-        dimension: $scope.dimension,
-        element: $scope.$parent.element || ele,
-        groups: $scope.groups,
-        groupNames: $scope.window.variables.x,
-        colorScale: $scope.colorScale,
-        filter: $scope.filterOnSet,
-        filterEnabled: $scope.window.filterEnabled,
-        totalReduced: $scope.totalReduced
-      };
-    };
 
     $scope.dimension = $scope.dimensionService.getVariableBMUDimension();
     $scope.groups = {};
@@ -125,7 +113,6 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
       $scope.totalDimension = DimensionService.getPrimary().getSampleDimension();
       $scope.totalGroup = $scope.totalDimension.groupAll();
       $scope.totalReduced = DimensionService.getPrimary().getReducedSTD( $scope.totalGroup, $scope.window.variables.x );
-      // $scope.config = $scope.getConfig();
 
       // _.each($scope.barCharts, function(chart, variable) {
       //   var group = $scope.groups[variable];

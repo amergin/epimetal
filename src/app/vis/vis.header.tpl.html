@@ -35,6 +35,9 @@
 
 
 <div id="header-submenu" ui-view="submenu" class="am-fade-and-slide-top">
+    <div ui-view="submenu-explore" ng-show="$state.includes('vis.explore')"></div>
+    <div ui-view="submenu-som" ng-show="$state.includes('vis.som')"></div>
+    <div ui-view="submenu-regression" ng-show="$state.includes('vis.regression')"></div>
 </div>
 </nav>
 
