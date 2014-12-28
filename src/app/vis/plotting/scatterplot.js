@@ -14,7 +14,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
     $scope.$parent.showResetBtn = false;
     $scope.$parent.headerText = ['Scatter plot of', $scope.window.variables.x + ", " + $scope.window.variables.y, ''];
 
-    var _calcCanvasAttributes = function() {
+    $scope._calcCanvasAttributes = function() {
       $scope.reduced = $scope.dimensionService.getReduceScatterplot($scope.dimension.group());
 
       $scope.sets = DatasetFactory.activeSets();
@@ -34,7 +34,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
     $scope._createCanvas = function(set, zIndex) {
       var name = set.getName();
       var data = $scope.reduced.all().filter(function(d) {
-        return d.value.dataset === name;
+        return (d.value.counts[name] > 0) && d.key.valueOf() >= constants.legalMinValue;
       });
       var color = $scope.window.pooled ? 'black' : set.getColor();
       var canvas = $scope.createCanvas(
@@ -61,7 +61,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
     $scope.redrawAll = function() {
       console.log("redraw scatter plot");
-      _calcCanvasAttributes();
+      $scope._calcCanvasAttributes();
 
       _.each($scope.sets, function(set, ind) {
         // remove previous canvas, if any
@@ -167,7 +167,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
           ctx.translate(trans.x, trans.y);
           ctx.rotate(rotate);
           ctx.fillStyle = "black";
-          ctx.font = "12px sans-serif";
+          ctx.font = "11px sans-serif";
           ctx.fillText(text, start.x, start.y);
           ctx.restore();
         }
@@ -176,7 +176,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
           function addTickText(coord, text) {
             ctx.fillStyle = "black";
             ctx.textBaseline = "middle";
-            ctx.font = "9px sans-serif";
+            ctx.font = "11px sans-serif";
             ctx.fillText(text, coord.x, coord.y);
           }
 
@@ -285,9 +285,9 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
       // adjust canvas size
       var canvas = d3.select(element[0]).select("#" + dataset) //'canvas')
-.attr("width", w + "px")
-.attr("height", h + "px")
-.style('z-index', zIndex);
+      .attr("width", w + "px")
+      .attr("height", h + "px")
+      .style('z-index', zIndex);
 
       // rendering context
       ctx = canvas[0][0].getContext('2d');
@@ -397,7 +397,7 @@ visu.directive('scatterplot', ['$timeout', '$rootScope',
                 // new, not drawn before
 
                 // refresh calculations
-                _calcCanvasAttributes();
+                $scope._calcCanvasAttributes();
                 // add canvas as 'layer'
                 $scope._createCanvas(dset, ++$scope.zIndexCount);
               } else {

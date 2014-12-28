@@ -96,10 +96,11 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
             // SOM comp is OK
             NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
             var som = result.data;
-            $rootScope.$emit('dataset:SOMUpdated', result.data);
 
             that.dimensionService.addBMUs(som.id, som.bmus);
             that.som = som;
+            // this will force existing planes to redraw
+            $rootScope.$emit('dataset:SOMUpdated', som);
             defer.resolve(som);
           }
         };

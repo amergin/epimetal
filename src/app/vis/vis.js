@@ -282,6 +282,8 @@
 
     $scope.dimensionService = DimensionService.getPrimary();
 
+
+    // for debugging
     $scope.usedVariables = $scope.dimensionService.getUsedVariables();
     $scope.activeVariables = $scope.dimensionService.getDimensions();
 

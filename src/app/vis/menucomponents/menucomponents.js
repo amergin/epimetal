@@ -43,8 +43,6 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
 
           // important!
           WindowHandler.reRenderVisible({ compute: true, dset: set, action: res });
-          // dc.redrawAll(constants.groups.scatterplot);
-          // dc.redrawAll(constants.groups.heatmap);
         }
         else if( res === 'empty' ) {
           DatasetFactory.toggle(set);

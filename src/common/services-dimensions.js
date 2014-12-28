@@ -32,14 +32,12 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         var current = $state.current.name;
         var parent = _.last( re.exec(current) );
 
-        if( $injector.get('DimensionService').getPrimary().getName() == that.getName() ) { //parent ) {
+        if( $injector.get('DimensionService').getPrimary().getName() == that.getName() ) {
           return crossfilterInst.size() > 0 ? that.getSampleDimension().groupAll().value() : 0;
         }
         else {
           return crossfilterInst.size();
         }
-        // return String( crossfilterInst.size() ) + "|" + String( that.getSampleDimension().groupAll().value() );
-        // return that.getSampleDimension().groupAll().value();
       };
 
       this.getName = function() {
@@ -71,7 +69,8 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             });
             dimensions[variable] = {
               count: 1,
-              dimension: retDimension
+              dimension: retDimension,
+              filterFn: null
             };
           } else {
             // already defined earlier
@@ -91,91 +90,15 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
 
 
       this.getDatasetDimension = function() {
-        return dimensions['_dataset'];
+        return dimensions['_dataset'].dimension;
       };
 
-      this.getVariableBMUDimension = function(force) {
+      this.getVariableBMUDimension = function() {
         var key = "variable|" + "bmu";
-        var FilterService = $injector.get('FilterService');
-        if( force ) {
-          console.log("forced");
-          if( !_.isUndefined( dimensions[key].dimension ) ) {
-            console.log("disposed");
-            dimensions[key].dimension.dispose();
-          }
-          console.log("new one created");
-          dimensions[key].dimension = crossfilterInst.dimension( function(d) {
-            return {
-              bmu: d.bmus,
-              circles: function(d) {
-                return FilterService.inWhatCircles(this.bmu);
-              },
-              valueOf: function() {
-                return String(this.circles());
-              }
-            };
-
-
-            // TOIMII:
-            // return {
-            //   circles: FilterService.inWhatCircles(d.bmus),
-            //   valueOf: function() {
-            //     return String(this.circles);
-            //   }
-            // };
-
-              // return {
-              //   x: d['bmus'].x,
-              //   y: d['bmus'].y,
-              //   valueOf: function() {
-              //     // IMPORTANT!
-              //     return d['bmus'].x + "|" + d['bmus'].y || String(constants.nanValue) + "|" + String(constants.nanValue);
-              //     //return ( d['bmus'].x + d['bmus'].y ) || constants.nanValue;
-              //   }
-              // };
-
-          });
-        }
-        else if( _.isUndefined( dimensions[key] ) ) {
+        if( _.isUndefined( dimensions[key] ) ) {
           dimensions[key] = {
             count: 1,
             dimension: crossfilterInst.dimension( function(d) {
-              // return {
-              //   bmu: d.bmus,
-              //   circles: function(d) {
-              //     return FilterService.inWhatCircles(this.bmu);
-              //   },
-              //   valueOf: function() {
-              //     return String(this.circles());
-              //   }
-              // };
-
-              // return {
-              //   circles: FilterService.inWhatCircles(d.bmus),
-              //   valueOf: function() { return String(this.circles); }
-              // };
-              // return {
-              //   circles: function() {
-              //     return FilterService.inWhatCircles(d.bmus);
-              //   },
-              //   valueOf: function() {
-              //     // MUST be a string!
-              //     return  d.bmus.x + "|" + d.bmus.y; // String(this.circles());
-              //   }
-              // };
-
-              // return {
-              //   bmu: d.bmus,
-              //   circles: FilterService.inWhatCircles(d.bmus),
-              //   // circles: function() {
-              //   //   return FilterService.inWhatCircles(this.bmu);
-              //   // },
-              //   valueOf: function() {
-              //     return this.circles; //String(this.circles());
-              //   }
-              // };
-
-
               return {
                 bmu: d.bmus,
                 valueOf: function() {
@@ -198,12 +121,13 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
           dimensions[somKey] = {
             count: 1,
             filters: {},
+            filterFn: null,
             dimension: crossfilterInst.dimension( function(d) { 
               if( _.isEmpty( d['bmus'] ) ) {
                 return {
                   x: NaN,
                   y: NaN,
-                  valueOf: function() { return String(constants.nanValue); } //constants.nanValue; }
+                  valueOf: function() { return String(constants.nanValue); }
                 };
               }
               return {
@@ -211,8 +135,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
                 y: d['bmus'].y,
                 valueOf: function() {
                   // IMPORTANT!
-                  return d['bmus'].x + "|" + d['bmus'].y || String(constants.nanValue) + "|" + String(constants.nanValue);
-                  //return ( d['bmus'].x + d['bmus'].y ) || constants.nanValue;
+                  return ( d['bmus'].x || String(constants.nanValue) ) + "|" + ( d['bmus'].y || String(constants.nanValue) );
                 }
               };
             })
@@ -228,12 +151,13 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         if( _.isEmpty( dimensions[somKey].filters ) ) {
           // all filters have been removed, remove the filter function
           dimensions[somKey].dimension.filterAll();
+          dimensions[somKey].filterFn = null;
           return true;
         }
         return false;
       };
 
-      this.updateSOMFilter = function(circleId, content) { //somId, circleId, content) {
+      this.updateSOMFilter = function(circleId, content) {
         var somKey = "som"; // + somId;
         if( !dimensions[somKey].filters[circleId] ) {
           dimensions[somKey].filters[circleId] = [];
@@ -248,7 +172,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
           // pass
         }
         else {
-          dimensions[somKey].dimension.filterFunction( function(d) {
+          var filterFunction = function(d) {
             var combined = _.chain(dimensions[somKey].filters)
             .values()
             .flatten()
@@ -263,21 +187,15 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
               return ( (h.i === (d.y-1) ) && (h.j === (d.x-1) ) );
             });
 
-          });
+          };
+
+          dimensions[somKey].dimension.filterFn = filterFunction;
+          dimensions[somKey].dimension.filterFunction( filterFunction );
         }
         $rootScope.$emit('dimension:SOMFilter');
       };
 
       this.getSampleDimension = function() {
-        if( _.isUndefined( dimensions['_samples'] ) ) {
-          dimensions['_samples'] = {
-            count: 1,
-            dimension: crossfilterInst.dimension( function(d) { return d.dataset + "|" + d.sampleid; } )
-          };
-        }
-        else {
-          ++dimensions['_samples'].count;
-        }
         return dimensions['_samples'].dimension;
       };
 
@@ -379,15 +297,15 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
 
         var reduceAdd = function (p, v) {
           p.counts[v.dataset] = p.counts[v.dataset] + 1;
-          p.dataset = v.dataset;
-          p.sampleid = v.sampleid;
+          // p.dataset = v.dataset;
+          // p.sampleid = v.sampleid;
           return p;
         };
 
         var reduceRemove = function (p, v) {
           p.counts[v.dataset] = p.counts[v.dataset] - 1;
-          p.dataset = v.dataset;
-          p.sampleid = v.sampleid;
+          // p.dataset = v.dataset;
+          // p.sampleid = v.sampleid;
           return p;
         };
 
@@ -583,6 +501,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
       this.getReducedGroupHistoDistributions = function (dimensionGroup, variable) {
 
         var bmuStrId = function(bmu) {
+          if( !bmu || !bmu.x || !bmu.y ) { return constants.nanValue + "|" + constants.nanValue; }
           return bmu.x + "|" + bmu.y;
         };
 
@@ -696,10 +615,20 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
       };
 
       var createDatasetDimension = _.once( function () {
-        dimensions['_dataset'] = crossfilterInst.dimension(function (s) {
-          return s.dataset;
-        });
-      } );
+        dimensions['_dataset'] = {
+          dimension: crossfilterInst.dimension(function(s) {
+            return s.dataset;
+          }),
+          filterFn: null
+        };
+      });
+
+      var createSampleDimension = _.once( function() {
+        dimensions['_samples'] = {
+          dimension: crossfilterInst.dimension( function(d) { return d.dataset + "|" + d.sampleid; } ),
+          filterFn: null
+        };
+      });
 
       var createCrossfilterInst = _.once( function() {
         crossfilterInst = crossfilter(_.values(currSamples));
@@ -711,29 +640,59 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
 
       // rebuilds crossfilter instance (called after adding new variable data)
       this.rebuildInstance = function () {
+        // see http://stackoverflow.com/a/23520094/1467417 for principle
+        var removeFilters = function() {
+          _.chain(dimensions)
+          .values()
+          .each(function(obj) {
+            // remove current filter
+            obj.dimension.filter(null);
+          })
+          .value();
+        };
+
+        var addExistingFilters = function() {
+          _.chain(dimensions)
+          .values()
+          .each(function(obj) {
+            var filterFn = obj.filterFn;
+            if( !_.isNull(filterFn) ) {
+              obj.dimension.filter(filterFn);
+            }
+          })
+          .value();
+        };
+
+
         console.log("Crossfilter instance rebuild called on", this.getName());
-        crossfilterInst.remove( function() { return false; } );
+        removeFilters();
+        crossfilterInst.remove();//( function() { return false; } );
         crossfilterInst.add(_.values(currSamples));
-        $rootScope.$emit('dimension:crossfilter');
+        $injector.get('WindowHandler').reRenderVisible({ compute: true });
+        // $rootScope.$emit('dimension:crossfilter');
+        addExistingFilters();
       };
 
       this.updateDatasetDimension = function () {
         var DatasetFactory = $injector.get('DatasetFactory');
         var activeSets = DatasetFactory.activeSets();
 
-        dimensions['_dataset'].filterFunction(function (dsetName) {
+        var filterFunction = function (dsetName) {
           return _.any(activeSets, function (set) { 
             return set.getName() === dsetName; 
           });
-        });
+        };
+
+        dimensions['_dataset'].filterFn = filterFunction;
+        dimensions['_dataset'].dimension.filterFunction(filterFunction);
         $rootScope.$emit('dimension:dataset');
       };
 
-      this.deleteDimension = function(variable) {
-        if( _.isUndefined( dimensions[variable] ) ) { return; }
-        dimensions[variable].dispose();
-        delete dimensions[variable];
-      };
+      // this.deleteDimension = function(variable) {
+      //   if( _.isUndefined( dimensions[variable] ) ) { return; }
+      //   dimensions[variable].dispose();
+      //   delete dimensions[variable];
+      // };
 
       // important! these values are not *necessarily* the same as the ones
       // currently shown: Example:
@@ -756,8 +715,9 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
 
       this.clearFilters = function() {
         _.each( dimensions, function(val, key) {
-          if( key == '_dataset' ) { val.filterAll(); return; }
+          // if( key == '_dataset' ) { val.filterAll(); return; }
           val.dimension.filterAll();
+          val.filterFn = null;
         });
       };
 
@@ -778,6 +738,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
       // start by initializing crossfilter
       createCrossfilterInst();
       createDatasetDimension();
+      createSampleDimension();
       createSOMDimension();
 
       // HELPER FUNCTIONS
@@ -805,16 +766,6 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
       getAll: function() {
         return _instances;
       },
-      // compare: function(nameA, nameB) {
-      //   var a = _instances[nameA],
-      //   b = _instances[nameB];
-
-      //   if( !a || !b) {
-      //     throw "Invalid name(s) provided";
-      //   }
-
-      //   return _.isEqual( a.instance.getHash(), b.istance.getHash() );
-      // },
       getPrimary: function() {
         return _.chain(_instances)
         .values()

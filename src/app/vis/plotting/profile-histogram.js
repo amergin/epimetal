@@ -35,12 +35,6 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
             valueOf: function() {
               return d.valueOf();
             }
-            // circles: function() {
-            //   return FilterService.inWhatCircles(d.bmu);
-            // },
-            // valueOf: function() {
-            //   return d.valueOf() + String(this.circles());
-            // }
           };
         });
         $scope.groups[variable] = $scope.dimensionService.getReducedMean(group, variable);
@@ -103,6 +97,19 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
       };
     };
 
+    $scope.formGroups = function(groups) {
+      return {
+        'all': function() { 
+          return _.chain(groups)
+          .map(function(group, variable) {
+            return $scope.filterOnSet(group, variable).all();
+          })
+          .flatten()
+          .value();
+        }
+      };
+    };
+
   }
   ]);
 
@@ -160,42 +167,71 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
 
       };
 
-      var labels = getLabels();
-
       // 1. create composite chart
-      $scope.histogram = dc.compositeChart(config.element[0]) //, constants.groups.histogram)
-.dimension(config.dimension)
-.width(null)
-.height(null)
-.shareColors(true)
-.elasticY(true)
-.elasticX(true)
-.brushOn(false)
-.renderTitle(false)
-.colors(config.colorScale)
-.title(function(d) {
-  var variable = d.key.variable;
-  var totalVal = config.totalReduced.value()[variable];
-  var value = d.value.valueOf();
-  var totalStd = d3.round(totalVal.valueOf().stddev, 3);
-  var circle = d.key.circle;
-  return [
-  'Circle filter: ' + circle.name(),
-  'Variable: ' + variable,
-  'Mean of ' + variable + ": " + d3.round(value.mean, 3),
-  'STD (all samples): ' + totalStd,
-  'Sample count: ' + d.value.n || 0
-  ].join("\n");
-})
-.x( d3.scale.ordinal().domain(labels) )
-.xUnits(dc.units.ordinal)
-.margins({
-  top: 10,
-  right: 10,
-  bottom: 90,
-  left: 40
-})
-.renderlet( function(chart) {
+      $scope.histogram = dc.seriesChart(config.element[0])
+      .chart(dc.barChart)
+      .dimension(config.dimension)
+      .width(null)
+      .height(null)
+      //.shareColors(true)
+      .elasticY(true)
+      .elasticX(true)
+      .brushOn(false)
+      .renderTitle(false)
+      .colors(config.colorScale)
+      .title(function(d) {
+        var variable = d.key.variable;
+        var totalVal = config.totalReduced.value()[variable];
+        var value = d.value.valueOf();
+        var totalStd = d3.round(totalVal.valueOf().stddev, 3);
+        var circle = d.key.circle;
+        return [
+        'Circle filter: ' + circle.name(),
+        'Variable: ' + variable,
+        'Mean of ' + variable + ": " + d3.round(value.mean, 3),
+        'STD (all samples): ' + totalStd,
+        'Sample count: ' + d.value.n || 0
+        ].join("\n");
+      })
+      .x( d3.scale.ordinal().domain(config.groupNames) )
+      .xUnits(dc.units.ordinal)
+      .margins({
+        top: 10,
+        right: 10,
+        bottom: 90,
+        left: 40
+      })
+      .seriesAccessor( function(d) {
+        return d.key.variable;
+        // var circle = d.key.circle,
+        // variable = d.key.variable;
+        // return getLabel(variable, circle);
+      })
+      .seriesSort(d3.descending)
+      .valueSort(d3.descending)
+      .group(config.filter(config.groups))
+      .childOptions({
+        colorAccessor: function(d) {
+          return d.key.circle.id();
+        },
+        barPadding: 0.30
+      })
+      .valueAccessor(function(d) { // is y direction
+        // console.log("N=", d.value.n, JSON.stringify(d), " in group = ", getLabel(d.key.variable, d.key.circle) );
+        var variable = d.key.variable;//groupName;
+        var mean = d.value.mean;
+        var constant = 100;
+        var totalVal = config.totalReduced.value()[variable];
+        var totalStd = totalVal.valueOf().stddev;
+        var totalMean = totalVal.valueOf().mean;
+        return ( mean - totalMean ) / totalStd * constant; 
+      })
+      .keyAccessor(function(d) {
+        var circle = d.key.circle,
+        variable = d.key.variable;
+        return getLabel(variable, circle);
+      })
+      .renderlet( function(chart) {
           // rotate labels
           chart.selectAll('g.x text')
           .attr('transform', "rotate(-65)")
@@ -208,41 +244,46 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         // hide y axis
         // $scope.histogram.yAxis().ticks(0); //.tickFormat( function(v) { return ''; } );
 
-      // 2. for each of the additional stacks, create a child chart
-      _.each(config.groups, function(group, variable) {
-        var chart = dc.barChart($scope.histogram)
-        .centerBar(false)
-        .xUnits(dc.units.ordinal)
-        .x( d3.scale.ordinal().domain(labels))
-        .barPadding(0.15)
-        .colorAccessor( function(d) {
-          return d.key.circle.id();
-        })
-        .brushOn(false)
-        .dimension(config.dimension)
-        .group(config.filter(group, variable), variable)
-          .valueAccessor(function(d) { // is y direction
-            // console.log("N=", d.value.n, JSON.stringify(d), " in group = ", getLabel(d.key.variable, d.key.circle) );
-            var mean = d.value.mean;
-            var constant = 100;
-            var totalVal = config.totalReduced.value()[variable];
-            var totalStd = totalVal.valueOf().stddev;
-            var totalMean = totalVal.valueOf().mean;
-            return ( mean - totalMean ) / totalStd * constant; 
-          })
-          .keyAccessor(function(d) {
-            var circle = d.key.circle,
-            variable = d.key.variable;
-            return getLabel(variable, circle);
-          });
+      // // 2. for each of the additional stacks, create a child chart
+      // _.each(config.groups, function(group, variable) {
+      //   var chart = dc.barChart($scope.histogram)
+      //   .centerBar(false)
+      //   .xUnits(dc.units.ordinal)
+      //   .x( d3.scale.ordinal().domain(labels))
+      //   .barPadding(0.15)
+      //   .colorAccessor( function(d) {
+      //     return d.key.circle.id();
+      //   })
+      //   .brushOn(false)
+      //   .dimension(config.dimension)
+      //   .group(config.filter(group, variable), variable)
+      //   .valueAccessor(function(d) { // is y direction
+      //     // console.log("N=", d.value.n, JSON.stringify(d), " in group = ", getLabel(d.key.variable, d.key.circle) );
+      //     var mean = d.value.mean;
+      //     var constant = 100;
+      //     var totalVal = config.totalReduced.value()[variable];
+      //     var totalStd = totalVal.valueOf().stddev;
+      //     var totalMean = totalVal.valueOf().mean;
+      //     return ( mean - totalMean ) / totalStd * constant; 
+      //   });
+      //   // .seriesAccessor( function(d) {
+      //   //   var circle = d.key.circle,
+      //   //   variable = d.key.variable;
+      //   //   return getLabel(variable, circle);
+      //   // });
+      //   // .keyAccessor(function(d) {
+      //   //   var circle = d.key.circle,
+      //   //   variable = d.key.variable;
+      //   //   return getLabel(variable, circle);
+      //   // });
 
-          $scope.barCharts[variable] = chart;
-          charts.push(chart);
+      //   $scope.barCharts[variable] = chart;
+      //   charts.push(chart);
 
-        });
+      // });
 
       // 3. compose & render the composite chart
-      $scope.histogram.compose(charts);
+      // $scope.histogram.compose(charts);
       $scope.histogram.render();
 
     };
@@ -255,9 +296,9 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         dimension: $scope.dimension,
         element: ele,
         groups: $scope.groups,
-        groupNames: $scope.window.variables.x,
+        groupNames: $scope.window.variables.x.sort(),
         colorScale: $scope.colorScale,
-        filter: $scope.filterOnSet,
+        filter: $scope.formGroups,
         filterEnabled: $scope.window.filterEnabled,
         totalReduced: $scope.totalReduced
       };
@@ -280,8 +321,8 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
               if( $scope.histogram ) {
                 $scope.histogram.redraw();
               }
-          }
-        });
+            }
+          });
         }
       });
 

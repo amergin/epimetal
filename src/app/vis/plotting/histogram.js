@@ -329,7 +329,17 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
           if( config.omit == 'histogram' ) { return; }
           $timeout( function() {
             if(config.compute) {
+              // $scope.redraw();
+              var oldFilters = $scope.histogram.filters();
+              $scope.histogram.filter(null);
               $scope.redraw();
+              $timeout(function() {
+                _.each(oldFilters, function(filter) {
+                  $scope.histogram.filter(filter);
+                });
+                $scope.histogram.redraw();
+              });
+
             }
             else {
               $scope.histogram.redraw();
@@ -346,7 +356,19 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
         }
       });
 
-      $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind);
+      // var restartCrossfilterUnbind = $rootScope.$on('dimension:crossfilter', function(event) {
+      //   var oldFilters = $scope.histogram.filters();
+      //   $scope.histogram.filter(null);
+      //   $scope.redraw();
+      //   $timeout(function() {
+      //     _.each(oldFilters, function(filter) {
+      //       $scope.histogram.filter(filter);
+      //     });
+      //     $scope.histogram.redraw();
+      //   });
+      // });
+
+      $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind); //, restartCrossfilterUnbind);
 
       $scope.$on('$destroy', function() {
         console.log("destroying histogram for", $scope.window.variables.x);

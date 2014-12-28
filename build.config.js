@@ -90,9 +90,9 @@ module.exports = {
       'vendor/angular-ui-router/release/angular-ui-router.js',
       'vendor/ui-router-extras/release/ct-ui-router-extras.js',
       'vendor/angular-ui-utils/modules/route/route.js',
-      'vendor/crossfilter/crossfilter.custom.old.js', //crossfilter.custom.js',
+      'vendor/crossfilter/crossfilter-new-unmodified.js',//crossfilter.custom.old.js', //crossfilter.custom.js',
       'vendor/d3/d3.js',
-      'vendor/dcjs/dc.js',
+      'vendor/dcjs/dc.2.0.js',//dc.js',
       // utilities
       'vendor/underscore/underscore.js',
       // core framework for UI

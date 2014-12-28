@@ -374,9 +374,9 @@ var outerCircle = circleAnchor.append('circle')
 
 
 
-visu.directive('somplane', [ '$rootScope', 'SOMService',
+visu.directive('somplane', [ '$rootScope', 'SOMService', 'NotifyService',
 
-  function($rootScope, SOMService) {
+  function($rootScope, SOMService, NotifyService) {
 
     var linkFn = function($scope, ele, iAttrs) {
 
