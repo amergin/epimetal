@@ -41,8 +41,8 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
       });
 
       $scope.totalDimension = DimensionService.getPrimary().getSampleDimension();
-      $scope.totalGroup = $scope.totalDimension.groupAll();
-      $scope.totalReduced = DimensionService.getPrimary().getReducedSTD( $scope.totalGroup, $scope.window.variables.x );
+      // $scope.totalGroup = $scope.totalDimension.groupAll();
+      $scope.totalReduced = DimensionService.getPrimary().getReducedSTD( $scope.totalDimension.groupAll(), $scope.window.variables.x );
     };
 
     $scope.compute();

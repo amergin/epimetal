@@ -453,10 +453,13 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             var obj = p[variable];
             obj.n = obj.n + 1;
             var value = +v.variables[variable];
-            if( _.isNaN(value) ) { return p; }
-            var delta = value - obj.mean;
-            obj.mean = obj.mean + delta/obj.n;
-            obj.M2 = obj.M2 + delta*(value-obj.mean);
+            if( _.isNaN(value) ) {
+              //pass
+            } else {
+              var delta = value - obj.mean;
+              obj.mean = obj.mean + delta/obj.n;
+              obj.M2 = obj.M2 + delta*(value-obj.mean);
+            }
           }
           return p;
         };
@@ -466,11 +469,19 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             var variable = variables[i];
             var obj = p[variable];
             obj.n = obj.n - 1;
+            if( obj.n === 0 ) {
+              obj.mean = 0;
+              obj.M2 = 0;
+              continue;
+            }
             var value = +v.variables[variable];
-            if( _.isNaN(value) ) { return p; }
-            var delta = value - obj.mean;
-            obj.mean = obj.mean - delta/obj.n;
-            obj.M2 = obj.M2 - delta*(value - obj.mean);
+            if( _.isNaN(value) ) {
+              //pass
+            } else {
+              var delta = value - obj.mean;
+              obj.mean = obj.mean - delta/obj.n;
+              obj.M2 = obj.M2 - delta*(value - obj.mean);
+            }
           }
           return p;
         };
@@ -483,7 +494,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             obj.n = 0;
             obj.mean = 0;
             obj.M2 = 0;
-            obj['valueOf'] = function() {
+            obj.valueOf = function() {
               var variance = obj.M2 / (obj.n-1),
               stddev = Math.sqrt(variance);
               return {
@@ -516,6 +527,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             p.counts[bmuId].count = p.counts[bmuId].count + 1;
           }
           p.counts.total = p.counts.total + 1;
+          // console.log("--> ADD, P = ", JSON.stringify(p));
           return p;
         };
 
@@ -529,6 +541,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             p.counts[bmuId].count = p.counts[bmuId].count - 1;
           } 
           p.counts.total = p.counts.total - 1;
+          // console.log("--> REMOVE, P = ", JSON.stringify(p));
           return p;         
         };
 
