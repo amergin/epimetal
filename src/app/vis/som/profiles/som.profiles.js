@@ -13,7 +13,22 @@ var vis =
 mod.controller('SOMProfilesController', ['$scope', '$templateCache', '$rootScope', 'PlotService', 'DatasetFactory', 'windowHandler',
   function SOMProfilesController($scope, $templateCache, $rootScope, PlotService, DatasetFactory, windowHandler) {
   $scope.windowHandler = windowHandler;
+  $scope.windowHandler.filtersEnabled(false);
   $scope.windows = $scope.windowHandler.get();
+
+  $scope.getClass = function(type) {
+    var number = $scope.windows.length;
+    if( type == 'profile-histogram' ) {
+      return (number == 2) ? 'col-sm-9' : 'col-sm-12';
+    } else if( type == 'histogram' ) {
+      return 'col-sm-3';
+    }
+  };
+
+  $scope.histogramVisible = function() {
+    return $scope.windows.length == 2;
+    //return true;
+  };
 
   }
 ]);
@@ -27,7 +42,6 @@ mod.controller('SOMProfilesMenuController', ['$scope', '$templateCache', '$rootS
     DatasetFactory.getVariables().then( function(res) {
       $scope.profiles = DatasetFactory.getProfiles();
     });
-
 
     $scope.$watch('profile', function(profile) {
       if( _.isEmpty(profile) ) { return; }

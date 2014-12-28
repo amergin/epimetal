@@ -32,7 +32,7 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
 
       this.rerenderAll = function(config) {
         if( that.ignoreRedraws() ) { return; }
-        $rootScope.$emit('window-handler.rerender', that, config);
+        $rootScope.$emit('window-handler.rerender', that, config || {});
       };
 
       this.redrawAll = function() {
@@ -86,6 +86,20 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
       this.filtersEnabled = function(val) {
         if(!arguments.length) { return _filtersEnabled; }
         _filtersEnabled = val;
+      };
+
+      this.removeByType = function(type) {
+        var ind = Utils.indexOf(windows, function(win) {
+          return win.type == type;
+        });
+
+        if( ind == -1 ) { return; }
+
+        var win = windows.splice(ind,1);
+        console.log("splice = ", win, "type = ", type);
+        win = _.first(win);
+        $rootScope.$emit('variable:remove', win.type, win.variables);
+        return that;
       };
 
       this.remove = function(id) {

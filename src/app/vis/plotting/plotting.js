@@ -54,6 +54,11 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         windowHandler.add(config);
 
         UrlHandler.createWindow( type, config );
+
+        // if(config.somSpecial) {
+        //   // tailored for profile tab
+        //   windowHandler.rerenderAll({ omit: null, compute: true });
+        // }
       };
 
       NotifyService.addSpinnerModal('Loading...');//, _callback);

@@ -41,13 +41,13 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         // .attr("width", width)
         // .attr("height", height)
         .style('vertical-align', 'top')
-          .style('padding-right', '10px');
+        .style('padding-right', '10px');
         var g = svg.append("g").attr("transform", "translate(10,10)").classed("colorbar", true);
         var cb = colorBar()
-          .color(scale)
-          .size(height - 40)
-          .lineWidth(width - 30)
-          .precision(4);
+        .color(scale)
+        .size(height - 40)
+        .lineWidth(width - 30)
+        .precision(4);
         g.call(cb);
         return cb;
       };
@@ -55,62 +55,62 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       $scope.heatmap = dc.heatMap(element[0], constants.groups.heatmap);
 
       var colorScale = d3.scale.linear()
-        .domain([-1, 0, 1])
-        .range(['blue', 'white', 'red']);
+      .domain([-1, 0, 1])
+      .range(['blue', 'white', 'red']);
 
       $scope.heatmap
-        .width(null)
-        .height(null)
-        .margins(margins)
-        .turnOffControls()
-        .dimension(dimension)
-        .group(group)
-        .xBorderRadius(0)
-        .yBorderRadius(0)
-        .keyAccessor(function(d) {
-          return d.key.x;
-        })
-        .valueAccessor(function(d) {
-          return d.key.y;
-        })
-        .title(function(d) {
-          return "Horizontal variable:  " +
-            d.key.x + "\n" +
-            "Vertical variable:  " +
-            d.key.y + "\n" +
-            "Correlation:  " + 
-            constants.tickFormat(d.value) + "\n" + 
-            "P-value:   " + 
-            ( _(d.key.pvalue).isNaN() || _(d.key.pvalue).isUndefined() ? "(not available)" : $scope.format(d.key.pvalue) );
-        })
-        .colorAccessor(function(d) {
-          if($scope.filtered) {
-            if( !_.isUndefined(d.key.pvalue) && d.key.pvalue > $scope.limit ) {
-              return 0;
-            }
+      .width(null)
+      .height(null)
+      .margins(margins)
+      .turnOffControls()
+      .dimension(dimension)
+      .group(group)
+      .xBorderRadius(0)
+      .yBorderRadius(0)
+      .keyAccessor(function(d) {
+        return d.key.x;
+      })
+      .valueAccessor(function(d) {
+        return d.key.y;
+      })
+      .title(function(d) {
+        return "Horizontal variable:  " +
+        d.key.x + "\n" +
+        "Vertical variable:  " +
+        d.key.y + "\n" +
+        "Correlation:  " + 
+        constants.tickFormat(d.value) + "\n" + 
+        "P-value:   " + 
+        ( _(d.key.pvalue).isNaN() || _(d.key.pvalue).isUndefined() ? "(not available)" : $scope.format(d.key.pvalue) );
+      })
+      .colorAccessor(function(d) {
+        if($scope.filtered) {
+          if( !_.isUndefined(d.key.pvalue) && d.key.pvalue > $scope.limit ) {
+            return 0;
           }
-          return d.value;
-        })
-        .colors(colorScale)
-        .renderlet(function(chart) {
+        }
+        return d.value;
+      })
+      .colors(colorScale)
+      .renderlet(function(chart) {
           // rotate labels
           chart.selectAll('g.cols > text')
-            .attr('transform', function(d) {
-              var ele = d3.select(this);
-              return 'rotate(-90,' + ele.attr('x') + "," + ele.attr('y') + ")";
-            })
-            .style("text-anchor", "end")
-            .attr("dy", function(d) {
-              return +d3.select(this).attr('dy') / 2;
-            });
+          .attr('transform', function(d) {
+            var ele = d3.select(this);
+            return 'rotate(-90,' + ele.attr('x') + "," + ele.attr('y') + ")";
+          })
+          .style("text-anchor", "end")
+          .attr("dy", function(d) {
+            return +d3.select(this).attr('dy') / 2;
+          });
         })
-        .on('preRender', function(chart) {
+      .on('preRender', function(chart) {
           // try to hide flickering from renderlet
           chart.transitionDuration(0);
         })
-        .on('postRender', function(chart) {
-          chart.transitionDuration(500);
-        })
+      .on('postRender', function(chart) {
+        chart.transitionDuration(500);
+      })
         // override default click actions
         .xAxisOnClick( function() {} )
         .yAxisOnClick( function() {} )
@@ -125,12 +125,12 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
           });
         });
 
-      $scope.heatmap.render();
-      $scope.legend = _drawLegend($scope.colorbarAnchor, colorScale, height);
+        $scope.heatmap.render();
+        $scope.legend = _drawLegend($scope.colorbarAnchor, colorScale, height);
 
-    };
+      };
 
-    $scope.computeVariables = function() {
+      $scope.computeVariables = function() {
       // calculate coordinates
       var coordinates = [];
 
@@ -185,7 +185,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
           }
           coordinates.push(coord);
         });
-      });
+});
 
       // compute Bonferroni correction
       var bonferroni = 0.5 * variables.length * (variables.length - 1);
@@ -223,7 +223,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
     });
 
     $scope.redraw = function() {
-        $scope.computeVariables();
+      $scope.computeVariables();
 
         // update the chart and redraw
         $scope.heatmap.dimension($scope.coordDim);
@@ -232,36 +232,15 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         // remember to clear any filters that may have been applied
         $scope.heatmap.filterAll();
         $scope.heatmap.render();      
-    };
+      };
 
-    $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
-      if( winHandler == $scope.window.handler ) {
-        $timeout( function() {
-          if(config.compute) {
-            $scope.redraw();
-          }
-          else {
-            $scope.heatmap.render();
-          }
-        });
-      }
-    });
+      $scope.filter = function() {
+        $scope.filtered = !$scope.filtered;
+        $scope.heatmap.render();
+      };
 
-    $rootScope.$on('window-handler.redraw', function(event, winHandler) {
-      if( winHandler == $scope.window.handler ) {
-        $timeout( function() {
-          $scope.heatmap.redraw();
-        });
-      }
-    });    
-
-    $scope.filter = function() {
-      $scope.filtered = !$scope.filtered;
-      $scope.heatmap.render();
-    };
-
-  }
-]);
+    }
+    ]);
 
 
 
@@ -274,11 +253,11 @@ visu.directive('heatmap', ['$compile', '$rootScope',
       $scope.$parent.element = ele;
 
       $scope.heatmapAnchor = d3.select(ele[0])
-        .append('div')
-        .attr('class', 'heatmap-chart-anchor')[0];
+      .append('div')
+      .attr('class', 'heatmap-chart-anchor')[0];
 
 
-    $scope.colorbarAnchor = d3.select(ele[0])
+      $scope.colorbarAnchor = d3.select(ele[0])
       .append('div')
       .attr('class', 'heatmap-legend-anchor')[0][0];
 
@@ -290,10 +269,45 @@ visu.directive('heatmap', ['$compile', '$rootScope',
         $scope.width, 
         $scope.height );
 
-      $rootScope.$on('gridster.resize', function(event,$element) {
+      $scope.deregisters = [];
+
+      var resizeUnbind = $rootScope.$on('gridster.resize', function(event,$element) {
         if( $element.is( $scope.$parent.element.parent() ) ) {
           $scope.heatmap.render();
         }
+      });
+
+      var reRenderUnbind =  $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
+        if( winHandler == $scope.window.handler ) {
+          $timeout( function() {
+            if(config.compute) {
+              $scope.redraw();
+            }
+            else {
+              $scope.heatmap.render();
+            }
+          });
+        }
+      });
+
+      var redrawUnbind =  $rootScope.$on('window-handler.redraw', function(event, winHandler) {
+        if( winHandler == $scope.window.handler ) {
+          $timeout( function() {
+            $scope.heatmap.redraw();
+          });
+        }
+      });
+
+      $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind);
+
+      $scope.$on('$destroy', function() {
+        _.each($scope.deregisters, function(unbindFn) {
+          unbindFn();
+        });
+      });
+
+      ele.on('$destroy', function() {
+        $scope.$destroy();
       });
 
     };
@@ -309,4 +323,4 @@ visu.directive('heatmap', ['$compile', '$rootScope',
       transclude: true
     };
   }
-]);
+  ]);

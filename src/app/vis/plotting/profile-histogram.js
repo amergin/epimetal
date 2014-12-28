@@ -20,50 +20,10 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
       }
     };
 
-    $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
-      if( winHandler == $scope.window.handler ) {
-        if( config.omit == 'histogram' ) { return; }
-        $timeout( function() {
-          if(config.compute) {
-            $scope.redraw();
-          }
-          else {
-            if( $scope.histogram ) {
-              $scope.histogram.redraw();
-            }
-            //$scope.histogram.render();
-          }
-        });
-      }
-    });
-
-    $rootScope.$on('window-handler.redraw', function(event, winHandler) {
-      if( winHandler == $scope.window.handler ) {
-        $timeout( function() {
-          $scope.histogram.redraw();
-        });
-      }
-    });
-
-
     $scope.dimension = $scope.dimensionService.getVariableBMUDimension();
     $scope.groups = {};
 
     $scope.compute = function() {
-      // var inWhatCircles = function(d) {
-      //   if( !_.isUndefined(d.bmu) ) {
-      //     var ret = [];
-      //     _.each( FilterService.getSOMFilters(), function(circle) {
-      //       if( circle.contains(d.bmu) ) {
-      //         ret.push(circle.id());
-      //       }
-      //     });
-      //     return ret;
-      //   } else {
-      //     return [];
-      //   }
-      // };
-
       // notice that you CANNOT use SOMDimension here! it will not apply the filter on its dimension
       // to restrict out to proper amount of samples!
 
@@ -71,15 +31,15 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
       _.each( $scope.window.variables.x, function(variable) {
 
         var group = $scope.dimension.group( function(d) {
-            return {
-              variable: variable,
-              circles: function() {
-                return FilterService.inWhatCircles(d.bmu);
-              },
-              valueOf: function() {
-                return d.valueOf() + String(this.circles());
-              }
-            };
+          return {
+            variable: variable,
+            circles: function() {
+              return FilterService.inWhatCircles(d.bmu);
+            },
+            valueOf: function() {
+              return d.valueOf() + String(this.circles());
+            }
+          };
         });
 
           // var group = $scope.dimension.group( function(d) {
@@ -110,17 +70,17 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
         // console.log("AFTER REDUCING ", JSON.stringify( _.map($scope.groups[variable].all(), function(g) { return [g.key.circles, g.value.n]; } ) ) );
       });
 
-      $scope.totalDimension = DimensionService.getPrimary().getSampleDimension();
-      $scope.totalGroup = $scope.totalDimension.groupAll();
-      $scope.totalReduced = DimensionService.getPrimary().getReducedSTD( $scope.totalGroup, $scope.window.variables.x );
+$scope.totalDimension = DimensionService.getPrimary().getSampleDimension();
+$scope.totalGroup = $scope.totalDimension.groupAll();
+$scope.totalReduced = DimensionService.getPrimary().getReducedSTD( $scope.totalGroup, $scope.window.variables.x );
 
       // _.each($scope.barCharts, function(chart, variable) {
       //   var group = $scope.groups[variable];
       //   chart.group($scope.filterOnSet(group, variable), variable);
       // });
-    };
+};
 
-    $scope.compute();
+$scope.compute();
 
     // individual charts that are part of the composite chart
     $scope.barCharts = {};
@@ -166,11 +126,13 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
     };
 
   }
-]);
+  ]);
 
 visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'FilterService',
 
   function(constants, $timeout, $rootScope, $injector, FilterService) {
+
+    var PlotService = $injector.get('PlotService');
 
     var createSVG = function($scope, config) {
       // check css window rules before touching these
@@ -200,50 +162,69 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         return ret;
       };
 
-      var labels = getLabels();
+      var onClick = function(d, xCoord, yCoord) {
+        var variable = d.data.key.variable;
+        var config = {
+          variables: { x: d.data.key.variable },
+          pooled: false,
+          somSpecial: true
+        };
+
+        // remove the old histogram window, if any
+        $scope.window.handler.removeByType('histogram');
+        // draw a new one
+        PlotService.drawHistogram( config, $scope.window.handler );
+
+        // remove this instance and create a new one
+        // this is to combat rescaling issues, FIXME
+        $scope.window.handler.remove( $scope.window._winid );
+        PlotService.drawProfileHistogram({ variables: $scope.window.variables }, $scope.window.handler);
+
+      };
+
+        var labels = getLabels();
 
       // 1. create composite chart
       $scope.histogram = dc.compositeChart(config.element[0]) //, constants.groups.histogram)
-        .dimension(config.dimension)
-        .width(null)
-        .height(null)
-        .shareColors(true)
-        .elasticY(true)
-        .elasticX(true)
-        .brushOn(false)
-        .renderTitle(false)
-        .colors(config.colorScale)
-        // .onClick( function(chart) {
-        //   console.log("clicked", chart, arguments);
-        //   return null;
-        // })
-        .title(function(d) {
-          var variable = d.key.variable;
-          var totalVal = config.totalReduced.value()[variable];
-          var value = d.value.valueOf();
-          var totalStd = d3.round(totalVal.valueOf().stddev, 3);
-          var circle = d.key.circle;
-          return [
-          'Circle filter: ' + circle.name(),
-          'Variable: ' + variable,
-          'Mean of ' + variable + ": " + d3.round(value.mean, 3),
-          'STD (all samples): ' + totalStd,
-          'Sample count: ' + d.value.n || 0
-          ].join("\n");
-        })
-        .x( d3.scale.ordinal().domain(labels) )
-        .xUnits(dc.units.ordinal)
-        .margins({
-          top: 10,
-          right: 10,
-          bottom: 90,
-          left: 40
-        })
-        .renderlet( function(chart) {
+                        .dimension(config.dimension)
+                        .width(null)
+                        .height(null)
+                        .shareColors(true)
+                        .elasticY(true)
+                        .elasticX(true)
+                        .brushOn(false)
+                        .renderTitle(false)
+                        .colors(config.colorScale)
+                        .title(function(d) {
+                          var variable = d.key.variable;
+                          var totalVal = config.totalReduced.value()[variable];
+                          var value = d.value.valueOf();
+                          var totalStd = d3.round(totalVal.valueOf().stddev, 3);
+                          var circle = d.key.circle;
+                          return [
+                          'Circle filter: ' + circle.name(),
+                          'Variable: ' + variable,
+                          'Mean of ' + variable + ": " + d3.round(value.mean, 3),
+                          'STD (all samples): ' + totalStd,
+                          'Sample count: ' + d.value.n || 0
+                          ].join("\n");
+                        })
+                        .x( d3.scale.ordinal().domain(labels) )
+                        .xUnits(dc.units.ordinal)
+                        .margins({
+                          top: 10,
+                          right: 10,
+                          bottom: 90,
+                          left: 40
+                        })
+                        .renderlet( function(chart) {
+          // rotate labels
           chart.selectAll('g.x text')
           .attr('transform', "rotate(-65)")
           .style("text-anchor", "end")
           .attr('dx', "-1em");
+
+          chart.selectAll('rect').on("click", onClick);
         });
 
         // hide y axis
@@ -252,16 +233,16 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
       // 2. for each of the additional stacks, create a child chart
       _.each(config.groups, function(group, variable) {
         var chart = dc.barChart($scope.histogram)
-          .centerBar(false)
-          .xUnits(dc.units.ordinal)
-          .x( d3.scale.ordinal().domain(labels))
-          .barPadding(0.15)
-          .colorAccessor( function(d) {
-            return d.key.circle.id();
-          })
-          .brushOn(false)
-          .dimension(config.dimension)
-          .group(config.filter(group, variable), variable)
+        .centerBar(false)
+        .xUnits(dc.units.ordinal)
+        .x( d3.scale.ordinal().domain(labels))
+        .barPadding(0.15)
+        .colorAccessor( function(d) {
+          return d.key.circle.id();
+        })
+        .brushOn(false)
+        .dimension(config.dimension)
+        .group(config.filter(group, variable), variable)
           .valueAccessor(function(d) { // is y direction
             // console.log("N=", d.value.n, JSON.stringify(d), " in group = ", getLabel(d.key.variable, d.key.circle) );
             var mean = d.value.mean;
@@ -277,10 +258,10 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
             return getLabel(variable, circle);
           });
 
-        $scope.barCharts[variable] = chart;
-        charts.push(chart);
+          $scope.barCharts[variable] = chart;
+          charts.push(chart);
 
-      });
+        });
 
       // 3. compose & render the composite chart
       $scope.histogram.compose(charts);
@@ -307,6 +288,46 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         createSVG($scope, config);
       });
 
+
+      $scope.deregisters = [];
+
+      var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
+        if( winHandler == $scope.window.handler ) {
+          if( config.omit == 'histogram' ) { return; }
+          $timeout( function() {
+            if(config.compute) {
+              $scope.redraw();
+            }
+            else {
+              if( $scope.histogram ) {
+                $scope.histogram.redraw();
+              }
+            //$scope.histogram.render();
+          }
+        });
+        }
+      });
+
+      var redrawUnbind =  $rootScope.$on('window-handler.redraw', function(event, winHandler) {
+        if( winHandler == $scope.window.handler ) {
+          $timeout( function() {
+            $scope.histogram.redraw();
+          });
+        }
+      });
+
+      $scope.deregisters.push(reRenderUnbind, redrawUnbind);
+
+      $scope.$on('$destroy', function() {
+        _.each($scope.deregisters, function(unbindFn) {
+          unbindFn();
+        });
+      });
+
+      ele.on('$destroy', function() {
+        $scope.$destroy();
+      });
+
     }
 
     return {
@@ -318,4 +339,4 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
       }
     };
   }
-]);
+  ]);

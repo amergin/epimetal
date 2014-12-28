@@ -1,7 +1,7 @@
 <div ui-layout="{ flow : 'row', dividerSize: 10 }">
 	<div ui-layout-container class="am-fade horizontal-scrollbar som-top">
-		<div ui-view="top-distributions" ng-show="$state.includes('vis.som.distributions')"></div>
-		<div ui-view="top-profiles" ng-show="$state.includes('vis.som.profiles')"></div>
+		<div ui-view="top-distributions" ng-show="$state.includes('vis.som.distributions')" class="full-height"></div>
+		<div ui-view="top-profiles" ng-show="$state.includes('vis.som.profiles')" class="full-height"></div>
 	</div>
 	<div ui-layout-container class="am-fade som-bottom">
 		<div ui-view="som-bottom">

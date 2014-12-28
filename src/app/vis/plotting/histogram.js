@@ -15,8 +15,8 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     $scope.prevFilter = null;
 
     if( $scope.window.somSpecial ) {
-        $scope.primary = $injector.get('DimensionService').getPrimary();
-        $scope.totalDimension = $scope.primary.getDimension($scope.window.variables);      
+      $scope.primary = $injector.get('DimensionService').getPrimary();
+      $scope.totalDimension = $scope.primary.getDimension($scope.window.variables);      
     }
 
     $scope.$parent.resetFilter = function() {
@@ -32,29 +32,6 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
         $scope.histogram.render();
       }
     };
-
-    $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
-      if( winHandler == $scope.window.handler ) {
-        if( config.omit == 'histogram' ) { return; }
-        $timeout( function() {
-          if(config.compute) {
-            $scope.redraw();
-          }
-          else {
-            $scope.histogram.redraw();
-          }
-        });
-      }
-    });
-
-    $rootScope.$on('window-handler.redraw', function(event, winHandler) {
-      if( winHandler == $scope.window.handler ) {
-        $timeout( function() {
-          $scope.histogram.redraw();
-        });
-      }
-    });
-
 
     // share information with the plot window
     $scope.$parent.headerText = ['Histogram of', $scope.window.variables.x, ''];
@@ -118,7 +95,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
         }
       });
 
-      console.log("histogram extent is ", $scope.extent);
+      console.log("histogram extent is ", $scope.extent, "on windowHandler = ", $scope.window.handler.getName(), "variable = ", $scope.window.variables.x);
     };
 
     $scope.computeExtent();
@@ -150,7 +127,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     };
 
   }
-]);
+  ]);
 
 visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
 
@@ -171,39 +148,39 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
 
       // 1. create composite chart
       $scope.histogram = dc.compositeChart(config.element[0], constants.groups.histogram)
-        .dimension(config.dimension)
-        .width(null)
-        .height(null)
-        .shareColors(true)
-        .elasticY(true)
-        .elasticX(false)
-        .brushOn(config.filterEnabled)
-        .renderTitle(false)
-        .title(function(d) {
-          return ['Value: ' + constants.tickFormat(d.key),
-           'Total count: ' + d.value.counts.total || 0
-          ].join("\n");
-        })
-        .x(d3.scale.linear().domain(config.extent).range([0, config.noBins]))
-        .xUnits( function() { return _xBarWidth; } )
-        .margins({
-          top: 15,
-          right: 10,
-          bottom: 30,
-          left: 40
-        })
-        .xAxisLabel(config.variableX)
-        .on("filtered", function(chart, filter) {
-          dc.events.trigger( function() {
+      .dimension(config.dimension)
+      .width(null)
+      .height(null)
+      .shareColors(true)
+      .elasticY(true)
+      .elasticX(false)
+      .brushOn(config.filterEnabled)
+      .renderTitle(false)
+      .title(function(d) {
+        return ['Value: ' + constants.tickFormat(d.key),
+        'Total count: ' + d.value.counts.total || 0
+        ].join("\n");
+      })
+      .x(d3.scale.linear().domain(config.extent).range([0, config.noBins]))
+      .xUnits( function() { return _xBarWidth; } )
+      .margins({
+        top: 15,
+        right: 10,
+        bottom: 30,
+        left: 40
+      })
+      .xAxisLabel(config.variableX)
+      .on("filtered", function(chart, filter) {
+        dc.events.trigger( function() {
 
-            $timeout( function() {
-              var filterRemoved = _.isNull(filter) && _.isNull(chart.filter());
+          $timeout( function() {
+            var filterRemoved = _.isNull(filter) && _.isNull(chart.filter());
 
-              if( filterRemoved ) {
-                $scope.window.showResetBtn = false;
-                $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
-              } else {
-                $scope.window.showResetBtn = true;
+            if( filterRemoved ) {
+              $scope.window.showResetBtn = false;
+              $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
+            } else {
+              $scope.window.showResetBtn = true;
                 // remove filter (perhaps slided to another position)
                 $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
                 $scope.FilterService.addHistogramFilter( { 'type': 'range', 'filter': filter, 
@@ -215,21 +192,21 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
 
             });
 
-          }, 100);
-        })
-        .renderlet( function(chart) {
-          if( config.pooled ) {
-            d3.selectAll( $(config.element).find('rect.bar:not(.deselected)') )
-            .attr("class", 'bar pooled')
-            .attr("fill", _poolingColor);
-          }
+        }, 100);
+      })
+      .renderlet( function(chart) {
+        if( config.pooled ) {
+          d3.selectAll( $(config.element).find('rect.bar:not(.deselected)') )
+          .attr("class", 'bar pooled')
+          .attr("fill", _poolingColor);
+        }
 
-        });
+      });
 
 
       // set x axis format
       $scope.histogram
-        .xAxis().ticks(7).tickFormat(constants.tickFormat);
+      .xAxis().ticks(7).tickFormat(constants.tickFormat);
 
       // set colors
       if (config.pooled) {
@@ -244,32 +221,32 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       _.each(config.groupNames, function(name, ind) {
 
         var chart = dc.barChart($scope.histogram) //, constants.groups.histogram)
-          .centerBar(true)
-          .barPadding(0.15)
-          .brushOn(true)
-          .dimension(config.dimension)
-          .group(config.filter(config.reduced, name), name)
+      .centerBar(true)
+      .barPadding(0.15)
+      .brushOn(true)
+      .dimension(config.dimension)
+      .group(config.filter(config.reduced, name), name)
           .valueAccessor(function(d) { // is y direction
             return d.value.counts[name];
           });
 
-        $scope.barCharts[name] = chart;
-        charts.push(chart);
-      });
+          $scope.barCharts[name] = chart;
+          charts.push(chart);
+        });
 
       if( $scope.window.somSpecial  ) {
         var name = 'total';
         var chart = dc.barChart($scope.histogram) //, constants.groups.histogram)
-          .centerBar(true)
-          .barPadding(0.15)
-          .brushOn(true)
-          .dimension($scope.totalDimension)
-          .group(config.filter($scope.totalReduced, name), name)
+.centerBar(true)
+.barPadding(0.15)
+.brushOn(true)
+.dimension($scope.totalDimension)
+.group(config.filter($scope.totalReduced, name), name)
           .valueAccessor(function(d) { // is y direction
             return d.value.counts[name];
           });
-        $scope.barCharts[name] = chart;
-        charts.push(chart);
+          $scope.barCharts[name] = chart;
+          charts.push(chart);
 
         // total to background
         charts.reverse();
@@ -314,12 +291,49 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
         createSVG($scope, config);
       });
 
-      $rootScope.$on('gridster.resize', function(eve, $element) {
+      $scope.deregisters = [];
+
+      var resizeUnbind = $rootScope.$on('gridster.resize', function(eve, $element) {
         if( $element.is( $scope.$parent.element.parent() ) ) {
           $timeout( function() {
             $scope.histogram.render();
           });
         }
+      });
+
+      var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
+        if( winHandler == $scope.window.handler ) {
+          if( config.omit == 'histogram' ) { return; }
+          $timeout( function() {
+            if(config.compute) {
+              $scope.redraw();
+            }
+            else {
+              $scope.histogram.redraw();
+            }
+          });
+        }
+      });
+
+      var redrawUnbind = $rootScope.$on('window-handler.redraw', function(event, winHandler) {
+        if( winHandler == $scope.window.handler ) {
+          $timeout( function() {
+            $scope.histogram.redraw();
+          });
+        }
+      });
+
+      $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind);
+
+      $scope.$on('$destroy', function() {
+        console.log("destroying histogram for", $scope.window.variables.x);
+        _.each($scope.deregisters, function(unbindFn) {
+          unbindFn();
+        });
+      });
+
+      ele.on('$destroy', function() {
+        $scope.$destroy();
       });
 
     }
@@ -333,4 +347,4 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       }
     };
   }
-]);
+  ]);

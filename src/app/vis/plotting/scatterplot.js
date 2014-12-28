@@ -52,7 +52,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
         data,
         name,
         color
-      );
+        );
       $scope.canvases[set.getName()] = {
         'zindex': zIndex,
         'canvas': canvas
@@ -91,7 +91,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
         100,
         $scope.window.variables.x,
         $scope.window.variables.y
-      );
+        );
       $scope.canvases['axes'] = {
         'zindex': 100,
         'canvas': axesCanvas
@@ -102,65 +102,6 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
     $scope.margins = [10, 10, 45, 55];
     $scope.zIndexCount = 1;
-
-    $rootScope.$on('gridster.resize', function(event, $element) {
-      if( $element.is( $scope.$parent.element.parent() ) ) {
-        $scope.width = $scope.$parent.element.width();
-        $scope.height = $scope.$parent.element.height();
-        if( !_($scope.canvases).isEmpty() ) {
-          $scope.redrawAll();
-        }
-      }
-    });
-
-    $rootScope.$on('window-handler.redraw', function(event, winHandler) {
-      if( winHandler == $scope.window.handler ) {
-        $timeout( function() {
-          // nothing to do
-        });
-      }
-    });
-
-    $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
-      if( winHandler == $scope.window.handler ) {
-        $timeout( function() {
-            var action = config.action,
-            dset = config.dset,
-            compute = config.compute;
-
-          if( !action && !dset && compute ) {
-            $scope.redrawAll();
-          }
-          else {
-            if (action === 'disabled') {
-              $scope.disable(dset);
-            } else if (action === 'enabled') {
-
-              var canvas = $scope.canvases[dset.getName()];
-              if (_.isUndefined(canvas)) {
-                // new, not drawn before
-
-                // refresh calculations
-                _calcCanvasAttributes();
-                // add canvas as 'layer'
-                $scope._createCanvas(dset, ++$scope.zIndexCount);
-              } else {
-                $scope.enable(dset);
-              }
-            }
-          }
-        });
-      }
-    });
-
-    // $scope.$onRootScope('scatterplot.redrawAll', function(event) {
-    //   // only redraw if the dashboard is visible
-    //   if( $state.current.name === $scope.window.handler.getName() ) {
-    //     $scope.redrawAll();
-    //   }
-    // });
-
-
 
     $scope.disable = function(set) {
       var ctx = $scope.canvases[set.getName()].canvas;
@@ -187,9 +128,9 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
       // adjust canvas size
       var canvas = d3.select(element[0]).select("#axes")
-        .attr("width", w + "px")
-        .attr("height", h + "px")
-        .style('z-index', zIndex);
+      .attr("width", w + "px")
+      .attr("height", h + "px")
+      .style('z-index', zIndex);
 
       canvas[0][0].width = w;
       canvas[0][0].height = h;
@@ -251,10 +192,10 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
             ctx.lineTo(origin.x + TICK_WIDTH / 2, origin.y - i * VERTICAL_TICK_SPACING);
             ctx.stroke();
             addTickText({
-                x: origin.x - TICK_WIDTH / 2 - TICK_TEXT_SPACING,
-                y: origin.y - i * VERTICAL_TICK_SPACING
-              },
-              Y_TICK_FORMAT(yscale.invert(origin.y - i * VERTICAL_TICK_SPACING))
+              x: origin.x - TICK_WIDTH / 2 - TICK_TEXT_SPACING,
+              y: origin.y - i * VERTICAL_TICK_SPACING
+            },
+            Y_TICK_FORMAT(yscale.invert(origin.y - i * VERTICAL_TICK_SPACING))
             );
           }
         }
@@ -277,10 +218,10 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
             ctx.lineTo(origin.x + i * HORIZONTAL_TICK_SPACING, origin.y + TICK_WIDTH / 2);
             ctx.stroke();
             addTickText({
-                x: origin.x + i * HORIZONTAL_TICK_SPACING,
-                y: origin.y - TICK_WIDTH / 2 + TICK_TEXT_SPACING
-              },
-              X_TICK_FORMAT(xscale.invert(origin.x + i * HORIZONTAL_TICK_SPACING))
+              x: origin.x + i * HORIZONTAL_TICK_SPACING,
+              y: origin.y - TICK_WIDTH / 2 + TICK_TEXT_SPACING
+            },
+            X_TICK_FORMAT(xscale.invert(origin.x + i * HORIZONTAL_TICK_SPACING))
             );
           }
         }
@@ -309,22 +250,22 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
         // x axis / label / ticks
         drawLine({
-            x: origin.x,
-            y: origin.y
+          x: origin.x,
+          y: origin.y
           }, //h - d3.round(0.75 * m[2])}, 
           {
             x: w - d3.round(0.5 * m[1]),
             y: origin.y
           } //y: h - d3.round(0.75 * m[2])}
-        );
+          );
         addLabelText(varX, {
-            x: 0,
-            y: 4
-          }, {
-            x: (w - d3.round(m[1] / 2) - d3.round(m[3] / 2)) / 2,
-            y: h - d3.round(m[2] / 2)
-          },
-          0, "top");
+          x: 0,
+          y: 4
+        }, {
+          x: (w - d3.round(m[1] / 2) - d3.round(m[3] / 2)) / 2,
+          y: h - d3.round(m[2] / 2)
+        },
+        0, "top");
         addHorizontalAxisTicks(origin);
       }
     };
@@ -344,9 +285,9 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
       // adjust canvas size
       var canvas = d3.select(element[0]).select("#" + dataset) //'canvas')
-      .attr("width", w + "px")
-        .attr("height", h + "px")
-        .style('z-index', zIndex);
+.attr("width", w + "px")
+.attr("height", h + "px")
+.style('z-index', zIndex);
 
       // rendering context
       ctx = canvas[0][0].getContext('2d');
@@ -400,11 +341,11 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
   }
 
-]);
+  ]);
 
-visu.directive('scatterplot', ['$timeout',
+visu.directive('scatterplot', ['$timeout', '$rootScope',
 
-  function($timeout) {
+  function($timeout, $rootScope) {
 
     var linkFn = function($scope, ele, iAttrs) {
 
@@ -415,6 +356,71 @@ visu.directive('scatterplot', ['$timeout',
       $scope.height = ele.height() || 345;
 
       $scope.redrawAll();
+
+      $scope.deregisters = [];
+
+      var resizeUnbind = $rootScope.$on('gridster.resize', function(event, $element) {
+        if( $element.is( $scope.$parent.element.parent() ) ) {
+          $scope.width = $scope.$parent.element.width();
+          $scope.height = $scope.$parent.element.height();
+          if( !_($scope.canvases).isEmpty() ) {
+            $scope.redrawAll();
+          }
+        }
+      });
+
+      var redrawUnbind =  $rootScope.$on('window-handler.redraw', function(event, winHandler) {
+        if( winHandler == $scope.window.handler ) {
+          $timeout( function() {
+          // nothing to do
+        });
+        }
+      });
+
+      var reRenderUnbind =  $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
+        if( winHandler == $scope.window.handler ) {
+          $timeout( function() {
+            var action = config.action,
+            dset = config.dset,
+            compute = config.compute;
+
+            if( !action && !dset && compute ) {
+              $scope.redrawAll();
+            }
+            else {
+              if (action === 'disabled') {
+                $scope.disable(dset);
+              } else if (action === 'enabled') {
+
+                var canvas = $scope.canvases[dset.getName()];
+                if (_.isUndefined(canvas)) {
+                // new, not drawn before
+
+                // refresh calculations
+                _calcCanvasAttributes();
+                // add canvas as 'layer'
+                $scope._createCanvas(dset, ++$scope.zIndexCount);
+              } else {
+                $scope.enable(dset);
+              }
+            }
+          }
+        });
+        }
+      });
+
+      $scope.deregisters.push(reRenderUnbind, redrawUnbind, resizeUnbind);
+
+      $scope.$on('$destroy', function() {
+        _.each($scope.deregisters, function(unbindFn) {
+          unbindFn();
+        });
+      });
+
+      ele.on('$destroy', function() {
+        $scope.$destroy();
+      });
+
     };
 
     return {
@@ -428,4 +434,4 @@ visu.directive('scatterplot', ['$timeout',
       link: linkFn
     };
   }
-]);
+  ]);
