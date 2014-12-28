@@ -177,8 +177,8 @@ function CircleFilter(id, $injector) {
   _filter.hexagons = function(hexagons) {
     if(!arguments.length) { return _hexagons; }
     _hexagons = hexagons;
-    _injector.get('WindowHandler').reRenderVisible({ 'compute': true });
     _injector.get('DimensionService').get('vis.som').updateSOMFilter( _filter.id(), _hexagons );
+    _injector.get('WindowHandler').redrawVisible();
     return _filter;
   };
 
