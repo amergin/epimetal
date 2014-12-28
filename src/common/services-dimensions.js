@@ -580,109 +580,43 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
       };
 
-      // this.getReducedSTD = function(dimensionGroup, variable) {
-      //   // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Decremental_algorithm
-      //   var reduceAdd = function (p, v) {
-      //     p.n = p.n + 1;
-      //     var varValue = v.variables[variable];
-      //     var delta = varValue - p.mean;
-      //     p.mean = p.mean + delta/p.n;
-      //     p.M2 = p.M2 + delta*(varValue - p.mean);
-      //     return p;
-      //   };
-
-      //   var reduceRemove = function (p, v) {
-      //     p.n = p.n - 1;
-      //     var varValue = v.variables[variable];
-      //     var delta = varValue - p.mean;
-      //     p.mean = p.mean - delta/p.n;
-      //     p.M2 = p.M2 - delta*(varValue - p.mean);
-      //   };
-
-      //   var reduceInitial = function () {
-      //     var p = {
-      //       n: 0,
-      //       mean: 0,
-      //       M2: 0,
-      //       valueOf: function() {
-      //         var p = this,
-      //         variance = p.M2 / (p.n-1),
-      //         stddev = Math.sqrt(variance);
-      //         return {
-      //           variance: variance,
-      //           stddev: stddev,
-      //           mean: p.mean
-      //         };
-      //       }
-      //     };
-      //     return p;
-      //   };
-      //   return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
-      // };
-
       this.getReducedGroupHistoDistributions = function (dimensionGroup, variable) {
-        var FilterService = $injector.get('FilterService');
-        var circleFilters = FilterService.getSOMFilters();
-        var groupNames = _.map( circleFilters, function(cf) { return cf.id(); } );
 
-        var reduceAdd = function (p, v) {
+        var bmuStrId = function(bmu) {
+          return bmu.x + "|" + bmu.y;
+        };
+
+        var reduceAdd = function(p, v) {
           var variableVal = +v.variables[variable];
           if( _.isNaN(variableVal) ) {
-            return p;
+            // pass
           }
-
-          _.each( groupNames, function(name) {
-            var inGroups = FilterService.inWhatCircles(v.bmus);
-            if( inGroups.length === 0 ) {
-              // pass
-            }
-            else {
-              v.groups = inGroups;
-              _.each(inGroups, function(name) {
-                p.counts[name] = p.counts[name] + 1;
-              });
-            }
-          });
+          else {
+            var bmuId = bmuStrId(v.bmus);
+            if( !p.counts[bmuId] ) { p.counts[bmuId] = { bmu: v.bmus, count: 0 }; }
+            p.counts[bmuId].count = p.counts[bmuId].count + 1;
+          }
           p.counts.total = p.counts.total + 1;
           return p;
         };
 
-        var reduceRemove = function (p, v) {
+        var reduceRemove = function(p, v) {
           var variableVal = +v.variables[variable];
           if( _.isNaN(variableVal) ) {
-            return p;
+            // pass
           }
-
-          if( _.isUndefined(v.groups) ) {
-            // console.log("WARNING, GROUP NOT DEFINED", v, p);
-          }
-          // compute again as a precaution
-          var inGroups = FilterService.inWhatCircles(v.bmus);
-          _.each( inGroups, function(name) {
-            p.counts[name] = p.counts[name] - 1;
-          });
+          else {
+            var bmuId = bmuStrId(v.bmus);
+            p.counts[bmuId].count = p.counts[bmuId].count - 1;
+          } 
           p.counts.total = p.counts.total - 1;
-
-
-          // var inGroups = v.groups;
-          // // var inGroup = inWhatCircle(v);
-          // _.each( inGroups, function(name) {
-          //   p.counts[name] = p.counts[name] - 1;
-          // });
-          // error here!
-          // p.counts[inGroup] = p.counts[inGroup] - 1;
-          // p.counts.total = p.counts.total - 1;
-          return p;
+          return p;         
         };
 
         var reduceInitial = function () {
           var p = {
             counts: { total: 0 }
           };
-
-          _.each(groupNames, function (name) {
-            p.counts[name] = 0;
-          });
           return p;
         };
 

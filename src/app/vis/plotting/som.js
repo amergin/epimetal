@@ -1,6 +1,6 @@
 var visu = angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dataset', 'angularSpinner']);
-visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'SOMService', 'FilterService',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, SOMService, FilterService) {
+visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'FilterService',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, FilterService) {
 
     $scope.resetFilter = function() {
       removeFilters();
@@ -374,9 +374,9 @@ var outerCircle = circleAnchor.append('circle')
 
 
 
-visu.directive('somplane', [ '$rootScope',
+visu.directive('somplane', [ '$rootScope', 'SOMService',
 
-  function($rootScope) {
+  function($rootScope, SOMService) {
 
     var linkFn = function($scope, ele, iAttrs) {
 

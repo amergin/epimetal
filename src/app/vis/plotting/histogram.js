@@ -39,17 +39,6 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
 
     $scope.computeExtent = function() {
 
-      // get rid of the existing ones
-      if( !_.isUndefined($scope.group) ) {
-        // redraw going on
-        $scope.group.dispose();
-        $scope.reduced.dispose();
-
-        if($scope.somSpecial) {
-          $scope.totalReduced.dispose();
-        }
-      }
-
       var allValues;
       if( $scope.window.somSpecial ) {
         allValues = $scope.totalDimension.group().all().filter( function(d) {
@@ -119,9 +108,43 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     $scope.filterOnSet = function(group, name) {
       return {
         'all': function() {
-          return group.all().filter(function(d) {
-            return (d.value.counts[name] > 0) && (d.key >= constants.legalMinValue);
-          });
+          // special
+          if( $scope.window.somSpecial && name != 'total' ) {
+            var ret = _.chain(group.all())
+            .reject(function(grp) { return grp.key < constants.legalMinValue; })
+            .map(function(grp) {
+              var lookup = {};
+
+              // for each bmu coordinate
+              _.each(grp.value.counts, function(countObj, id) {
+                if( id == 'total' ) { return; } // continue
+                var circles = $injector.get('FilterService').inWhatCircles(countObj.bmu);
+
+                // that may exist in many circle filters
+                _.each(circles, function(circleId) {
+                  if( !lookup[circleId] ) { lookup[circleId] = 0; }
+                  // add the amount info
+                  lookup[circleId] = lookup[circleId] + countObj.count;
+                });
+
+              });
+              return {
+                key: grp.key,
+                value: {
+                  counts: angular.extend(lookup, { total: grp.value.counts.total })
+                }
+              };
+            })
+            .reject(function(grp) { return grp.value.counts[name] === 0; })
+            .value();
+
+            return ret;
+          } else {
+            // normal histograms
+            return group.all().filter(function(d) {
+              return (d.value.counts[name] > 0) && (d.key >= constants.legalMinValue);
+            });
+          }
         }
       };
     };

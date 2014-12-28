@@ -244,9 +244,9 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
 
 
-visu.directive('heatmap', ['$compile', '$rootScope',
+visu.directive('heatmap', ['$compile', '$rootScope', '$timeout',
 
-  function($compile, $rootScope) {
+  function($compile, $rootScope, $timeout) {
 
     var linkFn = function($scope, ele, iAttrs) {
 
