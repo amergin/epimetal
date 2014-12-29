@@ -458,9 +458,10 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             } else {
               var delta = value - obj.mean;
               obj.mean = obj.mean + delta/obj.n;
-              obj.M2 = obj.M2 + delta*(value-obj.mean);
+              obj.M2 = obj.M2 + delta*(value - obj.mean);
             }
           }
+          console.log("--> ADD", JSON.stringify(p), "V = ", v);          
           return p;
         };
 
@@ -483,6 +484,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
               obj.M2 = obj.M2 - delta*(value - obj.mean);
             }
           }
+          console.log("--> REMOVE", JSON.stringify(p), "V = ", v);
           return p;
         };
 
