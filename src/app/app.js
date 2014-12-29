@@ -18,7 +18,10 @@ App.constant('constants', {
   groups: {
     heatmap: 'ext',
     scatterplot: 'main',
-    histogram: 'main'
+    histogram: {
+      interactive: 'histogram.filters',
+      nonInteractive: 'histogram.nofilters'
+    }
   },
   som: {
     websocket: {

@@ -678,7 +678,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
           .value();
         };
 
-        var addExistingFilters = function() {
+        var addFilterFunctions = function() {
           _.chain(dimensions)
           .values()
           .each(function(obj) {
@@ -690,6 +690,16 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
           .value();
         };
 
+        var addHistogramFilters = function() {
+          _.each(dc.chartRegistry.list(constants.groups.histogram.interactive), function(chart) {
+            var oldFilters = chart.filters();
+            chart.filter(null);
+            _.each(oldFilters, function(filter) {
+              chart.filter(filter);
+            });
+          });
+        };
+
 
         console.log("Crossfilter instance rebuild called on", this.getName());
         removeFilters();
@@ -697,7 +707,8 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         crossfilterInst.add(_.values(currSamples));
         $injector.get('WindowHandler').reRenderVisible({ compute: true });
         // $rootScope.$emit('dimension:crossfilter');
-        addExistingFilters();
+        addFilterFunctions();
+        addHistogramFilters();
       };
 
       this.updateDatasetDimension = function () {

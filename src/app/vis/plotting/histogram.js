@@ -180,8 +180,10 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       // work-around, weird scope issue on filters ?!
       $scope.FilterService = $injector.get('FilterService');
 
+      var dcGroup = $scope.somSpecial ? constants.groups.histogram.nonInteractive : constants.groups.histogram.interactive;
+
       // 1. create composite chart
-      $scope.histogram = dc.compositeChart(config.element[0], constants.groups.histogram)
+      $scope.histogram = dc.compositeChart(config.element[0], dcGroup)
       .dimension(config.dimension)
       .width(config.size.width)
       .height(config.size.height)

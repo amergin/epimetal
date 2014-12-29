@@ -177,7 +177,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
       };
 
       // 1. create composite chart
-      $scope.histogram = dc.seriesChart(config.element[0])
+      $scope.histogram = dc.seriesChart(config.element[0], constants.groups.histogram.nonInteractive)
       .chart(dc.barChart)
       .dimension(config.dimension)
       .width(config.size.width)
