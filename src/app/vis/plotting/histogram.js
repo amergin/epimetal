@@ -166,14 +166,25 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       // collect charts here
       var charts = [];
 
+      var resizeSVG = function(chart) {
+        var ratio = config.size.aspectRatio === 'stretch' ? 'none' : 'xMinYMin';
+          chart.select("svg")
+              .attr("viewBox", "0 0 " + [config.size.width, config.size.height].join(" ") )
+              .attr("preserveAspectRatio", ratio)
+              .attr("width", "100%")
+              .attr("height", "100%");
+          // don't redraw here, or it will form a feedback loop
+          // chart.redraw();
+      };
+
       // work-around, weird scope issue on filters ?!
       $scope.FilterService = $injector.get('FilterService');
 
       // 1. create composite chart
       $scope.histogram = dc.compositeChart(config.element[0], constants.groups.histogram)
       .dimension(config.dimension)
-      .width(null)
-      .height(null)
+      .width(config.size.width)
+      .height(config.size.height)
       .shareColors(true)
       .elasticY(true)
       .elasticX(false)
@@ -223,9 +234,9 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
           .attr("class", 'bar pooled')
           .attr("fill", _poolingColor);
         }
-
-      });
-
+      })
+      .on("postRender", resizeSVG)
+      .on("postRedraw", resizeSVG);
 
       // set x axis format
       $scope.histogram
@@ -260,11 +271,11 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       if( $scope.window.somSpecial  ) {
         var name = 'total';
         var chart = dc.barChart($scope.histogram) //, constants.groups.histogram)
-.centerBar(true)
-.barPadding(0.15)
-.brushOn(true)
-.dimension($scope.totalDimension)
-.group(config.filter($scope.totalReduced, name), name)
+          .centerBar(true)
+          .barPadding(0.15)
+          .brushOn(true)
+          .dimension($scope.totalDimension)
+          .group(config.filter($scope.totalReduced, name), name)
           .valueAccessor(function(d) { // is y direction
             return d.value.counts[name];
           });
@@ -298,6 +309,7 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
         element: ele,
         variableX: $scope.window.variables.x,
         noBins: $scope.noBins,
+        size: $scope.window.size,
         extent: $scope.extent,
         binWidth: $scope.binWidth,
         groups: $scope.groups,
@@ -317,11 +329,11 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       $scope.deregisters = [];
 
       var resizeUnbind = $rootScope.$on('gridster.resize', function(eve, $element) {
-        if( $element.is( $scope.$parent.element.parent() ) ) {
-          $timeout( function() {
-            $scope.histogram.render();
-          });
-        }
+        // if( $element.is( $scope.$parent.element.parent() ) ) {
+        //   $timeout( function() {
+        //     $scope.histogram.render();
+        //   });
+        // }
       });
 
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
@@ -329,17 +341,25 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
           if( config.omit == 'histogram' ) { return; }
           $timeout( function() {
             if(config.compute) {
-              // $scope.redraw();
+              $scope.redraw();
               var oldFilters = $scope.histogram.filters();
               $scope.histogram.filter(null);
-              $scope.redraw();
               $timeout(function() {
                 _.each(oldFilters, function(filter) {
                   $scope.histogram.filter(filter);
                 });
                 $scope.histogram.redraw();
               });
-
+              // if(!$scope.somSpecial) {
+              //   var oldFilters = $scope.histogram.filters();
+              //   $scope.histogram.filter(null);
+              //   $timeout(function() {
+              //     _.each(oldFilters, function(filter) {
+              //       $scope.histogram.filter(filter);
+              //     });
+              //     $scope.histogram.redraw();
+              //   });
+              // }
             }
             else {
               $scope.histogram.redraw();

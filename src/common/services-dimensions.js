@@ -517,12 +517,18 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         };
 
         var reduceAdd = function(p, v) {
+          if( _.isEmpty(v.bmus) || _.isUndefined(v.bmus) ) {
+            return p;
+          }
           var variableVal = +v.variables[variable];
           if( _.isNaN(variableVal) ) {
             // pass
           }
           else {
             var bmuId = bmuStrId(v.bmus);
+            if( bmuId == '-1000|-1000' ) {
+              console.log("here");
+            }
             if( !p.counts[bmuId] ) { p.counts[bmuId] = { bmu: v.bmus, count: 0 }; }
             p.counts[bmuId].count = p.counts[bmuId].count + 1;
           }
@@ -532,13 +538,21 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         };
 
         var reduceRemove = function(p, v) {
+          // typically when service is restarted and bmu's have not yet
+          // been received (som computation pending)
+          if( _.isEmpty(v.bmus) || _.isUndefined(v.bmus) ) {
+            return p;
+          }
           var variableVal = +v.variables[variable];
           if( _.isNaN(variableVal) ) {
             // pass
           }
           else {
             var bmuId = bmuStrId(v.bmus);
-            p.counts[bmuId].count = p.counts[bmuId].count - 1;
+            if( !_.isUndefined(p.counts[bmuId]) ) {
+              // PROBLEM SPOT!
+              p.counts[bmuId].count = p.counts[bmuId].count - 1;
+            }
           } 
           p.counts.total = p.counts.total - 1;
           // console.log("--> REMOVE, P = ", JSON.stringify(p));
@@ -723,6 +737,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
       };
 
       this.copy = function() {
+        // return this.getSampleDimension().top(Infinity);
         return angular.copy( this.getSampleDimension().top(Infinity) );
       };
 
@@ -745,7 +760,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         });
 
         this.rebuildInstance();
-        this.clearFilters();
+        // this.clearFilters();
       };
 
       // start by initializing crossfilter

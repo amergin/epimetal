@@ -41,7 +41,6 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
       });
 
       $scope.totalDimension = DimensionService.getPrimary().getSampleDimension();
-      // $scope.totalGroup = $scope.totalDimension.groupAll();
       $scope.totalReduced = DimensionService.getPrimary().getReducedSTD( $scope.totalDimension.groupAll(), $scope.window.variables.x );
     };
 
@@ -162,18 +161,27 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
 
         // remove this instance and create a new one
         // this is to combat rescaling issues, FIXME
-        $scope.window.handler.remove( $scope.window._winid );
-        PlotService.drawProfileHistogram({ variables: $scope.window.variables }, $scope.window.handler);
+        // $scope.window.handler.remove( $scope.window._winid );
+        // PlotService.drawProfileHistogram({ variables: $scope.window.variables }, $scope.window.handler);
 
+      };
+
+      var resizeSVG = function(chart) {
+        var ratio = config.size.aspectRatio === 'stretch' ? 'none' : 'xMinYMin';
+          chart.select("svg")
+              .attr("viewBox", "0 0 " + [config.size.width, config.size.height].join(" ") )
+              .attr("preserveAspectRatio", ratio)
+              .attr("width", "100%")
+              .attr("height", "100%");
+          // chart.redraw();
       };
 
       // 1. create composite chart
       $scope.histogram = dc.seriesChart(config.element[0])
       .chart(dc.barChart)
       .dimension(config.dimension)
-      .width(null)
-      .height(null)
-      //.shareColors(true)
+      .width(config.size.width)
+      .height(config.size.height)
       .elasticY(true)
       .elasticX(true)
       .brushOn(false)
@@ -203,9 +211,6 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
       })
       .seriesAccessor( function(d) {
         return d.key.variable;
-        // var circle = d.key.circle,
-        // variable = d.key.variable;
-        // return getLabel(variable, circle);
       })
       .seriesSort(d3.descending)
       .valueSort(d3.descending)
@@ -214,7 +219,8 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         colorAccessor: function(d) {
           return d.key.circle.id();
         },
-        barPadding: 0.30
+        barPadding: 0.30,
+        gap: 5
       })
       .valueAccessor(function(d) { // is y direction
         // console.log("N=", d.value.n, JSON.stringify(d), " in group = ", getLabel(d.key.variable, d.key.circle) );
@@ -239,62 +245,25 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
           .attr('dx', "-1em");
 
           chart.selectAll('rect').on("click", onClick);
-        });
+        })
+      .on("postRender", resizeSVG)
+      .on("postRedraw", resizeSVG);
 
-        // hide y axis
-        // $scope.histogram.yAxis().ticks(0); //.tickFormat( function(v) { return ''; } );
 
-      // // 2. for each of the additional stacks, create a child chart
-      // _.each(config.groups, function(group, variable) {
-      //   var chart = dc.barChart($scope.histogram)
-      //   .centerBar(false)
-      //   .xUnits(dc.units.ordinal)
-      //   .x( d3.scale.ordinal().domain(labels))
-      //   .barPadding(0.15)
-      //   .colorAccessor( function(d) {
-      //     return d.key.circle.id();
-      //   })
-      //   .brushOn(false)
-      //   .dimension(config.dimension)
-      //   .group(config.filter(group, variable), variable)
-      //   .valueAccessor(function(d) { // is y direction
-      //     // console.log("N=", d.value.n, JSON.stringify(d), " in group = ", getLabel(d.key.variable, d.key.circle) );
-      //     var mean = d.value.mean;
-      //     var constant = 100;
-      //     var totalVal = config.totalReduced.value()[variable];
-      //     var totalStd = totalVal.valueOf().stddev;
-      //     var totalMean = totalVal.valueOf().mean;
-      //     return ( mean - totalMean ) / totalStd * constant; 
-      //   });
-      //   // .seriesAccessor( function(d) {
-      //   //   var circle = d.key.circle,
-      //   //   variable = d.key.variable;
-      //   //   return getLabel(variable, circle);
-      //   // });
-      //   // .keyAccessor(function(d) {
-      //   //   var circle = d.key.circle,
-      //   //   variable = d.key.variable;
-      //   //   return getLabel(variable, circle);
-      //   // });
+      // hide y axis
+      // $scope.histogram.yAxis().ticks(0); //.tickFormat( function(v) { return ''; } );
 
-      //   $scope.barCharts[variable] = chart;
-      //   charts.push(chart);
-
-      // });
-
-      // 3. compose & render the composite chart
-      // $scope.histogram.compose(charts);
       $scope.histogram.render();
-
     };
 
     function postLink($scope, ele, attrs, ctrl) {
 
       $scope.$parent.element = ele;
 
-      var config = {
+      $scope.config = {
         dimension: $scope.dimension,
         element: ele,
+        size: $scope.window.size,
         groups: $scope.groups,
         groupNames: $scope.window.variables.x.sort(),
         colorScale: $scope.colorScale,
@@ -304,7 +273,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
       };
 
       $timeout( function() {
-        createSVG($scope, config);
+        createSVG($scope, $scope.config);
       });
 
 
@@ -315,7 +284,15 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
           if( config.omit == 'histogram' ) { return; }
           $timeout( function() {
             if(config.compute) {
-              $scope.redraw();
+              if($scope.histogram) {
+                $scope.histogram.resetSvg();
+                $scope.$parent.element.find('svg').remove();
+                $scope.compute();
+                createSVG($scope, $scope.config);
+              }
+              else {
+                $scope.redraw();
+              }
             }
             else {
               if( $scope.histogram ) {

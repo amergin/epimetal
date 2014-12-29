@@ -38,8 +38,6 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         .attr("height", "100%");
 
         svg
-        // .attr("width", width)
-        // .attr("height", height)
         .style('vertical-align', 'top')
         .style('padding-right', '10px');
         var g = svg.append("g").attr("transform", "translate(10,10)").classed("colorbar", true);

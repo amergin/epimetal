@@ -48,9 +48,21 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
     this.drawHistogram = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
         var type = 'histogram';
-        config.size = 'normal';
         config.type = type;
         config.somSpecial = config.somSpecial || false;
+        if(config.somSpecial) {
+          config.size = {
+            width: 400,
+            height: 300,
+            aspectRatio: 'preserve'
+          };
+        } else {
+          config.size = {
+            width: 450,
+            height: 375,
+            aspectRatio: 'stretch'
+          };
+        }
         windowHandler.add(config);
 
         UrlHandler.createWindow( type, config );
@@ -115,6 +127,11 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
       var draw = function() {
         var type = 'profile-histogram';
         config.type = type;
+        config.size = {
+          width: 1600,
+          height: 400,
+          aspectRatio: 'preserve'
+        };
         windowHandler.add(config);
         UrlHandler.createWindow( type, config );
       };

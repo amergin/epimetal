@@ -137,8 +137,8 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
   }
 ]);
 
-mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$rootScope', 'bottomWindowHandler', 'DatasetFactory', 'DimensionService', 'SOMService', 'PlotService', 'NotifyService',
-  function SOMBottomContentController($scope, $templateCache, $rootScope, bottomWindowHandler, DatasetFactory, DimensionService, SOMService, PlotService, NotifyService) {
+mod.controller('SOMBottomContentController', ['$scope', '$injector', '$timeout', '$rootScope', 'bottomWindowHandler', 'DatasetFactory', 'DimensionService', 'SOMService', 'PlotService', 'NotifyService',
+  function SOMBottomContentController($scope, $injector, $timeout, $rootScope, bottomWindowHandler, DatasetFactory, DimensionService, SOMService, PlotService, NotifyService) {
     $scope.windowHandler = bottomWindowHandler;
     $scope.windows = $scope.windowHandler.get();
 
@@ -159,6 +159,9 @@ mod.controller('SOMBottomContentController', ['$scope', '$templateCache', '$root
             DimensionService.restart( current, primary );
             SOMService.getSOM().then( function succFn() {
               $scope.checkDefaults();
+              // $timeout(function() {
+              //   $scope.windowHandler.getService().reRenderVisible({ compute: true });
+              // });
             }, function errFn(msg) {
               NotifyService.addTransient('Error', msg, 'warning');
             });
