@@ -43,10 +43,20 @@ mod.controller('SOMProfilesMenuController', ['$scope', '$templateCache', '$rootS
       $scope.profiles = DatasetFactory.getProfiles();
     });
 
+    var removeOldProfile = function() {
+      var ind = Utils.indexOf($scope.windowHandler.get(), function(win) {
+        return win.type == 'profile-histogram';
+      });
+      if( ind != -1 ) {
+        $scope.windowHandler.get().splice(ind,1);
+      }
+    };
+
     $scope.$watch('profile', function(profile) {
       if( _.isEmpty(profile) ) { return; }
       var activeSampleSize = $scope.windowHandler.getDimensionService().getSampleDimension().group().reduceCount().size();
       if( activeSampleSize === 0 ) { return; }
+      removeOldProfile();
       PlotService.drawProfileHistogram({ variables: { x: profile.variables } }, $scope.windowHandler);
     });
   }

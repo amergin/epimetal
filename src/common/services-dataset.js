@@ -202,7 +202,19 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         .map(function(d) { return d.name; } )
         .value();
       };
-      return [ { name: 'Total lipids', variables: getTotalLipids() }  ];      
+      var getFattyAcids = function() {
+        var names = ['TotFA', 'UnSat', 'DHA', 'LA', 'FAw3', 'FAw6', 'PUFA', 'MUFA', 'SFA', 'DHAtoFA', 'LAtoFA', 'FAw3toFA', 'FAw6toFA', 'PUFAtoFA', 'MUFAtoFA', 'SFAtoFA'];
+        return names;
+      };
+
+      var getSmallMolecules = function() {
+        var names = ['Glc', 'Lac', 'Pyr', 'Cit', 'Glol', 'Ala', 'Gln', 'His', 'Ile', 'Leu', 'Val', 'Phe', 'Tyr', 'Ace', 'AcAce', 'bOHBut', 'Crea', 'Alb', 'Gp'];
+        return names;
+      };
+      return [ { name: 'Total lipids', variables: getTotalLipids() },
+      { name: 'Fatty acids', variables: getFattyAcids() },
+      { name: 'Small molecules', variables: getSmallMolecules() }
+      ];
     });
 
     service.getProfiles = function() {

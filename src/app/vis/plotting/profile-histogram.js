@@ -79,7 +79,9 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
           .map(function(groups, circleId) {
             var obj = { 
               key: { variable: name, circle: FilterService.getSOMFilter(circleId) }, 
-              value: { mean: 0, n: 0 } 
+              value: { mean: 0, n: 0 },
+              // for later sorting
+              valueOf: function() { return this.key.variable; }
             };
             _.each(groups, function(grp) {
               // actually a sum
@@ -112,25 +114,13 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
   }
   ]);
 
-visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'FilterService',
+visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$injector',
 
-  function(constants, $timeout, $rootScope, $injector, FilterService) {
+  function(constants, $timeout, $rootScope, $injector) {
 
     var PlotService = $injector.get('PlotService');
 
     var createSVG = function($scope, config) {
-      // check css window rules before touching these
-      var _width = 470;
-      var _height = 345;
-      var _xBarWidth = 50;
-      var _poolingColor = '#000000';
-
-      // collect charts here
-      var charts = [];
-
-      // work-around, weird scope issue on filters ?!
-      $scope.FilterService = $injector.get('FilterService');
-
       var getLabel = function(variable, circle) {
         return variable + " (" + circle.name() + ")";
       };
@@ -158,12 +148,6 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         $scope.window.handler.removeByType('histogram');
         // draw a new one
         PlotService.drawHistogram( config, $scope.window.handler );
-
-        // remove this instance and create a new one
-        // this is to combat rescaling issues, FIXME
-        // $scope.window.handler.remove( $scope.window._winid );
-        // PlotService.drawProfileHistogram({ variables: $scope.window.variables }, $scope.window.handler);
-
       };
 
       var resizeSVG = function(chart) {
@@ -176,10 +160,44 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
           // chart.redraw();
       };
 
+      // var sortByLowerCase = function(a,b) {
+      //   var aLower = a.valueOf().toLowerCase(),
+      //   bLower = b.valueOf().toLowerCase();
+      //   if( aLower < bLower ) { 
+      //     console.log (aLower, " < ", bLower);
+      //     return -1; }
+      //   if( aLower > bLower ) { 
+      //     console.log (aLower, " > ", bLower);          
+      //     return 1; 
+      //   }
+      //   console.log(aLower, " = ", bLower);
+      //   return 0;
+      // };
+
+      // var sortByLabel = function(a,b) {
+      //   var aLabel = getLabel(a.key.variable, a.key.circle);
+      //   var bLabel = getLabel(b.key.variable, b.key.circle);
+      //   if( aLabel < bLabel ) { return -1; }
+      //   if( aLabel > bLabel ) { return 1; }
+      //   return 0;
+      // };
+
       // 1. create composite chart
       $scope.histogram = dc.seriesChart(config.element[0], constants.groups.histogram.nonInteractive)
       .chart(dc.barChart)
       .dimension(config.dimension)
+      .group(config.filter(config.groups))
+      .seriesAccessor( function(d) {
+        return d.key.variable;
+      })
+      .seriesSort(function(a,b) {
+        return d3.ascending(a.toLowerCase(), b.toLowerCase());
+      }) //sortByLowerCase)
+      .valueSort(function(a,b) {
+        var aLabel = getLabel(a.key.variable, a.key.circle);
+        var bLabel = getLabel(b.key.variable, b.key.circle);
+        return d3.ascending(aLabel.toLowerCase(), bLabel.toLowerCase());
+      }) //sortByLabel)
       .width(config.size.width)
       .height(config.size.height)
       .elasticY(true)
@@ -209,12 +227,6 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         bottom: 90,
         left: 40
       })
-      .seriesAccessor( function(d) {
-        return d.key.variable;
-      })
-      .seriesSort(d3.descending)
-      .valueSort(d3.descending)
-      .group(config.filter(config.groups))
       .childOptions({
         colorAccessor: function(d) {
           return d.key.circle.id();
@@ -223,8 +235,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         gap: 5
       })
       .valueAccessor(function(d) { // is y direction
-        // console.log("N=", d.value.n, JSON.stringify(d), " in group = ", getLabel(d.key.variable, d.key.circle) );
-        var variable = d.key.variable;//groupName;
+        var variable = d.key.variable;
         var mean = d.value.mean;
         var constant = 100;
         var totalVal = config.totalReduced.value()[variable];

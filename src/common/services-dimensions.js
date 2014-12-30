@@ -456,12 +456,17 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             if( _.isNaN(value) ) {
               //pass
             } else {
-              var delta = value - obj.mean;
-              obj.mean = obj.mean + delta/obj.n;
-              obj.M2 = obj.M2 + delta*(value - obj.mean);
+              if( obj.n === 1 ) {
+                obj.mean = value;
+                obj.M2 = 0;
+              } else {
+                var delta = value - obj.mean;
+                obj.mean = obj.mean + delta/obj.n;
+                obj.M2 = obj.M2 + delta*(value - obj.mean);
+              }
             }
           }
-          console.log("--> ADD", JSON.stringify(p), "V = ", v);          
+          // console.log("--> ADD", JSON.stringify(p), "V = ", v);          
           return p;
         };
 
@@ -484,7 +489,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
               obj.M2 = obj.M2 - delta*(value - obj.mean);
             }
           }
-          console.log("--> REMOVE", JSON.stringify(p), "V = ", v);
+          // console.log("--> REMOVE", JSON.stringify(p), "V = ", v);
           return p;
         };
 
@@ -707,10 +712,10 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         removeFilters();
         crossfilterInst.remove();//( function() { return false; } );
         crossfilterInst.add(_.values(currSamples));
-        $injector.get('WindowHandler').reRenderVisible({ compute: true });
         // $rootScope.$emit('dimension:crossfilter');
         addFilterFunctions();
         addHistogramFilters();
+        $injector.get('WindowHandler').reRenderVisible({ compute: true });
       };
 
       this.updateDatasetDimension = function () {

@@ -96,7 +96,6 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         if( ind == -1 ) { return; }
 
         var win = windows.splice(ind,1);
-        console.log("splice = ", win, "type = ", type);
         win = _.first(win);
         $rootScope.$emit('variable:remove', win.type, win.variables);
         return that;

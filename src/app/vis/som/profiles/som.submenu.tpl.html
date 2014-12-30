@@ -1,19 +1,9 @@
 <select chosen
 		ng-model="profile"
-		ng-options="profile as profile.name for profile in profiles"
+		ng-options="profile as profile.name for profile in profiles | orderBy:'name'"
         data-placeholder="Select a profile"
         disable-search="true"
         allow-single-deselect="false"
         width="'50%'">
   <option value=""></option>
 </select>
-
-<!-- <div class="btn-group" role="group">
-	<a class="btn btn-default disabled" href>
-		<span>Selected profile</span>
-	</a>
-	<a class="btn btn-primary" href>
-		<span>Lipoprotein subclasses</span>
-		<i class="fa fa-caret-down"></i>
-	</a>
-</div> -->
