@@ -356,49 +356,49 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
       };
 
-      this.getReducedBMUinCircle = function(dimensionGroup) {
-        var getId = function(v) {
-          return v.dataset + "|" + v.sampleid;
-        };
-        var circleFilters = $injector.get('FilterService').getSOMFilters();
+      // this.getReducedBMUinCircle = function(dimensionGroup) {
+      //   var getId = function(v) {
+      //     return v.dataset + "|" + v.sampleid;
+      //   };
+      //   var circleFilters = $injector.get('FilterService').getSOMFilters();
 
-        var getBMUstr = function(bmu) {
-          return bmu.x + "|" + bmu.y;
-        };
+      //   var getBMUstr = function(bmu) {
+      //     return bmu.x + "|" + bmu.y;
+      //   };
 
-        var reduceAdd = function (p, v) {
-          console.log("bmu-add");
-          p.samples[getId(v)] = true;
-          var bmuId = getBMUstr(v.bmus);
-          if( _.isUndefined(p.bmus[bmuId]) ) {
-            p.bmus[bmuId] = [];
-            // determine in which circle(s) the bmu belongs to:
-            _.each( circleFilters, function(circle) {
-              if( circle.contains(v.bmus) ) {
-                console.log( "hex = ", JSON.stringify(v.bmus), "belongs to circle = ", circle.id() );
-                p.bmus[bmuId].push( circle.id() );
-              }
-            });
+      //   var reduceAdd = function (p, v) {
+      //     console.log("bmu-add");
+      //     p.samples[getId(v)] = true;
+      //     var bmuId = getBMUstr(v.bmus);
+      //     if( _.isUndefined(p.bmus[bmuId]) ) {
+      //       p.bmus[bmuId] = [];
+      //       // determine in which circle(s) the bmu belongs to:
+      //       _.each( circleFilters, function(circle) {
+      //         if( circle.contains(v.bmus) ) {
+      //           console.log( "hex = ", JSON.stringify(v.bmus), "belongs to circle = ", circle.id() );
+      //           p.bmus[bmuId].push( circle.id() );
+      //         }
+      //       });
 
-          }
-          return p;
-        };
+      //     }
+      //     return p;
+      //   };
 
-        var reduceRemove = function (p, v) {
-          console.log("bmu-remove");          
-          p.samples[getId(v)] = false;
-          return p;
-        };
+      //   var reduceRemove = function (p, v) {
+      //     console.log("bmu-remove");          
+      //     p.samples[getId(v)] = false;
+      //     return p;
+      //   };
 
-        var reduceInitial = function () {
-          var p = {
-            samples: {},
-            bmus: {}
-          };
-          return p;
-        };
-        return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
-      };
+      //   var reduceInitial = function () {
+      //     var p = {
+      //       samples: {},
+      //       bmus: {}
+      //     };
+      //     return p;
+      //   };
+      //   return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
+      // };
 
       this.getReducedMean = function(dimensionGroup, variable) {
         // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Decremental_algorithm
@@ -410,9 +410,6 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             if( delta === 0 || p.n === 0 ) { return p; }
             p.mean = p.mean + delta/p.n;
           }
-          else {
-            // console.log("ELSE!", varValue);
-          }
           return p;
         };
 
@@ -423,8 +420,6 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             var delta = varValue - p.mean;
             if( delta === 0 || p.n === 0 ) { return p; }            
             p.mean = p.mean - delta/p.n;
-          } else {
-            // console.log("ELSE!", varValue);
           }
           return p;
         };
@@ -445,7 +440,80 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
       };
 
-      this.getReducedSTD = function(dimensionGroup, variables) {
+
+
+      this.getReducedSTD = function(dimensionGroup, variable) {
+        // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Decremental_algorithm
+        var reduceAdd = function (p, v) {
+          var obj = p;
+          obj.n = obj.n + 1;
+          var value = +v.variables[variable];
+          if( _.isNaN(value) ) {
+            //pass
+          } else {
+            var oldM2 = obj.M2;
+            var delta = value - obj.mean;
+            obj.mean = obj.mean + delta/obj.n;
+            obj.M2 = obj.M2 + delta*(value - obj.mean);
+            if( obj.M2 < 0 ) {
+              // console.log("passed to negative");
+            }
+            // if( obj.M2 <= 0 ) {
+            //   console.log("problem");
+            // }
+          }
+          // console.log("--> ADD", JSON.stringify(p), "V = ", v);
+          return p;
+        };
+
+        var reduceRemove = function (p, v) {
+          var obj = p;
+          obj.n = obj.n - 1;
+          if( obj.n === 0 ) {
+            obj.mean = 0;
+            obj.M2 = 0;
+          }
+          else {
+            var value = +v.variables[variable];
+            if( _.isNaN(value) ) {
+              //pass
+            } else {
+              var oldM2 = obj.M2;
+              var delta = value - obj.mean;
+              obj.mean = obj.mean - delta/obj.n;
+              obj.M2 = obj.M2 - delta*(value - obj.mean);
+              if( obj.M2 < 0 ) {
+                // console.log("passed to negative");
+              }
+
+            }
+          }
+          // console.log("--> REMOVE", JSON.stringify(p), "V = ", v);
+          return p;
+        };
+
+        var reduceInitial = function () {
+          var p = {};
+          var obj = p;
+          obj.n = 0;
+          obj.mean = 0;
+          obj.M2 = 0;
+          obj.valueOf = function() {
+            var variance = obj.M2 / (obj.n-1),
+            stddev = Math.sqrt(variance);
+            return {
+              variance: variance,
+              stddev: stddev,
+              mean: obj.mean
+            };
+          };
+          return p;
+        };
+        return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
+      };
+
+
+      this.getReducedSTDMultiple = function(dimensionGroup, variables) {
         // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Decremental_algorithm
         var reduceAdd = function (p, v) {
           for(var i = 0; i < variables.length; ++i) {
@@ -456,17 +524,12 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
             if( _.isNaN(value) ) {
               //pass
             } else {
-              if( obj.n === 1 ) {
-                obj.mean = value;
-                obj.M2 = 0;
-              } else {
-                var delta = value - obj.mean;
-                obj.mean = obj.mean + delta/obj.n;
-                obj.M2 = obj.M2 + delta*(value - obj.mean);
-              }
+              var delta = value - obj.mean;
+              obj.mean = obj.mean + delta/obj.n;
+              obj.M2 = obj.M2 + delta*(value - obj.mean);
             }
           }
-          // console.log("--> ADD", JSON.stringify(p), "V = ", v);          
+          console.log("--> ADD", JSON.stringify(p), "V = ", v);          
           return p;
         };
 
@@ -489,7 +552,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
               obj.M2 = obj.M2 - delta*(value - obj.mean);
             }
           }
-          // console.log("--> REMOVE", JSON.stringify(p), "V = ", v);
+          console.log("--> REMOVE", JSON.stringify(p), "V = ", v);
           return p;
         };
 
@@ -709,12 +772,14 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
 
 
         console.log("Crossfilter instance rebuild called on", this.getName());
-        removeFilters();
-        crossfilterInst.remove();//( function() { return false; } );
+        // removeFilters();
+        // crossfilterInst.remove();//( function() { return false; } );
+        // crossfilterInst.add(_.values(currSamples));
+        // // $rootScope.$emit('dimension:crossfilter');
+        // addFilterFunctions();
+        // addHistogramFilters();
+        crossfilterInst.remove(function() { return false; });
         crossfilterInst.add(_.values(currSamples));
-        // $rootScope.$emit('dimension:crossfilter');
-        addFilterFunctions();
-        addHistogramFilters();
         $injector.get('WindowHandler').reRenderVisible({ compute: true });
       };
 
@@ -778,7 +843,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         });
 
         this.rebuildInstance();
-        // this.clearFilters();
+        this.clearFilters();
       };
 
       // start by initializing crossfilter

@@ -304,7 +304,7 @@
     $rootScope.$on('tab.changed', function(event, tabName) {
       _.each( WindowHandler.getVisible(), function(hand) {
         console.log("tab.changed triggered for", tabName);
-        hand.redrawAll({ 'compute': false });
+        // hand.redrawAll({ 'compute': false });
       });
     });
 

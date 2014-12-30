@@ -59,6 +59,11 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
         });
       }
 
+      function removePrevious() {
+        // remove previous computation
+        that.som = {};
+      }
+
       function doCall(samples) {
         NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'success');
 
@@ -67,8 +72,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
           return set.getName();
         });
 
-        // remove previous computation
-        that.som = {};
+        removePrevious();
 
 
         var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
@@ -113,6 +117,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
 
 
       if( samples.length < 10 ) {
+        removePrevious();
         defer.reject('Under 10 samples provided for SOM computation.');
       }
       else if( service.somReady(samples) ) {

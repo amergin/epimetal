@@ -198,8 +198,23 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
           }
         });    
         return res;    
+      },
+      spinAllVisible: function() {
+        _.each(this.getVisible(), function(handler) {
+          handler.spinAll();
+        });
+      },
+      stopAllSpins: function() {
+        _.each(this.getVisible(), function(handler) {
+          handler.stopAllSpins();
+        });
+      },
+      removeAllVisible: function() {
+        _.each(this.getVisible(), function(handler) {
+          // empty the window array, that'll remove all
+          handler.get().splice(0);
+        });
       }
-
     };
 
 

@@ -144,11 +144,13 @@ mod.controller('SOMBottomContentController', ['$scope', '$injector', '$timeout',
 
     var defaultVariables = ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'];
 
-    $scope.checkDefaults = _.once( function() {
-      _.each( defaultVariables, function(variable) {
-        PlotService.drawSOM({ variables: { x: variable } }, bottomWindowHandler);
-      });
-    });
+    $scope.checkDefaults = function() {
+      if( $scope.windows.length === 0 ) {
+        _.each( defaultVariables, function(variable) {
+          PlotService.drawSOM({ variables: { x: variable } }, bottomWindowHandler);
+        });
+      }
+    };
 
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
       var compareAndRestart = function() {
@@ -157,13 +159,18 @@ mod.controller('SOMBottomContentController', ['$scope', '$injector', '$timeout',
           if( !DimensionService.equal( primary, current ) ) {
             console.log("dimension instances not equal, need to restart");
             DimensionService.restart( current, primary );
+            $scope.windowHandler.getService().spinAllVisible();
             SOMService.getSOM().then( function succFn() {
               $scope.checkDefaults();
-              // $timeout(function() {
-              //   $scope.windowHandler.getService().reRenderVisible({ compute: true });
-              // });
+              $timeout(function() {
+                $scope.windowHandler.getService().reRenderVisible({ compute: true });
+              });
             }, function errFn(msg) {
-              NotifyService.addTransient('Error', msg, 'warning');
+              NotifyService.addTransient('Error', msg, 'danger');
+              $scope.windowHandler.getService().removeAllVisible();
+            })
+            .finally(function() {
+              $scope.windowHandler.getService().stopAllSpins();
             });
           } else {
             console.log("dimension instances equal, do not restart");

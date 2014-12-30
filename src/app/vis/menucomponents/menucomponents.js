@@ -28,9 +28,7 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
     $scope.datasets = DatasetFactory.getSets();
 
     $scope.toggle = function(set) {
-      _.each( WindowHandler.getAll(), function(h) {
-        h.spinAll();
-      });
+      WindowHandler.spinAllVisible();
 
       set.toggle();
       DatasetFactory.checkActiveVariables(set).then( function succFn(res) {
@@ -54,9 +52,7 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
         level = 'danger';
         NotifyService.addTransient(title, message, level);
       }).finally( function() {
-        _.each( WindowHandler.getAll(), function(h) {
-          h.stopAllSpins();
-        });
+        WindowHandler.stopAllSpins();
       });
     };
   }

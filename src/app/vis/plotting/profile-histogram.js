@@ -24,6 +24,9 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
     $scope.groups = {};
 
     $scope.compute = function() {
+      $scope.totalDimension = DimensionService.getPrimary().getSampleDimension();
+      $scope.totalReduced = {};
+
       // notice that you CANNOT use SOMDimension here! it will not apply the filter on its dimension
       // to restrict out to proper amount of samples!
       _.each( $scope.window.variables.x, function(variable) {
@@ -38,10 +41,11 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
           };
         });
         $scope.groups[variable] = $scope.dimensionService.getReducedMean(group, variable);
+        $scope.totalReduced[variable] = DimensionService.getPrimary().getReducedSTD( $scope.totalDimension.groupAll(), variable );
       });
 
-      $scope.totalDimension = DimensionService.getPrimary().getSampleDimension();
-      $scope.totalReduced = DimensionService.getPrimary().getReducedSTD( $scope.totalDimension.groupAll(), $scope.window.variables.x );
+      // $scope.totalDimension = DimensionService.getPrimary().getSampleDimension();
+      // $scope.totalReduced = DimensionService.getPrimary().getReducedSTD( $scope.totalDimension.groupAll(), $scope.window.variables.x );
     };
 
     $scope.compute();
@@ -207,7 +211,8 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
       .colors(config.colorScale)
       .title(function(d) {
         var variable = d.key.variable;
-        var totalVal = config.totalReduced.value()[variable];
+        var totalVal = config.totalReduced[variable].value();
+        // var totalVal = config.totalReduced.value()[variable];
         var value = d.value.valueOf();
         var totalStd = d3.round(totalVal.valueOf().stddev, 3);
         var circle = d.key.circle;
@@ -221,6 +226,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
       })
       .x( d3.scale.ordinal().domain(config.groupNames) )
       .xUnits(dc.units.ordinal)
+      // .y(d3.scale.linear().domain([-110,110]))
       .margins({
         top: 10,
         right: 10,
@@ -238,9 +244,11 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         var variable = d.key.variable;
         var mean = d.value.mean;
         var constant = 100;
-        var totalVal = config.totalReduced.value()[variable];
+        // var totalVal = config.totalReduced.value()[variable];
+        var totalVal = config.totalReduced[variable].value();
         var totalStd = totalVal.valueOf().stddev;
         var totalMean = totalVal.valueOf().mean;
+        console.log("totalMean = ", totalMean, "totalStd = ", totalStd, totalVal);
         return ( mean - totalMean ) / totalStd * constant; 
       })
       .keyAccessor(function(d) {
