@@ -168,9 +168,23 @@ mod.controller('SOMBottomContentController', ['$scope', '$injector', '$timeout',
             }, function errFn(msg) {
               NotifyService.addTransient('Error', msg, 'danger');
               $scope.windowHandler.getService().removeAllVisible();
+              _.each($scope.windowHandler.getService().getVisible(), function(handler) {
+                _.each(handler.get(), function(win) {
+                  if( win.type == 'somplane' ) {
+                    handler.stopSpin(win._winid);
+                  }
+                });
+              });              
             })
             .finally(function() {
-              $scope.windowHandler.getService().stopAllSpins();
+              // $scope.windowHandler.getService().stopAllSpins();
+              _.each($scope.windowHandler.getService().getVisible(), function(handler) {
+                _.each(handler.get(), function(win) {
+                  if( win.type != 'somplane' ) {
+                    handler.stopSpin(win._winid);
+                  }
+                });
+              });
             });
           } else {
             console.log("dimension instances equal, do not restart");

@@ -215,6 +215,8 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
             if( filterRemoved ) {
               $scope.window.showResetBtn = false;
               $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
+              // no idea why this is needed
+              $scope.histogram.redraw();
             } else {
               $scope.window.showResetBtn = true;
                 // remove filter (perhaps slided to another position)

@@ -101,21 +101,21 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         return that;
       };
 
-      this.remove = function(id) {
-        var _findWin = function(id) {
-          var rwin;
-          var rind;
-          _.every( windows, function(win,ind) {
-            if( win['_winid'] === id ) {
-              rwin = win;
-              rind = ind;
-              return false;
-            }
-            return true;
-          });
-          return [rwin, rind];
-        };
+      var _findWin = function(id) {
+        var rwin;
+        var rind;
+        _.every( windows, function(win,ind) {
+          if( win['_winid'] === id ) {
+            rwin = win;
+            rind = ind;
+            return false;
+          }
+          return true;
+        });
+        return [rwin, rind];
+      };
 
+      this.remove = function(id) {
         var fnd = _findWin(id);
         var win  = fnd[0];
         var wind = fnd[1];
@@ -148,8 +148,11 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         return ret;
       };
 
-      this.get = function() {
-        return windows;
+      this.get = function(id) {
+        if(!arguments.length) {
+          return windows;
+        }
+        return _findWin(id)[0];
       };
     } // function
 
