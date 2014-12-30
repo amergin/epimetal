@@ -33,8 +33,8 @@ mod.controller('SOMProfilesController', ['$scope', '$templateCache', '$rootScope
   }
 ]);
 
-mod.controller('SOMProfilesMenuController', ['$scope', '$templateCache', '$rootScope', 'PlotService', 'DatasetFactory', 'windowHandler',
-  function SOMProfilesMenuController($scope, $templateCache, $rootScope, PlotService, DatasetFactory, windowHandler) {
+mod.controller('SOMProfilesMenuController', ['$scope', '$templateCache', '$rootScope', 'PlotService', 'DatasetFactory', 'windowHandler', 'SOMService',
+  function SOMProfilesMenuController($scope, $templateCache, $rootScope, PlotService, DatasetFactory, windowHandler, SOMService) {
     $scope.windowHandler = windowHandler;
 
     // selected from the dropdown
@@ -42,6 +42,10 @@ mod.controller('SOMProfilesMenuController', ['$scope', '$templateCache', '$rootS
     DatasetFactory.getVariables().then( function(res) {
       $scope.profiles = DatasetFactory.getProfiles();
     });
+
+    $scope.enabled = function() {
+      return SOMService.somReady();
+    };
 
     var removeOldProfile = function() {
       var ind = Utils.indexOf($scope.windowHandler.get(), function(win) {

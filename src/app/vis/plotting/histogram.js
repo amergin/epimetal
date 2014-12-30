@@ -346,24 +346,15 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
           $timeout( function() {
             if(config.compute) {
               $scope.redraw();
-              var oldFilters = $scope.histogram.filters();
-              $scope.histogram.filter(null);
-              $timeout(function() {
+
+              if(!$scope.somSpecial) {
+                var oldFilters = $scope.histogram.filters();
+                $scope.histogram.filter(null);
                 _.each(oldFilters, function(filter) {
                   $scope.histogram.filter(filter);
                 });
                 $scope.histogram.redraw();
-              });
-              // if(!$scope.somSpecial) {
-              //   var oldFilters = $scope.histogram.filters();
-              //   $scope.histogram.filter(null);
-              //   $timeout(function() {
-              //     _.each(oldFilters, function(filter) {
-              //       $scope.histogram.filter(filter);
-              //     });
-              //     $scope.histogram.redraw();
-              //   });
-              // }
+              }
             }
             else {
               $scope.histogram.redraw();

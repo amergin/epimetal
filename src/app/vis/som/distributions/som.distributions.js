@@ -49,10 +49,14 @@ mod.controller('SOMDistributionsController', ['$scope', '$templateCache', '$root
   }
 ]);
 
-mod.controller('SOMMenuController', ['$scope', '$templateCache', '$rootScope', 'windowHandler',
-  function SOMMenuController($scope, $templateCache, $rootScope, windowHandler) {
+mod.controller('SOMMenuController', ['$scope', '$templateCache', '$rootScope', 'windowHandler', 'SOMService',
+  function SOMMenuController($scope, $templateCache, $rootScope, windowHandler, SOMService) {
     $scope.windowHandler = windowHandler;
     $scope.somSpecial = true;
+
+    $scope.enabled = function() {
+      return SOMService.somReady();
+    };
   }
 ]);
 

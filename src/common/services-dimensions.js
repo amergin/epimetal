@@ -441,53 +441,97 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
       };
 
 
+      this.getReducedSTD2 = function(dimensionGroup, variable) {
+        // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+        var reduceAdd = function (p, v) {
+          var value = +v.variables[variable];
+          if( _.isNaN(value) ) {
+            //pass
+          }
+          else {
+            if( p.n === 0 ) {
+              p.k = value;
+            }
+            p.n = p.n + 1;
+            p.ex = p.ex + (value-p.k);
+            p.ex2 = p.ex2 + (value-p.k) * (value-p.k);
+          }
+          return p;
+        };
+
+        var reduceRemove = function (p, v) {
+          var value = +v.variables[variable];
+          if( _.isNaN(value) ) {
+            //pass
+          } else {
+            p.n = p.n - 1;
+            p.ex = p.ex - (value-p.k);
+            p.ex2 = p.ex2 - (value-p.k) * (value-p.k);
+          }
+          return p;
+        };
+
+        var reduceInitial = function () {
+          var p = {
+            k: 0,
+            n: 0,
+            ex: 0,
+            ex2: 0,
+            valueOf: function() {
+              var variance = (p.ex2 - (p.ex * p.ex)/p.n) / (p.n-1);
+              var mean = p.k + p.ex / p.n;
+              return {
+                variance: variance,
+                stddev: Math.sqrt(variance),
+                mean: mean
+              };
+            }
+          };
+          return p;
+        };
+        return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
+      };
+
 
       this.getReducedSTD = function(dimensionGroup, variable) {
         // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Decremental_algorithm
         var reduceAdd = function (p, v) {
           var obj = p;
-          obj.n = obj.n + 1;
           var value = +v.variables[variable];
           if( _.isNaN(value) ) {
             //pass
           } else {
+            obj.n = obj.n + 1;
             var oldM2 = obj.M2;
             var delta = value - obj.mean;
             obj.mean = obj.mean + delta/obj.n;
             obj.M2 = obj.M2 + delta*(value - obj.mean);
             if( obj.M2 < 0 ) {
-              // console.log("passed to negative");
+              console.log("ADD passed to negative", variable, oldM2, "delta=", delta, JSON.stringify(obj));
             }
-            // if( obj.M2 <= 0 ) {
-            //   console.log("problem");
-            // }
           }
+          // console.log("--> ADD", p.n, variable, JSON.stringify(p.valueOf()));          
           // console.log("--> ADD", JSON.stringify(p), "V = ", v);
           return p;
         };
 
         var reduceRemove = function (p, v) {
           var obj = p;
-          obj.n = obj.n - 1;
-          if( obj.n === 0 ) {
-            obj.mean = 0;
-            obj.M2 = 0;
-          }
-          else {
-            var value = +v.variables[variable];
-            if( _.isNaN(value) ) {
-              //pass
-            } else {
-              var oldM2 = obj.M2;
-              var delta = value - obj.mean;
-              obj.mean = obj.mean - delta/obj.n;
-              obj.M2 = obj.M2 - delta*(value - obj.mean);
-              if( obj.M2 < 0 ) {
-                // console.log("passed to negative");
-              }
-
+          var value = +v.variables[variable];
+          if( _.isNaN(value) || obj.n < 2 ) {
+            //pass
+          } else {
+            obj.n = obj.n - 1;
+            var oldM2 = obj.M2;
+            var oldMean = obj.mean;
+            var delta = value - obj.mean;
+            obj.mean = obj.mean - delta/obj.n;
+            obj.M2 = obj.M2 - delta*(value - obj.mean);
+            if( obj.M2 < 0 ) {
+              console.log("REMOVE passed to negative", variable, oldM2, "delta=", delta, JSON.stringify(obj));
             }
           }
+          // console.log("--> REMOVE", p.n, variable, JSON.stringify(p.valueOf()));
           // console.log("--> REMOVE", JSON.stringify(p), "V = ", v);
           return p;
         };
@@ -499,7 +543,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
           obj.mean = 0;
           obj.M2 = 0;
           obj.valueOf = function() {
-            var variance = obj.M2 / (obj.n-1),
+            var variance = (obj.n < 2) ? 0 : obj.M2 / (obj.n-1),
             stddev = Math.sqrt(variance);
             return {
               variance: variance,
@@ -780,7 +824,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         // addHistogramFilters();
         crossfilterInst.remove(function() { return false; });
         crossfilterInst.add(_.values(currSamples));
-        $injector.get('WindowHandler').reRenderVisible({ compute: true });
+        // $injector.get('WindowHandler').reRenderVisible({ compute: true });
       };
 
       this.updateDatasetDimension = function () {

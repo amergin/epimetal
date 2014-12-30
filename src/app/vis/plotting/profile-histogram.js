@@ -248,7 +248,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         var totalVal = config.totalReduced[variable].value();
         var totalStd = totalVal.valueOf().stddev;
         var totalMean = totalVal.valueOf().mean;
-        console.log("totalMean = ", totalMean, "totalStd = ", totalStd, totalVal);
+        console.log(variable, "totalMean = ", totalMean, "totalStd = ", totalStd, totalVal);
         return ( mean - totalMean ) / totalStd * constant; 
       })
       .keyAccessor(function(d) {
