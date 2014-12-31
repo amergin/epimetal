@@ -47,6 +47,8 @@ mod.controller('SOMProfilesMenuController', ['$scope', '$templateCache', '$rootS
       return SOMService.somReady();
     };
 
+    $scope.sampleGroup = $scope.windowHandler.getDimensionService().getSampleDimension().groupDefault().get();
+
     var removeOldProfile = function() {
       var ind = Utils.indexOf($scope.windowHandler.get(), function(win) {
         return win.type == 'profile-histogram';
@@ -58,7 +60,7 @@ mod.controller('SOMProfilesMenuController', ['$scope', '$templateCache', '$rootS
 
     $scope.$watch('profile', function(profile) {
       if( _.isEmpty(profile) ) { return; }
-      var activeSampleSize = $scope.windowHandler.getDimensionService().getSampleDimension().group().reduceCount().size();
+      var activeSampleSize = $scope.sampleGroup.reduceCount().size(); //$scope.windowHandler.getDimensionService().getSampleDimension().group().reduceCount().size();
       if( activeSampleSize === 0 ) { return; }
       removeOldProfile();
       PlotService.drawProfileHistogram({ variables: { x: profile.variables } }, $scope.windowHandler);

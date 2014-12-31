@@ -11,6 +11,9 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
        { type: 'som', circle: new CircleFilter('circle2', $injector).name('B') } ]
     };
 
+    var _somDimensionInst = _activeDimensionService.getSOMDimension();
+    var _somDimension = _somDimensionInst.get();
+
     var _colors = d3.scale.category10();
     var _bmusLookup = {};
 
@@ -31,7 +34,13 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
     var service = {};
 
     $rootScope.$on('tab.changed', function(event, tabName) {
+      function changeDimension() {
+        _somDimensionInst.decrement();
+        _somDimensionInst = _activeDimensionService.getSOMDimension();
+        _somDimension = _somDimensionInst.get();
+      }
       _activeDimensionService = DimensionService.get(tabName);
+      changeDimension();
       service.updateCircleFilters();
     });
 
@@ -119,7 +128,8 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
 
       var resolveAmounts = function() {
         var handle = [];
-        var groupedBMUs = _activeDimensionService.getSOMDimension().group();
+        var groupedBMUs = _somDimension.group();
+        // var groupedBMUs = _activeDimensionService.getSOMDimension().group();
         var counts = {};
         _.each( groupedBMUs.all(), function(group) {
           var inGroups = inWhatCircles(group.key);

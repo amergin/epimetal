@@ -8,21 +8,23 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
   function($scope, DatasetFactory, DimensionService, constants, $state, $rootScope, $timeout) {
 
     $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
-    $scope.dimension = $scope.dimensionService.getXYDimension($scope.window.variables);
-
+    $scope.dimensionInst = $scope.dimensionService.getXYDimension($scope.window.variables);
+    $scope.dimension = $scope.dimensionInst.get();
+    $scope.groupInst = $scope.dimensionService.getReduceScatterplot($scope.dimensionInst.groupDefault());
+    $scope.group = $scope.groupInst.get();
 
     $scope.$parent.showResetBtn = false;
     $scope.$parent.headerText = ['Scatter plot of', $scope.window.variables.x + ", " + $scope.window.variables.y, ''];
 
     $scope._calcCanvasAttributes = function() {
-      $scope.reduced = $scope.dimensionService.getReduceScatterplot($scope.dimension.group());
+      // $scope.reduced = $scope.dimensionService.getReduceScatterplot($scope.dimension.group());
 
       $scope.sets = DatasetFactory.activeSets();
       // min&max for all active datasets
-      $scope.xExtent = d3.extent($scope.reduced.top(Infinity), function(d) {
+      $scope.xExtent = d3.extent($scope.group.top(Infinity), function(d) {
         return d.key.x;
       });
-      $scope.yExtent = d3.extent($scope.reduced.top(Infinity), function(d) {
+      $scope.yExtent = d3.extent($scope.group.top(Infinity), function(d) {
         return d.key.y;
       });
 
@@ -33,7 +35,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
     $scope._createCanvas = function(set, zIndex) {
       var name = set.getName();
-      var data = $scope.reduced.all().filter(function(d) {
+      var data = $scope.group.all().filter(function(d) {
         return (d.value.counts[name] > 0) && d.key.valueOf() >= constants.legalMinValue;
       });
       var color = $scope.window.pooled ? 'black' : set.getColor();
@@ -415,6 +417,9 @@ visu.directive('scatterplot', ['$timeout', '$rootScope',
         _.each($scope.deregisters, function(unbindFn) {
           unbindFn();
         });
+
+        $scope.groupInst.decrement();
+        $scope.dimensionInst.decrement();
       });
 
       ele.on('$destroy', function() {

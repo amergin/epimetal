@@ -12,6 +12,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
     };
     that.SOMPlanes = {};
     that.dimensionService = undefined;
+    that.sampleDimension = undefined;
 
     var _colors = d3.scale.category10();
 
@@ -33,6 +34,8 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
 
     service.setDimensionService = function(dimensionService) {
       that.dimensionService = dimensionService;
+      that.sampleDimension = that.dimensionService.getSampleDimension().get();
+      return service;
     };
 
     service.updateVariables = function(variables) {
@@ -54,7 +57,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
       var defer = $q.defer();
 
       function getSamples() {
-        return _.map( that.dimensionService.getSampleDimension().top(Infinity), function(obj) {
+        return _.map( that.sampleDimension.top(Infinity), function(obj) {
           return _.pick( obj, 'dataset', 'sampleid');
         });
       }
@@ -125,7 +128,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
         defer.resolve('SOM already computed');        
       }
       else {
-        var primarySamplesCount = primary.getSize() > 0 ? primary.getSampleDimension().groupAll().reduceCount().value() : 0;
+        var primarySamplesCount = primary.getSize() > 0 ? primary.getSampleDimension().get().groupAll().reduceCount().value() : 0;
         var bmuCount = that.som.bmus ? that.som.bmus.length : 0;
         if( primarySamplesCount == bmuCount ) {
           console.log('SOM already computed');

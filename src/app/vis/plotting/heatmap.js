@@ -128,6 +128,17 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
       };
 
+      $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
+      $scope.sampDimensionInst = $scope.dimensionService.getSampleDimension();
+      $scope.sampDimension = $scope.sampDimensionInst.get();
+      $scope.crossfilter = crossfilter([]);
+      $scope.coordDim = $scope.crossfilter.dimension(function(d) {
+        return _.extend(d, { 'valueOf': function() { return d.x + "|" + d.y; } });
+      });
+      $scope.coordGroup = $scope.coordDim.group().reduceSum(function(d) {
+        return d.corr;
+      });
+
       $scope.computeVariables = function() {
       // calculate coordinates
       var coordinates = [];
@@ -140,9 +151,6 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       // var corr = sampleCorrelation( test, 'a', tmeanA, tstdA, 'b', tmeanB, tstdB );
       // console.log("testvars:", tmeanA, tmeanB, tstdA, tstdB, corr); // corr should be 1.0
 
-
-      $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
-      $scope.sampDimension = $scope.dimensionService.getSampleDimension();
       var samples = $scope.sampDimension.top(Infinity);
 
       var variables = $scope.window.variables.x;
@@ -190,16 +198,10 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       $scope.limit = 0.05 / bonferroni;
       $scope.limitDisp = $scope.format($scope.limit);
 
-      // create a tiny crossfilt. instance for heatmap
-      $scope.crossfilter = crossfilter(coordinates);
-      $scope.coordDim = $scope.crossfilter.dimension(function(d) {
-        return _.extend(d, { 'valueOf': function() { return d.x + "|" + d.y; } });
-        // console.log(d);
-        // return [d.x, d.y];
-      });
-      $scope.coordGroup = $scope.coordDim.group().reduceSum(function(d) {
-        return d.corr;
-      });
+      // create a tiny crossfilt. instance for heatmap. so tiny that it's outside of dimension
+      // service reach.
+      $scope.crossfilter.remove();
+      $scope.crossfilter.add(coordinates);
     };
 
     $scope.computeVariables();
@@ -302,6 +304,9 @@ visu.directive('heatmap', ['$compile', '$rootScope', '$timeout',
         _.each($scope.deregisters, function(unbindFn) {
           unbindFn();
         });
+        $scope.sampDimensionInst.decrement();
+        $scope.coordGroup.dispose();
+        $scope.coordDim.dispose();
       });
 
       ele.on('$destroy', function() {
@@ -312,9 +317,7 @@ visu.directive('heatmap', ['$compile', '$rootScope', '$timeout',
 
     return {
       scope: false,
-      // scope: {},
       restrict: 'C',
-      //require: '^?window',
       replace: true,
       link: linkFn,
       controller: 'HeatmapController',

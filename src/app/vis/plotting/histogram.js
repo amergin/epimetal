@@ -11,12 +11,16 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
 
     $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
 
-    $scope.dimension = $scope.dimensionService.getDimension($scope.window.variables);
-    $scope.prevFilter = null;
+    $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables);
+
+    $scope.dimension = $scope.dimensionInst.get();
+    $scope.groupInst = null;
+    $scope.totalGroupInst = null;
 
     if( $scope.window.somSpecial ) {
       $scope.primary = $injector.get('DimensionService').getPrimary();
-      $scope.totalDimension = $scope.primary.getDimension($scope.window.variables);      
+      $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables);
+      $scope.totalDimension = $scope.totalDimensionInst.get();
     }
 
     $scope.$parent.resetFilter = function() {
@@ -38,6 +42,9 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     $scope.$parent.showResetBtn = false;
 
     $scope.computeExtent = function() {
+      // remove older ones
+      if($scope.groupInst) { $scope.groupInst.decrement(); }
+      if($scope.totalGroupInst) { $scope.totalGroupInst.decrement(); }
 
       var allValues;
       if( $scope.window.somSpecial ) {
@@ -57,22 +64,28 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
 
       $scope.noBins = _.max([_.min([Math.floor($scope.dimension.group().size() / 20), 50]), 20]);
       $scope.binWidth = ($scope.extent[1] - $scope.extent[0]) / $scope.noBins;
-      $scope.group = $scope.dimension.group(function(d) {
+      $scope.groupInst = $scope.dimensionInst.group(function(d) {
         return Math.floor(d / $scope.binWidth) * $scope.binWidth;
       });
+      // $scope.group = $scope.dimension.group(function(d) {
+      //   return Math.floor(d / $scope.binWidth) * $scope.binWidth;
+      // });
 
       if( $scope.window.somSpecial ) {
         // circle
-        $scope.reduced = $scope.dimensionService.getReducedGroupHistoDistributions($scope.group, $scope.window.variables.x);
+        $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables.x);
+        $scope.reduced = $scope.groupInst.get();
 
-        $scope.totalGroup = $scope.totalDimension.group(function(d) {
+        $scope.totalGroupInst = $scope.totalDimensionInst.group(function(d) {
           return Math.floor(d / $scope.binWidth) * $scope.binWidth;
         });
         // total
-        $scope.totalReduced = $scope.primary.getReducedGroupHisto($scope.totalGroup, $scope.window.variables.x);
+        $scope.primary.getReducedGroupHisto($scope.totalGroupInst, $scope.window.variables.x);
+        $scope.totalReduced = $scope.totalGroupInst.get();
       }
       else {
-        $scope.reduced = $scope.dimensionService.getReducedGroupHisto($scope.group, $scope.window.variables.x);
+        $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables.x);
+        $scope.reduced = $scope.groupInst.get();
       }
 
       // update individual charts to the newest info about the bins
@@ -140,7 +153,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
 
             return ret;
           } else {
-            // normal histograms
+            // normal histograms or total
             return group.all().filter(function(d) {
               return (d.value.counts[name] > 0) && (d.key >= constants.legalMinValue);
             });
@@ -390,6 +403,10 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
         _.each($scope.deregisters, function(unbindFn) {
           unbindFn();
         });
+
+        $scope.groupInst.decrement();
+        if($scope.window.somSpecial) { $scope.totalGroupInst.decrement(); }
+        $scope.dimensionInst.decrement();
       });
 
       ele.on('$destroy', function() {

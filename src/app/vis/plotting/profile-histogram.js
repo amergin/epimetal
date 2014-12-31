@@ -12,37 +12,61 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
     $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
     $scope.colorScale = FilterService.getSOMFilterColors();
 
-    $scope.redraw = function() {
-      // only redraw if the dashboard is visible
-      if( $state.current.name === $scope.window.handler.getName() ) {
-        $scope.compute();
-        $scope.histogram.redraw();
-      }
-    };
+    // $scope.redraw = function() {
+    //   // only redraw if the dashboard is visible
+    //   if( $state.current.name === $scope.window.handler.getName() ) {
+    //     $scope.histogram.redraw();
+    //   }
+    // };
 
-    $scope.dimension = $scope.dimensionService.getVariableBMUDimension();
+    $scope.dimensionInst = $scope.dimensionService.getVariableBMUDimension();
+    $scope.dimension = $scope.dimensionInst.get();
+    $scope.totalDimensionInst = DimensionService.getPrimary().getSampleDimension();
+    $scope.totalDimension = $scope.totalDimensionInst.get();
     $scope.groups = {};
+    $scope.groupsInst = {};
+    $scope.totalReduced = {};
+    $scope.totalReducedInst = {};
+
+    _.each( $scope.window.variables.x, function(variable) {
+
+      var groupInst = $scope.dimensionInst.group( function(d) {
+        return {
+          variable: variable,
+          bmu: d.bmu,
+          valueOf: function() {
+            return d.valueOf();
+          }
+        };
+      }, true );
+      $scope.groupsInst[variable] = groupInst;
+      $scope.groups[variable] = $scope.dimensionService.getReducedMean(groupInst, variable).get();
+      var groupAll = $scope.totalDimensionInst.groupAll();
+      $scope.totalReducedInst[variable] = groupAll;
+      $scope.totalReduced[variable] = DimensionService.getPrimary().getReducedSTD( groupAll, variable ).get();
+    });
+
 
     $scope.compute = function() {
-      $scope.totalDimension = DimensionService.getPrimary().getSampleDimension();
-      $scope.totalReduced = {};
+      // $scope.totalDimension = DimensionService.getPrimary().getSampleDimension();
+      // $scope.totalReduced = {};
 
       // notice that you CANNOT use SOMDimension here! it will not apply the filter on its dimension
       // to restrict out to proper amount of samples!
-      _.each( $scope.window.variables.x, function(variable) {
+      // _.each( $scope.window.variables.x, function(variable) {
 
-        var group = $scope.dimension.group( function(d) {
-          return {
-            variable: variable,
-            bmu: d.bmu,
-            valueOf: function() {
-              return d.valueOf();
-            }
-          };
-        });
-        $scope.groups[variable] = $scope.dimensionService.getReducedMean(group, variable);
-        $scope.totalReduced[variable] = DimensionService.getPrimary().getReducedSTD( $scope.totalDimension.groupAll(), variable );
-      });
+      //   var group = $scope.dimension.group( function(d) {
+      //     return {
+      //       variable: variable,
+      //       bmu: d.bmu,
+      //       valueOf: function() {
+      //         return d.valueOf();
+      //       }
+      //     };
+      //   });
+      //   $scope.groups[variable] = $scope.dimensionService.getReducedMean(group, variable);
+      //   $scope.totalReduced[variable] = DimensionService.getPrimary().getReducedSTD( $scope.totalDimension.groupAll(), variable );
+      // });
 
       // $scope.totalDimension = DimensionService.getPrimary().getSampleDimension();
       // $scope.totalReduced = DimensionService.getPrimary().getReducedSTD( $scope.totalDimension.groupAll(), $scope.window.variables.x );
@@ -306,11 +330,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
               if($scope.histogram) {
                 $scope.histogram.resetSvg();
                 $scope.$parent.element.find('svg').remove();
-                $scope.compute();
                 createSVG($scope, $scope.config);
-              }
-              else {
-                $scope.redraw();
               }
             }
             else {
@@ -336,6 +356,14 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         _.each($scope.deregisters, function(unbindFn) {
           unbindFn();
         });
+        _.each( $scope.groupsInst, function(grp) {
+          grp.decrement();
+        });
+        _.each( $scope.totalReducedInst, function(totalGrp) {
+          totalGrp.decrement();
+        });
+        $scope.dimensionInst.decrement();
+        $scope.totalDimensionInst.decrement();
       });
 
       ele.on('$destroy', function() {

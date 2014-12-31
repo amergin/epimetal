@@ -97,7 +97,7 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
 
         var win = windows.splice(ind,1);
         win = _.first(win);
-        $rootScope.$emit('variable:remove', win.type, win.variables);
+        // $rootScope.$emit('variable:remove', win.type, win.variables);
         return that;
       };
 
@@ -125,11 +125,11 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         var UrlHandler = $injector.get('UrlHandler');
         if( _.isUndefined( win.variables ) ) {
           UrlHandler.removeWindow( win.type, win.id );
-          $rootScope.$emit('dimension:decreaseCount', "som" + win.som_id);
+          // $rootScope.$emit('dimension:decreaseCount', "som" + win.som_id);
         }
         else {
           UrlHandler.removeWindow(win.type, win.variables, win.filter);
-          $rootScope.$emit('variable:remove', win.type, win.variables);
+          // $rootScope.$emit('variable:remove', win.type, win.variables);
         }
 
         windows.splice(wind,1);
