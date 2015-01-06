@@ -81,6 +81,10 @@ function svgExport(element) {
 
   _export.get = function() {
     _clone = _ele.cloneNode(true);
+
+    _clone.setAttribute("width", _ele.width.baseVal.value);
+    _clone.setAttribute("height", _ele.height.baseVal.value);
+
     _ele.parentNode.appendChild(_clone);
     setNS(_clone);
 

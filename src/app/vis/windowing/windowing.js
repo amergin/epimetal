@@ -109,6 +109,10 @@ win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q', 
       var svgToCanvas = function(svgElement) {
         var DOMURL = window.URL || window.webkitURL || window;
 
+        // get the dimensions from viewbox
+        // var dimRegex = /^(?:\d\s\d\s)(\d+)\s(\d+)$/m;
+        // var dimensions = dimRegex.exec(
+
         var svgXml = svgExport(svgElement).get();
 
         var image = new Image();
@@ -120,6 +124,8 @@ win.controller('WinController', ['$scope', 'constants', 'DatasetFactory', '$q', 
         var defer = $q.defer();
 
         image.onload = function() {
+          image.width = svgElement.width.baseVal.value; //width;
+          image.height = svgElement.height.baseVal.value; //height;
           var canvas = document.createElement('canvas');
           canvas.width = image.width;
           canvas.height = image.height;
