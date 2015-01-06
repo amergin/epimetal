@@ -194,26 +194,31 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
     };
 
     var getProfiles = _.once(function() {
-      var getTotalLipids = function() {
-        // get variables ending with '-L'
-        var re = /^((?:[a-z|-]+)-L)$/i;
+      var getSorted = function() {
         return _.chain(that.variables)
-        .filter(function(d) { return re.test(d.name); })
-        .map(function(d) { return d.name; } )
+        .sortBy(function(v) { return v.name_order; })
+        .sortBy(function(v) { return v.group.order; })
         .value();
       };
-      var getFattyAcids = function() {
+      var getTotalLipids = function(sorted) {
+        // get variables ending with '-L'
+        var re = /^((?:[a-z|-]+)-L)$/i;
+        return _.filter(sorted, function(d) { return re.test(d.name); });
+      };
+      var getFattyAcids = function(sorted) {
         var names = ['TotFA', 'UnSat', 'DHA', 'LA', 'FAw3', 'FAw6', 'PUFA', 'MUFA', 'SFA', 'DHAtoFA', 'LAtoFA', 'FAw3toFA', 'FAw6toFA', 'PUFAtoFA', 'MUFAtoFA', 'SFAtoFA'];
-        return names;
+        return _.filter(sorted, function(v) { return _.some(names, function(n) { return v.name == n; } ); });
       };
 
-      var getSmallMolecules = function() {
+      var getSmallMolecules = function(sorted) {
         var names = ['Glc', 'Lac', 'Pyr', 'Cit', 'Glol', 'Ala', 'Gln', 'His', 'Ile', 'Leu', 'Val', 'Phe', 'Tyr', 'Ace', 'AcAce', 'bOHBut', 'Crea', 'Alb', 'Gp'];
-        return names;
+        return _.filter(sorted, function(v) { return _.some(names, function(n) { return v.name == n; } ); });
       };
-      return [ { name: 'Total lipids', variables: getTotalLipids() },
-      { name: 'Fatty acids', variables: getFattyAcids() },
-      { name: 'Small molecules', variables: getSmallMolecules() }
+
+      var sorted = getSorted();
+      return [ { name: 'Total lipids', variables: getTotalLipids(sorted) },
+      { name: 'Fatty acids', variables: getFattyAcids(sorted) },
+      { name: 'Small molecules', variables: getSmallMolecules(sorted) }
       ];
     });
 

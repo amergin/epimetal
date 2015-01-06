@@ -224,7 +224,6 @@ function GroupedBarChart(element, width, height) {
   }
 
   function renderBars() {
-
     function renderGroups() {
       // enter for groups
       _bodyG.selectAll("g.group")
@@ -280,9 +279,9 @@ function GroupedBarChart(element, width, height) {
       // update
       _bodyG.selectAll("g.group")
       .selectAll(".group-rect")
-      .transition().ease("linear")
+      // .transition().ease("linear")
       .attr("x", function(d) { return _x1(d.name); })
-      .transition().ease("linear")
+      // .transition().ease("linear")
       .attr("y", function(d) {  
         return _y( Math.max(0, d.value) );
       })
@@ -303,7 +302,7 @@ function GroupedBarChart(element, width, height) {
 
   function renderLegend(svg) {
     var legend = svg.selectAll(".legend")
-    .data(_barNames.slice().reverse())
+    .data(_barNames.slice())
     .enter().append("g")
     .attr("class", "legend")
     .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });    
@@ -332,7 +331,7 @@ function GroupedBarChart(element, width, height) {
     .attr("x", 0 - padding)
     .attr("y", 0)
     .attr("width", visibleWidth() + padding)
-    .attr("height", visibleHeight());
+    .attr("height", visibleHeight() - padding);
   }
 
   function visibleHeight() {

@@ -60,10 +60,11 @@ mod.controller('SOMProfilesMenuController', ['$scope', '$templateCache', '$rootS
 
     $scope.$watch('profile', function(profile) {
       if( _.isEmpty(profile) ) { return; }
-      var activeSampleSize = $scope.sampleGroup.reduceCount().size(); //$scope.windowHandler.getDimensionService().getSampleDimension().group().reduceCount().size();
+      var activeSampleSize = $scope.sampleGroup.reduceCount().size();
       if( activeSampleSize === 0 ) { return; }
+      var variables = _.map(profile.variables, function(v) { return v.name; } );
       removeOldProfile();
-      PlotService.drawProfileHistogram({ variables: { x: profile.variables } }, $scope.windowHandler);
+      PlotService.drawProfileHistogram({ variables: { x: variables } }, $scope.windowHandler);
     });
   }
 ]);
