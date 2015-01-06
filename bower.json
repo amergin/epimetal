@@ -25,7 +25,8 @@
     "bootstrap-chosen": "*",
     "angular-ui-layout": "master",
     "angular-spinner": "~0.5.1",
-    "spark-md5": "~0.0.5"
+    "spark-md5": "~0.0.5",
+    "d3-tip": "~0.6.6"
   },
   "dependencies": {},
   "resolutions": {

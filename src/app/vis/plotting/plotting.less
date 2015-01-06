@@ -70,6 +70,32 @@ svg text.label {
 
 .profile-histogram {
   min-height: 250px;
+
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+  /*  .bar {
+      fill: steelblue;
+    }*/
+
+    .x.axis path {
+      display: none;
+    }
+
+}
+
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
 }
 
 .heatmap-chart-anchor {
@@ -107,11 +133,17 @@ rect.heat-box {
   max-height: 100%;
 }
 
-// heatmap axis tick fonts
-.axis > .tick {
-  font-size: 1.7em;
+.heatmap {
+  // heatmap axis tick fonts
+  .axis > .tick {
+    font-size: 1.7em;
+  }
 }
 
 .full-height {
   height: 100%;
+}
+
+.tooltip-val {
+  color: orangered;
 }

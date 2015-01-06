@@ -93,6 +93,7 @@ module.exports = {
       'vendor/crossfilter/crossfilter.new.js',//crossfilter.custom.old.js', //crossfilter.custom.js',
       'vendor/d3/d3.js',
       'vendor/dcjs/dc.2.0.js',//dc.js',
+      'vendor/d3-tip/index.js',
       // utilities
       'vendor/underscore/underscore.js',
       // core framework for UI
