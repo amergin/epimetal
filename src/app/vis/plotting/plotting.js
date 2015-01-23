@@ -128,7 +128,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         var type = 'profile-histogram';
         config.type = type;
         config.size = {
-          width: 1600,
+          width: 1400,
           height: 400,
           aspectRatio: 'preserve'
         };
@@ -146,6 +146,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
       $q.all([promiseSOM, promisePrimary]).then(function successFn(res) {
           // draw the figure
           NotifyService.closeModal();
+          windowHandler.spinAll();
           draw(config, windowHandler);
         },
         function errorFn(variable) {
@@ -155,6 +156,9 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           message = 'Please check the selected combination is valid for the selected datasets.',
           level = 'danger';
           NotifyService.addTransient(title, message, level);
+        })
+        .finally( function() {
+          windowHandler.stopAllSpins();
         });
     };    
 

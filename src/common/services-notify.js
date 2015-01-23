@@ -3,8 +3,8 @@ var serv = angular.module('services.notify', [
 'mgcrea.ngStrap.popover', 
 'mgcrea.ngStrap.modal']);
 
-serv.factory('NotifyService', ['$injector',
-  function NotifyService($injector) {
+serv.factory('NotifyService', ['$injector', '$timeout',
+  function NotifyService($injector, $timeout) {
 
     var _modalInstanceRef = null;
 
@@ -39,7 +39,7 @@ serv.factory('NotifyService', ['$injector',
 
       /* THESE ARE FOR MODAL WINDOWS */
 
-      addClosableModal: function (templateUrl, scope) {
+      addClosableModal: function (templateUrl, scope, config) {
 
         var $modal = $injector.get('$modal');
         var $q = $injector.get('$q');
@@ -50,15 +50,32 @@ serv.factory('NotifyService', ['$injector',
           deferred.resolve();
         });
 
-        _modalInstanceRef = $modal({
+        var applyConfig = {
           scope: scope,
-          contentTemplate: templateUrl,
+          // contentTemplate: templateUrl,
           show: true,
           backdrop: true, //'static',
           keyboard: false,
+          persist: false,
           placement: 'center',
           animation: 'am-fade-and-scale'
-        });
+        };
+        angular.extend(applyConfig, config);
+        if(!applyConfig.template) {
+          applyConfig['contentTemplate'] = templateUrl;
+        }
+
+        _modalInstanceRef = $modal(applyConfig);
+
+        // _modalInstanceRef = $modal({
+        //   scope: scope,
+        //   contentTemplate: templateUrl,
+        //   show: true,
+        //   backdrop: true, //'static',
+        //   keyboard: false,
+        //   placement: 'center',
+        //   animation: 'am-fade-and-scale'
+        // });
         return deferred.promise;
       },
 

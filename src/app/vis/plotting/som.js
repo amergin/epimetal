@@ -200,7 +200,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
         var _circleConfig = {
           fillOpacity: 0.40,
-          radius: { normal: hexRadius * 3, min: hexRadius * 2, max: hexRadius * 5 }
+          radius: { normal: hexRadius * 3, min: hexRadius * 1.5, max: hexRadius * 5 }
         };
 
         var resolveAreaCells = function(circle, event) {
@@ -327,7 +327,8 @@ var circleText = circleAnchor
 .attr('alignment-baseline', 'middle')
 .attr('class', 'circle-filter noselect')
 .style('fill', circle.color())
-.text( circle.name() );
+.text( circle.name() )
+.call( innerCircleDrag );
 
 
 var outerCircleDrag = d3.behavior.drag()

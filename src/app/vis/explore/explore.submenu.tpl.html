@@ -24,39 +24,15 @@
 			</div>
 
 			<div class="btn-group" role="group">
-				<button class="btn btn-primary" title="Create a new correlation plot" placement="bottom-right" content-template="vis/menucomponents/new.heatmap.tpl.html" data-animation="am-fade" bs-popover data-auto-close="1">				
-				<!-- <a class="btn btn-primary" href="#"> -->
+				<button class="btn btn-primary" title="Create a new correlation plot" ng-click="openHeatmapSelection()">
 					<span>New correlation plot</span>
 					<i class="fa fa-caret-down"></i>
 				</button>
+<!-- 				<button class="btn btn-primary" title="Create a new correlation plot" placement="bottom-right" content-template="vis/menucomponents/new.heatmap.tpl.html" data-animation="am-fade" bs-popover data-auto-close="1">
+					<span>New correlation plot</span>
+					<i class="fa fa-caret-down"></i>
+				</button> -->
 			</div>
 		</div>
 	</div>
 </div>
-
-
-
-<!-- <div class="col-sm-12">
-	<button class="btn btn-secondary menubutton-right" ng-click="toggle()" title="{{menuButton()}}">
-		<i ng-class="{ true: 'fa fa-arrow-up', false: 'fa fa-arrow-down'}[menuVisible]"></i> {{menuButton()}}
-	</button>
-	<div class="well am-fade-and-slide-top" ng-show="menuVisible" ng-mouseenter="hover = true" ng-mouseleave="hover = false">
-		<div class="row">
-			<div class="col-sm-3">
-				<h3><b>1.</b> Select datasets</h3>
-				<div class="dataset"></div>
-			</div>
-			<div class="col-sm-9 vertical-divider">
-				<h3><b>2.</b> Create a plot based on selected samples</h3>
-
-				<div class="scatterplot-form col-sm-4 menu-form">
-				</div>
-				<div class="histogram-form col-sm-4 vertical-divider menu-form">
-				</div>
-				<div class="heatmap-form col-sm-4 vertical-divider menu-form">
-				</div>
-			</div>
-
-		</div>
-	</div>
-</div> -->

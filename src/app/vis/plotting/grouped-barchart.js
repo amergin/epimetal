@@ -4,7 +4,7 @@ function GroupedBarChart(element, width, height) {
   var _margins = {
       top: 20,
       right: 20,
-      bottom: 80,
+      bottom: 90,
       left: 20
     },
     _element = element,
@@ -175,7 +175,7 @@ function GroupedBarChart(element, width, height) {
     if(_rotateGroupLabel) {
       x.selectAll("text")
       .style("text-anchor", "end")
-      .style("font-size", "11px")
+      .style("font-size", "1em")
       .attr("dx", "-1.5em")
       .attr("dy", "0.3em")
       .attr("transform", "rotate(-65)");
@@ -282,10 +282,10 @@ function GroupedBarChart(element, width, height) {
       // .transition().ease("linear")
       .attr("x", function(d) { return _x1(d.name); })
       // .transition().ease("linear")
+      .transition().ease("linear")
       .attr("y", function(d) {  
         return _y( Math.max(0, d.value) );
       })
-      .transition().ease("linear")
       .attr("height", function(d) { return Math.abs( _y(d.value) - _y(0) ); });
 
       // remove

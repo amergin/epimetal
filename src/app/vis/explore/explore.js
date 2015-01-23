@@ -9,7 +9,8 @@ var vis =
     'localytics.directives',
     'services.urlhandler',
     'gridster',
-    'utilities'
+    'utilities',
+    'mgcrea.ngStrap.collapse'
     ]);
 
 mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', 'windowHandler', 'DatasetFactory', '$q', 'PlotService', 'WindowHandler', 'SOMService', '$timeout',
@@ -117,19 +118,87 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
 
     });
 
-    // PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'Serum-C' } }, $scope.windowHandler);
-    // PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'Serum-TG' } }, $scope.windowHandler);
-    // PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'HDL-C' } }, $scope.windowHandler);
-    // PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'LDL-C' } }, $scope.windowHandler);
-    // PlotService.drawHistogram({ pooled: undefined,  variables: { x: 'Glc' } }, $scope.windowHandler);
-    
   }
 ]);
 
-mod.controller('ExploreMenuCtrl', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants', 'datasets', 'variables', 'windowHandler',
-  function ExploreMenuCtrl($scope, $templateCache, DimensionService, $rootScope, constants, datasets, variables, windowHandler) {
-    console.log("menu ctrl", datasets);
+mod.controller('ExploreMenuCtrl', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants', 'datasets', 'variables', 'windowHandler', 'NotifyService', 'PlotService',
+  function ExploreMenuCtrl($scope, $templateCache, DimensionService, $rootScope, constants, datasets, variables, windowHandler, NotifyService, PlotService) {
+    console.log("menu ctrl");
 
     $scope.windowHandler = windowHandler;
+    $scope.variables = variables;
+    var groups = _.chain(variables)
+    .groupBy(function(v) { return v.group.name; } )
+    .values()
+    .sortBy(function(g) { return g[0].group.order; } )
+    .value();
+
+    // for splitting the data equally to columns, see http://stackoverflow.com/questions/21644493/how-to-split-the-ng-repeat-data-with-three-columns-using-bootstrap
+    function chunk(arr, size) {
+      var newArr = [];
+      for (var i=0; i<arr.length; i+=size) {
+        newArr.push(arr.slice(i, i+size));
+      }
+      return newArr;
+    }
+
+    $scope.openHeatmapSelection = function() {
+      var getScope = function() {
+
+        var $modalScope = $scope.$new(true);
+        $modalScope.groups = chunk(groups, 4);
+        $modalScope.modal = { wide: true };
+        $modalScope.panels = [0];
+
+        $modalScope.toggleGroupSelection = function(items) {
+          var value = _.first(items).selected === true;
+          _.each(items, function(item) {
+            if(!item['selected']) { item['selected'] = true; }
+            else {
+              item['selected'] = !value; //!item.selected;
+              console.log(item.selected);
+            }
+          });
+        };
+
+        $modalScope.groupSelected = function(items) {
+          return _.every(items, function(i) {
+            return i.selected && i.selected === true;
+          });
+        };
+
+        $modalScope.getSelected = function() {
+          return _.chain($modalScope.groups)
+          .flatten()
+          .filter(function(v) { return v.selected === true; })
+          .value();
+        };
+
+        $modalScope.post = function() {
+          var variables = $modalScope.getSelected();
+          var bare = _.map(variables, function(v) { return v.name; } );
+          PlotService.drawHeatmap({ variables: {x: bare} }, $scope.windowHandler);
+        };
+
+        $modalScope.getActiveNumber = function(items) {
+          var counts = _.countBy(items, function(i) { 
+          return _.isUndefined(i.selected) || i.selected === false ? false : true;
+          } );
+          return counts.true || 0;
+        };
+        return $modalScope;
+      };
+
+      NotifyService.addClosableModal('vis/menucomponents/heatmap.modal.tpl.html', getScope(), { 
+        title: 'Add a correlation plot', 
+        html: true,
+        persist: true
+      });
+    };
+
   }
-]);
+])
+
+.run(['$templateCache', function($templateCache) {
+  $templateCache.put('modal/modal.tpl.html', $templateCache.get('notify.modal-wide.tpl.html'));
+}]);

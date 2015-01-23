@@ -3,11 +3,35 @@
 	height: 800px;
 }
 
-.modal-body {
+/* .modal-body {
 	overflow:hidden;
-}
+} */
 
 .spinner-modal .modal-dialog {
 	width: 300px;
 	height: 200px;
+}
+
+.modal.center .modal-dialog.modal-wide {
+	.modal-content {
+		overflow: hidden;
+		height: 100%;
+	}
+
+	.modal-body {
+		overflow-y: auto;
+		height: 90%;
+	}
+
+	top: 10%;
+	height: 80%;
+	max-height: initial;
+	left: 15%;
+	/* right: 15%; */
+	width: 70%;
+	max-width: initial;
+	overflow-y: auto;
+	overflow-x: hidden;
+	-webkit-transform: initial; // translateX(-10%) translateY(-10%);
+	transform: initial; // translateX(-10%) translateY(-10%);
 }

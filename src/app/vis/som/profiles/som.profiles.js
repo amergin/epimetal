@@ -27,7 +27,6 @@ mod.controller('SOMProfilesController', ['$scope', '$templateCache', '$rootScope
 
   $scope.histogramVisible = function() {
     return $scope.windows.length == 2;
-    //return true;
   };
 
   }
