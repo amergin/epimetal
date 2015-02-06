@@ -10,7 +10,8 @@ var vis =
     'services.urlhandler',
     'gridster',
     'utilities',
-    'mgcrea.ngStrap.collapse'
+    // 'mgcrea.ngStrap.collapse',
+    'mgcrea.ngStrap.scrollspy'
     ]);
 
 mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', 'windowHandler', 'DatasetFactory', '$q', 'PlotService', 'WindowHandler', 'SOMService', '$timeout',
@@ -58,9 +59,9 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
       colWidth: 150,
       rowHeight: '125',
       minSizeX: 2,
-      maxSizeX: 5,
+      maxSizeX: 8,
       minSizeY: 2,
-      maxSizeY: 5,
+      maxSizeY: 8,
       resizable: {
            enabled: true,
            handles: ['se'],
@@ -121,84 +122,35 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
   }
 ]);
 
-mod.controller('ExploreMenuCtrl', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants', 'datasets', 'variables', 'windowHandler', 'NotifyService', 'PlotService',
-  function ExploreMenuCtrl($scope, $templateCache, DimensionService, $rootScope, constants, datasets, variables, windowHandler, NotifyService, PlotService) {
+mod.controller('ExploreMenuCtrl', ['$scope', '$rootScope', 'datasets', 'variables', 'windowHandler', 'NotifyService', 'PlotService',
+  function ExploreMenuCtrl($scope, $rootScope, datasets, variables, windowHandler, NotifyService, PlotService) {
     console.log("menu ctrl");
 
     $scope.windowHandler = windowHandler;
-    $scope.variables = variables;
-    var groups = _.chain(variables)
-    .groupBy(function(v) { return v.group.name; } )
-    .values()
-    .sortBy(function(g) { return g[0].group.order; } )
-    .value();
-
-    // for splitting the data equally to columns, see http://stackoverflow.com/questions/21644493/how-to-split-the-ng-repeat-data-with-three-columns-using-bootstrap
-    function chunk(arr, size) {
-      var newArr = [];
-      for (var i=0; i<arr.length; i+=size) {
-        newArr.push(arr.slice(i, i+size));
-      }
-      return newArr;
-    }
 
     $scope.openHeatmapSelection = function() {
-      var getScope = function() {
+      var $modalScope = $scope.$new({ isolate: true });
+      // $modalScope.modal = {
+      //   wide: true
+      // };
+      $modalScope.handler = $scope.windowHandler;
 
-        var $modalScope = $scope.$new(true);
-        $modalScope.groups = chunk(groups, 4);
-        $modalScope.modal = { wide: true };
-        $modalScope.panels = [0];
-
-        $modalScope.toggleGroupSelection = function(items) {
-          var value = _.first(items).selected === true;
-          _.each(items, function(item) {
-            if(!item['selected']) { item['selected'] = true; }
-            else {
-              item['selected'] = !value; //!item.selected;
-              console.log(item.selected);
-            }
-          });
-        };
-
-        $modalScope.groupSelected = function(items) {
-          return _.every(items, function(i) {
-            return i.selected && i.selected === true;
-          });
-        };
-
-        $modalScope.getSelected = function() {
-          return _.chain($modalScope.groups)
-          .flatten()
-          .filter(function(v) { return v.selected === true; })
-          .value();
-        };
-
-        $modalScope.post = function() {
-          var variables = $modalScope.getSelected();
-          var bare = _.map(variables, function(v) { return v.name; } );
-          PlotService.drawHeatmap({ variables: {x: bare} }, $scope.windowHandler);
-        };
-
-        $modalScope.getActiveNumber = function(items) {
-          var counts = _.countBy(items, function(i) { 
-          return _.isUndefined(i.selected) || i.selected === false ? false : true;
-          } );
-          return counts.true || 0;
-        };
-        return $modalScope;
-      };
-
-      NotifyService.addClosableModal('vis/menucomponents/heatmap.modal.tpl.html', getScope(), { 
-        title: 'Add a correlation plot', 
-        html: true,
-        persist: true
+      var promise = NotifyService.addClosableModal('vis/menucomponents/new.heatmap.modal.tpl.html', $modalScope, { 
+        // controller: 'HeatmapModalFormController'
+        // title: 'Add a correlation plot', 
+        // html: true
       });
+
+      promise.finally(function() {
+        $modalScope.$destroy();
+      });
+
     };
 
   }
 ])
 
 .run(['$templateCache', function($templateCache) {
+  // overwrite default template for modal; allow wider setup with custom css
   $templateCache.put('modal/modal.tpl.html', $templateCache.get('notify.modal-wide.tpl.html'));
 }]);

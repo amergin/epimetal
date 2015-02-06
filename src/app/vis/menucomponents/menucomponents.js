@@ -226,7 +226,7 @@ vis.controller('HeatmapFormController', ['$scope', '$rootScope', 'DatasetFactory
   }
 ]);
 
-// directive for histogram form
+// directive for heatmap form
 vis.directive('heatmapForm', function () {
   return {
     restrict: 'C',
@@ -239,3 +239,124 @@ vis.directive('heatmapForm', function () {
     }
   };
 });
+
+
+
+// directive for heatmap modal form
+// vis.directive('heatmapModalForm', function () {
+//   return {
+//     restrict: 'C',
+//     scope: { handler: '=' },
+//     // replace: true,
+//     controller: 'HeatmapModalFormController',
+//     templateUrl: 'vis/menucomponents/heatmap.modal.tpl.html',
+//     link: function (scope, elm, attrs) {
+//     }
+//   };
+// });
+
+
+// controller for the histogram form
+vis.controller('HeatmapModalFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'PlotService', '$timeout', '$location', '$anchorScroll',
+  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService, $timeout, $location, $anchorScroll) {
+    // $scope.handler comes when the directive is called in a template
+
+    $scope.variables = [];
+
+    // for splitting the data equally to columns, see http://stackoverflow.com/questions/21644493/how-to-split-the-ng-repeat-data-with-three-columns-using-bootstrap
+    function chunk(arr, size) {
+      var newArr = [];
+      for (var i=0; i<arr.length; i+=size) {
+        newArr.push(arr.slice(i, i+size));
+      }
+      return newArr;
+    }
+
+    $scope.sideGroups = [];
+
+    DatasetFactory.getVariables().then( function(res) { 
+      $scope.variables = res;
+
+      var groups = _.chain($scope.variables)
+      .groupBy(function(v) { return v.group.name; } )
+      .values()
+      .sortBy(function(g) { return g[0].group.order; } )
+      .value();
+
+      $scope.groups = chunk(groups, 3);
+
+      $scope.sideGroups = _.chain($scope.groups)
+      .flatten(true)
+      .value();
+
+      // $scope.sideGroupIds = _.chain($scope.variables)
+      // .map(function(v) { return v.group.order; } )
+      // .unique()
+      // .sort(d3.ascending)
+      // .value();
+    });
+
+    $scope.scrollToGroup = function(id) {
+        var old = $location.hash();
+        $location.hash(id);
+        $anchorScroll(null, { target: '#' + id, offset: 30});
+        $location.hash(old);
+    };
+
+    $scope.toggleGroupSelection = function(items) {
+      var value = _.first(items).selected === true;
+      _.each(items, function(item) {
+        if(!item['selected']) { item['selected'] = true; }
+        else {
+          item['selected'] = !value; //!item.selected;
+        }
+      });
+    };
+
+    $scope.canSubmit = function() {
+      return $scope.getSelected().length > 0;
+    };
+
+    $scope.groupSelected = function(items) {
+      return _.every(items, function(i) {
+        return i.selected && i.selected === true;
+      });
+    };
+
+    $scope.getSelected = function() {
+      console.log("getSelected", Date());
+      return _.chain($scope.groups)
+      .flatten()
+      .filter(function(v) { return v.selected === true; })
+      .value();
+    };
+
+    $scope.post = function() {
+      var variables = $scope.getSelected();
+      var bare = _.map(variables, function(v) { return v.name; } );
+      PlotService.drawHeatmap({ variables: {x: bare} }, $scope.handler);
+
+      NotifyService.closeModal();
+    };
+
+    $scope.cancel = function() {
+      NotifyService.closeModal();
+    };
+
+    $scope.getActiveNumber = function(items) {
+      var counts = _.countBy(items, function(i) { 
+      return _.isUndefined(i.selected) || i.selected === false ? false : true;
+      } );
+      return counts.true || 0;
+    };
+
+    $scope.clear = function() {
+      _.chain($scope.groups)
+      .flatten()
+      .each(function(v) {
+        v.selected = false;
+      });
+    };
+
+  }
+]);

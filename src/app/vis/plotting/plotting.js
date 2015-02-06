@@ -105,15 +105,19 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         UrlHandler.createWindow( type, config );
       };
 
-      NotifyService.addSpinnerModal('Loading...');//, _callback);
+      // NotifyService.addSpinnerModal('Loading...');//, _callback);
+      var title = "Loading correlation plot",
+      message = 'Please wait',
+      level = 'info';
+      NotifyService.addTransient(title, message, level);
       var plottingDataPromise = DatasetFactory.getVariableData(config.variables.x, windowHandler);
       plottingDataPromise.then(function successFn(res) {
           // draw the figure
-          NotifyService.closeModal();
+          // NotifyService.closeModal();
           draw(config, windowHandler);
         },
         function errorFn(variable) {
-          NotifyService.closeModal();
+          // NotifyService.closeModal();
 
           var title = 'Variable ' + variable + ' could not be loaded\n',
           message = 'Please check the selected combination is valid for the selected datasets.',

@@ -223,15 +223,18 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
     });
 
     $scope.redraw = function() {
-      $scope.computeVariables();
+        $scope.$parent.startSpin();
+        $scope.computeVariables();
 
         // update the chart and redraw
         $scope.heatmap.dimension($scope.coordDim);
         $scope.heatmap.group($scope.coordGroup);
 
         // remember to clear any filters that may have been applied
-        $scope.heatmap.filterAll();
-        $scope.heatmap.render();      
+        //$scope.heatmap.filterAll();
+        $scope.heatmap.render();
+
+        $scope.$parent.stopSpin();
       };
 
       $scope.filter = function() {

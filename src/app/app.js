@@ -38,8 +38,12 @@ App.constant('constants', {
   }
 });
 
-App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', '$injector', '$stickyStateProvider',
-  function ($stateProvider, $urlRouterProvider, $httpProvider, $injector, $stickyStateProvider) {
+App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', '$injector', '$stickyStateProvider', '$locationProvider',
+  function ($stateProvider, $urlRouterProvider, $httpProvider, $injector, $stickyStateProvider, $locationProvider) {
+
+    $locationProvider
+    // .html5Mode(true)
+    .hashPrefix('!');
 
     // default route
     // $urlRouterProvider.otherwise('/vis/explore');

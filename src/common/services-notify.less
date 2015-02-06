@@ -12,7 +12,7 @@
 	height: 200px;
 }
 
-.modal.center .modal-dialog.modal-wide {
+/*.modal.center .modal-dialog.modal-wide {
 	.modal-content {
 		overflow: hidden;
 		height: 100%;
@@ -27,11 +27,37 @@
 	height: 80%;
 	max-height: initial;
 	left: 15%;
-	/* right: 15%; */
 	width: 70%;
 	max-width: initial;
 	overflow-y: auto;
 	overflow-x: hidden;
 	-webkit-transform: initial; // translateX(-10%) translateY(-10%);
 	transform: initial; // translateX(-10%) translateY(-10%);
+}*/
+
+.modal-wide .modal-dialog {
+	width: 90%;
+	min-width: 800px;
+	height: 80%;
+	overflow: hidden;
+	margin-top: 5%;
+
+	.modal-content {
+		height: 100%;
+		overflow: initial;
+
+		.modal-header {
+			max-height: 10%;
+		}
+		.modal-body {
+			max-height: 80%;
+			overflow-y: auto;
+		}
+		.modal-footer {
+			max-height: 10%;
+		}
+	}
+
+
 }
+

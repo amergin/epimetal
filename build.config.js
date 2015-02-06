@@ -87,6 +87,7 @@ module.exports = {
       // dropdowns x2
       'vendor/chosen/chosen.jquery.js',
       'vendor/angular-chosen-localytics/chosen.js',
+      // routing
       'vendor/angular-ui-router/release/angular-ui-router.js',
       'vendor/ui-router-extras/release/ct-ui-router-extras.js',
       'vendor/angular-ui-utils/modules/route/route.js',
@@ -106,7 +107,9 @@ module.exports = {
       'vendor/angular-ui-layout/src/ui-layout.js',
       'vendor/spin.js/spin.js',
       'vendor/angular-spinner/angular-spinner.min.js',
-      'vendor/spark-md5/spark-md5.min.js'
+      // customize this for release:
+      'vendor/angular-bootstrap/custom/ui-bootstrap-custom-tpls-0.12.0.js'
+      // 'vendor/spark-md5/spark-md5.min.js'
     ],
     css: [
       'vendor/dcjs/dc.css',
