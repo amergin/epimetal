@@ -299,7 +299,8 @@ vis.controller('HeatmapModalFormController', ['$scope', '$rootScope', 'DatasetFa
     $scope.scrollToGroup = function(id) {
         var old = $location.hash();
         $location.hash(id);
-        $anchorScroll(null, { target: '#' + id, offset: 30});
+        $anchorScroll();
+        // $anchorScroll(null, { target: '#' + id, offset: -30});
         $location.hash(old);
     };
 
@@ -360,3 +361,43 @@ vis.controller('HeatmapModalFormController', ['$scope', '$rootScope', 'DatasetFa
 
   }
 ]);
+
+
+
+// regression menu X
+vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'PlotService',
+  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService) {
+    $scope.selection = {};
+
+    DatasetFactory.getVariables().then( function(res) { $scope.variables = res; } );
+
+    $scope.canEdit = function () {
+      return DatasetFactory.activeSets().length > 0;
+    };
+
+    $scope.canSubmit = function () {
+      return $scope.canEdit() && !_.isEmpty($scope.selection.target) && !_.isEmpty($scope.selection.association) && !_.isEmpty($scope.selection.adjust);
+    };
+
+    $scope.submit = function() {
+      var config = {
+        variables: $scope.selection
+      };
+      PlotService.drawRegression(config, $scope.handler);
+    };
+
+  }
+]);
+
+// directive for heatmap form
+vis.directive('regressionMenu', function () {
+  return {
+    restrict: 'C',
+    scope: { handler: '=' },
+    replace: true,
+    controller: 'RegressionMenuController',
+    templateUrl: 'vis/menucomponents/regression-menu.tpl.html',
+    link: function (scope, elm, attrs) {
+    }
+  };
+});

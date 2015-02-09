@@ -1,0 +1,59 @@
+<div>
+	<div class="row text-center">
+		<div class="col-sm-3">
+			<label for="regression-target">Target variable</label>
+		</div>
+		<div class="col-sm-4">
+			<label for="regression-association">Calculate association with</label>
+		</div>
+		<div class="col-sm-4">
+			<label for="regression-adjust">Adjust for</label>
+		</div>
+	</div>
+	<form class="form-inline row">
+		<div class="form-group col-sm-3">
+			<select
+			chosen
+			class="form-control" id="regression-target" 
+			allow-single-deselect="true"
+			data-placeholder="Target variable"
+			ng-model="selection.target"
+			ng-options="o.name as o.name group by o.group.name for o in variables | orderBy:['group.order','name_order']"
+			ng-disabled="!canEdit()"
+			required
+			width="'100%'">
+				<option value=""></option>
+			</select>
+		</div>
+		<div class="form-group col-sm-4">
+			<select
+			chosen
+			multiple
+			class="form-control" id="regression-association"
+			data-placeholder="Association variable(s)"
+			ng-model="selection.association"
+			ng-options="o.name as o.name group by o.group.name for o in variables | orderBy:['group.order','name_order']"
+			ng-disabled="!canEdit()" 
+			required 
+			width="'100%'">
+				<option value=""></option>
+			</select>
+		</div>
+		<div class="form-group col-sm-4">
+			<select
+			chosen
+			multiple
+			class="form-control" id="regression-adjust"
+			data-placeholder="Adjust variable(s)"
+			ng-model="selection.adjust"
+			ng-options="o.name as o.name group by o.group.name for o in variables | orderBy:['group.order','name_order']"
+			ng-disabled="!canEdit()" 
+			required 
+			width="'100%'">
+				<option value=""></option>
+			</select>
+		</div>
+
+		<button type="submit" class="btn btn-primary" ng-disabled="!canSubmit()" ng-click="submit()">Compute</button>
+	</form>
+</div>

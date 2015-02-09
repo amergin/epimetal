@@ -1,4 +1,4 @@
-var serv = angular.module('services.compatibility', ['mgcrea.ngStrap.modal']);
+var serv = angular.module('services.compatibility', []);
 
 serv.service('CompatibilityService', ['$q', '$timeout', '$modal', '$rootScope',
   function CompatibilityService($q, $timeout, $modal, $rootScope) {

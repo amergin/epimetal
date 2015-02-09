@@ -10,12 +10,13 @@ var visu = angular.module('plotter.vis.plotting',
   'services.dataset', 
   'services.urlhandler',
   'services.window',
-  'services.som'
+  'services.som',
+  'services.regression'
   ]);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'UrlHandler', 'NotifyService', 'SOMService', '$q',
-  function($injector, DimensionService, DatasetFactory, UrlHandler, NotifyService, SOMService, $q) {
+visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'UrlHandler', 'NotifyService', 'SOMService', '$q', 'RegressionService',
+  function($injector, DimensionService, DatasetFactory, UrlHandler, NotifyService, SOMService, $q, RegressionService) {
 
     this.drawScatter = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
@@ -164,7 +165,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         .finally( function() {
           windowHandler.stopAllSpins();
         });
-    };    
+    };
 
     this.drawSOM = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
@@ -185,6 +186,10 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           NotifyService.addTransient('Plane computation failed', res, 'danger');
         }
       );
+    };
+
+    this.drawRegression = function(config, windowHandler) {
+      var promise = RegressionService.compute(config, windowHandler);
     };
 
   }

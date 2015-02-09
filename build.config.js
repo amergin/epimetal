@@ -108,7 +108,12 @@ module.exports = {
       'vendor/spin.js/spin.js',
       'vendor/angular-spinner/angular-spinner.min.js',
       // customize this for release:
-      'vendor/angular-bootstrap/custom/ui-bootstrap-custom-tpls-0.12.0.js'
+      'vendor/angular-bootstrap/custom/ui-bootstrap-custom-tpls-0.12.0.js',
+      // 'vendor/mathjs/dist/math.js',
+      'vendor/paralleljs/lib/parallel.js',
+      // only for debug:
+      'vendor/numericjs/lib/numeric.js'
+      // 'vendor/mathjs/dist/math.js'
       // 'vendor/spark-md5/spark-md5.min.js'
     ],
     css: [

@@ -308,14 +308,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
             }
 
             _.each(variables, function(vari) {
-              // var dataAdded;
-              // _.each( _.values( DimensionService.getAll()), function(dimSer) {
-              //   if( dimSer.instance.addVariableData(vari, setSamples) ) {
-              //     dataAdded = true;
-              //   }
-              // });
               var dataAdded = windowHandler.getDimensionService().addVariableData(vari, setSamples);
-              // var dataAdded = that.dimensionService.addVariableData(vari, setSamples);
               if (dataAdded) {
                 dataWasAdded = true;
               }
@@ -324,17 +317,8 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
           });
 
           if (dataWasAdded) {
-
             windowHandler.getDimensionService().rebuildInstance();
-
-              // _.each( _.values( DimensionService.getAll()), function(dimSer) {
-              //   dimSer.instance.rebuildInstance();
-              // });
-
-            // rebuilds crossfilter instance
-            // that.dimensionService.rebuildInstance();
           }
-          // result can be empty, it's the promise that counts, not the data delivered outwards
           defer.resolve();
         }, function errFn(res) {
           defer.reject(res);

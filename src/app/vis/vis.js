@@ -209,12 +209,20 @@
     data: { pageTitle: 'Regression analysis | Visualization' },
     views: {
       'submenu-regression@vis': {
-        templateUrl: 'vis/regression/regression.submenu.tpl.html'
+        templateUrl: 'vis/regression/regression.submenu.tpl.html',
+        controller: 'RegressionSubmenuController'
       },
       'regression@vis': {
         templateUrl: 'vis/regression/regression.tpl.html',
         controller: 'RegressionController'
       }
+    },
+    resolve: {
+      windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
+        var handler = WindowHandler.create('vis.regression');
+        handler.setDimensionService( DimensionService.get('vis.som') );
+        return handler;
+      }]
     },
     sticky: true,
     deepStateRedirect: true
