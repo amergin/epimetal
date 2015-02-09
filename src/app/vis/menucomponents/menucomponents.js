@@ -365,8 +365,8 @@ vis.controller('HeatmapModalFormController', ['$scope', '$rootScope', 'DatasetFa
 
 
 // regression menu X
-vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'PlotService',
-  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService) {
+vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'PlotService', 'RegressionService',
+  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService, RegressionService) {
     $scope.selection = {};
 
     DatasetFactory.getVariables().then( function(res) { $scope.variables = res; } );
@@ -376,7 +376,11 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
     };
 
     $scope.canSubmit = function () {
-      return $scope.canEdit() && !_.isEmpty($scope.selection.target) && !_.isEmpty($scope.selection.association) && !_.isEmpty($scope.selection.adjust);
+      return !RegressionService.inProgress() && 
+      $scope.canEdit() && 
+      !_.isEmpty($scope.selection.target) && 
+      !_.isEmpty($scope.selection.association) && 
+      !_.isEmpty($scope.selection.adjust);
     };
 
     $scope.submit = function() {
