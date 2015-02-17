@@ -110,12 +110,12 @@ App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', '$injector'
     }
   ]);
 
-App.controller('AppCtrl', ['$scope', '$location', '$templateCache', 'CompatibilityService', 'NotifyService',
-  function AppCtrl($scope, $location, $templateCache, CompatibilityService, NotifyService) {
+App.controller('AppCtrl', ['$scope', '$location', '$templateCache', 'CompatibilityService', 'NotifyService', 'usSpinnerService',
+  function AppCtrl($scope, $location, $templateCache, CompatibilityService, NotifyService, usSpinnerService) {
 
     $scope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
       if (toState.resolve) {
-        $scope.loading.spinner = true;
+        usSpinnerService.spin('main');
       }
     });
 
@@ -128,7 +128,9 @@ App.controller('AppCtrl', ['$scope', '$location', '$templateCache', 'Compatibili
         $scope.pageTitle = toState.data.pageTitle + ' | Plotter';
       }
 
-      $scope.loading.spinner = false;
+      if (toState.resolve) {
+        usSpinnerService.stop('main');
+      }
     });
 
     $scope.loading = { spinner: true };

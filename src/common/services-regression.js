@@ -88,8 +88,12 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         targetData = stripNaNs(global.env.targetData.slice(0), nanIndices),
         adjustData = getStrippedAdjust(global.env.adjustData, nanIndices);
 
-      var xMatrix = [onesArray, threadData].concat(adjustData);
-      var xMatrixTransp = numeric.transpose(xMatrix);
+      // console.log("raw=", onesArray, threadData, adjustData);
+      var xMatrixTransp = [onesArray, threadData].concat(adjustData);
+      var xMatrix  = numeric.transpose(xMatrixTransp);
+      console.log( "transp size =", _.size(xMatrixTransp) );
+      console.log( "matrix size =", _.size(xMatrix) );
+      // console.log("matrix=", xMatrix, xMatrixTransp);
 
       // see https://en.wikipedia.org/wiki/Ordinary_least_squares#Estimation
       // beta = (X^T X)^{-1} X^T y 
@@ -168,7 +172,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
             console.log("Result Betas=", result);
             _inProgress = false;
             _result = result;
-            NotifyService.addTransient('Regression analysis completed', 'Computation ready.', 'success');
+            NotifyService.addTransient('Regression analysis completed', 'Regression computation ready.', 'success');
             deferred.resolve(result);
           });
       });

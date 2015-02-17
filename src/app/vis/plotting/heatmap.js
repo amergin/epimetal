@@ -1,10 +1,11 @@
 var visu = angular.module('plotter.vis.plotting.heatmap', 
   [
   'ui.router',
-  'services.dimensions'
+  'services.dimensions',
+  'services.correlation'
   ]);
-visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope) {
+visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService) {
 
     $scope.resetFilter = function() {
       $scope.heatmap.filterAll();
@@ -139,93 +140,55 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         return d.corr;
       });
 
-      $scope.computeVariables = function() {
-      // calculate coordinates
-      var coordinates = [];
 
-      // var test = [{ variables: { 'a': 1, 'b': 4}}, { variables: { 'a': 2, 'b': 5}}, { variables: { 'a': 3, 'b': 6}}];
-      // var tmeanA = d3.mean( test, function(d) { return +d.variables['a']; } );
-      // var tmeanB = d3.mean( test, function(d) { return +d.variables['b']; } );
-      // var tstdA = stDeviation( test, tmeanA, 'a' );
-      // var tstdB = stDeviation( test, tmeanB, 'b' );
-      // var corr = sampleCorrelation( test, 'a', tmeanA, tstdA, 'b', tmeanB, tstdB );
-      // console.log("testvars:", tmeanA, tmeanB, tstdA, tstdB, corr); // corr should be 1.0
+      $scope.computeVariables = function(callback) {
+        var variables = $scope.window.variables.x;
+        $scope.$parent.startSpin();
 
-      var samples = $scope.sampDimension.top(Infinity);
+        // get coordinates in a separate worker
+        CorrelationService.compute(
+          { variables: variables }, $scope.$parent.window.handler
+          )
+        .then(function succFn(coordinates) {
 
-      var variables = $scope.window.variables.x;
-      var correlations = {};
+          // compute Bonferroni correction
+          var bonferroni = 0.5 * variables.length * (variables.length - 1);
+          $scope.limit = 0.05 / bonferroni;
+          $scope.limitDisp = $scope.format($scope.limit);
 
-      _.each(variables, function(varA, indX) {
-        _.each(variables, function(varB, indY) {
-          var coord = {
-            x: varA,
-            y: varB
-          };
-          if (varA == varB) {
-            // diagonal -> always 1
-            coord['corr'] = 1;
-          } else if (indX > indY) {
-            coordinates.push({
-              x: varA,
-              y: varB,
-              corr: correlations[[varB, varA]]['corr'],
-              pvalue: correlations[[varB, varA]]['pvalue']
-            });
-            return;
-          } else {
-            // compute mean and st. deviation for varA & varB
-            var meanA = d3.mean(samples, function(d) {
-              return +d.variables[varA];
-            });
-            var stdA = Utils.stDeviation(samples, meanA, varA);
-            var meanB = d3.mean(samples, function(d) {
-              return +d.variables[varB];
-            });
-            var stdB = Utils.stDeviation(samples, meanB, varB);
-            // compute correlation
-            coord['corr'] = Utils.sampleCorrelation(samples, varA, meanA, stdA, varB, meanB, stdB);
-            // compute p-value
-            coord['pvalue'] = Utils.calcPForPearsonR( coord['corr'], samples.length);
-            correlations[[varA, varB]] = coord;//coord['corr'];
-          }
-          coordinates.push(coord);
+          // create a tiny crossfilt. instance for heatmap. so tiny that it's outside of dimension
+          // service reach.
+          $scope.crossfilter.remove();
+          $scope.crossfilter.add(coordinates);
+          callback();
+        }).finally(function() {
+          $scope.$parent.stopSpin();
         });
-});
 
-      // compute Bonferroni correction
-      var bonferroni = 0.5 * variables.length * (variables.length - 1);
-      $scope.limit = 0.05 / bonferroni;
-      $scope.limitDisp = $scope.format($scope.limit);
+      };
 
-      // create a tiny crossfilt. instance for heatmap. so tiny that it's outside of dimension
-      // service reach.
-      $scope.crossfilter.remove();
-      $scope.crossfilter.add(coordinates);
-    };
+    $scope.$watch('limitDisp', function(val) {
 
-    $scope.computeVariables();
-
-    $scope.$parent.settingsDropdown.push({
-      'text': '<i class="fa fa-sliders"></i> Show correlations with p > <b>' + $scope.limitDisp + '</b>',
-      'click': function() {
-        var entry = _.last($scope.$parent.settingsDropdown).text;
-        $scope.filtered = !$scope.filtered;
-        if($scope.filtered) { 
-          $scope.$parent.headerText[2] = '(p < ' + $scope.limitDisp + ')';
-          _.last($scope.$parent.settingsDropdown).text = entry.replace(/Hide/, 'Show');
-        } else {
-          $scope.$parent.headerText[2] = '';
-          _.last($scope.$parent.settingsDropdown).text = entry.replace(/Show/, 'Hide');
+      $scope.$parent.settingsDropdown.push({
+        'text': '<i class="fa fa-sliders"></i> Show correlations with p > <b>' + $scope.limitDisp + '</b>',
+        'click': function() {
+          var entry = _.last($scope.$parent.settingsDropdown).text;
+          $scope.filtered = !$scope.filtered;
+          if($scope.filtered) { 
+            $scope.$parent.headerText[2] = '(p < ' + $scope.limitDisp + ')';
+            _.last($scope.$parent.settingsDropdown).text = entry.replace(/Hide/, 'Show');
+          } else {
+            $scope.$parent.headerText[2] = '';
+            _.last($scope.$parent.settingsDropdown).text = entry.replace(/Show/, 'Hide');
+          }
+          $scope.heatmap.render();
         }
-        $scope.heatmap.render();
-      }
+      });
+
     });
 
     $scope.redraw = function() {
-        $scope.$parent.startSpin();
-        $scope.computeVariables();
-
+      var callback = function() {
         // update the chart and redraw
         $scope.heatmap.dimension($scope.coordDim);
         $scope.heatmap.group($scope.coordGroup);
@@ -233,8 +196,8 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         // remember to clear any filters that may have been applied
         //$scope.heatmap.filterAll();
         $scope.heatmap.render();
-
-        $scope.$parent.stopSpin();
+      };
+        $scope.computeVariables(callback);
       };
 
       $scope.filter = function() {
@@ -264,13 +227,18 @@ visu.directive('heatmap', ['$compile', '$rootScope', '$timeout',
       .append('div')
       .attr('class', 'heatmap-legend-anchor')[0][0];
 
-      $scope.drawHeatmap(
-        $scope.heatmapAnchor, 
-        $scope.coordDim, 
-        $scope.coordGroup, 
-        $scope.margins, 
-        $scope.width, 
-        $scope.height );
+      $scope.computeVariables(function() {
+        $scope.drawHeatmap(
+          $scope.heatmapAnchor, 
+          $scope.coordDim, 
+          $scope.coordGroup, 
+          $scope.margins, 
+          $scope.width, 
+          $scope.height );
+      });
+
+
+
 
       $scope.deregisters = [];
 

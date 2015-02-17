@@ -1,43 +1,50 @@
 var serv = angular.module('services.notify', [
 'mgcrea.ngStrap.alert', 
 'mgcrea.ngStrap.popover',
-'ui.bootstrap'
+'ui.bootstrap',
+'angular-growl'
 // 'ui.bootstrap.modal'
 // 'mgcrea.ngStrap.modal'
 ]);
 
-serv.factory('NotifyService', ['$injector', '$timeout',
-  function NotifyService($injector, $timeout) {
+serv.config(['growlProvider', function(growlProvider) {
+    growlProvider.onlyUniqueMessages(false);
+    growlProvider.globalTimeToLive(6000);
+    growlProvider.globalPosition('top-left');
+}]);
+
+serv.factory('NotifyService', ['$injector', '$timeout', 'growl',
+  function NotifyService($injector, $timeout, growl) {
 
     var _modalInstanceRef = null;
 
+    getAlertFunction = function(msgClass) {
+      switch(msgClass) {
+        case 'warn':
+          return growl.warning;
+        case 'info':
+          return growl.info;
+        case 'success':
+          return growl.success;
+        case 'error':
+          return growl.error;
+        default:
+          throw 'Unknown alert type';
+      }
+    };
+
     return {
 
+      // alerts
       addSticky: function (title, message, level) {
-        // var $alert = $injector.get('$alert');
-        // var myAlert = $alert({
-        //   title: title,
-        //   content: message,
-        //   container: '.alert-area',
-        //   // placement: 'top-right',
-        //   animation: 'am-fade-and-slide-top',
-        //   type: level,
-        //   show: true
-        // });
+        var call = getAlertFunction(level);
+        call(message, { ttl: -1 });
       },
 
+      // alerts
       addTransient: function (title, message, level) {
-        // var $alert = $injector.get('$alert');
-        // var myAlert = $alert({
-        //   title: title + "\n",
-        //   content: message, 
-        //   container: '.alert-area',
-        //   // placement: 'top-right',
-        //   animation: 'am-fade-and-slide-top',
-        //   type: level,
-        //   show: true,
-        //   duration: 8
-        // });
+        var call = getAlertFunction(level);
+        call(message, { title: title });
       },
 
       /* THESE ARE FOR MODAL WINDOWS */

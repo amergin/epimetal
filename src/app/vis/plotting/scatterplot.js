@@ -345,9 +345,9 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
   ]);
 
-visu.directive('scatterplot', ['$timeout', '$rootScope',
+visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
 
-  function($timeout, $rootScope) {
+  function($timeout, $rootScope, NotifyService) {
 
     var linkFn = function($scope, ele, iAttrs) {
 
@@ -358,6 +358,11 @@ visu.directive('scatterplot', ['$timeout', '$rootScope',
       $scope.height = ele.height() || 345;
 
       $scope.redrawAll();
+
+      NotifyService.addTransient(
+        'Scatter plot added', 
+        'Scatter plot for ' + '(' + $scope.window.variables.x + ", " + $scope.window.variables.y + ') has been added', 
+        'success');
 
       $scope.deregisters = [];
 

@@ -27,13 +27,11 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         UrlHandler.createWindow( type, config );
       };
 
-      NotifyService.addSpinnerModal('Loading...');
 
       var plottingDataPromise = DatasetFactory.getVariableData([config.variables.x, config.variables.y], windowHandler);
       plottingDataPromise.then(function successFn(res) {
           // draw the figure
           draw(config, windowHandler);
-          NotifyService.closeModal();
         },
         function errorFn(variable) {
           NotifyService.closeModal();

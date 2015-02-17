@@ -263,15 +263,6 @@ vis.controller('HeatmapModalFormController', ['$scope', '$rootScope', 'DatasetFa
 
     $scope.variables = [];
 
-    // for splitting the data equally to columns, see http://stackoverflow.com/questions/21644493/how-to-split-the-ng-repeat-data-with-three-columns-using-bootstrap
-    function chunk(arr, size) {
-      var newArr = [];
-      for (var i=0; i<arr.length; i+=size) {
-        newArr.push(arr.slice(i, i+size));
-      }
-      return newArr;
-    }
-
     $scope.sideGroups = [];
 
     DatasetFactory.getVariables().then( function(res) { 
@@ -283,7 +274,7 @@ vis.controller('HeatmapModalFormController', ['$scope', '$rootScope', 'DatasetFa
       .sortBy(function(g) { return g[0].group.order; } )
       .value();
 
-      $scope.groups = chunk(groups, 3);
+      $scope.groups = Utils.chunk(groups, 3);
 
       $scope.sideGroups = _.chain($scope.groups)
       .flatten(true)
@@ -325,7 +316,6 @@ vis.controller('HeatmapModalFormController', ['$scope', '$rootScope', 'DatasetFa
     };
 
     $scope.getSelected = function() {
-      console.log("getSelected", Date());
       return _.chain($scope.groups)
       .flatten()
       .filter(function(v) { return v.selected === true; })

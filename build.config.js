@@ -112,7 +112,8 @@ module.exports = {
       // 'vendor/mathjs/dist/math.js',
       'vendor/paralleljs/lib/parallel.js',
       // only for debug:
-      'vendor/numericjs/lib/numeric.js'
+      'vendor/numericjs/lib/numeric.js',
+      'vendor/angular-growl-2/build/angular-growl.js'
       // 'vendor/mathjs/dist/math.js'
       // 'vendor/spark-md5/spark-md5.min.js'
     ],
@@ -120,7 +121,8 @@ module.exports = {
       'vendor/dcjs/dc.css',
       'vendor/angular-motion/dist/angular-motion.min.css',
       'vendor/bootstrap-additions/dist/bootstrap-additions.min.css',
-      'vendor/angular-ui-layout/src/ui-layout.css'
+      'vendor/angular-ui-layout/src/ui-layout.css',
+      'vendor/angular-growl-2/build/angular-growl.min.css'      
       //'vendor/chosen/chosen.min.css'
     ],
     assets: [

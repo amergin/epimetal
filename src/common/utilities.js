@@ -79,7 +79,7 @@ Utils.stDeviation = function(array, mean, variable) {
   // http://stackoverflow.com/questions/3762589/fastest-javascript-summation
   var dev = [];
   for (var i = array.length; i--;) {
-    var val = +array[i].variables[variable];
+    var val = +array[i][variable]; //+array[i].variables[variable];
     dev.push((val - mean) * (val - mean));
   }
 
@@ -94,11 +94,9 @@ Utils.stDeviation = function(array, mean, variable) {
 Utils.sampleCorrelation = function(samples, varA, meanA, stdA, varB, meanB, stdB) {
   var val = 0;
   _.each(samples, function(samp, ind) {
-    var valA = +samp.variables[varA];
-    var valB = +samp.variables[varB];
-    // if (_.isUndefined(valA) || _.isUndefined(valB)) {
-    //   return;
-    // }
+    var valA = +samp[varA];
+    var valB = +samp[varB];
+
     var sum = (valA - meanA) * (valB - meanB);
     if (_(sum).isNaN()) {
       return;
@@ -238,5 +236,22 @@ String.prototype.hashCode = function() {
 };
 
 
+// for splitting the data equally to columns, see http://stackoverflow.com/questions/21644493/how-to-split-the-ng-repeat-data-with-three-columns-using-bootstrap
+Utils.chunk = function(arr, size) {
+  var newArr = [];
+  for (var i=0; i<arr.length; i+=size) {
+    newArr.push(arr.slice(i, i+size));
+  }
+  return newArr;
+};
 
-
+Utils.subarrays = function(array, n) {
+  var len = array.length, out = [], i = 0;
+ 
+  while (i < len) {
+    var size = Math.ceil((len - i) / n--);
+    out.push(array.slice(i, i += size));
+  }
+ 
+  return out;
+};
