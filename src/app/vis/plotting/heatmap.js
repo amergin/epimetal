@@ -168,6 +168,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       };
 
     $scope.$watch('limitDisp', function(val) {
+      if(!val) { return; }
 
       $scope.$parent.settingsDropdown.push({
         'text': '<i class="fa fa-sliders"></i> Show correlations with p > <b>' + $scope.limitDisp + '</b>',

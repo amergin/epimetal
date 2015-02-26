@@ -1,8 +1,8 @@
-<div ng-controller="HeatmapModalFormController" style="height: 100%;">
+<div style="height: 100%;">
 	<div class="modal-header">
 		<div class="row">
 			<div class="col-sm-8">
-				<h3 class="modal-title">Select a set of variables for correlation plot</h3>
+				<h3 class="modal-title">{{extend.title}}</h3>
 			</div>
 			<div class="col-sm-2">
 				<span><strong>{{getSelected().length}}</strong> variables selected</span>
@@ -61,7 +61,7 @@
 	<div class="modal-footer">
 		<div class="row">
 			<div class="col-sm-offset-4 col-sm-4 text-center">
-				<button type="button" class="btn btn-primary" ng-disabled="!canSubmit()" ng-click="post()">Plot correlation plot</button>
+				<button type="button" class="btn btn-primary" ng-disabled="!canSubmit()" ng-click="post()">{{extend.submitButton}}</button>
 				<button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
 			</div>
 		</div>

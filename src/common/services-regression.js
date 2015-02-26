@@ -88,7 +88,6 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         targetData = stripNaNs(global.env.targetData.slice(0), nanIndices),
         adjustData = getStrippedAdjust(global.env.adjustData, nanIndices);
 
-      // console.log("raw=", onesArray, threadData, adjustData);
       var xMatrixTransp = [onesArray, threadData].concat(adjustData);
       var xMatrix  = numeric.transpose(xMatrixTransp);
       console.log( "transp size =", _.size(xMatrixTransp) );
@@ -167,13 +166,17 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
           .require(getNaNIndices)
           .require(stripNaNs)
           .map(threadFunctionNumericjs)
-          .then(function(result) {
+          .then(function succFn(result) {
             windowHandler.stopAllSpins();
             console.log("Result Betas=", result);
             _inProgress = false;
             _result = result;
             NotifyService.addTransient('Regression analysis completed', 'Regression computation ready.', 'success');
             deferred.resolve(result);
+          }, function errFn(result) {
+            _inProgress = false;
+            NotifyService.addTransient('Regression analysis failed', 'Something went wrong while performing the computation.', 'error');
+            deferred.reject(result);
           });
       });
       return deferred.promise;

@@ -240,25 +240,9 @@ vis.directive('heatmapForm', function () {
   };
 });
 
-
-
-// directive for heatmap modal form
-// vis.directive('heatmapModalForm', function () {
-//   return {
-//     restrict: 'C',
-//     scope: { handler: '=' },
-//     // replace: true,
-//     controller: 'HeatmapModalFormController',
-//     templateUrl: 'vis/menucomponents/heatmap.modal.tpl.html',
-//     link: function (scope, elm, attrs) {
-//     }
-//   };
-// });
-
-
 // controller for the histogram form
-vis.controller('HeatmapModalFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'PlotService', '$timeout', '$location', '$anchorScroll',
-  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService, $timeout, $location, $anchorScroll) {
+vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'PlotService', '$timeout', '$location', '$anchorScroll', '$modalInstance',
+  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService, $timeout, $location, $anchorScroll, $modalInstance) {
     // $scope.handler comes when the directive is called in a template
 
     $scope.variables = [];
@@ -266,7 +250,8 @@ vis.controller('HeatmapModalFormController', ['$scope', '$rootScope', 'DatasetFa
     $scope.sideGroups = [];
 
     DatasetFactory.getVariables().then( function(res) { 
-      $scope.variables = res;
+      // always operate on a copy: otherwise the selections are preserved in the service... -> deep copy, shallow not enough
+      $scope.variables = angular.copy(res);
 
       var groups = _.chain($scope.variables)
       .groupBy(function(v) { return v.group.name; } )
@@ -279,12 +264,6 @@ vis.controller('HeatmapModalFormController', ['$scope', '$rootScope', 'DatasetFa
       $scope.sideGroups = _.chain($scope.groups)
       .flatten(true)
       .value();
-
-      // $scope.sideGroupIds = _.chain($scope.variables)
-      // .map(function(v) { return v.group.order; } )
-      // .unique()
-      // .sort(d3.ascending)
-      // .value();
     });
 
     $scope.scrollToGroup = function(id) {
@@ -306,7 +285,7 @@ vis.controller('HeatmapModalFormController', ['$scope', '$rootScope', 'DatasetFa
     };
 
     $scope.canSubmit = function() {
-      return $scope.getSelected().length > 0;
+      return $scope.getSelected().length > 0 && $scope.extend.canSubmit.apply(arguments);
     };
 
     $scope.groupSelected = function(items) {
@@ -325,13 +304,13 @@ vis.controller('HeatmapModalFormController', ['$scope', '$rootScope', 'DatasetFa
     $scope.post = function() {
       var variables = $scope.getSelected();
       var bare = _.map(variables, function(v) { return v.name; } );
-      PlotService.drawHeatmap({ variables: {x: bare} }, $scope.handler);
+      $modalInstance.close(bare);
 
-      NotifyService.closeModal();
+      // PlotService.drawHeatmap({ variables: {x: bare} }, $scope.payload.handler);
     };
 
     $scope.cancel = function() {
-      NotifyService.closeModal();
+      $modalInstance.dismiss('cancel');
     };
 
     $scope.getActiveNumber = function(items) {
@@ -357,7 +336,14 @@ vis.controller('HeatmapModalFormController', ['$scope', '$rootScope', 'DatasetFa
 // regression menu X
 vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'PlotService', 'RegressionService',
   function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService, RegressionService) {
-    $scope.selection = {};
+    $scope.selection = {
+      target: null,
+      association: [],
+      adjust: []
+    };
+
+    var associationScope = $scope.$new({ isolate: true });
+    var adjustScope = $scope.$new({ isolate: true });
 
     DatasetFactory.getVariables().then( function(res) { $scope.variables = res; } );
 
@@ -365,20 +351,78 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
       return DatasetFactory.activeSets().length > 0;
     };
 
+    var assocAndAdjustOverlapping = function() {
+      return _.intersection( $scope.selection.association, $scope.selection.adjust ).length > 0;
+    };
+
     $scope.canSubmit = function () {
       return !RegressionService.inProgress() && 
       $scope.canEdit() && 
-      !_.isEmpty($scope.selection.target) && 
-      !_.isEmpty($scope.selection.association) && 
-      !_.isEmpty($scope.selection.adjust);
+      !_.isUndefined($scope.selection.target) &&
+      !_.isEmpty($scope.selection.association);
     };
 
-    $scope.submit = function() {
+    $scope.submit = function(result) {
+      if( assocAndAdjustOverlapping() ) {
+        NotifyService.addSticky('Incorrect variable combination', 'Association variables and adjust variables overlap. Please adjust the selections.', 'error');
+        return;
+      }
       var config = {
         variables: $scope.selection
       };
       PlotService.drawRegression(config, $scope.handler);
     };
+
+    $scope.openAssociation = function() {
+      var $modalScope = associationScope;
+      // var $modalScope = $scope.$new({ isolate: true });
+
+      $modalScope.extend = {
+        canSubmit: function() { return true; },
+        title: 'Select association variable(s) for regression analysis',
+        submitButton: 'Select'
+      };
+
+      var promise = NotifyService.addClosableModal('vis/menucomponents/new.heatmap.modal.tpl.html', $modalScope, { 
+        controller: 'ModalFormController'
+      });
+
+      promise.then( function succFn(variables) {
+        $scope.selection.association = variables;
+      }, function errFn(res) {
+        $scope.selection.association = [];
+        // cancelled
+      })
+      .finally(function() {
+        // $modalScope.$destroy();
+      });
+    };
+
+    $scope.openAdjust = function() {
+      var $modalScope = adjustScope;
+
+      $modalScope.extend = {
+        canSubmit: function() { return true; },
+        title: 'Select adjust variable(s) for regression analysis',
+        submitButton: 'Select'
+      };
+
+      var promise = NotifyService.addClosableModal('vis/menucomponents/new.heatmap.modal.tpl.html', $modalScope, { 
+        controller: 'ModalFormController'
+      });
+
+      promise.then( function succFn(variables) {
+        $scope.selection.adjust = variables;
+      }, function errFn(res) {
+        $scope.selection.adjust = [];
+        // cancelled
+      })
+      .finally(function() {
+        // $modalScope.$destroy();
+      });
+    };
+
+
 
   }
 ]);
@@ -387,7 +431,9 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
 vis.directive('regressionMenu', function () {
   return {
     restrict: 'C',
-    scope: { handler: '=' },
+    scope: { 
+      handler: '='
+    },
     replace: true,
     controller: 'RegressionMenuController',
     templateUrl: 'vis/menucomponents/regression-menu.tpl.html',

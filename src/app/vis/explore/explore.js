@@ -67,11 +67,11 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
            handles: ['se'],
            start: function(event, $element, widget) { console.log("resize start"); },
            resize: function(event, $element, widget) { 
-            event.stopImmediatePropagation();
+            // event.stopImmediatePropagation();
             emitResize($element); 
             },
            stop: function(event, $element, widget) { 
-            event.stopImmediatePropagation();
+            // event.stopImmediatePropagation();
             emitResize($element);
           }
       }
@@ -122,26 +122,31 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
   }
 ]);
 
-mod.controller('ExploreMenuCtrl', ['$scope', '$rootScope', 'datasets', 'variables', 'windowHandler', 'NotifyService', 'PlotService',
-  function ExploreMenuCtrl($scope, $rootScope, datasets, variables, windowHandler, NotifyService, PlotService) {
+mod.controller('ExploreMenuCtrl', ['$scope', '$rootScope', 'datasets', 'variables', 'windowHandler', 'NotifyService', 'PlotService', '$q',
+  function ExploreMenuCtrl($scope, $rootScope, datasets, variables, windowHandler, NotifyService, PlotService, $q) {
     console.log("menu ctrl");
 
     $scope.windowHandler = windowHandler;
 
     $scope.openHeatmapSelection = function() {
       var $modalScope = $scope.$new({ isolate: true });
-      // $modalScope.modal = {
-      //   wide: true
-      // };
-      $modalScope.handler = $scope.windowHandler;
+
+      $modalScope.extend = {
+        canSubmit: function() { return true; },
+        title: 'Select a set of variables for a correlation plot',
+        submitButton: 'Add correlation plot'
+      };
 
       var promise = NotifyService.addClosableModal('vis/menucomponents/new.heatmap.modal.tpl.html', $modalScope, { 
-        // controller: 'HeatmapModalFormController'
-        // title: 'Add a correlation plot', 
-        // html: true
+        controller: 'ModalFormController'
       });
 
-      promise.finally(function() {
+      promise.then( function succFn(variables) {
+        PlotService.drawHeatmap({ variables: {x: variables} }, $scope.windowHandler);
+      }, function errFn(res) {
+        // cancelled
+      })
+      .finally(function() {
         $modalScope.$destroy();
       });
 

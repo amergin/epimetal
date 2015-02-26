@@ -51,7 +51,7 @@ mod.factory('CorrelationService', ['$injector', '$q', '$rootScope', 'DatasetFact
 
       return {
         diagonals: diagonals,
-        coordinates: Utils.subarrays(coordinates, 6)
+        coordinates: Utils.subarrays(coordinates, 20)
       };
     };
 
@@ -103,6 +103,8 @@ mod.factory('CorrelationService', ['$injector', '$q', '$rootScope', 'DatasetFact
         // p-value
         coord['pvalue'] = calcPForPearsonR(coord['corr'], samples.length);
       });
+
+      console.log("Thread ready");
       return coordinates;
     }
 

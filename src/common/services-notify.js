@@ -38,7 +38,7 @@ serv.factory('NotifyService', ['$injector', '$timeout', 'growl',
       // alerts
       addSticky: function (title, message, level) {
         var call = getAlertFunction(level);
-        call(message, { ttl: -1 });
+        call(message, { title: title, ttl: -1 });
       },
 
       // alerts
@@ -67,11 +67,12 @@ serv.factory('NotifyService', ['$injector', '$timeout', 'growl',
 
         _modalInstanceRef = $modal.open(applyConfig);
 
-        _modalInstanceRef.result.then(function() {
-          deferred.resolve();
-        }, function() {
-          deferred.reject();
+        _modalInstanceRef.result.then(function(res) {
+          deferred.resolve(res);
+        }, function(res) {
+          deferred.reject(res);
         });
+
         return deferred.promise;
       },
 

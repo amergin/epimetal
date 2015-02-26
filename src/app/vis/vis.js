@@ -220,7 +220,7 @@
     resolve: {
       windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
         var handler = WindowHandler.create('vis.regression');
-        handler.setDimensionService( DimensionService.get('vis.som') );
+        handler.setDimensionService( DimensionService.getPrimary() );
         return handler;
       }]
     },
