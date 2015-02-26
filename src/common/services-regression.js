@@ -66,6 +66,45 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       return ret;
     };
 
+    function getCI(dotInverse, xMatrix, xMatrixTransposed, yMatrixTransposed, n, k, beta) {
+      var VARIABLE_INDEX = 1;
+      var dispSize = function(title, matrix) {
+        var isArray = function(d) {
+          return _.isArray(d);
+        };
+        console.log(title + ": ", isArray(matrix) ? _.size(matrix) : 1, " x ", isArray(matrix[0]) ? _.size(matrix[0]) : 1);
+      };
+
+      var hMatrix = numeric.dot( numeric.dot(xMatrix, dotInverse), xMatrixTransposed );
+      // dispSize("hMatrix", hMatrix);
+
+      var _identity = numeric.identity( _.size(hMatrix) );
+      // dispSize("identity", _identity);
+
+      var _subtracted = numeric.sub(_identity, hMatrix);
+      // dispSize("subtracted", _subtracted);
+
+      var yMatrix = numeric.transpose(yMatrixTransposed);
+
+      // var _yMatrixTransp = numeric.transpose([yMatrix]);
+      // dispSize("yTrans", _yMatrixTransp);
+      // dispSize("y", yMatrix);
+
+      var sigma = numeric.dot( numeric.dot( yMatrixTransposed, _subtracted ), yMatrix )[0][0] / (n-(k+1));
+      console.log("sigma=", sigma);
+      var cMatrix = numeric.mul(sigma, dotInverse);
+      console.log("cmatrix=", JSON.stringify(cMatrix));
+
+      var alpha = 0.05 / k;
+
+      var _sqrt = Math.sqrt( cMatrix[VARIABLE_INDEX][VARIABLE_INDEX] ); //numeric.getDiag(cMatrix)[1] );
+      var ci = statDist.tdistr(n-(k+1), alpha/2) * _sqrt;
+      console.log("CI before [sub, add] of beta = ", ci);
+
+      var ret = [ beta - ci, beta + ci ];
+      // console.log(ret);
+      return ret;
+    }
 
     function threadFunctionNumericjs(thData) {
       var getStrippedAdjust = function(data, nanIndices) {
@@ -111,34 +150,21 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
 
       var xMatrixTransp = [onesArray, associationData].concat(adjustData);
       var xMatrix  = numeric.transpose(xMatrixTransp);
-      console.log( "transp size =", _.size(xMatrixTransp) );
-      console.log( "matrix size =", _.size(xMatrix) );
 
       // see https://en.wikipedia.org/wiki/Ordinary_least_squares#Estimation
-      // beta = (X^T X)^{-1} X^T y 
-      var t0 = performance.now();
-      var multi = numeric.dot(xMatrixTransp, xMatrix);
-      var t1 = performance.now();
-      console.log("multi took ", (t1 - t0) / 1000, " seconds");
+      // Compute beta = (X^T X)^{-1} X^T y 
+      var dotProduct = numeric.dot(xMatrixTransp, xMatrix),
+      inverse = numeric.inv(dotProduct),
+      multi2 = numeric.dot(inverse, xMatrixTransp),
+      betas = numeric.dot(multi2, targetData);
 
-      t0 = performance.now();
-      var inv = numeric.inv(multi);
-      t1 = performance.now();
-      console.log("inv took ", (t1 - t0) / 1000, " seconds");
-
-      t0 = performance.now();
-      var multi2 = numeric.dot(inv, xMatrixTransp);
-      t1 = performance.now();
-      console.log("multi2 took ", (t1 - t0) / 1000, " seconds");
-
-      t0 = performance.now();
-      var multi3 = numeric.dot(multi2, targetData);
-      t1 = performance.now();
-      console.log("multi3 took ", (t1 - t0) / 1000, " seconds");
+      // get confidence interval
+      var ci = getCI(inverse, xMatrix, xMatrixTransp, [targetData], _.size(xMatrix), global.env.xColumns, betas[1]);
 
       return {
-        betas: multi3,
-        variable: thData.variable
+        betas: betas,
+        variable: thData.variable,
+        ci: ci
       };
     }
 
@@ -178,14 +204,20 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
             env: {
               targetData: targetData,
               adjustData: adjustData,
-              nanIndices: getAllNaNs(targetData, targetVar, adjustData, adjustVars)
+              nanIndices: getAllNaNs(targetData, targetVar, adjustData, adjustVars),
+              xColumns: _.size(threadData) // = k
             }
           })
           .require('numeric.min.js')
           .require('underscore-min.js')
+          // nan proprocessing
           .require(getNaNIndices)
           .require(stripNaNs)
+          // normalization
           .require({ fn: Utils.stDeviation, name: 'stDeviation' })
+          .require('statistics-distributions-packaged.js')
+          // t distribution
+          .require(getCI)
           .map(threadFunctionNumericjs)
           .then(function succFn(result) {
             windowHandler.stopAllSpins();
