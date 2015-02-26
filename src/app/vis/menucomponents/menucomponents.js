@@ -259,7 +259,13 @@ vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory',
       .sortBy(function(g) { return g[0].group.order; } )
       .value();
 
-      $scope.groups = Utils.chunk(groups, 3);
+      if($scope.extend.groups && $scope.extend.groups.length > 0) {
+        // previous selections
+        $scope.groups = angular.copy($scope.extend.groups);
+      } else {
+        $scope.groups = Utils.chunk(groups, 3);
+      }
+
 
       $scope.sideGroups = _.chain($scope.groups)
       .flatten(true)
@@ -294,8 +300,8 @@ vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory',
       });
     };
 
-    $scope.getSelected = function() {
-      return _.chain($scope.groups)
+    $scope.getSelected = function(selection) {
+      return _.chain(selection || $scope.groups)
       .flatten()
       .filter(function(v) { return v.selected === true; })
       .value();
@@ -304,9 +310,8 @@ vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory',
     $scope.post = function() {
       var variables = $scope.getSelected();
       var bare = _.map(variables, function(v) { return v.name; } );
+      $scope.$parent.extend['groups'] = $scope.groups;
       $modalInstance.close(bare);
-
-      // PlotService.drawHeatmap({ variables: {x: bare} }, $scope.payload.handler);
     };
 
     $scope.cancel = function() {
@@ -319,6 +324,10 @@ vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory',
       } );
       return counts.true || 0;
     };
+
+    $scope.$on('$destroy', function() {
+      console.log("modal scope destroyed");
+    });
 
     $scope.clear = function() {
       _.chain($scope.groups)
@@ -343,7 +352,20 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
     };
 
     var associationScope = $scope.$new({ isolate: true });
+    associationScope.extend = {
+      canSubmit: function() { return true; },
+      title: 'Select association variable(s) for regression analysis',
+      submitButton: 'Select',
+      groups: []
+    };
+
     var adjustScope = $scope.$new({ isolate: true });
+    adjustScope.extend = {
+      canSubmit: function() { return true; },
+      title: 'Select adjust variable(s) for regression analysis',
+      submitButton: 'Select',
+      groups: []
+    };
 
     DatasetFactory.getVariables().then( function(res) { $scope.variables = res; } );
 
@@ -386,13 +408,6 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
 
     $scope.openAssociation = function() {
       var $modalScope = associationScope;
-      // var $modalScope = $scope.$new({ isolate: true });
-
-      $modalScope.extend = {
-        canSubmit: function() { return true; },
-        title: 'Select association variable(s) for regression analysis',
-        submitButton: 'Select'
-      };
 
       var promise = NotifyService.addClosableModal('vis/menucomponents/new.heatmap.modal.tpl.html', $modalScope, { 
         controller: 'ModalFormController'
@@ -401,8 +416,8 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
       promise.then( function succFn(variables) {
         $scope.selection.association = variables;
       }, function errFn(res) {
-        $scope.selection.association = [];
         // cancelled
+        // $scope.selection.association = [];
       })
       .finally(function() {
         // $modalScope.$destroy();
@@ -412,12 +427,6 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
     $scope.openAdjust = function() {
       var $modalScope = adjustScope;
 
-      $modalScope.extend = {
-        canSubmit: function() { return true; },
-        title: 'Select adjust variable(s) for regression analysis',
-        submitButton: 'Select'
-      };
-
       var promise = NotifyService.addClosableModal('vis/menucomponents/new.heatmap.modal.tpl.html', $modalScope, { 
         controller: 'ModalFormController'
       });
@@ -425,8 +434,8 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
       promise.then( function succFn(variables) {
         $scope.selection.adjust = variables;
       }, function errFn(res) {
-        $scope.selection.adjust = [];
         // cancelled
+        // $scope.selection.adjust = [];
       })
       .finally(function() {
         // $modalScope.$destroy();
