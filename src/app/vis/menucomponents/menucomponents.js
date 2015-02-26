@@ -355,6 +355,10 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
       return _.intersection( $scope.selection.association, $scope.selection.adjust ).length > 0;
     };
 
+    var assocIncludesTargetVar = function() {
+      return _.contains( $scope.selection.association, $scope.selection.target );
+    };
+
     $scope.canSubmit = function () {
       return !RegressionService.inProgress() && 
       $scope.canEdit() && 
@@ -363,10 +367,17 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
     };
 
     $scope.submit = function(result) {
+      var error = false;
       if( assocAndAdjustOverlapping() ) {
-        NotifyService.addSticky('Incorrect variable combination', 'Association variables and adjust variables overlap. Please adjust the selections.', 'error');
-        return;
+        NotifyService.addSticky('Incorrect variable combination', 'Association variables and adjust variables overlap. Please adjust the selection.', 'error');
+        error = true;
       }
+      if( assocIncludesTargetVar() ) {
+        NotifyService.addSticky('Incorrect variable combination', 'The target variable is included in the association variables. Please adjust the selection.', 'error');
+        error = true;
+      }
+      if(error) { return; }
+
       var config = {
         variables: $scope.selection
       };

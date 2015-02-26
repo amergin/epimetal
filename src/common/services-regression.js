@@ -66,14 +66,15 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       return ret;
     };
 
+    function dispSize(title, matrix) {
+      var isArray = function(d) {
+        return _.isArray(d);
+      };
+      console.log(title + ": ", isArray(matrix) ? _.size(matrix) : 1, " x ", isArray(matrix[0]) ? _.size(matrix[0]) : 1);
+    }
+
     function getCI(dotInverse, xMatrix, xMatrixTransposed, yMatrixTransposed, n, k, beta) {
       var VARIABLE_INDEX = 1;
-      var dispSize = function(title, matrix) {
-        var isArray = function(d) {
-          return _.isArray(d);
-        };
-        console.log(title + ": ", isArray(matrix) ? _.size(matrix) : 1, " x ", isArray(matrix[0]) ? _.size(matrix[0]) : 1);
-      };
 
       var hMatrix = numeric.dot( numeric.dot(xMatrix, dotInverse), xMatrixTransposed );
       // dispSize("hMatrix", hMatrix);
@@ -126,11 +127,24 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       }
 
       var getNormalizedData = function(data) {
-        var avg = mean(data),
-        stDev = stDeviation(data, avg, function(d) { return +d; }),
-        normalized = [];
-        for(var i = 0; i < data.length; ++i) {
-          normalized.push( (+data[i] - avg)/stDev );
+        var process = function(array) {
+          var ret = [],
+          avg = mean(array),
+          stDev = stDeviation(array, avg, function(d) { return +d; });
+          for(var i = 0; i < array.length; ++i) {
+            ret.push( (+array[i] - avg)/stDev );
+          }
+          return ret;
+        };
+
+        var normalized = [];
+        // matrix = array with vertical columns
+        if( _.isArray(data[0]) ) {
+          _.each(data, function(array) {
+            normalized.push( process(array) );
+          });
+        } else {
+          normalized = process(data);
         }
         return normalized;
       };
@@ -139,17 +153,16 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
 
       var threadNaNs = getNaNIndices(thData.data),
         nanIndices = _.union(threadNaNs, global.env.nanIndices),
-        associationDataRaw = stripNaNs(thData.data, nanIndices),
-        associationData = getNormalizedData(associationDataRaw),
+        associationData = getNormalizedData( stripNaNs(thData.data, nanIndices) ),
         onesArray = _.times(associationData.length, function(d) {
           return 1;
         }),
         // these are global and hence const, never try to modify them!
-        targetData = stripNaNs(global.env.targetData.slice(0), nanIndices),
-        adjustData = getStrippedAdjust(global.env.adjustData, nanIndices);
+        targetData = getNormalizedData( stripNaNs(global.env.targetData.slice(0), nanIndices) ),
+        adjustData = getNormalizedData( getStrippedAdjust(global.env.adjustData, nanIndices) );
 
-      var xMatrixTransp = [onesArray, associationData].concat(adjustData);
-      var xMatrix  = numeric.transpose(xMatrixTransp);
+      var xMatrixTransp = [onesArray, associationData].concat(adjustData),
+      xMatrix  = numeric.transpose(xMatrixTransp);
 
       // see https://en.wikipedia.org/wiki/Ordinary_least_squares#Estimation
       // Compute beta = (X^T X)^{-1} X^T y 
@@ -218,6 +231,8 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
           .require('statistics-distributions-packaged.js')
           // t distribution
           .require(getCI)
+          // debugging
+          .require(dispSize)
           .map(threadFunctionNumericjs)
           .then(function succFn(result) {
             windowHandler.stopAllSpins();
