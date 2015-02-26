@@ -95,8 +95,8 @@ mod.factory('CorrelationService', ['$injector', '$q', '$rootScope', 'DatasetFact
         meanX = mean(samples, varX),
         meanY = mean(samples, varY);
 
-        var stdX = stDeviation(samples, meanX, varX),
-        stdY = stDeviation(samples, meanY, varY);
+        var stdX = stDeviation(samples, meanX, function(item) { return +item[varX]; }),
+        stdY = stDeviation(samples, meanY, function(item) { return +item[varY]; });
 
         // correlation
         coord['corr'] = sampleCorrelation(samples, varX, meanX, stdX, varY, meanY, stdY);

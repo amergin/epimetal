@@ -77,22 +77,42 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         return ret;
       };
 
+      function mean(arr) {
+        var num = arr.length, sum = 0;
+        for(var i = 0; i < arr.length; i++) {
+          var val = +arr[i];
+          sum += val;
+        }
+        return sum / num;
+      }
+
+      var getNormalizedData = function(data) {
+        var avg = mean(data),
+        stDev = stDeviation(data, avg, function(d) { return +d; }),
+        normalized = [];
+        for(var i = 0; i < data.length; ++i) {
+          normalized.push( (+data[i] - avg)/stDev );
+        }
+        return normalized;
+      };
+
       console.log("Thread started");
 
       var threadNaNs = getNaNIndices(thData.data),
         nanIndices = _.union(threadNaNs, global.env.nanIndices),
-        threadData = stripNaNs(thData.data, nanIndices),
-        onesArray = _.times(threadData.length, function(d) {
+        associationDataRaw = stripNaNs(thData.data, nanIndices),
+        associationData = getNormalizedData(associationDataRaw),
+        onesArray = _.times(associationData.length, function(d) {
           return 1;
         }),
+        // these are global and hence const, never try to modify them!
         targetData = stripNaNs(global.env.targetData.slice(0), nanIndices),
         adjustData = getStrippedAdjust(global.env.adjustData, nanIndices);
 
-      var xMatrixTransp = [onesArray, threadData].concat(adjustData);
+      var xMatrixTransp = [onesArray, associationData].concat(adjustData);
       var xMatrix  = numeric.transpose(xMatrixTransp);
       console.log( "transp size =", _.size(xMatrixTransp) );
       console.log( "matrix size =", _.size(xMatrix) );
-      // console.log("matrix=", xMatrix, xMatrixTransp);
 
       // see https://en.wikipedia.org/wiki/Ordinary_least_squares#Estimation
       // beta = (X^T X)^{-1} X^T y 
@@ -165,6 +185,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
           .require('underscore-min.js')
           .require(getNaNIndices)
           .require(stripNaNs)
+          .require({ fn: Utils.stDeviation, name: 'stDeviation' })
           .map(threadFunctionNumericjs)
           .then(function succFn(result) {
             windowHandler.stopAllSpins();

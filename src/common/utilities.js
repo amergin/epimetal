@@ -74,12 +74,13 @@ Utils.getVariables = function(windowType, selection, splitScatter) {
   }
 };
 
-Utils.stDeviation = function(array, mean, variable) {
+Utils.stDeviation = function(array, mean, accessFn) { //variable) {
   // for loop is actually fastest vs js map-reduce
   // http://stackoverflow.com/questions/3762589/fastest-javascript-summation
   var dev = [];
   for (var i = array.length; i--;) {
-    var val = +array[i][variable]; //+array[i].variables[variable];
+    var val = accessFn.apply(null, [ array[i] ] );
+    // var val = +array[i][variable];
     dev.push((val - mean) * (val - mean));
   }
 
