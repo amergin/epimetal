@@ -33,7 +33,8 @@
     "numericjs": "~1.2.6",
     "angular-growl": "~0.4.0",
     "angular-growl-2": "~0.7.3",
-    "statistics-distributions-js": "svn+http://statistics-distributions-js.googlecode.com/svn/"
+    "statistics-distributions-js": "svn+http://statistics-distributions-js.googlecode.com/svn/",
+    "hor-boxplot": "https://gist.github.com/11198007.git"
   },
   "dependencies": {},
   "resolutions": {

@@ -1,31 +1,96 @@
-var mod = angular.module('services.regression', ['services.dataset', 'services.notify']);
+var mod = angular.module('services.regression', ['services.dataset', 'services.notify', 'services.filter']);
 
 mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'NotifyService',
   function RegressionService($injector, $q, $rootScope, DatasetFactory, NotifyService) {
     var that = this;
     var service = {};
+    var FilterService = $injector.get('FilterService');
 
     var _inProgress = false;
     var _result = {};
 
     var getData = function(variables, windowHandler) {
-      var getRaw = function(samples, variables) {
+      var getRaw = function(samples) {
         return _.map(samples, function(s) {
           return s.variables;
         });
       };
+      var getSOMData = function(windowHandler) {
+        var service = windowHandler.getService().get('vis.som'),
+        somService = service.getDimensionService(),
+        // samples that are currently selected in SOM circles
+        samples = somService.getSampleDimension().get().top(Infinity),
+        circleFilters = FilterService.getSOMFilters();
+
+        return _.chain(circleFilters)
+        .map(function(circle) {
+          var circleSamples, hexagons = circle.hexagons(), bmu;
+
+          circleSamples = _.chain(samples)
+          .filter(function(s) {
+            return _.some(hexagons, function(h) { 
+              bmu = s.bmus.valueOf();
+              return (bmu.x == (h.j+1)) && (bmu.y == (h.i+1));
+            });
+          })
+          .value();
+          return {
+            id: circle.id(),
+            samples: getRaw(circleSamples)
+          };
+        })
+        .value();
+      };
+
       var deferred = $q.defer();
+      // fetches the data from API and adds it to dimensionservices
       DatasetFactory.getVariableData(variables, windowHandler)
         .then(function() {
           that.sampleDimension = windowHandler.getDimensionService().getSampleDimension();
-          var raw = getRaw(that.sampleDimension.get().top(Infinity), variables);
-          deferred.resolve(raw);
+          var retObject = {
+            circles: getSOMData(windowHandler),
+            total: {
+              samples: getRaw(that.sampleDimension.get().top(Infinity))
+            }
+          };
+          deferred.resolve(retObject);
         });
       return deferred.promise;
     };
 
+    // var pluckData = function(data, variable) {
+    //   return {
+    //     total: {
+    //       samples: _.pluck(data.total.samples, variable) 
+    //     },
+    //     circles: _.map(data.circles, function(circle) {
+    //       return {
+    //         id: circle.id,
+    //         samples: _.pluck(circle.samples, variable)
+    //       };
+    //     })
+    //   };
+    // };
+
     var getVariableData = function(data, variable) {
-      return _.pluck(data, variable);
+      var obj = {
+        total: {
+          samples: _.pluck(data.total.samples, variable),
+        },
+        circles: _.map(data.circles, function(circle) {
+          return {
+            id: circle.id,
+            samples: _.pluck(circle.samples, variable)
+          };
+        })
+      };
+      // _.each(data.circles, function(circle) {
+      //   obj.circles.push({
+      //     id: circle.id,
+      //     samples: _.pluck(circle.samples, variable)
+      //   });
+      // });
+      return obj;
     };
 
     var getThreads = function(data, assocVars) {
@@ -59,11 +124,25 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
     }
 
     var getAdjustData = function(data, variables) {
-      var ret = [];
-      _.each(variables, function(v) {
-        ret.push(_.pluck(data, v));
+      var pluckVariables = function(data, variables) {
+        return _.map(variables, function(v) {
+          return _.pluck(data, v);
+        });
+      };
+      var ret = {
+        total: [],
+        circles: {}
+      };
+      ret.total = pluckVariables(data.total.samples,variables);
+      _.each(data.circles, function(circle, ind) {
+        ret.circles[circle.id] = pluckVariables(circle.samples, variables);
       });
       return ret;
+      // var ret = [];
+      // _.each(variables, function(v) {
+      //   ret.push(_.pluck(data, v));
+      // });
+      // return ret;
     };
 
     function dispSize(title, matrix) {
@@ -107,6 +186,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       return ret;
     }
 
+    // this is called on each thread execution
     function threadFunctionNumericjs(thData) {
       var getStrippedAdjust = function(data, nanIndices) {
         var ret = [];
@@ -149,39 +229,85 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         return normalized;
       };
 
+      var compute = function(assocData, nanIndices, targetData, adjustData) {
+        var threadNaNs = getNaNIndices(assocData),
+        allNaNIndices = _.union(threadNaNs, nanIndices),
+        normalAssocData = getNormalizedData( stripNaNs(assocData, allNaNIndices) ),
+        onesArray = _.times(normalAssocData.length, function(d) { return 1; }),
+        normalTargetData = getNormalizedData( stripNaNs(targetData, allNaNIndices) ),
+        normalAdjustData = getNormalizedData( getStrippedAdjust(adjustData, allNaNIndices) );
+
+        var xMatrixTransp = [onesArray, normalAssocData].concat(normalAdjustData),
+        xMatrix = numeric.transpose(xMatrixTransp);
+
+        // see https://en.wikipedia.org/wiki/Ordinary_least_squares#Estimation
+        // Compute beta = (X^T X)^{-1} X^T y 
+        var dotProduct = numeric.dot(xMatrixTransp, xMatrix),
+        inverse = numeric.inv(dotProduct),
+        multi2 = numeric.dot(inverse, xMatrixTransp),
+        betas = numeric.dot(multi2, normalTargetData);
+
+        // get confidence interval
+        var ci = getCI(inverse, xMatrix, xMatrixTransp, [normalTargetData], _.size(xMatrix), global.env.xColumns, betas[1]);
+
+        return {
+          betas: betas,
+          ci: ci
+        };
+      }; // end compute 
+
       console.log("Thread started");
-
-      var threadNaNs = getNaNIndices(thData.data),
-        nanIndices = _.union(threadNaNs, global.env.nanIndices),
-        associationData = getNormalizedData( stripNaNs(thData.data, nanIndices) ),
-        onesArray = _.times(associationData.length, function(d) {
-          return 1;
-        }),
-        // these are global and hence const, never try to modify them!
-        targetData = getNormalizedData( stripNaNs(global.env.targetData.slice(0), nanIndices) ),
-        adjustData = getNormalizedData( getStrippedAdjust(global.env.adjustData, nanIndices) );
-
-      var xMatrixTransp = [onesArray, associationData].concat(adjustData),
-      xMatrix  = numeric.transpose(xMatrixTransp);
-
-      // see https://en.wikipedia.org/wiki/Ordinary_least_squares#Estimation
-      // Compute beta = (X^T X)^{-1} X^T y 
-      var dotProduct = numeric.dot(xMatrixTransp, xMatrix),
-      inverse = numeric.inv(dotProduct),
-      multi2 = numeric.dot(inverse, xMatrixTransp),
-      betas = numeric.dot(multi2, targetData);
-
-      // get confidence interval
-      var ci = getCI(inverse, xMatrix, xMatrixTransp, [targetData], _.size(xMatrix), global.env.xColumns, betas[1]);
-
-      return {
-        betas: betas,
-        variable: thData.variable,
-        ci: ci
+      var retObj = {
+        total: null,
+        circles: {},
+        variable: thData.variable
       };
+
+      // process total
+      retObj['total'] = compute(thData.data.total.samples, global.env.nanIndices.total, 
+        global.env.targetData.total.samples.slice(0), global.env.adjustData.total);
+
+      // process each circle
+      _.each(thData.data.circles, function(circle, ind) {
+        retObj.circles[circle.id] = compute(circle.samples, global.env.nanIndices.circles[circle.id], 
+          global.env.targetData.circles[ind].samples.slice(0), global.env.adjustData.circles[circle.id]);
+      });
+
+      // all done
+      return retObj;
+
+
+      // var threadNaNs = getNaNIndices(thData.data),
+      //   nanIndices = _.union(threadNaNs, global.env.nanIndices),
+      //   associationData = getNormalizedData( stripNaNs(thData.data, nanIndices) ),
+      //   onesArray = _.times(associationData.length, function(d) {
+      //     return 1;
+      //   }),
+      //   // these are global and hence const, never try to modify them!
+      //   targetData = getNormalizedData( stripNaNs(global.env.targetData.slice(0), nanIndices) ),
+      //   adjustData = getNormalizedData( getStrippedAdjust(global.env.adjustData, nanIndices) );
+
+      // var xMatrixTransp = [onesArray, associationData].concat(adjustData),
+      // xMatrix  = numeric.transpose(xMatrixTransp);
+
+      // // see https://en.wikipedia.org/wiki/Ordinary_least_squares#Estimation
+      // // Compute beta = (X^T X)^{-1} X^T y 
+      // var dotProduct = numeric.dot(xMatrixTransp, xMatrix),
+      // inverse = numeric.inv(dotProduct),
+      // multi2 = numeric.dot(inverse, xMatrixTransp),
+      // betas = numeric.dot(multi2, targetData);
+
+      // // get confidence interval
+      // var ci = getCI(inverse, xMatrix, xMatrixTransp, [targetData], _.size(xMatrix), global.env.xColumns, betas[1]);
+
+      // return {
+      //   betas: betas,
+      //   variable: thData.variable,
+      //   ci: ci
+      // };
     }
 
-    var getAllNaNs = function(targetData, targetVar, adjustData, adjustVars) {
+    var getNaNs = function(targetData, targetVar, adjustData, adjustVars) {
       var indices = [];
       indices = indices.concat(getNaNIndices(targetData));
       _.each(adjustVars, function(v, ind) {
@@ -189,6 +315,23 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       });
 
       return _.union(indices);
+    };
+
+    var getAllNaNs = function(targetData, targetVar, adjustData, adjustVars) {
+      var obj = {
+        total: [],
+        circles: {
+        }
+      };
+
+      // total
+      obj.total = getNaNs(targetData.total.samples, targetVar, adjustData.total, adjustVars);
+
+      // circles
+      _.each(targetData.circles, function(circle, ind) {
+        obj.circles[circle.id] = getNaNs( circle.samples, targetVar, adjustData.circles[circle.id], adjustVars);
+      });
+      return obj;
     };
 
     service.inProgress = function() {

@@ -69,6 +69,8 @@ Utils.getVariables = function(windowType, selection, splitScatter) {
       return selection.x;
     case 'somplane':
       return [];
+    case 'regression-plot':
+      return [];
     default:
       console.log('Undefined type!');
   }

@@ -114,7 +114,8 @@ module.exports = {
       // only for debug:
       'vendor/numericjs/lib/numeric.js',
       'vendor/angular-growl-2/build/angular-growl.js',
-      'vendor/statistics-distributions-js/statistics-distributions-packaged.js'
+      'vendor/statistics-distributions-js/statistics-distributions-packaged.js',
+      'vendor/hor-boxplot/horizontalboxplot.js'
       // 'vendor/mathjs/dist/math.js'
       // 'vendor/spark-md5/spark-md5.min.js'
     ],

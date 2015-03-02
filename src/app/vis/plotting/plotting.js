@@ -6,6 +6,7 @@ var visu = angular.module('plotter.vis.plotting',
   'plotter.vis.plotting.heatmap',
   'plotter.vis.plotting.som',
   'plotter.vis.plotting.profile-histogram',
+  'plotter.vis.plotting.regression',
   'services.dimensions', 
   'services.dataset', 
   'services.urlhandler',
@@ -187,7 +188,15 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
     };
 
     this.drawRegression = function(config, windowHandler) {
-      var promise = RegressionService.compute(config, windowHandler);
+      RegressionService.compute(config, windowHandler).then( function succFn(result) {
+        var config = {
+          computation: result,
+          type: 'regression-plot'
+        };
+        windowHandler.add(config);
+      }, function errFn(result) {
+        // failed
+      });
     };
 
   }
