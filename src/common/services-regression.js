@@ -275,36 +275,6 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
 
       // all done
       return retObj;
-
-
-      // var threadNaNs = getNaNIndices(thData.data),
-      //   nanIndices = _.union(threadNaNs, global.env.nanIndices),
-      //   associationData = getNormalizedData( stripNaNs(thData.data, nanIndices) ),
-      //   onesArray = _.times(associationData.length, function(d) {
-      //     return 1;
-      //   }),
-      //   // these are global and hence const, never try to modify them!
-      //   targetData = getNormalizedData( stripNaNs(global.env.targetData.slice(0), nanIndices) ),
-      //   adjustData = getNormalizedData( getStrippedAdjust(global.env.adjustData, nanIndices) );
-
-      // var xMatrixTransp = [onesArray, associationData].concat(adjustData),
-      // xMatrix  = numeric.transpose(xMatrixTransp);
-
-      // // see https://en.wikipedia.org/wiki/Ordinary_least_squares#Estimation
-      // // Compute beta = (X^T X)^{-1} X^T y 
-      // var dotProduct = numeric.dot(xMatrixTransp, xMatrix),
-      // inverse = numeric.inv(dotProduct),
-      // multi2 = numeric.dot(inverse, xMatrixTransp),
-      // betas = numeric.dot(multi2, targetData);
-
-      // // get confidence interval
-      // var ci = getCI(inverse, xMatrix, xMatrixTransp, [targetData], _.size(xMatrix), global.env.xColumns, betas[1]);
-
-      // return {
-      //   betas: betas,
-      //   variable: thData.variable,
-      //   ci: ci
-      // };
     }
 
     var getNaNs = function(targetData, targetVar, adjustData, adjustVars) {

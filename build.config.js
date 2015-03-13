@@ -93,7 +93,7 @@ module.exports = {
       'vendor/angular-ui-utils/modules/route/route.js',
       'vendor/crossfilter/crossfilter.new.js',//crossfilter.custom.old.js', //crossfilter.custom.js',
       'vendor/d3/d3.js',
-      'vendor/dcjs/dc.2.0.js',//dc.js',
+      'vendor/dcjs/dc.js',
       'vendor/d3-tip/index.js',
       // utilities
       'vendor/underscore/underscore.js',
@@ -115,7 +115,8 @@ module.exports = {
       'vendor/numericjs/lib/numeric.js',
       'vendor/angular-growl-2/build/angular-growl.js',
       'vendor/statistics-distributions-js/statistics-distributions-packaged.js',
-      'vendor/hor-boxplot/horizontalboxplot.js'
+      'vendor/hor-boxplot/horizontalboxplot.js',
+      'vendor/SOM.js/SOM.js'
       // 'vendor/mathjs/dist/math.js'
       // 'vendor/spark-md5/spark-md5.min.js'
     ],

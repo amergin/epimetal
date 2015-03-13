@@ -27,6 +27,12 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       left: 80
     };
 
+    $scope.variablesLookup = {};
+
+    DatasetFactory.getVariables().then(function(variables) {
+      $scope.variablesLookup = _.chain(variables).map(function(d) { return [d.name, d]; }).object().value();
+    });
+
     $scope.drawHeatmap = function(element, dimension, group, margins, width, height) {
 
       var _drawLegend = function(element, scale, height) {
@@ -57,6 +63,14 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       .domain([-1, 0, 1])
       .range(['blue', 'white', 'red']);
 
+      function labelOrdering(a, b) {
+        var grpA = $scope.variablesLookup[a].group.order,
+        grpB = $scope.variablesLookup[b].group.order,
+        varA = $scope.variablesLookup[a].name_order,
+        varB = $scope.variablesLookup[b].name_order;
+        return d3.descending( grpA * 10 + varA, grpB * 10 + varB);
+      }
+
       $scope.heatmap
       .width(null)
       .height(null)
@@ -71,6 +85,20 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       })
       .valueAccessor(function(d) {
         return d.key.y;
+      })
+      .rowOrdering(function(a,b) {
+        var grpA = $scope.variablesLookup[a].group.order,
+        grpB = $scope.variablesLookup[b].group.order,
+        varA = $scope.variablesLookup[a].name_order,
+        varB = $scope.variablesLookup[b].name_order;
+        return d3.descending( grpA * 10 + varA, grpB * 10 + varB);
+      })
+      .colOrdering(function(a,b) {
+        var grpA = $scope.variablesLookup[a].group.order,
+        grpB = $scope.variablesLookup[b].group.order,
+        varA = $scope.variablesLookup[a].name_order,
+        varB = $scope.variablesLookup[b].name_order;
+        return d3.ascending( grpA * 10 + varA, grpB * 10 + varB);
       })
       .title(function(d) {
         return "Horizontal variable:  " +
