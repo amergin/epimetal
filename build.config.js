@@ -96,7 +96,8 @@ module.exports = {
       'vendor/dcjs/dc.js',
       'vendor/d3-tip/index.js',
       // utilities
-      'vendor/underscore/underscore.js',
+      // 'vendor/underscore/underscore.js',
+      'vendor/lodash/lodash.js',
       // core framework for UI
       'vendor/angular-strap/dist/angular-strap.js',
       'vendor/angular-strap/dist/angular-strap.tpl.js',

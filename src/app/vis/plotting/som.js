@@ -32,7 +32,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
     $scope.window.showResetBtn = false;
 
     $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
-    $scope.dimension = $scope.dimensionService.getSOMDimension( $scope.window.som_id );
+    $scope.dimension = $scope.dimensionService.getSOMDimension();
 
 
     $scope.updateFilter = function(hexagons, circleId) {
@@ -393,7 +393,7 @@ visu.directive('somplane', [ '$rootScope', 'SOMService', 'NotifyService',
       var somUpdatedUnbind = $rootScope.$on('dataset:SOMUpdated', function(event, som) {
         $scope.$parent.startSpin();
 
-        SOMService.getPlane($scope.window.variable).then( 
+        SOMService.getPlane($scope.window.variable, $scope.$parent.window.handler).then( 
           function succFn(res) {
           angular.extend($scope.window, res); // overrides old values, places new plane info/ids/...
           $scope.redraw();

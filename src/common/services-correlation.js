@@ -139,7 +139,7 @@ mod.factory('CorrelationService', ['$injector', '$q', '$rootScope', 'DatasetFact
           .map(threadFunction)
           .then(function(result) {
             _inProgress = false;
-            var flattened = _.chain(result).values().flatten().unique().value();
+            var flattened = _.chain(result).values().flatten(true).unique().value();
             _result = combineResults(flattened, cellInfo.diagonals);
             NotifyService.addTransient('Correlation computation ready', 'Correlation plot updated.', 'success');
             deferred.resolve(_result);

@@ -243,7 +243,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         var filterFn = function(d) {
           var combined = _.chain(dimensions[key].hexagons())
           .values()
-          .flatten()
+          .flatten(true)
           .uniq( function(f) { return f.i + "|" + f.j; } )
           .value();
 
@@ -878,7 +878,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
 
 
       // adds BMU information for each sample in SOM
-      this.addBMUs = function(somId, bmuSamples) {
+      this.addBMUs = function(bmuSamples) {
         _.each( bmuSamples, function(samp) {
           var key = _getSampleKey(samp.sample.dataset, samp.sample.sampleid);
           if( _.isUndefined( currSamples[key] ) ) {

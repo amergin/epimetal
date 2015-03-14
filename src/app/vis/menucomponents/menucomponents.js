@@ -268,7 +268,7 @@ vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory',
 
 
       $scope.sideGroups = _.chain($scope.groups)
-      .flatten(true)
+      .flatten(false)//true)
       .value();
     });
 
@@ -302,7 +302,7 @@ vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory',
 
     $scope.getSelected = function(selection) {
       return _.chain(selection || $scope.groups)
-      .flatten()
+      .flatten(true)
       .filter(function(v) { return v.selected === true; })
       .value();
     };
@@ -331,10 +331,9 @@ vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory',
 
     $scope.clear = function() {
       _.chain($scope.groups)
-      .flatten()
-      .each(function(v) {
-        v.selected = false;
-      });
+      .flatten(true)
+      .each(function(v) { v.selected = false; })
+      .value();
     };
 
   }

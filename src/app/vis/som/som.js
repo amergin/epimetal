@@ -160,7 +160,7 @@ mod.controller('SOMBottomContentController', ['$scope', '$injector', '$timeout',
             console.log("dimension instances not equal, need to restart");
             DimensionService.restart( current, primary );
             $scope.windowHandler.getService().spinAllVisible();
-            SOMService.getSOM().then( function succFn() {
+            SOMService.getSOM($scope.windowHandler).then( function succFn() {
               $scope.checkDefaults();
               $timeout(function() {
                 $scope.windowHandler.getService().reRenderVisible({ compute: true });

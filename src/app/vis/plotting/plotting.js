@@ -175,7 +175,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
       };
 
       NotifyService.addTransient('', 'Starting plane computation', 'info');
-      SOMService.getPlane(config.variables.x).then(
+      SOMService.getPlane(config.variables.x, windowHandler).then(
         function succFn(res) {
           NotifyService.addTransient('Plane computation ready', 'The requested new plane has now been drawn.', 'success');
           angular.extend(config, res);
@@ -188,14 +188,17 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
     };
 
     this.drawRegression = function(config, windowHandler) {
+      NotifyService.addTransient('Regression analysis started', 'Regression analysis computation started.', 'info');
       RegressionService.compute(config, windowHandler).then( function succFn(result) {
+        NotifyService.addTransient('Regression analysis completed', 'Regression computation ready.', 'success');
         var config = {
           computation: result,
           type: 'regression-plot'
         };
         windowHandler.add(config);
+        
       }, function errFn(result) {
-        // failed
+        NotifyService.addTransient('Regression analysis completed', 'Regression computation ready.', 'success');
       });
     };
 

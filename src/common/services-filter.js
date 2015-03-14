@@ -155,7 +155,7 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
     };
 
     var updateReturnFilters = function() {
-        angular.copy( _.chain(_filters).values().flatten().value(), _filterReturnHandle );
+        angular.copy( _.chain(_filters).values().flatten(true).value(), _filterReturnHandle );
     };
 
     return service;

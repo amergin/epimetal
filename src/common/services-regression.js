@@ -1,6 +1,6 @@
-var mod = angular.module('services.regression', ['services.dataset', 'services.notify', 'services.filter']);
+var mod = angular.module('services.regression', ['services.dataset', 'services.filter']);
 
-mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'NotifyService',
+mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory',
   function RegressionService($injector, $q, $rootScope, DatasetFactory, NotifyService) {
     var that = this;
     var service = {};
@@ -58,20 +58,6 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       return deferred.promise;
     };
 
-    // var pluckData = function(data, variable) {
-    //   return {
-    //     total: {
-    //       samples: _.pluck(data.total.samples, variable) 
-    //     },
-    //     circles: _.map(data.circles, function(circle) {
-    //       return {
-    //         id: circle.id,
-    //         samples: _.pluck(circle.samples, variable)
-    //       };
-    //     })
-    //   };
-    // };
-
     var getVariableData = function(data, variable) {
       var obj = {
         total: {
@@ -84,12 +70,6 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
           };
         })
       };
-      // _.each(data.circles, function(circle) {
-      //   obj.circles.push({
-      //     id: circle.id,
-      //     samples: _.pluck(circle.samples, variable)
-      //   });
-      // });
       return obj;
     };
 
@@ -138,11 +118,6 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         ret.circles[circle.id] = pluckVariables(circle.samples, variables);
       });
       return ret;
-      // var ret = [];
-      // _.each(variables, function(v) {
-      //   ret.push(_.pluck(data, v));
-      // });
-      // return ret;
     };
 
     function dispSize(title, matrix) {
@@ -152,7 +127,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       console.log(title + ": ", isArray(matrix) ? _.size(matrix) : 1, " x ", isArray(matrix[0]) ? _.size(matrix[0]) : 1);
     }
 
-    function getCI(dotInverse, xMatrix, xMatrixTransposed, yMatrixTransposed, n, k, beta) {
+    function getCIAndPvalue(dotInverse, xMatrix, xMatrixTransposed, yMatrixTransposed, n, k, beta) {
       var VARIABLE_INDEX = 1;
 
       var hMatrix = numeric.dot( numeric.dot(xMatrix, dotInverse), xMatrixTransposed );
@@ -178,12 +153,19 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       var alpha = 0.05 / k;
 
       var _sqrt = Math.sqrt( cMatrix[VARIABLE_INDEX][VARIABLE_INDEX] ); //numeric.getDiag(cMatrix)[1] );
-      var ci = statDist.tdistr(n-(k+1), alpha/2) * _sqrt;
-      console.log("CI before [sub, add] of beta = ", ci);
+      var degrees = n-(k+1);
+      var ci = statDist.tdistr(degrees, alpha/2) * _sqrt;
 
-      var ret = [ beta - ci, beta + ci ];
-      // console.log(ret);
-      return ret;
+      // See http://reliawiki.org/index.php/Multiple_Linear_Regression_Analysis 
+      // -> p value = 2 * (1-P(T <= |t0|)
+      var t = beta / _sqrt;
+      var pvalue = 2 * (1 - statDist.tprob(degrees, t));
+
+      console.log("CI before [sub, add] of beta = ", ci);
+      return {
+        ci: [ beta - ci, beta + ci ],
+        pvalue: pvalue
+      };
     }
 
     // this is called on each thread execution
@@ -247,12 +229,13 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         multi2 = numeric.dot(inverse, xMatrixTransp),
         betas = numeric.dot(multi2, normalTargetData);
 
-        // get confidence interval
-        var ci = getCI(inverse, xMatrix, xMatrixTransp, [normalTargetData], _.size(xMatrix), global.env.xColumns, betas[1]);
+        // get confidence interval and p-value
+        var ciAndPvalue = getCIAndPvalue(inverse, xMatrix, xMatrixTransp, [normalTargetData], _.size(xMatrix), global.env.xColumns, betas[1]);
 
         return {
           betas: betas,
-          ci: ci
+          ci: ciAndPvalue.ci,
+          pvalue: ciAndPvalue.pvalue
         };
       }; // end compute 
 
@@ -312,9 +295,8 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       var deferred = $q.defer();
       windowHandler.spinAll();
       _inProgress = true;
-      NotifyService.addTransient('Regression analysis started', 'Regression analysis computation started.', 'info');
 
-      var variables = _.chain(config.variables).values().flatten().unique().value();
+      var variables = _.chain(config.variables).values().flatten(true).unique().value();
       getData(variables, windowHandler).then(function(data) {
 
         var targetVar = config.variables.target,
@@ -335,7 +317,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
             }
           })
           .require('numeric.min.js')
-          .require('underscore-min.js')
+          .require('lodash.min.js')
           // nan proprocessing
           .require(getNaNIndices)
           .require(stripNaNs)
@@ -343,7 +325,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
           .require({ fn: Utils.stDeviation, name: 'stDeviation' })
           .require('statistics-distributions-packaged.js')
           // t distribution
-          .require(getCI)
+          .require(getCIAndPvalue)
           // debugging
           .require(dispSize)
           .map(threadFunctionNumericjs)
@@ -352,11 +334,9 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
             console.log("Result Betas=", result);
             _inProgress = false;
             _result = result;
-            NotifyService.addTransient('Regression analysis completed', 'Regression computation ready.', 'success');
             deferred.resolve(result);
           }, function errFn(result) {
             _inProgress = false;
-            NotifyService.addTransient('Regression analysis failed', 'Something went wrong while performing the computation.', 'error');
             deferred.reject(result);
           });
       });
