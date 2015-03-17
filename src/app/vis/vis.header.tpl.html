@@ -16,7 +16,7 @@
   <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
     <ul class="nav navbar-nav">
      <li ng-repeat="tab in tabs" ng-class="{active:$state.includes('vis.' + tab.name)}">
-      <a href ui-sref="{{ 'vis.' + tab.name }}" eat-click-if="!tabChangeEnabled()" role="tab" data-toggle="tab">{{tab.title}}</a>
+      <a href ui-sref="{{ 'vis.' + tab.name }}" eat-click-if="!tabChangeEnabled(tab)" role="tab" data-toggle="tab">{{tab.title}}</a>
       <!-- <a href ui-sref="{{ 'vis.' + tab.name }}" role="tab" data-toggle="tab">{{tab.title}}</a> -->
     </li>
   </ul>

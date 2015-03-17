@@ -241,14 +241,20 @@
 
     var $rootScope = $injector.get('$rootScope');
 
-    $rootScope.tabChangeEnabled = function() {
-      var val = !TabService.lock();
-      if(!val) { 
+    $rootScope.tabChangeEnabled = function(tab) {
+      var locked = !TabService.lock(),
+      canChange = TabService.canChangeTo('vis.' + tab.name);
+
+      if(!locked) { 
         NotifyService.addTransient(
           'Please wait until the computation has been completed', 
           'Tabs cannot be switched during computational tasks.', 'warn');
+      } else if(!canChange) {
+        NotifyService.addTransient(
+          'Please navigate between the tabs in consecutive order', 
+          'Please navigate between the tabs in consecutive order.', 'warn');        
       }
-      return val;
+      return locked && canChange;
     };
 
     $scope.menuDatasets = datasets;

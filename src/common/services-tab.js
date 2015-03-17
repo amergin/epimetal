@@ -124,8 +124,18 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
       return _service;
     };
 
-    _service.canChangeTo = function(name) {
-      return true;
+    _service.canChangeTo = function(toName) {
+      if( _.startsWith(toName, 'vis.som') ) {
+        return $state.current.name == 'vis.explore' ||
+        $state.current.name == 'vis.regression';
+      } else if( _.startsWith(toName, 'vis.regression') ) {
+        return _.startsWith($state.current.name, 'vis.som');
+      } else if( _.startsWith(toName, 'vis.explore') ) {
+        return _.startsWith($state.current.name, 'vis.som') ||
+        $state.current.name == 'vis.regression';
+      } else {
+        return true;
+      }
     };
 
     // only get
