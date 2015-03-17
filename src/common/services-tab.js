@@ -7,8 +7,26 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
     _locked = false,
     _activeState;
 
+    function changeDimensionService(name) {
+      function updateFilterService(name) {
+        var FilterService = $injector.get('FilterService');
+        FilterService.tabChange(name);
+      }
+      var rootName,
+      DatasetFactory = $injector.get('DatasetFactory');
+      if( _.startsWith(name, 'vis.som') ) { rootName = 'vis.som'; }
+      else {
+        rootName = name;
+      }
+      DatasetFactory.setDimensionService( DimensionService.get(rootName) );
+      updateFilterService(rootName);
+    }
+
     // listen on tab changes
     $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
+      console.log("tab change: ", fromState.name, " -> ", toState.name);
+
+      changeDimensionService(toState.name);
 
       // som -> somewhere
       if( _.startsWith(fromState.name, 'vis.som' ) ) {
@@ -104,6 +122,10 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
       _locked = x;
       console.log("Tabs are locked = ", _locked);
       return _service;
+    };
+
+    _service.canChangeTo = function(name) {
+      return true;
     };
 
     // only get

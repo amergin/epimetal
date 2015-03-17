@@ -33,7 +33,7 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
 
     var service = {};
 
-    $rootScope.$on('tab.changed', function(event, tabName) {
+    service.tabChange = function(tabName) {
       function changeDimension() {
         _somDimensionInst.decrement();
         _somDimensionInst = _activeDimensionService.getSOMDimension();
@@ -42,7 +42,7 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       _activeDimensionService = DimensionService.get(tabName);
       changeDimension();
       service.updateCircleFilters();
-    });
+    };
 
     service.canEdit = function() {
       return _activeDimensionService == DimensionService.getPrimary();
