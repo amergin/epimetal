@@ -25,7 +25,8 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
 
     $scope.$parent.resetFilter = function() {
       $scope.histogram.filterAll();
-      dc.redrawAll(constants.groups.histogram);
+      $scope.window.handler.redrawAll();
+      // dc.redrawAll(constants.groups.histogram);
     };
 
     $scope.redraw = function() {
