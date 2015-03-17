@@ -189,7 +189,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           draw(config, windowHandler);
         },
         function errFn(res) {
-          NotifyService.addTransient('Plane computation failed', res, 'danger');
+          NotifyService.addTransient('Plane computation failed', res, 'error');
         }
       );
     };

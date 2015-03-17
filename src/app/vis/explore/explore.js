@@ -134,7 +134,8 @@ mod.controller('ExploreMenuCtrl', ['$scope', '$rootScope', 'datasets', 'variable
       $modalScope.extend = {
         canSubmit: function() { return true; },
         title: 'Select a set of variables for a correlation plot',
-        submitButton: 'Add correlation plot'
+        submitButton: 'Add correlation plot',
+        upperLimit: 100
       };
 
       var promise = NotifyService.addClosableModal('vis/menucomponents/new.heatmap.modal.tpl.html', $modalScope, { 
