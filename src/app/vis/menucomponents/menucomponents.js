@@ -311,9 +311,9 @@ vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory',
       var variables = $scope.getSelected();
       var bare = _.map(variables, function(v) { return v.name; } );
       if($scope.extend.upperLimit && bare.length > $scope.extend.upperLimit) {
-        NotifyService.addSticky('Too many variables selected', 
+        NotifyService.addTransient('Too many variables selected', 
           'Please do not exceed the limit of ' + $scope.extend.upperLimit + ' variables.', 
-          'error');
+          'error', { referenceId: 'modalinfo' });
         return;
       }
       $scope.$parent.extend['groups'] = $scope.groups;

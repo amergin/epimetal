@@ -2,7 +2,7 @@
 	<div class="arrow"></div>
 	<h3 class="popover-title" ng-bind-html="title" ng-show="title"></h3>
 	<div class="popover-content">
-		<div growl inline="true" reference="filterinfo" class="am-fade container-fluid"></div>
+		<div growl inline="true" limit-messages="1" reference="filterinfo" class="am-fade container-fluid"></div>
 	    <table class="table table-striped table-condensed" ng-show="filteredFilters.length > 0">
 	      <thead>
 	        <tr>

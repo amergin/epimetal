@@ -159,7 +159,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       // See http://reliawiki.org/index.php/Multiple_Linear_Regression_Analysis 
       // -> p value = 2 * (1-P(T <= |t0|)
       var t = beta / _sqrt;
-      var pvalue = 2 * statDist.tprob(degrees, t);
+      var pvalue = statDist.tprob(degrees, t);
 
       console.log("CI before [sub, add] of beta = ", ci);
       return {
@@ -227,10 +227,14 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         var dotProduct = numeric.dot(xMatrixTransp, xMatrix),
         inverse = numeric.inv(dotProduct),
         multi2 = numeric.dot(inverse, xMatrixTransp),
-        betas = numeric.dot(multi2, normalTargetData);
+        betas = numeric.dot(multi2, normalTargetData),
+
+        n = _.size(xMatrix),
+        k = _.size(xMatrix[0]),
+        beta = betas[1];
 
         // get confidence interval and p-value
-        var ciAndPvalue = getCIAndPvalue(inverse, xMatrix, xMatrixTransp, [normalTargetData], _.size(xMatrix), global.env.xColumns, betas[1]);
+        var ciAndPvalue = getCIAndPvalue(inverse, xMatrix, xMatrixTransp, [normalTargetData], n, k, beta);
 
         return {
           betas: betas,
@@ -313,8 +317,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
             env: {
               targetData: targetData,
               adjustData: adjustData,
-              nanIndices: getAllNaNs(targetData, targetVar, adjustData, adjustVars),
-              xColumns: _.size(threadData) // = k
+              nanIndices: getAllNaNs(targetData, targetVar, adjustData, adjustVars)
             }
           })
           .require('numeric.min.js')

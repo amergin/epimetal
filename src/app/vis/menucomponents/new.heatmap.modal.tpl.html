@@ -11,11 +11,12 @@
 				<p><button type="button" class="btn btn-default" ng-click="clear()">Clear all selections</button></p>
 			</div>
 		</div>
+		<div growl inline="true" reference="modalinfo" limit-messages="1" class="am-fade"></div>
 	</div>
 	<div class="modal-body">
 		<div class="row">
 			<div class="col-sm-3">
-				<ul class="nav bs-sidenav" bs-scrollspy data-target="{{'#vargrp-' + groupList[0].group.order}}">
+				<ul class="nav nav-stacked bs-sidenav" bs-scrollspy data-target="{{'#vargrp-' + groupList[0].group.order}}">
 				  <li ng-repeat="groupList in sideGroups | orderBy: groupList[0].group.order">
 				    <a href ng-click="scrollToGroup('vargrp-' + groupList[0].group.order)">{{groupList[0].group.name}}</a>
 				  </li>

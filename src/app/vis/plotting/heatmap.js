@@ -198,28 +198,27 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
       };
 
-    $scope.$watch('limitDisp', function(val) {
-      if(!val) { return; }
+      $scope.$watch('limitDisp', function(val) {
+        if(!val) { return; }
 
-      $scope.$parent.settingsDropdown.push({
-        'text': '<i class="fa fa-sliders"></i> Show correlations with p > <b>' + $scope.limitDisp + '</b>',
-        'click': function() {
-          var entry = _.last($scope.$parent.settingsDropdown).text;
-          $scope.filtered = !$scope.filtered;
-          if($scope.filtered) { 
-            $scope.$parent.headerText[2] = '(p < ' + $scope.limitDisp + ')';
-            _.last($scope.$parent.settingsDropdown).text = entry.replace(/Hide/, 'Show');
-          } else {
-            $scope.$parent.headerText[2] = '';
-            _.last($scope.$parent.settingsDropdown).text = entry.replace(/Show/, 'Hide');
+        $scope.$parent.settingsDropdown.push({
+          'text': '<i class="fa fa-sliders"></i> Show correlations with p > <b>' + $scope.limitDisp + '</b>',
+          'click': function() {
+            var entry = _.last($scope.$parent.settingsDropdown).text;
+            $scope.filtered = !$scope.filtered;
+            if($scope.filtered) { 
+              $scope.$parent.headerText[2] = '(p < ' + $scope.limitDisp + ')';
+              _.last($scope.$parent.settingsDropdown).text = entry.replace(/Hide/, 'Show');
+            } else {
+              $scope.$parent.headerText[2] = '';
+              _.last($scope.$parent.settingsDropdown).text = entry.replace(/Show/, 'Hide');
+            }
+            $scope.heatmap.render();
           }
-          $scope.heatmap.render();
-        }
+        });
+
       });
 
-    });
-
-    $scope.redraw = function() {
       var callback = function() {
         // update the chart and redraw
         $scope.heatmap.dimension($scope.coordDim);
@@ -229,16 +228,21 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         //$scope.heatmap.filterAll();
         $scope.heatmap.render();
       };
+
+      $scope.throttled = _.debounce(function() {
         $scope.computeVariables(callback);
-      };
+      }, 300, { maxWait: 600, trailing: true });
 
-      $scope.filter = function() {
-        $scope.filtered = !$scope.filtered;
-        $scope.heatmap.render();
-      };
+      $scope.redraw = function() {
+      $scope.throttled();
+    };
 
-    }
-    ]);
+    $scope.filter = function() {
+      $scope.filtered = !$scope.filtered;
+      $scope.heatmap.render();
+    };
+
+  }]);
 
 
 
