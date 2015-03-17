@@ -246,27 +246,10 @@
       if(!val) { 
         NotifyService.addTransient(
           'Please wait until the computation has been completed', 
-          'Tabs cannot be switched during computation tasks.', 'info');
+          'Tabs cannot be switched during computational tasks.', 'warn');
       }
       return val;
     };
-
-    $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
-      var name = 'vis.som';
-      switch(toState.name) {
-        case 'vis.som':
-        case 'vis.som.distributions':
-        case 'vis.som.profiles':
-        name = 'vis.som';
-        break;
-
-        case 'vis.explore':
-        name = 'vis.explore';
-        break;
-      }
-      DatasetFactory.setDimensionService( DimensionService.get(name) );
-      $rootScope.$emit('tab.changed', name);
-    });
 
     $scope.menuDatasets = datasets;
     $scope.menuVariables = variables;

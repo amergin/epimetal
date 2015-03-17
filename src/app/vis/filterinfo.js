@@ -17,8 +17,8 @@ mod.directive('filterInfo', ['$templateCache', '$compile', '$rootScope', '$injec
   }
 ]);
 
-mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService', '$rootScope', 'constants', 'FilterService', '$alert', '$state',
-  function FilterInfoController($scope, $injector, DimensionService, $rootScope, constants, FilterService, $alert, $state) {
+mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService', '$rootScope', 'constants', 'FilterService', '$state', 'NotifyService',
+  function FilterInfoController($scope, $injector, DimensionService, $rootScope, constants, FilterService, $state, NotifyService) {
     var numFormat = d3.format('.2e');
     var dimensionService = DimensionService.getPrimary();
 
@@ -64,16 +64,7 @@ mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService
 
     var checkEdit = function() {
       if( !$scope.canEdit() ) {
-        var alert = $alert({ 
-          title: 'Error',
-          content: 'Filters can only be edited on Explore tab',
-          container: '#filterinfo-alert',
-          type: 'danger',
-          show: true,
-          duration: 5,
-          dismissable: true,
-          animation: 'am-fade-and-slide-top'
-        });
+        NotifyService.addTransient('Warning', 'Filters can only be edited on Explore tab.', 'warn');
         return true;
       }
       return false;
