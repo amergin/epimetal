@@ -64,7 +64,8 @@ mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService
 
     var checkEdit = function() {
       if( !$scope.canEdit() ) {
-        NotifyService.addTransient('Warning', 'Filters can only be edited on Explore tab.', 'warn');
+        NotifyService.addSticky('Warning', 'Filters can only be edited on Explore tab.', 'warn', 
+          { referenceId: 'filterinfo' });
         return true;
       }
       return false;

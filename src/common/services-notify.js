@@ -36,15 +36,17 @@ serv.factory('NotifyService', ['$injector', '$timeout', 'growl',
     return {
 
       // alerts
-      addSticky: function (title, message, level) {
+      addSticky: function (title, message, level, config) {
         var call = getAlertFunction(level);
-        call(message, { title: title, ttl: -1 });
+        var obj = _.extend({ title: title, ttl: -1 }, config);
+        call(message, obj);
       },
 
       // alerts
-      addTransient: function (title, message, level) {
+      addTransient: function (title, message, level, config) {
         var call = getAlertFunction(level);
-        call(message, { title: title });
+        var obj = _.extend({ title: title }, config);
+        call(message, obj);
       },
 
       /* THESE ARE FOR MODAL WINDOWS */
