@@ -1,12 +1,13 @@
 var mod = angular.module('services.som', ['services.dataset', 'services.dimensions', 'services.notify', 'services.tab']);
 
-mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyService', '$q', 'DatasetFactory', 'TabService',
-  function ($injector, constants, $rootScope, NotifyService, $q, DatasetFactory, TabService) {
+mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', 'NotifyService', '$q', 'DatasetFactory', 'TabService',
+  function ($injector, $timeout, constants, $rootScope, NotifyService, $q, DatasetFactory, TabService) {
 
     var that = this;
 
     this.som = {};
     this.trainSamples = [];
+    that.inProgress = false;
     that.somSelection = {
       variables: [],
       samples: undefined
@@ -20,10 +21,8 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
 
     var service = {};
 
-    service.somReady = function(samples) {
-      var empty = _.isEmpty(that.som);
-      if(!empty && samples) { return samples.length == that.som.bmus.length; }
-      return !empty;
+    service.somReady = function(sampleCount) {
+      return !that.inProgress;
     };
 
     service.getBMUs = function() {
@@ -46,15 +45,16 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
       return service;
     };
 
-    service.updateVariables = function(variables) {
-      function sameVariables(variables) {
-        return _.isEmpty( _.difference(variables, that.somSelection.variables) );
-      }
+    service.updateVariables = function(variables, windowHandler) {
+      var currNotEmpty = !_.isUndefined(that.somSelection.variables) && that.somSelection.variables.length > 0,
+      sameVariables = _.difference(variables, that.somSelection.variables).length === 0;
 
-      if( sameVariables(variables) ) {
+      if( sameVariables && currNotEmpty ) {
         return;
       }
       that.somSelection['variables'] = variables;
+      // recompute
+      service.getSOM(windowHandler);
     };
 
     service.getVariables = function() {
@@ -62,13 +62,24 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
     };
 
     service.getSOM = function(windowHandler) {
-      TabService.lock(true);
       var defer = $q.defer();
 
-      function getSampleIds() {
-        return _.map( that.sampleDimension.top(Infinity), function(obj) {
-          return _.pick( obj, 'dataset', 'sampleid');
-        });
+      function computationNeeded() {
+        if( !that.sampleDimension ) {
+          // early invoke, even before dimensionservice is initialized
+          return false;
+        }
+        var sampleCount = that.sampleDimension.groupAll().value();        
+        if( sampleCount === 0 ) {
+          // no samples
+          return false;
+        } else if( sampleCount <= 10 ) {
+          NotifyService.addSticky('Error', 'Please select at least 10 samples.', 'error');
+          return false;
+        } else if( !service.somReady() ) {
+          return false;
+        }
+        return true;
       }
 
       function removePrevious() {
@@ -112,7 +123,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
           return somObject;
       }
 
-      function doCall(samples) {
+      function doCall() {
         NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'info');
         // var selection = that.somSelection.variables;
         removePrevious();
@@ -137,27 +148,49 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
           // this will force existing planes to redraw
           $rootScope.$emit('dataset:SOMUpdated', that.som);
           TabService.lock(false);
+          that.inProgress = false;          
           defer.resolve(that.som);
         }, function errFn(result) {
           var message = '(Message)';
           NotifyService.addTransient('SOM computation failed', message, 'error');
-          TabService.lock(false);          
+          TabService.lock(false);
+          that.inProgress = false;          
           defer.reject(message);
         });
 
       }
 
-      // prefetch data and store it in the dimensionservice of that particular handler
-      DatasetFactory.getVariableData(that.somSelection.variables, windowHandler)
-      .then(function succFn(res) {
-        doCall();
-      });
+      if( !computationNeeded() ) {
+        $timeout(function() {
+          defer.reject('not_needed');
+        }, 5);
+
+      } else {
+        TabService.lock(true);
+        that.inProgress = true;
+
+        // important: without clearing filters there's a risk only the sample that
+        // are within the circles get passed
+        windowHandler.getDimensionService().clearFilters();
+
+        // prefetch data and store it in the dimensionservice of that particular handler
+        DatasetFactory.getVariableData(that.somSelection.variables, windowHandler)
+        .then(function succFn(res) {
+          doCall();
+        });
+      }
+
       return defer.promise;
     };
 
     service.getPlane = function(testVar, windowHandler) {
       TabService.lock(true);
       var defer = $q.defer();
+      that.inProgress = true;
+
+      // important: without clearing filters there's a risk only the sample that
+      // are within the circles get passed
+      windowHandler.getDimensionService().clearFilters();
 
       DatasetFactory.getVariableData([testVar], windowHandler)
       .then(function succFn(res) {
@@ -212,12 +245,14 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
         .map(planeThread)
         .then(function succFn(result) {
           TabService.lock(false);
+          that.inProgress = false;
           defer.resolve({
             variable: testVar,
             plane: result[0]
           });
         }, function errFn(result) {
           TabService.lock(false);
+          that.inProgress = false;
           defer.reject('Plane computation of variable ' + testVar + ' failed');
         });
 

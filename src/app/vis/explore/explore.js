@@ -131,7 +131,8 @@ mod.controller('ExploreMenuCtrl', ['$scope', '$rootScope', 'datasets', 'variable
       };
 
       var promise = NotifyService.addClosableModal('vis/menucomponents/new.heatmap.modal.tpl.html', $modalScope, { 
-        controller: 'ModalFormController'
+        controller: 'ModalFormController',
+        windowClass: 'modal-wide'
       });
 
       promise.then( function succFn(variables) {

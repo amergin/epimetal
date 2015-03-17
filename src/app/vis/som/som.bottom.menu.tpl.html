@@ -15,7 +15,7 @@
 	</div>
 	
 	<div class="col-sm-offset-2 col-sm-1">
-		<button type="button" class="btn btn-primary" ng-click="openSettings()">
+		<button type="button" class="btn btn-primary" ng-disabled="!canOpenPlane()" ng-click="openSettings()">
 			<i class="fa fa-cog"></i>
 			<span>SOM settings</span>
 		</button>

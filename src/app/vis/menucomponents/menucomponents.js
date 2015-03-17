@@ -421,7 +421,8 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
       var $modalScope = associationScope;
 
       var promise = NotifyService.addClosableModal('vis/menucomponents/new.heatmap.modal.tpl.html', $modalScope, { 
-        controller: 'ModalFormController'
+        controller: 'ModalFormController',
+        windowClass: 'modal-wide'
       });
 
       promise.then( function succFn(variables) {
@@ -439,7 +440,8 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
       var $modalScope = adjustScope;
 
       var promise = NotifyService.addClosableModal('vis/menucomponents/new.heatmap.modal.tpl.html', $modalScope, { 
-        controller: 'ModalFormController'
+        controller: 'ModalFormController',
+        windowClass: 'modal-wide'
       });
 
       promise.then( function succFn(variables) {

@@ -1,31 +1,36 @@
-<div class="" style="height: 400px;">
-	<h3 class="text-center" style="padding-bottom: 20px;">Self-Organizing Map settings</h3>
-	<form class="form-horizontal" role="form" name="plot" novalidate>
-		<fieldset>
-			<div class="form-group">
-				<label class="col-sm-4 control-label" for="vars-som">Input variables</label>
-				<div class="col-sm-8">
-					<small class="pull-right" ng-show="currentSelection.x"><a href="" ng-click="clear()">Clear selection</a></small>
-					<select 
-					chosen
-					multiple
-					class="form-control" id="vars-som"
-					data-placeholder=" "
-					ng-model="currentSelection.x"
-					ng-options="o.name as o.name group by o.group.name for o in variables | orderBy:['group.order','name_order']"
-					required ng-disabled="!canEdit()"
-					width="'100%'">
-				</select>
+<div class="modal-header">
+    <h3 class="modal-title text-center">Self-Organizing Map settings</h3>
+</div>
+<div class="modal-body">
+	<div class="row">
+		<div growl inline="true" reference="som-input" class="am-fade container-fluid"></div>		
+		<form class="form-horizontal col-sm-12" role="form" name="plot" novalidate>
+			<fieldset>
+				<div class="form-group">
+					<label class="col-sm-4 control-label" for="vars-som">Input variables</label>
+					<div class="col-sm-8">
+						<small class="pull-right" ng-show="currentSelection.x"><a href="" ng-click="clear()">Clear selection</a></small>
+						<select 
+						chosen
+						multiple
+						class="form-control" id="vars-som"
+						data-placeholder=" "
+						ng-model="currentSelection.x"
+						ng-options="o.name as o.name group by o.group.name for o in variables | orderBy:['group.order','name_order']"
+						required ng-disabled="!canEdit()"
+						width="'100%'">
+					</select>
+				</div>
 			</div>
-		</div>
-
-		<div class="form-group">
-			<div class="col-sm-offset-4 col-sm-8">
-				<button type="submit" class="btn btn-primary" ng-disabled="!canSubmitSOM()" ng-click="saveSettings()">Save settings</button>
-			</div>
-		</div>
 		</fieldset>
 	</form>
-
 </div>
-
+</div>
+<div class="modal-footer">
+	<div class="form-group">
+		<div class="col-sm-8">
+			<button type="submit" class="btn btn-primary" ng-disabled="!canSubmitSOM()" ng-click="saveSettings()">Save settings</button>
+			<button type="submit" class="btn btn-secondary" ng-click="$dismiss('cancel');">Cancel</button>
+		</div>
+	</div>
+</div>

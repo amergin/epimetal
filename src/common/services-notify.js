@@ -62,8 +62,7 @@ serv.factory('NotifyService', ['$injector', '$timeout', 'growl',
           scope: scope,
           backdrop: true, //'static',
           keyboard: false,
-          templateUrl: templateUrl,
-          windowClass: 'modal-wide'
+          templateUrl: templateUrl
         };
         angular.extend(applyConfig, config);
 

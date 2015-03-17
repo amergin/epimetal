@@ -348,7 +348,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
           if (dataWasAdded) {
             windowHandler.getDimensionService().rebuildInstance();
           }
-          defer.resolve();
+          defer.resolve(dataWasAdded);
         }, function errFn(res) {
           defer.reject(res);
         });

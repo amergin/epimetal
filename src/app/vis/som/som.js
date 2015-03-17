@@ -56,9 +56,13 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
 
     $scope.openSettings = function() {
       $scope.currentSelection = angular.copy( $scope.savedSelection );
-      var promise = NotifyService.addClosableModal( 'vis/menucomponents/som.tpl.html', $scope );
+      var promise = NotifyService.addClosableModal( 'vis/menucomponents/som.tpl.html', $scope, {
+        size: 'lg'
+      });
       promise.then( function(res) {
+        $scope.savedSelection = angular.copy( $scope.currentSelection );
         $scope.currentSelection = {};
+        SOMService.updateVariables($scope.savedSelection.x, $scope.windowHandler);
       });
     };
 
@@ -71,7 +75,7 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
     };
 
     $scope.canSubmitSOM = function () {
-      return $scope.canEdit() && !_.isEmpty($scope.currentSelection.x) && ($scope.currentSelection.x.length >= 3);
+      return $scope.canEdit();
     };
 
     $scope.filterInfo = [];
@@ -86,14 +90,11 @@ mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootSco
     };
 
     $scope.saveSettings = function(selection) {
-      NotifyService.closeModal();
-      if( _.isEqual( selection, $scope.savedSelection ) ) {
-        // do nothing
-      } else {
-        $scope.savedSelection = angular.copy( $scope.currentSelection );
-        SOMService.updateVariables($scope.currentSelection.x);
+      if( $scope.currentSelection.x.length < 3 ) {
+        NotifyService.addSticky('Error', 'Please select at least three variables.', 'error', { referenceId: 'som-input' });
+        return;
       }
-      $scope.currentSelection = {};
+      NotifyService.closeModal();
     };
 
     $scope.canSubmitPlane = function(plane) {

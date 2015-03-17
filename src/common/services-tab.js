@@ -92,7 +92,6 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
             WindowHandler.reRenderVisible({ compute: true });
           });
         }, function errFn(msg) {
-          NotifyService.addTransient('Error', msg, 'danger');
           WindowHandler.removeAllVisible();
 
           // stop plane spins
