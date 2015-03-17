@@ -181,7 +181,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         UrlHandler.createWindow( 'somplane', config );
       };
 
-      NotifyService.addTransient('', 'Starting plane computation', 'info');
+      NotifyService.addTransient('Starting plane computation', 'The computation may take a while.', 'info');
       SOMService.getPlane(config.variables.x, windowHandler).then(
         function succFn(res) {
           NotifyService.addTransient('Plane computation ready', 'The requested new plane has now been drawn.', 'success');

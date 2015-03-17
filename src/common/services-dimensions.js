@@ -118,7 +118,11 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
                 y: d['bmus'].y,
                 valueOf: function() {
                   // IMPORTANT!
-                  return ( d['bmus'].x || String(constants.nanValue) ) + "|" + ( d['bmus'].y || String(constants.nanValue) );
+                  if( _.isUndefined(d.bmus.x) || _.isUndefined(d.bmus.y) ) {
+                    return String(constants.nanValue);
+                  } else {
+                    return String(d.bmus.x) + "|" + String(d.bmus.y);
+                  }
                 }
               };
             };
