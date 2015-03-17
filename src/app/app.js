@@ -45,6 +45,9 @@ App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', '$injector'
     // .html5Mode(true)
     .hashPrefix('!');
 
+    // dc event/trigger delay
+    dc.constants.EVENT_DELAY = 150;
+
     // default route
     // $urlRouterProvider.otherwise('/vis/explore');
     $urlRouterProvider.otherwise('/vis/explore');

@@ -72,7 +72,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       //   return Math.floor(d / $scope.binWidth) * $scope.binWidth;
       // });
 
-      if( $scope.window.somSpecial ) {
+if( $scope.window.somSpecial ) {
         // circle
         $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables.x);
         $scope.reduced = $scope.groupInst.get();
@@ -182,14 +182,14 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
 
       var resizeSVG = function(chart) {
         var ratio = config.size.aspectRatio === 'stretch' ? 'none' : 'xMinYMin';
-          chart.select("svg")
-              .attr("viewBox", "0 0 " + [config.size.width, config.size.height].join(" ") )
-              .attr("preserveAspectRatio", ratio)
-              .attr("width", "100%")
-              .attr("height", "100%");
+        chart.select("svg")
+        .attr("viewBox", "0 0 " + [config.size.width, config.size.height].join(" ") )
+        .attr("preserveAspectRatio", ratio)
+        .attr("width", "100%")
+        .attr("height", "100%");
           // don't redraw here, or it will form a feedback loop
           // chart.redraw();
-      };
+        };
 
       // work-around, weird scope issue on filters ?!
       $scope.FilterService = $injector.get('FilterService');
@@ -221,30 +221,26 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       })
       .xAxisLabel(config.variableX)
       .on("filtered", function(chart, filter) {
-        dc.events.trigger( function() {
+        $timeout( function() {
+          var filterRemoved = _.isNull(filter) && _.isNull(chart.filter());
 
-          $timeout( function() {
-            var filterRemoved = _.isNull(filter) && _.isNull(chart.filter());
-
-            if( filterRemoved ) {
-              $scope.window.showResetBtn = false;
+          if( filterRemoved ) {
+            $scope.window.showResetBtn = false;
+            $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
+            // no idea why this is needed
+            $scope.histogram.redraw();
+          } else {
+            $scope.window.showResetBtn = true;
+              // remove filter (perhaps slided to another position)
               $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
-              // no idea why this is needed
-              $scope.histogram.redraw();
-            } else {
-              $scope.window.showResetBtn = true;
-                // remove filter (perhaps slided to another position)
-                $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
-                $scope.FilterService.addHistogramFilter( { 'type': 'range', 'filter': filter, 
-                  'var': $scope.window.variables.x, 'id': $scope.window._winid,
-                  'chart': $scope.histogram
-                });
-              }
-              $scope.window.handler.getService().reRenderVisible({ compute: true, omit: 'histogram' });
+              $scope.FilterService.addHistogramFilter( { 'type': 'range', 'filter': filter, 
+                'var': $scope.window.variables.x, 'id': $scope.window._winid,
+                'chart': $scope.histogram
+              });
+            }
+            $scope.window.handler.getService().reRenderVisible({ compute: true, omit: 'histogram' });
 
-            });
-
-        }, 100);
+          });
       })
       .renderlet( function(chart) {
         if( config.pooled ) {
@@ -289,11 +285,11 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       if( $scope.window.somSpecial  ) {
         var name = 'total';
         var chart = dc.barChart($scope.histogram) //, constants.groups.histogram)
-          .centerBar(true)
-          .barPadding(0.15)
-          .brushOn(true)
-          .dimension($scope.totalDimension)
-          .group(config.filter($scope.totalReduced, name), name)
+.centerBar(true)
+.barPadding(0.15)
+.brushOn(true)
+.dimension($scope.totalDimension)
+.group(config.filter($scope.totalReduced, name), name)
           .valueAccessor(function(d) { // is y direction
             return d.value.counts[name];
           });
@@ -399,30 +395,30 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
 
       $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind); //, restartCrossfilterUnbind);
 
-      $scope.$on('$destroy', function() {
-        console.log("destroying histogram for", $scope.window.variables.x);
-        _.each($scope.deregisters, function(unbindFn) {
-          unbindFn();
-        });
+$scope.$on('$destroy', function() {
+  console.log("destroying histogram for", $scope.window.variables.x);
+  _.each($scope.deregisters, function(unbindFn) {
+    unbindFn();
+  });
 
-        $scope.groupInst.decrement();
-        if($scope.window.somSpecial) { $scope.totalGroupInst.decrement(); }
-        $scope.dimensionInst.decrement();
-      });
+  $scope.groupInst.decrement();
+  if($scope.window.somSpecial) { $scope.totalGroupInst.decrement(); }
+  $scope.dimensionInst.decrement();
+});
 
-      ele.on('$destroy', function() {
-        $scope.$destroy();
-      });
+ele.on('$destroy', function() {
+  $scope.$destroy();
+});
 
-    }
+}
 
-    return {
-      scope: false,
-      restrict: 'C',
-      controller: 'HistogramPlotController',
-      link: {
-        post: postLink
-      }
-    };
+return {
+  scope: false,
+  restrict: 'C',
+  controller: 'HistogramPlotController',
+  link: {
+    post: postLink
   }
-  ]);
+};
+}
+]);
