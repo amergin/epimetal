@@ -1,18 +1,3 @@
-/**
- * Each section of the site has its own module. It probably also has
- * submodules, though this boilerplate is too simple to demonstrate it. Within
- * `src/app/home`, however, could exist several additional folders representing
- * additional modules that would then be listed as dependencies of this one.
- * For example, a `note` section could have the submodules `note.create`,
- * `note.delete`, `note.edit`, etc.
- *
- * Regardless, so long as dependencies are managed correctly, the build process
- * will automatically take take of the rest.
- *
- * The dependencies block here is also where component dependencies should be
- * specified, as shown below.
- */
-
  var vis = 
  angular.module( 'plotter.vis', [ 
   'ui.router.state',
@@ -38,11 +23,6 @@
   'ui.layout'
   ] );
 
-/**
- * Each section or module of the site can also have its own routes. AngularJS
- * will handle ensuring they are all available at run-time, but splitting it
- * this way makes each module more "self-contained".
- */
  vis.config(['$stateProvider', '$urlRouterProvider', function ( $stateProvider, $urlRouterProvider) {
 
   var vis = {
@@ -71,11 +51,6 @@
         SOMService.setDimensionService(som);
         var regression = DimensionService.create('vis.regression');
       }]
-      // defaultView: ['DatasetFactory', 'PlotService', 'SOMService', '$q', 'variables', 'datasets', 'compatibility', 'WindowHandler',
-      // function(DatasetFactory, PlotService, SOMService, $q, variables, datasets, compatibility, WindowHandler) {
-      //   var defer = $q.defer();
-      //   return defer.promise;
-      // }]
     },
     views: {
       'content': {
@@ -241,10 +216,6 @@
 
 }]);
 
-// vis.run(['$rootScope', '$state', '$stateParams', '$location', '$timeout', 'DimensionService', 'DatasetFactory', 'PlotService', '$q', 'WindowHandler', 'SOMService',
-// function ($rootScope, $state, $stateParams, $location, $timeout, DimensionService, DatasetFactory, PlotService, $q, WindowHandler, SOMService) {
-// }]);
-
 
  vis.controller( 'HeaderCtrl', ['$scope', '$stateParams', '$injector', '$state',
   function ($scope, $stateParams, $injector, $state) {
@@ -306,15 +277,6 @@
     // for debugging
     $scope.usedVariables = $scope.dimensionService.getUsedVariables();
     $scope.activeVariables = $scope.dimensionService.getDimensions();
-
-
-
-    // $rootScope.$on('$viewContentLoaded', function() {
-    //   console.log("loaded", arguments);
-    // });
-
-    // populate the view from current url 
-    // UrlHandler.loadNewPageState( $stateParams.path, PlotService );
 
     _.each( DatasetFactory.getSets(), function(set) {
       set.toggle();

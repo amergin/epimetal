@@ -129,61 +129,6 @@ mod.controller('SOMBottomContentController', ['$scope', '$injector', '$timeout',
       }
     };
 
-    // $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
-    //   var compareAndRestart = function() {
-    //       var primary  = DimensionService.getPrimary();
-    //       var current = $scope.windowHandler.getDimensionService();
-    //       if( !DimensionService.equal( primary, current ) ) {
-    //         console.log("dimension instances not equal, need to restart");
-    //         DimensionService.restart( current, primary );
-    //         $scope.windowHandler.getService().spinAllVisible();
-    //         SOMService.getSOM($scope.windowHandler).then( function succFn() {
-    //           $scope.checkDefaults();
-    //           $timeout(function() {
-    //             $scope.windowHandler.getService().reRenderVisible({ compute: true });
-    //           });
-    //         }, function errFn(msg) {
-    //           NotifyService.addTransient('Error', msg, 'danger');
-    //           $scope.windowHandler.getService().removeAllVisible();
-    //           _.each($scope.windowHandler.getService().getVisible(), function(handler) {
-    //             _.each(handler.get(), function(win) {
-    //               if( win.type == 'somplane' ) {
-    //                 handler.stopSpin(win._winid);
-    //               }
-    //             });
-    //           });              
-    //         })
-    //         .finally(function() {
-    //           // $scope.windowHandler.getService().stopAllSpins();
-    //           _.each($scope.windowHandler.getService().getVisible(), function(handler) {
-    //             _.each(handler.get(), function(win) {
-    //               if( win.type != 'somplane' ) {
-    //                 handler.stopSpin(win._winid);
-    //               }
-    //             });
-    //           });
-    //         });
-    //       } else {
-    //         console.log("dimension instances equal, do not restart");
-    //       }
-    //   };
-
-    //   // don't double compute -> vis.som.* should handle
-    //   if( toState === 'vis.som' ) { return; }
-
-    //   switch(fromState.name) {
-    //     case '':
-    //     if( toState.name == 'vis.som.distributions' || toState.name == 'vis.som.profiles' ) {
-    //       compareAndRestart();
-    //     }
-    //     break;
-        
-    //     case 'vis.explore':
-    //     compareAndRestart();
-    //     break;
-    //   }
-    // });
-
     $scope.itemMapper = {
         sizeX: 'window.size.x', 
         sizeY: 'window.size.y',
