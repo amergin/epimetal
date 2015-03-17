@@ -2,10 +2,11 @@ var visu = angular.module('plotter.vis.plotting.heatmap',
   [
   'ui.router',
   'services.dimensions',
-  'services.correlation'
+  'services.correlation',
+  'services.tab'
   ]);
-visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService) {
+visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService', 'TabService',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService, TabService) {
 
     $scope.resetFilter = function() {
       $scope.heatmap.filterAll();
@@ -173,10 +174,10 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         var variables = $scope.window.variables.x;
         $scope.$parent.startSpin();
 
+        // lock tab switching
+        TabService.lock(true);
         // get coordinates in a separate worker
-        CorrelationService.compute(
-          { variables: variables }, $scope.$parent.window.handler
-          )
+        CorrelationService.compute({ variables: variables }, $scope.$parent.window.handler)
         .then(function succFn(coordinates) {
 
           // compute Bonferroni correction
@@ -190,6 +191,8 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
           $scope.crossfilter.add(coordinates);
           callback();
         }).finally(function() {
+          // unlock tabs
+          TabService.lock(false);
           $scope.$parent.stopSpin();
         });
 

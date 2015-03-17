@@ -252,7 +252,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
           }
 
           return _.any( combined, function(h) {
-            return ( (h.i === (d.y-1) ) && (h.j === (d.x-1) ) );
+            return ( (h.i === d.y) && (h.j === d.x) );
           });
 
         };

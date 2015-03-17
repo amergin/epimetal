@@ -164,7 +164,7 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
 
 function CircleFilter(id, $injector) {
 
-  var _name = name,
+  var _name,
   _id = id,
   _color,
   _hexagons = [],

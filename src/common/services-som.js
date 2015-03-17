@@ -1,7 +1,7 @@
-var mod = angular.module('services.som', ['services.dataset', 'services.dimensions', 'services.notify']);
+var mod = angular.module('services.som', ['services.dataset', 'services.dimensions', 'services.notify', 'services.tab']);
 
-mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyService', '$q', 'DatasetFactory',
-  function ($injector, constants, $rootScope, NotifyService, $q, DatasetFactory) {
+mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyService', '$q', 'DatasetFactory', 'TabService',
+  function ($injector, constants, $rootScope, NotifyService, $q, DatasetFactory, TabService) {
 
     var that = this;
 
@@ -14,6 +14,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
     that.SOMPlanes = {};
     that.dimensionService = undefined;
     that.sampleDimension = undefined;
+    that.defaultPlanes = ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'];
 
     var _colors = d3.scale.category10();
 
@@ -27,6 +28,12 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
 
     service.getBMUs = function() {
       return that.som.bmus || [];
+    };
+
+    service.defaultPlanes = function(x) {
+      if(!arguments.length) { return that.defaultPlanes; }
+      that.defaultPlanes = x;
+      return service;
     };
 
     service.getSomId = function() {
@@ -55,6 +62,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
     };
 
     service.getSOM = function(windowHandler) {
+      TabService.lock(true);
       var defer = $q.defer();
 
       function getSampleIds() {
@@ -68,7 +76,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
         that.som = {};
       }
 
-      function getData() {
+      function getData(skipNaNs) {
         var variables = that.somSelection.variables,
         retObj = {
           samples: [],
@@ -86,7 +94,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
           sampleId;
 
           // don't record this one
-          if(containsNaNs) { return; }
+          if(skipNaNs && containsNaNs) { return; }
 
           sampleId = _.pick(obj, 'dataset', 'sampleid');
           retObj.samples.push(sampleId);
@@ -109,7 +117,8 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
         // var selection = that.somSelection.variables;
         removePrevious();
 
-        var data = getData();
+        var skipNaNs = false;
+        var data = getData(skipNaNs);
         that.trainSamples = data.samples;
         that.som = SOM.create(7, 9, data.samples, data.columns);
 
@@ -127,47 +136,15 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
 
           // this will force existing planes to redraw
           $rootScope.$emit('dataset:SOMUpdated', that.som);
+          TabService.lock(false);
           defer.resolve(that.som);
         }, function errFn(result) {
           var message = '(Message)';
           NotifyService.addTransient('SOM computation failed', message, 'error');
+          TabService.lock(false);          
           defer.reject(message);
         });
 
-
-        // var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.som);
-
-        // // don't know whether som exists already
-        // ws.onopen = function() {
-        //   ws.send(JSON.stringify({
-        //     // 'datasets': datasets,
-        //     'variables': selection,
-        //     'samples': samples
-        //   }));
-        // };
-
-        // ws.onclose = function(evt) {
-        //   console.log("SOM WS closed", evt);
-        // };
-
-        // ws.onmessage = function(evt) {
-        //   var result = JSON.parse(evt.data);
-        //   if (result.result.code == 'error') {
-        //     // SOM computation failed
-        //     NotifyService.addTransient('SOM computation failed', result.result.message, 'danger');
-        //     defer.reject(result.result.message);
-        //   } else {
-        //     // SOM comp is OK
-        //     NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
-        //     var som = result.data;
-
-        //     that.dimensionService.addBMUs(som.id, som.bmus);
-        //     that.som = som;
-        //     // this will force existing planes to redraw
-        //     $rootScope.$emit('dataset:SOMUpdated', som);
-        //     defer.resolve(som);
-        //   }
-        // };
       }
 
       // prefetch data and store it in the dimensionservice of that particular handler
@@ -175,35 +152,11 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
       .then(function succFn(res) {
         doCall();
       });
-
-      // var samples = getSamples();
-      // var DatasetFactory = $injector.get('DatasetFactory');
-      // var DimensionService = $injector.get('DimensionService');
-      // var primary = DimensionService.getPrimary();
-
-
-      // if( samples.length < 10 ) {
-      //   removePrevious();
-      //   defer.reject('Under 10 samples provided for SOM computation.');
-      // }
-      // else if( service.somReady(samples) ) {
-      //   console.log('SOM already computed');
-      //   defer.resolve('SOM already computed');        
-      // }
-      // else {
-      //   var primarySamplesCount = primary.getSize() > 0 ? primary.getSampleDimension().get().groupAll().reduceCount().value() : 0;
-      //   var bmuCount = that.som.bmus ? that.som.bmus.length : 0;
-      //   if( primarySamplesCount == bmuCount ) {
-      //     console.log('SOM already computed');
-      //     defer.resolve('SOM already computed');
-      //   } else {
-      //     doCall(samples);
-      //   }
-      // }
       return defer.promise;
     };
 
     service.getPlane = function(testVar, windowHandler) {
+      TabService.lock(true);
       var defer = $q.defer();
 
       DatasetFactory.getVariableData([testVar], windowHandler)
@@ -211,7 +164,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
         doCall();
       });
 
-      function getThreadData(variable) {
+      function getThreadData(variable, skipNaNs) {
         function inTrainSamples(sample) {
           return _.any(that.trainSamples, function(d) { return _.isEqual(d, sample); });
         }
@@ -228,7 +181,7 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
           sampleid;
 
           // don't record this one
-          if(isNaN) { return; }
+          if(skipNaNs && isNaN) { return; }
 
           sampleId = _.pick(obj, 'dataset', 'sampleid');
 
@@ -245,7 +198,8 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
       }
 
       function doCall() {
-        var threadData = getThreadData(testVar);
+        var skipNaNs = false;
+        var threadData = getThreadData(testVar, skipNaNs);
         var parallel = new Parallel(threadData, {
           evalPath: 'assets/threads/eval.js',
           env : {
@@ -257,43 +211,18 @@ mod.factory('SOMService', ['$injector', 'constants', '$rootScope', 'NotifyServic
         .require('SOM.js')
         .map(planeThread)
         .then(function succFn(result) {
+          TabService.lock(false);
           defer.resolve({
             variable: testVar,
             plane: result[0]
           });
         }, function errFn(result) {
+          TabService.lock(false);
           defer.reject('Plane computation of variable ' + testVar + ' failed');
         });
 
       }
 
-
-
-      // var ws = new WebSocket(constants.som.websocket.url + constants.som.websocket.api.plane);
-      // ws.onopen = function() {
-      //   ws.send(JSON.stringify({
-      //     'somid': that.som.id,
-      //     'datasets': that.som.datasets,
-      //     'variables': {
-      //       'test': testVar,
-      //       'input': that.som.variables
-      //     }
-      //   }));
-      // };
-
-      // ws.onclose = function(evt) {
-      //   console.log("Plane WS closed", evt);
-      // };
-
-      // ws.onmessage = function(evt) {
-      //   var result = JSON.parse(evt.data);
-      //   if (result.result.code == 'error') {
-      //     defer.reject(result.result.message);
-      //   } else {
-      //     that.SOMPlanes[result.data.id] = result.data;
-      //     defer.resolve( angular.copy(result.data) );
-      //   }
-      // };
       return defer.promise;
     };    
 

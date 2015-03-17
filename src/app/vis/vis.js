@@ -33,6 +33,8 @@
   'plotter.vis.sampleinfo',
   'mgcrea.ngStrap.popover',
   'services.som',
+  'services.tab',
+  'services.notify',
   'ui.layout'
   ] );
 
@@ -262,11 +264,21 @@
   }]);
 
 
- vis.controller( 'VisCtrl', ['$scope', 'DimensionService', 'DatasetFactory', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets', '$q', 'SOMService',
-  function VisController( $scope, DimensionService, DatasetFactory, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets, $q, SOMService) {
+ vis.controller( 'VisCtrl', ['$scope', 'DimensionService', 'DatasetFactory', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets', '$q', 'SOMService', 'TabService', 'NotifyService',
+  function VisController( $scope, DimensionService, DatasetFactory, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets, $q, SOMService, TabService, NotifyService) {
     console.log("viscontroller");
 
     var $rootScope = $injector.get('$rootScope');
+
+    $rootScope.tabChangeEnabled = function() {
+      var val = !TabService.lock();
+      if(!val) { 
+        NotifyService.addTransient(
+          'Please wait until the computation has been completed', 
+          'Tabs cannot be switched during computation tasks.', 'info');
+      }
+      return val;
+    };
 
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
       var name = 'vis.som';
@@ -304,10 +316,10 @@
     // populate the view from current url 
     // UrlHandler.loadNewPageState( $stateParams.path, PlotService );
 
-  _.each( DatasetFactory.getSets(), function(set) {
-    set.toggle();
-    DatasetFactory.toggle(set);
-  });
+    _.each( DatasetFactory.getSets(), function(set) {
+      set.toggle();
+      DatasetFactory.toggle(set);
+    });
 
     $rootScope.$on('tab.changed', function(event, tabName) {
       _.each( WindowHandler.getVisible(), function(hand) {

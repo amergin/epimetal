@@ -341,7 +341,7 @@ vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory',
 
 
 
-// regression menu X
+// regression menu modal controller
 vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'PlotService', 'RegressionService',
   function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService, RegressionService) {
     $scope.selection = {
@@ -402,7 +402,13 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
       var config = {
         variables: $scope.selection
       };
-      PlotService.drawRegression(config, $scope.handler);
+
+      // only draw on first window, on subsequent, force redraw
+      if( $scope.handler.get().length > 0 ) {
+        $scope.handler.redrawAll();
+      } else {
+        PlotService.drawRegression(config, $scope.handler);
+      }
     };
 
     $scope.openAssociation = function() {

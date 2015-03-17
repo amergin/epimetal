@@ -20,17 +20,17 @@ SOM = function() {
 		// som.batch_sample_size = 200;
 		som.sampleids = [];
 
-		// som.variablenames = [];
+		som.variablenames = [];
 		
-		som.codebook = [];
-		som.distances = [];
-		som.weights = [];
+		som.codebook = [] 
+		som.distances = [] 
+		som.weights = [] 
 
 		som.maxdistance = 0;
 		som.coords = [];
 		som.samples = new Float32Array(som.N*som.M);
 
-		som.numEpochs = som.rows*som.cols;
+		som.numEpochs = som.rows*som.cols * 0.5;
 		som.start_neigh_dist = Math.max(som.rows,som.cols);
 		som.end_neigh_dist = 0.5;
 		som.input_min = [];
@@ -171,22 +171,38 @@ SOM = function() {
 
 		console.log('calculating component plane');
 
-		values = new Float32Array(data_column.length);
+		som.bmus = get_best_matching_units(som, som.codebook, som.samples);
+
+		valuearr = []; 
 		var index;
+
+		var currentbmusarr = [];
 
 		for(var i=0;i<data_column.length;i++) {
 
 			index = _.findIndex(som.sampleids, sampleids[i]);
 			if(index < 0) {
-        console.log("Error at:", sampleids[i]);
-        throw new Error('Sample ' + JSON.stringify(sampleids[i]) + ' not found');
+				console.log('Sample' + sampleids[i] + " not found");
+				continue;
 			}
-			values[i] = data_column[index];
+
+			if(!isNaN(data_column[i])) {
+				valuearr.push(data_column[i]);
+				currentbmusarr.push(som.bmus[index]);
+			}
 
 		}
 
+		values = new Float32Array(valuearr.length);
+		currentbmus = new Float32Array(valuearr.length);
 
-		console.log(10);
+		for(var i=0;i<valuearr.length;i++) {
+			values[i] = valuearr[i];
+			currentbmus[i] = currentbmusarr[i];
+		}
+		
+		//console.log(values);
+		
 
 		var color_scale = ["#4682b4","#5e8fbc","#759dc5","#89a9cd","#9db8d5","#b1c6de","#c5d3e6","#d8e1ee","#ecf0f7","#ffffff","#fff1ef","#ffe5e0","#ffd7cf","#ffc9c0","#ffbbb0","#ffada0","#ff9d90","#fd8f80","#fa8072"];
 
@@ -194,8 +210,6 @@ SOM = function() {
 		var average_values = new Float32Array(som.rows*som.cols);
 
 		var samples_in_cell = new Int16Array(som.rows*som.cols);
-
-    console.log(20);
 
 
 		// Random permutations
@@ -206,23 +220,20 @@ SOM = function() {
 		var plane_mean;
 		var plane_variance;
 
-    console.log(30);
-		
-		som.bmus = get_best_matching_units(som, som.codebook, som.samples);
-
-    console.log(40, som.bmus);
 		
 		for(var it=0;it<Nperm;it++) {
+
+
 
 			for(var i=0; i<som.rows*som.cols; i++) {
 				average_values[i] = 0;
 				samples_in_cell[i] = 0;
 			}
 
-			shuffled_bmus = _.shuffle(som.bmus);
+			shuffled_bmus = _.shuffle(currentbmus);
 
 			
-			for(var i=0; i<som.N; i++) {
+			for(var i=0; i<shuffled_bmus.length; i++) {
 				if(!isNaN(values[i])) {
 					average_values[shuffled_bmus[i]] += values[i];
 					samples_in_cell[shuffled_bmus[i]]++;
@@ -232,19 +243,45 @@ SOM = function() {
 			}
 			
 			plane_mean = 0;
-			plane_variance = 0
 
-      // console.log(44, JSON.stringify(samples_in_cell));
+			// Calculating averages for each cell
+			for(var i=0; i<som.rows*som.cols; i++) {
+				
+				if(samples_in_cell[i]  > 0) {
+
+					average_values[i] = average_values[i] / samples_in_cell[i];
+				}
+			}
+
 			
 			for(var i=0; i<som.rows*som.cols; i++) {
-				average_values[i] = average_values[i] / samples_in_cell[i];
+				
+				/* If no samples in cell, interpolate value from 
+				surroundings */
+				if(samples_in_cell[i]  == 0) {
+
+					average_values[i] = 0;
+					cw = 0;
+					for(var j=0;j<som.rows*som.cols; j++) {			
+						
+						if(samples_in_cell[j] > 0) {
+							w = som.weights[j*som.rows*som.cols + i];
+							cw += w;
+							average_values[i] += w * average_values[j];
+						} 
+					}
+
+					average_values[i] = average_values[i] / cw;
+				}
+
+
 				plane_mean += average_values[i];
 			}
 
-      // console.log(45, "mean", plane_mean, som.rows, som.cols, JSON.stringify(average_values));
-      plane_mean = plane_mean / (som.rows*som.cols);
 
 			
+			plane_mean = plane_mean / (som.rows*som.cols);
+
 
 			plane_variance = 0;
 
@@ -259,10 +296,9 @@ SOM = function() {
 
 		}
 
-    console.log(50, variances);
 
-/*		console.log('Permuted variances');
-		console.log(variances); */
+	/*	console.log('Permuted variances');
+		console.log(variances);  */
 
 		var null_mean = 0;
 		var null_stddev = 0;
@@ -289,38 +325,63 @@ SOM = function() {
 
 		var data_mean = 0;
 		var N_not_nan = 0;
-
-    console.log(60);
 		
 		for(var i=0; i<som.rows*som.cols; i++) {
 				average_values[i] = 0;
 				samples_in_cell[i] = 0;
 		}
 
-		for(var i=0; i<som.N; i++) {
+		for(var i=0; i<currentbmus.length; i++) {
 
-			if(!isNaN(values[i])) {
-				average_values[som.bmus[i]] += values[i];
-				samples_in_cell[som.bmus[i]]++;
-				data_mean += values[i];
-				N_not_nan++;
-			}
+			
+			average_values[currentbmus[i]] += values[i];
+			samples_in_cell[currentbmus[i]]++;
+			data_mean += values[i];
+			N_not_nan++;
+		
 
 		}
-
-    console.log(70);
 
 		data_mean = data_mean / N_not_nan;
 
 		plane_mean = 0;
 		plane_variance = 0
 
+
+		// Calculating averages for each cell
 		for(var i=0; i<som.rows*som.cols; i++) {
-			average_values[i] = average_values[i] / samples_in_cell[i];
+			
+			if(samples_in_cell[i]  > 0) {
+
+				average_values[i] = average_values[i] / samples_in_cell[i];
+			}
+		}
+
+
+		for(var i=0; i<som.rows*som.cols; i++) {
+			
+			/* If no samples in cell, interpolate value from 
+			surroundings */
+			if(samples_in_cell[i]  == 0) {
+
+				average_values[i] = 0;
+				cw = 0;
+				for(var j=0;j<som.rows*som.cols; j++) {			
+					
+					if(samples_in_cell[j] > 0) {
+						w = som.weights[j*som.rows*som.cols + i];
+						cw += w;
+						average_values[i] += w * average_values[j];
+					} 
+				}
+
+				average_values[i] = average_values[i] / cw;
+			}
+
+
 			plane_mean += average_values[i];
 		}
 
-    console.log(80);
 		
 		plane_mean = plane_mean / (som.rows*som.cols);
 
@@ -333,20 +394,19 @@ SOM = function() {
 
 		plane_variance = plane_variance / (som.rows*som.cols);
 
-    console.log(90, plane_variance);
 
-//		console.log('Real variance');
-//		console.log(plane_variance);
+	/*	console.log('Real variance');
+		console.log(plane_variance);
 
 
-//		console.log('Norm cdf ');
-//		console.log(normalcdf(null_mean, null_stddev, plane_variance));
-
+		console.log('Norm cdf ');
+		console.log(normalcdf(null_mean, null_stddev, plane_variance));
+*/
 
 		var pvalue = 1 - normalcdf(null_mean, null_stddev, plane_variance);
 
-    console.log(100);
-
+		console.log('pvalue ');
+		console.log(pvalue);
 		// SMoothing
 
 		update_weights(som, 1.5);
@@ -358,8 +418,6 @@ SOM = function() {
 
 		console.log("Weights");
 		console.log(map_distance_to_weight); */
-
-    console.log(110);
 
 		var cw = 0;
 		var w = 0;
@@ -385,12 +443,12 @@ SOM = function() {
 
 		}		
 
-    console.log(120);
 
 
 		// -- drawing the plane
 
 
+		console.log(smooth_averages);
 
 		var maxvalue = _.max(smooth_averages);
 		var minvalue = _.min(smooth_averages);
@@ -410,7 +468,7 @@ SOM = function() {
 		plane_object['pvalue'] = pvalue;
 		plane_object['size'] = { 'm' : som.rows, 'n': som.cols };
 
-    console.log(130);
+
 
 		for(var i=0; i<som.rows*som.cols; i++) {
 
@@ -419,8 +477,6 @@ SOM = function() {
 			plane_object.cells.push({'x' : i % som.cols + 1, 'y' : Math.floor(i/som.cols) + 1, 'color' : color_scale[color_indices[i]] });
 
 		}
-
-    console.log(140);
 
 		var step = (maxvalue-minvalue)/7;
 		var stops = [minvalue, maxvalue].concat(_.range(minvalue+step, maxvalue-step, step));
@@ -453,7 +509,6 @@ SOM = function() {
 
 		}
 
-    console.log(150, "final");
 
 		return plane_object;
 
@@ -595,15 +650,23 @@ SOM = function() {
 			som.input_min[j] = 0; //_.min(arr);
 			som.input_max[j] = 1; //_.max(arr);
 
-			var sorted = arr.slice().sort(function(a,b){return b-a})
+			var sorted = arr.slice().sort(function(a,b){return b-a});
 			var ranks = arr.slice().map(function(v){ return sorted.indexOf(v)+1 });
 
 			for(var i=0;i<som.N;i++) {
 
 				//som.samples[i*som.M+j] = arr[i];
-				val = 2 * (ranks[i] / som.N) - 1;
-				som.samples[i*som.M+j] = ((val + val*val*val) + 2)/4;
+				if(isNaN(arr[i])) {
+					som.samples[i*som.M+j] = 0.5;
+				} else {
+					val = 2 * (ranks[i] / som.N) - 1;
+					som.samples[i*som.M+j] = ((val + val*val*val) + 2)/4;
+
+				}
+				
 			}
+
+
 		}
 
 

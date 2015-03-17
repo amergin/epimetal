@@ -1,7 +1,7 @@
 var mod = angular.module('services.correlation', ['services.dataset', 'services.notify']);
 
 mod.factory('CorrelationService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'NotifyService',
-  function RegressionService($injector, $q, $rootScope, DatasetFactory, NotifyService) {
+  function CorrelationService($injector, $q, $rootScope, DatasetFactory, NotifyService) {
     var that = this;
     var service = {};
 

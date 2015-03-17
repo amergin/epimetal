@@ -12,12 +12,13 @@ var visu = angular.module('plotter.vis.plotting',
   'services.urlhandler',
   'services.window',
   'services.som',
-  'services.regression'
+  'services.regression',
+  'services.tab'
   ]);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'UrlHandler', 'NotifyService', 'SOMService', '$q', 'RegressionService',
-  function($injector, DimensionService, DatasetFactory, UrlHandler, NotifyService, SOMService, $q, RegressionService) {
+visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'UrlHandler', 'NotifyService', 'SOMService', '$q', 'RegressionService', 'TabService',
+  function($injector, DimensionService, DatasetFactory, UrlHandler, NotifyService, SOMService, $q, RegressionService, TabService) {
 
     this.drawScatter = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
@@ -110,6 +111,8 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
       message = 'Please wait',
       level = 'info';
       NotifyService.addTransient(title, message, level);
+      // don't allow tab change when fetching
+      TabService.lock(true);
       var plottingDataPromise = DatasetFactory.getVariableData(config.variables.x, windowHandler);
       plottingDataPromise.then(function successFn(res) {
           // draw the figure
@@ -123,7 +126,11 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           message = 'Please check the selected combination is valid for the selected datasets.',
           level = 'danger';
           NotifyService.addTransient(title, message, level);
-        });
+        })
+      .finally(function() {
+        // release tab change lock
+        TabService.lock(false);
+      });
 
     };
 
@@ -187,6 +194,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
       );
     };
 
+    // this should only be called once, otherwise duplicate charts will appear on the handler
     this.drawRegression = function(config, windowHandler) {
       NotifyService.addTransient('Regression analysis started', 'Regression analysis computation started.', 'info');
       RegressionService.compute(config, windowHandler).then( function succFn(result) {

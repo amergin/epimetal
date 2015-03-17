@@ -108,9 +108,9 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       this.getVarSamples = function(variables) {
         var defer = $q.defer();
 
-        var performPost = function() {
+        var performPost = function(vars) {
           $http.post(that.config.multipleVariablesURL, {
-            variables: variables,
+            variables: vars,
             dataset: name
           })
             .success(function(response) {
@@ -121,7 +121,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
                   samples[sample['sampleid']] = sample;
                 } else {
                   // already present, just extend to include the new variable data
-                  _.extend(samples[sample['sampleid']].variables, samples.variables);
+                  _.extend(samples[sample['sampleid']].variables, sample.variables);
                 }
               });
 
@@ -133,21 +133,50 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
             });
         };
 
-        var samplesPopulated = !_.isUndefined(_.first(_.values(samples)));
-        if (samplesPopulated) {
-          var availableVariables = _.keys(_.first(_.values(samples)).variables);
-          var newVariables = _.difference(variables, availableVariables);
 
-          if (!_.isEmpty(newVariables)) {
-            performPost();
-          } else {
-            // nothing new discovered
-            defer.resolve();
-          }
+        var empty = _.isEmpty(samples),
+        currentVariables = _.chain(samples)
+        .sample(4)
+        .map(function(d) { return _.keys(d.variables); })
+        .flatten()
+        .uniq()
+        .value(),
+        newVariables = _.difference(variables, currentVariables);
+
+        if(empty) {
+          // get all variables
+          performPost(variables);
+        } 
+        else if( _.isEmpty(newVariables) ) {
+          // nothing to done, everything already fetched
+          defer.resolve();
         } else {
-          // samples is completely empty, e.g. pageload situation
-          performPost();
+          // fetch new variables
+          performPost(newVariables);
         }
+
+
+        // // potential, although rare, source for problems
+        // var samplesPopulated = _.chain(samples)
+        // .sample(4)
+        // .every(function(d) { return _.every(variables, function(v) { return !_.isUndefined(d.variables[v]); }); })
+        // .value() && _.size(samples) > 0;
+
+        // // var samplesPopulated = !_.isUndefined(_.first(_.values(samples)));
+        // if (samplesPopulated) {
+        //   var availableVariables = _.keys(_.first(_.values(samples)).variables);
+        //   var newVariables = _.difference(variables, availableVariables);
+
+        //   if (!_.isEmpty(newVariables)) {
+        //     performPost(newVariables);
+        //   } else {
+        //     // nothing new discovered
+        //     defer.resolve();
+        //   }
+        // } else {
+        //   // samples is completely empty, e.g. pageload situation
+        //   performPost(variables);
+        // }
 
         return defer.promise;
       };

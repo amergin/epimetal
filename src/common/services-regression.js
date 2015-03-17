@@ -1,7 +1,7 @@
-var mod = angular.module('services.regression', ['services.dataset', 'services.filter']);
+var mod = angular.module('services.regression', ['services.dataset', 'services.filter', 'services.tab']);
 
-mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory',
-  function RegressionService($injector, $q, $rootScope, DatasetFactory, NotifyService) {
+mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'TabService',
+  function RegressionService($injector, $q, $rootScope, DatasetFactory, TabService) {
     var that = this;
     var service = {};
     var FilterService = $injector.get('FilterService');
@@ -159,7 +159,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       // See http://reliawiki.org/index.php/Multiple_Linear_Regression_Analysis 
       // -> p value = 2 * (1-P(T <= |t0|)
       var t = beta / _sqrt;
-      var pvalue = 2 * (1 - statDist.tprob(degrees, t));
+      var pvalue = 2 * statDist.tprob(degrees, t);
 
       console.log("CI before [sub, add] of beta = ", ci);
       return {
@@ -292,6 +292,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
     };
 
     service.compute = function(config, windowHandler) {
+      TabService.lock(true);
       var deferred = $q.defer();
       windowHandler.spinAll();
       _inProgress = true;
@@ -334,10 +335,18 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
             console.log("Result Betas=", result);
             _inProgress = false;
             _result = result;
-            deferred.resolve(result);
+            TabService.lock(false);
+            deferred.resolve({
+              input: config.variables,
+              result: result
+            });
           }, function errFn(result) {
             _inProgress = false;
-            deferred.reject(result);
+            TabService.lock(false);
+            deferred.reject({
+              input: config.variables,
+              result: result
+            });
           });
       });
       return deferred.promise;
