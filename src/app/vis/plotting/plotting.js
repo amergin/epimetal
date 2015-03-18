@@ -206,7 +206,8 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         windowHandler.add(config);
         
       }, function errFn(result) {
-        NotifyService.addTransient('Regression analysis completed', 'Regression computation ready.', 'success');
+        var message = result.result[0].result.reason;
+        NotifyService.addSticky('Regression analysis failed', message, 'error');
       });
     };
 

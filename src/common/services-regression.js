@@ -237,31 +237,50 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         var ciAndPvalue = getCIAndPvalue(inverse, xMatrix, xMatrixTransp, [normalTargetData], n, k, beta);
 
         return {
+          result: { success: true },
           betas: betas,
           ci: ciAndPvalue.ci,
           pvalue: ciAndPvalue.pvalue
         };
+
+
       }; // end compute 
 
+      function getError(message) {
+        return {
+          success: false,
+          reason: message
+        };          
+      }
+
       console.log("Thread started");
+
       var retObj = {
+        result: { 'success': true },
         total: null,
         circles: {},
         variable: thData.variable
       };
 
       // process total
-      retObj['total'] = compute(thData.data.total.samples, global.env.nanIndices.total, 
-        global.env.targetData.total.samples.slice(0), global.env.adjustData.total);
+      try {
+        retObj['total'] = compute(thData.data.total.samples, global.env.nanIndices.total, 
+          global.env.targetData.total.samples.slice(0), global.env.adjustData.total);
 
-      // process each circle
-      _.each(thData.data.circles, function(circle, ind) {
-        retObj.circles[circle.id] = compute(circle.samples, global.env.nanIndices.circles[circle.id], 
-          global.env.targetData.circles[ind].samples.slice(0), global.env.adjustData.circles[circle.id]);
-      });
+        // process each circle
+        _.each(thData.data.circles, function(circle, ind) {
+          retObj.circles[circle.id] = compute(circle.samples, global.env.nanIndices.circles[circle.id], 
+            global.env.targetData.circles[ind].samples.slice(0), global.env.adjustData.circles[circle.id]);
+        });
+        retObj['result'] = { success: true };
+      } catch(errorObject) {
+        console.log("Regression throws error: ", errorObject.message);
+        retObj['result'] = getError('Something went wrong while computing the regression. Please check and adjust sample selections as needed.');
+      }
+      finally {
+        return retObj;
+      }
 
-      // all done
-      return retObj;
     }
 
     var getNaNs = function(targetData, targetVar, adjustData, adjustVars) {
@@ -335,14 +354,23 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
           .map(threadFunctionNumericjs)
           .then(function succFn(result) {
             windowHandler.stopAllSpins();
-            console.log("Result Betas=", result);
+            console.log("Regression result = ", result);
             _inProgress = false;
             _result = result;
             TabService.lock(false);
-            deferred.resolve({
-              input: config.variables,
-              result: result
-            });
+
+            if( !result[0].result.success ) {
+              // computation failed
+              deferred.reject({
+                input: config.variables,
+                result: result
+              });
+            } else {
+              deferred.resolve({
+                input: config.variables,
+                result: result
+              });
+            }
           }, function errFn(result) {
             _inProgress = false;
             TabService.lock(false);
