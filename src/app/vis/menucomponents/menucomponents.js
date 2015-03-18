@@ -291,7 +291,11 @@ vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory',
     };
 
     $scope.canSubmit = function() {
-      return $scope.getSelected().length > 0 && $scope.extend.canSubmit.apply(arguments);
+      var selected = $scope.getSelected();
+      if($scope.extend.lowerLimit && $scope.extend.lowerLimit >= selected.length) {
+        return $scope.extend.canSubmit.apply(arguments);
+      }
+      return (selected.length > 0) && $scope.extend.canSubmit.apply(arguments);
     };
 
     $scope.groupSelected = function(items) {
@@ -310,12 +314,12 @@ vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory',
     $scope.post = function() {
       var variables = $scope.getSelected();
       var bare = _.map(variables, function(v) { return v.name; } );
-      if($scope.extend.upperLimit && bare.length > $scope.extend.upperLimit) {
+      if($scope.extend.upperLimit && bare.length > $scope.extend.upperLimit ) {
         NotifyService.addTransient('Too many variables selected', 
           'Please do not exceed the limit of ' + $scope.extend.upperLimit + ' variables.', 
           'error', { referenceId: 'modalinfo' });
         return;
-      }
+      } 
       $scope.$parent.extend['groups'] = $scope.groups;
       $modalInstance.close(bare);
     };
@@ -369,7 +373,8 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
       canSubmit: function() { return true; },
       title: 'Select adjust variable(s) for regression analysis',
       submitButton: 'Select',
-      groups: []
+      groups: [],
+      lowerLimit: 0
     };
 
     DatasetFactory.getVariables().then( function(res) { $scope.variables = res; } );
