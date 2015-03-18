@@ -292,7 +292,7 @@ vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory',
 
     $scope.canSubmit = function() {
       var selected = $scope.getSelected();
-      if($scope.extend.lowerLimit && $scope.extend.lowerLimit >= selected.length) {
+      if(!_.isUndefined($scope.extend.lowerLimit) && $scope.extend.lowerLimit >= selected.length) {
         return $scope.extend.canSubmit.apply(arguments);
       }
       return (selected.length > 0) && $scope.extend.canSubmit.apply(arguments);

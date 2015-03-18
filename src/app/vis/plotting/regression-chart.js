@@ -17,7 +17,8 @@ function RegressionChart(element, width, height) {
     _splitData = [],
     _rootRow,
     _domain = [],
-    _domainAdjust = 0.05,
+    _domainAdjust = 0.10,
+    _zeroPoint = 0,
     _variables,
     _variablesLookup,
     // how many col-sm's in are reserved
@@ -357,6 +358,20 @@ function RegressionChart(element, width, height) {
   };
 
   function computeDomain() {
+    function getLowerValue(lowVal) {
+      if( lowVal >= _zeroPoint ) {
+        return _zeroPoint - _domainAdjust;
+      }
+      return lowVal - _domainAdjust;
+    }
+
+    function getUpperValue(upperVal) {
+      if( upperVal <= _zeroPoint ) {
+        return _zeroPoint + _domainAdjust;
+      }
+      return upperVal + _domainAdjust;
+    }
+
     var ciValues = _.chain(_data)
     .map(function(d) { 
       return [_.chain(d.circles).values().map(function(c) { return c.ci; }).value(), 
@@ -365,8 +380,11 @@ function RegressionChart(element, width, height) {
     })
     .flatten(true)
     .value(),
-    extent = d3.extent(ciValues);
-    _domain = [ extent[0] - _domainAdjust, extent[1] + _domainAdjust ];
+    extent = d3.extent(ciValues),
+    lowerValue = getLowerValue(extent[0]),
+    upperValue = getUpperValue(extent[1]);
+
+    _domain = [lowerValue, upperValue];
   }
 
   function sortValues(a,b) {
