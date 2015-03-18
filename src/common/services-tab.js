@@ -124,15 +124,20 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
     };
 
     _service.canChangeTo = function(toName) {
-      if( _.startsWith(toName, 'vis.som') ) {
-        return $state.current.name == 'vis.explore' ||
-        $state.current.name == 'vis.regression';
+      var currentName = $state.current.name;
+      if( _.startsWith(currentName, toName) ) {
+        // click on the current tab
+        return true;
+      } else if( _.startsWith(toName, 'vis.som') ) {
+        return currentName == 'vis.explore' ||
+        currentName == 'vis.regression';
       } else if( _.startsWith(toName, 'vis.regression') ) {
-        return _.startsWith($state.current.name, 'vis.som');
+        return _.startsWith(currentName, 'vis.som');
       } else if( _.startsWith(toName, 'vis.explore') ) {
-        return _.startsWith($state.current.name, 'vis.som') ||
-        $state.current.name == 'vis.regression';
-      } else {
+        return _.startsWith(currentName, 'vis.som') ||
+        currentName == 'vis.regression';
+      }
+      else {
         return true;
       }
     };
