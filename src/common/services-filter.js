@@ -207,7 +207,7 @@ function CircleFilter(id, $injector) {
   // is sample included in this circle?
   _filter.contains = function(bmu) {
     return _.any( _filter.hexagons(), function(hex) {
-      return (hex.i === (bmu.y-1)) && (hex.j === (bmu.x-1));
+      return (hex.i === bmu.y) && (hex.j === bmu.x);
     });
   };
 
