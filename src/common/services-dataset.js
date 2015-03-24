@@ -77,15 +77,21 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       // privates:
       // --------------------------------------
 
-      var name = dsetName;
-      var color = col;
+      var name = dsetName,
+      color = col,
 
       // loaded samples from the api
-      var samples = {};
+      samples = {},
 
-      var active = false;
+      active = false,
+      size = null || noSamples,
 
-      var size = null || noSamples;
+      // flag that is used to determine whether newly acquired
+      // data is added. check addVariableData fn on 
+      // services-dimensions!
+      unreadData = false;
+
+      var dset = {};
 
       // --------------------------------------
       // functions
@@ -105,7 +111,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       };
 
       // 'variables' is a list
-      this.getVarSamples = function(variables) {
+      dset.getVarSamples = function(variables) {
         var defer = $q.defer();
 
         var performPost = function(vars) {
@@ -114,14 +120,14 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
             dataset: name
           })
             .success(function(response) {
-
+              unreadData = true;
               _.each(response.result.values, function(sample) {
-                if (_.isUndefined(samples[sample['sampleid']])) {
+                if (_.isUndefined(samples[sample.sampleid])) {
                   // previously unknown sample
-                  samples[sample['sampleid']] = sample;
+                  samples[sample.sampleid] = sample;
                 } else {
                   // already present, just extend to include the new variable data
-                  _.extend(samples[sample['sampleid']].variables, sample.variables);
+                  _.extend(samples[sample.sampleid].variables, sample.variables);
                 }
               });
 
@@ -155,55 +161,42 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
           performPost(newVariables);
         }
 
-
-        // // potential, although rare, source for problems
-        // var samplesPopulated = _.chain(samples)
-        // .sample(4)
-        // .every(function(d) { return _.every(variables, function(v) { return !_.isUndefined(d.variables[v]); }); })
-        // .value() && _.size(samples) > 0;
-
-        // // var samplesPopulated = !_.isUndefined(_.first(_.values(samples)));
-        // if (samplesPopulated) {
-        //   var availableVariables = _.keys(_.first(_.values(samples)).variables);
-        //   var newVariables = _.difference(variables, availableVariables);
-
-        //   if (!_.isEmpty(newVariables)) {
-        //     performPost(newVariables);
-        //   } else {
-        //     // nothing new discovered
-        //     defer.resolve();
-        //   }
-        // } else {
-        //   // samples is completely empty, e.g. pageload situation
-        //   performPost(variables);
-        // }
-
         return defer.promise;
       };
 
-      this.getColor = function() {
+      dset.getColor = function() {
         return color;
       };
 
-      this.toggle = function() {
+      dset.toggle = function() {
         active = !active;
+        return that;
       };
 
-      this.disable = function() {
+      dset.disable = function() {
         active = false;
+        return dset;
       };
 
-      this.isActive = function() {
+      dset.isActive = function() {
         return active;
       };
 
-      this.getName = function() {
+      dset.getName = function() {
         return name;
       };
-      this.getSize = function() {
+
+      dset.getSize = function() {
         return size || _.size(samples);
       };
 
+      dset.unread = function(x) {
+        if(!arguments.length) { return unreadData; }
+        unreadData = x;
+        return dset;
+      };
+
+      return dset;
 
     } // Dataset class ends
 

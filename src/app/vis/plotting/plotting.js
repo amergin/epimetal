@@ -82,6 +82,9 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         promises.push(primaryPromise);
       }
 
+      var dim = DimensionService.getPrimary();
+      var samp = dim.getSampleDimension();
+
       $q.all(promises).then(function successFn(res) {
           // draw the figure
           NotifyService.closeModal();

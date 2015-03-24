@@ -49,7 +49,7 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
       }, function errFn(variable) {
         var title = 'Error fetching variable ' + variable,
         message = 'Something went wrong while fetching samples with the given combination.',
-        level = 'danger';
+        level = 'error';
         NotifyService.addTransient(title, message, level);
       }).finally( function() {
         WindowHandler.stopAllSpins();

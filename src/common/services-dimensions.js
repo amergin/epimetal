@@ -536,7 +536,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         if( _service.getPrimary() !== that ) {
           addSamples = _.filter(samples, function(s) { 
             var id = _getSampleKey(s.dataset, s.sampleid);
-            return currSamples[id];
+            return _.isUndefined(currSamples[id]) ? false : true;
           });
         }
         else {
@@ -544,7 +544,6 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         }
 
         var dataWasAdded = true;
-
         usedVariables[variable] = true;
 
         _.every(addSamples, function (samp) {
@@ -552,16 +551,25 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
           var key = _getSampleKey(samp.dataset, samp.sampleid);
 
           if (_.isUndefined(currSamples[key])) {
+            // sample has not been previously seen
             currSamples[ key ] = samp;
             currSamples[ key ]['bmus'] = {};
           } else {
             if( _.isUndefined( currSamples[key].variables ) ) {
+              // for some reason the variables is empty (unlikely)
               currSamples[key].variables = {};
             }
-
             if( !_.isUndefined( currSamples[key].variables[ variable ] ) ) {
-              // dummy work for the whole gang
-              dataWasAdded = false;
+              // defined and nothing to add
+              var DatasetFactory = $injector.get('DatasetFactory');
+              var dset = DatasetFactory.getSet(samp.dataset);
+              if( dset.unread() ) {
+                // newly-added data is present.
+                dset.unread(false);
+              } else {
+                // nothing new
+                dataWasAdded = false;
+              }
               return false; // stop iteration
             }
 
@@ -590,30 +598,23 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
 
       // rebuilds crossfilter instance (called after adding new variable data)
       this.rebuildInstance = function () {
-        // see http://stackoverflow.com/a/23520094/1467417 for principle
-        var removeFilters = function() {
-          _.chain(dimensions)
-          .values()
-          .each(function(obj) {
-            // remove current filter
-            obj.dimension.filter(null);
-          })
-          .value();
-        };
-
         var addFilterFunctions = function() {
           _.chain(dimensions)
           .values()
-          .each(function(obj) {
-            var filterFn = obj.filterFn;
-            if( !_.isNull(filterFn) ) {
-              obj.dimension.filter(filterFn);
+          .each(function(dim) {
+            var oldFilterFn = dim.oldFilter();
+            if(!_.isNull(oldFilterFn)) {
+              dim.filter(oldFilterFn);
             }
           })
           .value();
         };
 
         var addHistogramFilters = function() {
+          if( _service.getPrimary() !== that ) {
+            // interactive histograms are only in primary
+            return;
+          }
           _.each(dc.chartRegistry.list(constants.groups.histogram.interactive), function(chart) {
             var oldFilters = chart.filters();
             chart.filter(null);
@@ -624,23 +625,19 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         };
 
 
+        // with vanilla crossfilter
         console.log("Crossfilter instance rebuild called on", this.getName());
-        // removeFilters();
-        // crossfilterInst.remove();//( function() { return false; } );
-        // crossfilterInst.add(_.values(currSamples));
-        // // $rootScope.$emit('dimension:crossfilter');
-        // addFilterFunctions();
-        // addHistogramFilters();
-        crossfilterInst.remove(function() { return false; });
+        this.clearFilters();
+        crossfilterInst.remove();
         crossfilterInst.add(_.values(currSamples));
+        addFilterFunctions();
+        addHistogramFilters();
+
+        // with forked crossfilter:
+        // crossfilterInst.remove(function() { return false; });
+        // crossfilterInst.add(_.values(currSamples));
         // $injector.get('WindowHandler').reRenderVisible({ compute: true });
       };
-
-      // this.deleteDimension = function(variable) {
-      //   if( _.isUndefined( dimensions[variable] ) ) { return; }
-      //   dimensions[variable].dispose();
-      //   delete dimensions[variable];
-      // };
 
       // important! these values are not *necessarily* the same as the ones
       // currently shown: Example:
@@ -673,6 +670,10 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
           return samp.dataset + "|" + samp.sampleid;
         };
 
+        var clearBMUFilter = function() {
+          that.getSOMDimension().filterAll();          
+        };
+
         currSamples = {};
         _.each( copy, function(samp) {
           currSamples[ getKey(samp) ] = samp;
@@ -680,6 +681,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
 
         this.rebuildInstance();
         this.clearFilters();
+        clearBMUFilter();
       };
 
       // start by initializing crossfilter
@@ -748,6 +750,7 @@ function CrossfilterDimension(type, variable, injector, crossfilterInst, creatio
   _creationFn = creationFn,
   _obj = {},
   _filterFn = null,
+  _oldFilterFn = null,
   _sticky = false,
   _filters = null; // only for som
 
@@ -845,15 +848,21 @@ function CrossfilterDimension(type, variable, injector, crossfilterInst, creatio
 
   _obj.filter = function(filter) {
     if(!arguments.length) { return _filterFn; }
+    _oldFilterFn = _filterFn;
     _filterFn = filter;
     _dimension.filterFunction(_filterFn);
     return _obj;
   };
 
   _obj.filterAll = function() {
+    _oldFilterFn = _filterFn;
     _filterFn = null;
     _dimension.filterAll();
     return _obj;
+  };
+
+  _obj.oldFilter = function() {
+    return _oldFilterFn;
   };
 
   _obj.decrement = function() {
