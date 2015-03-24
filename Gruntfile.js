@@ -19,6 +19,9 @@ module.exports = function ( grunt ) {
   grunt.loadNpmTasks('grunt-ngmin');
   grunt.loadNpmTasks('grunt-html2js');
 
+  grunt.file.defaultEncoding = 'utf-8';
+  grunt.file.preserveBOM = true;
+
   /**
    * Load in our build configuration file.
    */

@@ -98,7 +98,8 @@ module.exports = {
       'vendor/d3-tip/index.js',
       // utilities
       // 'vendor/underscore/underscore.js',
-      'vendor/lodash/lodash.js',
+      // 'vendor/lodash/lodash.js',
+      'vendor/lodash/lodash.min.js',
       // core framework for UI
       'vendor/angular-strap/dist/angular-strap.js',
       'vendor/angular-strap/dist/angular-strap.tpl.js',
@@ -111,14 +112,13 @@ module.exports = {
       'vendor/angular-spinner/angular-spinner.min.js',
       // customize this for release:
       'vendor/angular-bootstrap/custom/ui-bootstrap-custom-tpls-0.12.0.js',
-      // 'vendor/mathjs/dist/math.js',
       'vendor/paralleljs/lib/parallel.js',
-      // only for debug:
-      'vendor/numericjs/lib/numeric.js',
+      'vendor/numericjs/lib/numeric.min.js',
       'vendor/angular-growl-2/build/angular-growl.js',
       'vendor/statistics-distributions-js/statistics-distributions-packaged.js',
       'vendor/hor-boxplot/horizontalboxplot.js',
-      'vendor/SOM.js/SOM.js'
+      'vendor/SOM.js/SOM.js',
+      'vendor/ngprogress/build/ngProgress.js'
       // 'vendor/mathjs/dist/math.js'
       // 'vendor/spark-md5/spark-md5.min.js'
     ],
@@ -127,7 +127,8 @@ module.exports = {
       'vendor/angular-motion/dist/angular-motion.min.css',
       'vendor/bootstrap-additions/dist/bootstrap-additions.min.css',
       'vendor/angular-ui-layout/src/ui-layout.css',
-      'vendor/angular-growl-2/build/angular-growl.min.css'      
+      'vendor/angular-growl-2/build/angular-growl.min.css',
+      'vendor/ngprogress/ngProgress.css'
       //'vendor/chosen/chosen.min.css'
     ],
     assets: [

@@ -7,7 +7,8 @@ var App = angular.module('plotter', [
   'ui.router',
   'services.compatibility',
   'plotter.compatibility',
-  'ngSanitize', 'ngAnimate',
+  'ngSanitize', 
+  'ngAnimate',
   'angularSpinner'
 ]);
 

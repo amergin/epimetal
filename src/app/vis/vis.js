@@ -20,10 +20,12 @@
   'services.som',
   'services.tab',
   'services.notify',
-  'ui.layout'
+  'ui.layout',
+  'ngProgress',
+  'progressBarInterceptor'
   ] );
 
- vis.config(['$stateProvider', '$urlRouterProvider', function ( $stateProvider, $urlRouterProvider) {
+ vis.config(['$stateProvider', '$urlRouterProvider', 'ngProgressProvider', function ($stateProvider, $urlRouterProvider, ngProgressProvider) {
 
   var vis = {
     name: 'vis',
@@ -213,7 +215,8 @@
   $stateProvider.state(somProfiles);
   $stateProvider.state(regression);
 
-
+  // progress bar settings
+  ngProgressProvider.setHeight('3px');
 }]);
 
 
