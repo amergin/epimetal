@@ -29,8 +29,8 @@ function HorizontalBoxPlot(element, width, height) {
       },
       _tooltip = d3.tip()
       .attr('class', 'd3-tip')
-      .direction('e')
-      .offset([0,+10])
+      .direction('w')
+      .offset([0,-10])
       .html(_tooltipAccessor);
 
   _chart.render = function() {
