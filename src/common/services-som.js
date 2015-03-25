@@ -6,6 +6,7 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
     var that = this;
 
     this.som = {};
+    this.bmus = [];
     this.trainSamples = [];
     that.inProgress = false;
     that.somSelection = {
@@ -26,7 +27,7 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
     };
 
     service.getBMUs = function() {
-      return that.som.bmus || [];
+      return that.bmus;
     };
 
     service.defaultPlanes = function(x) {
@@ -85,6 +86,7 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
       function removePrevious() {
         // remove previous computation
         that.som = {};
+        that.bmus = [];
       }
 
       function getData(skipNaNs) {
@@ -142,8 +144,8 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
         .then(function succFn(somObject) {
           NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
           that.som = somObject;
-          var bmuSamples = SOM.get_formatter_bmus(somObject);
-          that.dimensionService.addBMUs(bmuSamples);
+          that.bmus = SOM.get_formatter_bmus(somObject);
+          that.dimensionService.addBMUs(that.bmus);
 
           // this will force existing planes to redraw
           $rootScope.$emit('dataset:SOMUpdated', that.som);

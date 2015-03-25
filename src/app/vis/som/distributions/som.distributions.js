@@ -17,10 +17,10 @@ mod.controller('SOMDistributionsController', ['$scope', '$templateCache', '$root
     $scope.windows  = $scope.windowHandler.get();    
 
     $scope.itemMapper = {
-        sizeX: 'window.size.x', 
-        sizeY: 'window.size.y',
-        row: 'window.position.row',
-        col: 'window.position.col'
+        sizeX: 'window.grid.size.x', 
+        sizeY: 'window.grid.size.y',
+        row: 'window.grid.position.row',
+        col: 'window.grid.position.col'
     };
 
     $scope.gridOptions = {

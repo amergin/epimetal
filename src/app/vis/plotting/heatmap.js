@@ -305,7 +305,17 @@ visu.directive('heatmap', ['$compile', '$rootScope', '$timeout',
         }
       });
 
-      $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind);
+      var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
+        var retObj = _.chain($scope.window)
+        .pick(['type', 'grid', 'handler', 'variables', 'handler', 'limit'])
+        .clone()
+        .extend({ coordinates: $scope.coordDim.top(Infinity) })
+        .value();
+
+        callback(retObj);
+      });
+
+      $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind, gatherStateUnbind);
 
       $scope.$on('$destroy', function() {
         _.each($scope.deregisters, function(unbindFn) {

@@ -46,8 +46,19 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
           config, 
           { '_winid': id, 
           handler: that,
-          // position: { row: 0, col: 4 * windows.length },
-          // size: { x: 4, y: 4 },
+          grid: {
+            // will be overwritten by gridster on layout
+            position: {
+              row: null,
+              col: null
+            },
+            // use 0 so it will be overwritten by default gridster config
+            // (which is specific for each handler)
+            size: {
+              x: 0,
+              y: 0,
+            }
+          },
           filterEnabled: _filtersEnabled
         }) );
 
@@ -121,17 +132,6 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         var wind = fnd[1];
         if( _.isUndefined(win) ) { return; }
 
-        $rootScope.$emit('window:preDelete', id);
-        var UrlHandler = $injector.get('UrlHandler');
-        if( _.isUndefined( win.variables ) ) {
-          UrlHandler.removeWindow( win.type, win.id );
-          // $rootScope.$emit('dimension:decreaseCount', "som" + win.som_id);
-        }
-        else {
-          UrlHandler.removeWindow(win.type, win.variables, win.filter);
-          // $rootScope.$emit('variable:remove', win.type, win.variables);
-        }
-
         windows.splice(wind,1);
         return that;
       }; 
@@ -153,6 +153,10 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
           return windows;
         }
         return _findWin(id)[0];
+      };
+
+      this.valueOf = function() {
+        return this.getName();
       };
     } // function
 

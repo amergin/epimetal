@@ -27,7 +27,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
 
     var pvalFormat = d3.format('.2e');
-    $scope.$parent.headerText = ['Self-organizing map of', $scope.window.variable, "(P = " + pvalFormat($scope.window.plane.pvalue) + ")"];
+    $scope.$parent.headerText = ['Self-organizing map of', $scope.window.plane.variable, "(P = " + pvalFormat($scope.window.plane.pvalue) + ")"];
 
     $scope.window.showResetBtn = false;
 
@@ -298,66 +298,61 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           .attr('r', function(t) { t.r = d.r; return t.r; });
         });
 
-        // $rootScope.$on('som:circleFilter:remove', function(eve, circleId) {
-        //   svg.selectAll('circle').filter( function(a) {
-        //     return a.id == circleId;
-        //   }).remove();
-        // });
 
-var circleAnchor = svg.append('g')
-.data([{ x: origin.x, y: origin.y, r: circle.radius() || _circleConfig.radius.normal, id: circleId }]);
+        var circleAnchor = svg.append('g')
+        .data([{ x: origin.x, y: origin.y, r: circle.radius() || _circleConfig.radius.normal, id: circleId }]);
 
-var innerCircle = circleAnchor.append('circle')
-.attr('cx', function(d) { return d.x; })
-.attr('cy', function(d) { return d.y; })
-.attr('r', function(d) { return d.r; })
-.attr('fill', 'lightgray')
-.style('fill-opacity', 0)
-.call( innerCircleDrag );
+        var innerCircle = circleAnchor.append('circle')
+        .attr('cx', function(d) { return d.x; })
+        .attr('cy', function(d) { return d.y; })
+        .attr('r', function(d) { return d.r; })
+        .attr('fill', 'lightgray')
+        .style('fill-opacity', 0)
+        .call( innerCircleDrag );
 
-var circleText = circleAnchor
-.append('text')
-.attr('x', function(d) {
-  return d.x;
-})
-.attr('y', function(d) {
-  return d.y;
-})
-.attr('text-anchor', 'middle')
-.attr('alignment-baseline', 'middle')
-.attr('class', 'circle-filter noselect')
-.style('fill', circle.color())
-.text( circle.name() )
-.call( innerCircleDrag );
+        var circleText = circleAnchor
+        .append('text')
+        .attr('x', function(d) {
+          return d.x;
+        })
+        .attr('y', function(d) {
+          return d.y;
+        })
+        .attr('text-anchor', 'middle')
+        .attr('alignment-baseline', 'middle')
+        .attr('class', 'circle-filter noselect')
+        .style('fill', circle.color())
+        .text( circle.name() )
+        .call( innerCircleDrag );
 
 
-var outerCircleDrag = d3.behavior.drag()
-.on("drag", function(d) {
-  var direction, newRadius;
-  var x = Math.abs( d3.event.x - d.x );
-  var y = Math.abs( d3.event.y - d.y );
-  direction = (x >= y) ? x : y;
+        var outerCircleDrag = d3.behavior.drag()
+        .on("drag", function(d) {
+          var direction, newRadius;
+          var x = Math.abs( d3.event.x - d.x );
+          var y = Math.abs( d3.event.y - d.y );
+          direction = (x >= y) ? x : y;
 
-  newRadius = Math.max(_circleConfig.radius.min, Math.min(direction, _circleConfig.radius.max));
-  d.r = newRadius;
-  outerCircle.attr('r', newRadius);
-  innerCircle.attr('r', function(t) { t.r = newRadius; return t.r; });
-  circle.radius(newRadius);
+          newRadius = Math.max(_circleConfig.radius.min, Math.min(direction, _circleConfig.radius.max));
+          d.r = newRadius;
+          outerCircle.attr('r', newRadius);
+          innerCircle.attr('r', function(t) { t.r = newRadius; return t.r; });
+          circle.radius(newRadius);
 
-  resolveArea(d, d3.event);
-  $rootScope.$emit('som:circleFilter:resize', null, $scope.window._winid, d);              
-});
+          resolveArea(d, d3.event);
+          $rootScope.$emit('som:circleFilter:resize', null, $scope.window._winid, d);              
+        });
 
-var outerCircle = circleAnchor.append('circle')
-.data([{ x: origin.x, y: origin.y, r: (circle.radius() || _circleConfig.radius.normal) + 3, id: circleId }])
-.attr('cx', function(d) { return d.x; })
-.attr('cy', function(d) { return d.y; })
-.attr('r', function(d) { return d.r; })
-.attr('stroke', circle.color())
-.attr('stroke-width', 3)
-.attr('fill', 'none')
-.attr('cursor', 'ew-resize')
-.call( outerCircleDrag );
+        var outerCircle = circleAnchor.append('circle')
+        .data([{ x: origin.x, y: origin.y, r: (circle.radius() || _circleConfig.radius.normal) + 3, id: circleId }])
+        .attr('cx', function(d) { return d.x; })
+        .attr('cy', function(d) { return d.y; })
+        .attr('r', function(d) { return d.r; })
+        .attr('stroke', circle.color())
+        .attr('stroke-width', 3)
+        .attr('fill', 'none')
+        .attr('cursor', 'ew-resize')
+        .call( outerCircleDrag );
 
         // resolve intitial
         resolveArea( innerCircle.data()[0], null );
@@ -393,7 +388,7 @@ visu.directive('somplane', [ '$rootScope', 'SOMService', 'NotifyService',
       var somUpdatedUnbind = $rootScope.$on('dataset:SOMUpdated', function(event, som) {
         $scope.$parent.startSpin();
 
-        SOMService.getPlane($scope.window.variable, $scope.$parent.window.handler).then( 
+        SOMService.getPlane($scope.window.plane.variable, $scope.$parent.window.handler).then( 
           function succFn(res) {
           angular.extend($scope.window, res); // overrides old values, places new plane info/ids/...
           $scope.redraw();
@@ -405,7 +400,16 @@ visu.directive('somplane', [ '$rootScope', 'SOMService', 'NotifyService',
         });
       });
 
-      $scope.deregisters.push(somUpdatedUnbind);
+      var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
+        var retObj = _.chain($scope.window)
+        .pick(['type', 'grid', 'variables', 'handler', 'plane'])
+        .clone()
+        .value();
+
+        callback(retObj);
+      });
+
+      $scope.deregisters.push(somUpdatedUnbind, gatherStateUnbind);
 
       $scope.$on('$destroy', function() {
         _.each($scope.deregisters, function(unbindFn) {

@@ -9,7 +9,6 @@ var visu = angular.module('plotter.vis.plotting',
   'plotter.vis.plotting.regression',
   'services.dimensions', 
   'services.dataset', 
-  'services.urlhandler',
   'services.window',
   'services.som',
   'services.regression',
@@ -17,8 +16,8 @@ var visu = angular.module('plotter.vis.plotting',
   ]);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'UrlHandler', 'NotifyService', 'SOMService', '$q', 'RegressionService', 'TabService',
-  function($injector, DimensionService, DatasetFactory, UrlHandler, NotifyService, SOMService, $q, RegressionService, TabService) {
+visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'NotifyService', 'SOMService', '$q', 'RegressionService', 'TabService',
+  function($injector, DimensionService, DatasetFactory, NotifyService, SOMService, $q, RegressionService, TabService) {
 
     this.drawScatter = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
@@ -26,7 +25,6 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         config.size = 'normal';
         config.type = 'scatterplot';
         windowHandler.add(config);
-        UrlHandler.createWindow( type, config );
       };
 
 
@@ -65,8 +63,6 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           };
         }
         windowHandler.add(config);
-
-        UrlHandler.createWindow( type, config );
       };
 
       NotifyService.addSpinnerModal('Loading...');//, _callback);
@@ -106,7 +102,6 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         config.size = config.variables.x.length > 10 ? 'double' : 'normal';
         config.type = type;
         windowHandler.add(config);
-        UrlHandler.createWindow( type, config );
       };
 
       // NotifyService.addSpinnerModal('Loading...');//, _callback);
@@ -147,7 +142,6 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           aspectRatio: 'preserve'
         };
         windowHandler.add(config);
-        UrlHandler.createWindow( type, config );
       };
 
       NotifyService.addSpinnerModal('Loading...');//, _callback);
@@ -181,14 +175,13 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         config.size = 'normal';
         config.type = 'somplane';
         windowHandler.add(config);
-        UrlHandler.createWindow( 'somplane', config );
       };
 
       NotifyService.addTransient('Starting plane computation', 'The computation may take a while.', 'info');
       SOMService.getPlane(config.variables.x, windowHandler).then(
         function succFn(res) {
           NotifyService.addTransient('Plane computation ready', 'The requested new plane has now been drawn.', 'success');
-          angular.extend(config, res);
+          config['plane'] = res.plane;
           draw(config, windowHandler);
         },
         function errFn(res) {

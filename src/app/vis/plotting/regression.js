@@ -72,7 +72,16 @@ visu.directive('regressionPlot', ['constants', '$timeout', '$rootScope', '$injec
         }
       });
 
-      $scope.deregisters.push(reRenderUnbind, redrawUnbind);
+      var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
+        var retObj = _.chain($scope.window)
+        .pick(['type', 'grid', 'handler', 'computation'])
+        .clone()
+        .value();
+
+        callback(retObj);
+      });
+
+      $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind);
 
       $scope.$on('$destroy', function() {
         _.each($scope.deregisters, function(unbindFn) {

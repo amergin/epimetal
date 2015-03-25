@@ -1,80 +1,58 @@
-var dimMod = angular.module('services.urlhandler', ['services.dataset', 'ui.router']);
+var mod = angular.module('services.urlhandler', ['services.dataset', 'ui.router']);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-dimMod.service('UrlHandler', ['$injector', 'constants', '$location', 'DatasetFactory', '$state', '$rootScope',
-  function($injector, constants, $location, DatasetFactory, $state, $rootScope) {
+mod.factory('UrlHandler', ['$injector', '$location', 'DatasetFactory', 'DimensionService', '$rootScope', '$state', 'SOMService',
+  function($injector, $location, DatasetFactory, DimensionService, $rootScope, $state, SOMService) {
 
+    var _service = {};
 
-    function data() {
-      var _data = {
-        tabs: {
-          'explore': { 'active': true },
-          'som': {},
-          'regression': {}
-        },
-        datasets: [],
-        filters: {},
-        url: {}
-      };
-      _data['active'] = _data['tabs']['explore'];
+    // gathers the current state of the application
+    _service.create = function() {
+      // emits an event that provides a callback for each figure/component
+      // to present its current state on this service
+      var windows = [];
+      function emitGather() {
+        var callback = function(win) {
+          console.log("callback called, args=", arguments);
+          windows.push(win);
+        };
+        $rootScope.$emit('UrlHandler:getState', callback);
+      }
 
-      _data.activeTab = function(id) {
-        if (!arguments.length) {
-          return _data['active'];
-        }
-        _data.activeTab()['active'] = false;
-        _data['tabs'][id]['active'] = true;
-        _data['active'] = _data['tabs'][id];
-        return _data;
-      };
+      function getDBFormat() {
+        var groupedByHandler = _.chain(windows)
+        .map(function(win) {
+          // handler object to its name so the object is serializable later
+          return _.assign(win, { handler: win.handler.getName() });
+        })
+        .groupBy('handler')
+        .value();
 
-      _data.updateDataset = function() {
-        _data['datasets'] = DatasetFactory.getSets();
-      };
+        var activeSets = _.chain( DatasetFactory.getSets() )
+        .values()
+        .filter(function(set) { return set.isActive(); })
+        .map(function(set) { return set.getName(); })
+        .value();
 
-      _data.window = function(id, d) {
-        var act = _data.activeTab();
-        if (!arguments.length) {
-          return act['windows'];
-        }
-        act['windows'][id] = d;
-        return _data;
-      };
+        return {
+          active: $state.current.name,
+          views: groupedByHandler,
+          datasets: activeSets,
+          som: {
+            bmus: SOMService.getBMUs()
+          },
+          samples: DimensionService.getPrimary().getSampleInfo().active
+        };
+      }
+      emitGather();
+      var result = getDBFormat();
+      console.log(result);
 
-      _data.removeWindow = function(id) {
-        var act = _data.activeTab();
-        delete act['windows'][id];
-        return _data;
-      };
-
-      return _data;
-    }
-
-    var details = data();
-
-    // called on page load to extract the current state from parameters
-    this.loadNewPageState = function(path, PlotService) {
-    }; // function
-
-    this.clear = function() {
+      return _service;
     };
 
-    this.updateDataset = function() {
-      details.updateDataset();
-    };
 
-    this.createWindow = function(type, config) {
-      console.log(type, config);
-      // details.window(config.winid, config);
-    };
 
-    this.activeTab = function(id) {
-      details.activeTab(id);
-    };
 
-    this.removeWindow = function(type, selection, filter) {
-      console.log(type,selection,filter);
-    };
-
-  }
-]);
+    return _service;
+  }]);

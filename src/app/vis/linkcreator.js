@@ -29,23 +29,17 @@ mod.controller('LinkCreatorController', ['$scope', 'UrlHandler', 'NotifyService'
     $scope.short = null;
 
     $scope.getShort = function() {
-      $http.post(linksAPI.shortener.url, {
-        'longUrl': document.URL
-      }) // returns promise
-      .success(function(data) {
-        $scope.short = data.id;
-      })
-        .error(function(data, status, headers, config) {
-          NotifyService.addTransient(linksAPI.error);
-        });
+      UrlHandler.create();
+      // $http.post(linksAPI.shortener.url, {
+      //   'longUrl': document.URL
+      // }) // returns promise
+      // .success(function(data) {
+      //   $scope.short = data.id;
+      // })
+      //   .error(function(data, status, headers, config) {
+      //     NotifyService.addTransient(linksAPI.error);
+      //   });
     };
-
-    $scope.$on('$locationChangeSuccess', function(event, newLoc, oldLoc) {
-      if ($scope.currentUrl != document.URL) {
-        $scope.short = null;
-      }
-      $scope.currentUrl = document.URL;
-    });
 
   }
 ]);

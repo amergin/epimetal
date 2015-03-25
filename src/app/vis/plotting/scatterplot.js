@@ -416,7 +416,16 @@ visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
         }
       });
 
-      $scope.deregisters.push(reRenderUnbind, redrawUnbind, resizeUnbind);
+      var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
+        var retObj = _.chain($scope.window)
+        .pick(['type', 'grid', 'handler', 'variables', 'handler'])
+        .clone()
+        .value();
+
+        callback(retObj);
+      });
+
+      $scope.deregisters.push(reRenderUnbind, redrawUnbind, resizeUnbind, gatherStateUnbind);
 
       $scope.$on('$destroy', function() {
         _.each($scope.deregisters, function(unbindFn) {

@@ -189,7 +189,16 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         }
       });
 
-      $scope.deregisters.push(reRenderUnbind, redrawUnbind);
+      var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
+        var retObj = _.chain($scope.window)
+        .pick(['type', 'grid', 'variables', 'handler', 'plane'])
+        .clone()
+        .value();
+
+        callback(retObj);
+      });
+
+      $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind);
 
       $scope.$on('$destroy', function() {
         _.each($scope.deregisters, function(unbindFn) {
