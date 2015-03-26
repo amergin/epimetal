@@ -200,7 +200,7 @@ function CircleFilter(id, $injector) {
 
   _filter.position = function(position) {
     if(!arguments.length) { return _position; }
-    _position = position;
+    _position = _.pick(position, 'x', 'y');
     return _filter;
   };
 

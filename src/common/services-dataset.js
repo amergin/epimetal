@@ -178,6 +178,11 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         return dset;
       };
 
+      dset.enable = function() {
+        active = true;
+        return dset;
+      };
+
       dset.isActive = function() {
         return active;
       };
@@ -367,8 +372,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       });
     };
 
-    service.toggle = function(set) {
-      // var DimensionService = $injector.get('DimensionService');
+    service.updateDataset = function(set) {
       that.dimensionService.updateDatasetDimension();
     };
 

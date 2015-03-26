@@ -30,10 +30,6 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
     $scope.variablesLookup = {};
 
-    DatasetFactory.getVariables().then(function(variables) {
-      $scope.variablesLookup = _.chain(variables).map(function(d) { return [d.name, d]; }).object().value();
-    });
-
     $scope.drawHeatmap = function(element, dimension, group, margins, width, height) {
 
       var _drawLegend = function(element, scale, height) {
@@ -169,7 +165,6 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         return d.corr;
       });
 
-
       $scope.computeVariables = function(callback) {
         var variables = $scope.window.variables.x;
         $scope.$parent.startSpin();
@@ -246,9 +241,9 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
 
 
-visu.directive('heatmap', ['$compile', '$rootScope', '$timeout',
+visu.directive('heatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFactory',
 
-  function($compile, $rootScope, $timeout) {
+  function($compile, $rootScope, $timeout, DatasetFactory) {
 
     var linkFn = function($scope, ele, iAttrs) {
 
@@ -263,18 +258,34 @@ visu.directive('heatmap', ['$compile', '$rootScope', '$timeout',
       .append('div')
       .attr('class', 'heatmap-legend-anchor')[0][0];
 
-      $scope.computeVariables(function() {
+      function draw() {
         $scope.drawHeatmap(
           $scope.heatmapAnchor, 
           $scope.coordDim, 
           $scope.coordGroup, 
           $scope.margins, 
           $scope.width, 
-          $scope.height );
+          $scope.height );        
+      }
+
+      DatasetFactory.getVariables().then(function(variables) {
+        $scope.variablesLookup = _.chain(variables).map(function(d) { return [d.name, d]; }).object().value();
+
+        // load previous state provided by url routing
+        if($scope.window.coordinates && $scope.window.coordinates.length > 0) {
+          var bonferroni = 0.5 * variables.length * (variables.length - 1);
+          $scope.limit = 0.05 / bonferroni;
+          $scope.limitDisp = $scope.format($scope.limit);
+          
+          $scope.crossfilter.add($scope.window.coordinates);
+          draw();
+        } else {
+          // default route to do things
+          $scope.computeVariables(function() {
+            draw();
+          });
+        }
       });
-
-
-
 
       $scope.deregisters = [];
 

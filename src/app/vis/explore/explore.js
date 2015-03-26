@@ -14,6 +14,8 @@ var vis =
     'mgcrea.ngStrap.scrollspy'
     ]);
 
+mod.constant('EXPLORE_DEFAULT_HISTOGRAMS', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc']);
+
 mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', 'windowHandler', 'DatasetFactory', '$q', 'PlotService', 'WindowHandler', 'SOMService', '$timeout',
   function ExploreController($scope, $templateCache, $rootScope, windowHandler, DatasetFactory, $q, PlotService, WindowHandler, SOMService, $timeout) {
     console.log("explore ctrl");
@@ -68,49 +70,6 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
           }
       }
     };
-
-
-  var defaultVariables = ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'];
-  var planePromises = [];
-  var defaultSOMInputs = [
-    'XXL-VLDL-L',
-    'XL-VLDL-L',
-    'L-VLDL-L',
-    'M-VLDL-L',
-    'S-VLDL-L',
-    'XS-VLDL-L',
-    'IDL-L',
-    'L-LDL-L',
-    'M-LDL-L',
-    'S-LDL-L',
-    'XL-HDL-L',
-    'L-HDL-L',
-    'M-HDL-L',
-    'S-HDL-L',
-    'Serum-C',
-    'Serum-TG',
-    'HDL-C',
-    'LDL-C',
-    'Glc',
-    'Cit',
-    'Phe',
-    'Gp',
-    'Tyr',
-    'FAw3toFA',
-    'FAw6toFA',
-    'SFAtoFA'
-    ];
-
-    var inputPromise = DatasetFactory.getVariableData(defaultVariables, $scope.windowHandler);
-
-    inputPromise.then( function() {
-
-      _.each( defaultVariables, function(variable) {
-        PlotService.drawHistogram({ pooled: undefined,  variables: { x: variable } }, windowHandler);
-      });
-
-    });
-
   }
 ]);
 

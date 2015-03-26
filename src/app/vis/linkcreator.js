@@ -16,29 +16,21 @@ mod.directive('linkCreator', ['$templateCache', '$compile', '$rootScope', '$inje
   }
 ]);
 
-mod.constant('linksAPI', {
-  shortener: {
-    url: 'https://www.googleapis.com/urlshortener/v1/url'
-  },
-  error: 'Creating a short link failed. Please try again.'
-});
+mod.controller('LinkCreatorController', ['$scope', 'UrlHandler', 'NotifyService', '$templateCache', '$http', '$location', '$timeout',
+  function LinkCreatorController($scope, UrlHandler, NotifyService, $templateCache, $http, $location, $timeout) {
+    $scope.stateLink = null;
 
-mod.controller('LinkCreatorController', ['$scope', 'UrlHandler', 'NotifyService', '$templateCache', '$http', 'linksAPI',
-  function LinkCreatorController($scope, UrlHandler, NotifyService, $templateCache, $http, linksAPI) {
-    $scope.currentUrl = document.URL;
-    $scope.short = null;
+    $scope.getStateLink = function() {
+      UrlHandler.create()
+      .then(function succFn(hash) {
+        $location.search('state', hash);
+        $scope.stateLink = $location.absUrl();
+        $location.url($location.path());
+      }, function errFn(res) {
+        NotifyService.addSticky('Error', 'The current state could not be saved. Please try again.', 'error', 
+          { referenceId: 'linkcreatorinfo' });
+      });
 
-    $scope.getShort = function() {
-      UrlHandler.create();
-      // $http.post(linksAPI.shortener.url, {
-      //   'longUrl': document.URL
-      // }) // returns promise
-      // .success(function(data) {
-      //   $scope.short = data.id;
-      // })
-      //   .error(function(data, status, headers, config) {
-      //     NotifyService.addTransient(linksAPI.error);
-      //   });
     };
 
   }

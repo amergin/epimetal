@@ -29,8 +29,10 @@
 
   var vis = {
     name: 'vis',
-    url: '/vis/',
+    url: '/vis/?state',
     abstract: true,
+    // don't reload state when query parameter is modified
+    reloadOnSearch: false,
     data: { pageTitle: 'Visualization' },
     // templateUrl: 'vis/vis.tpl.html',
     // important: the app will NOT change state to 'vis' until
@@ -40,18 +42,40 @@
       variables: ['DatasetFactory', function(DatasetFactory) {
         return DatasetFactory.getVariables();
       }],
-      datasets: ['DatasetFactory', function(DatasetFactory) {
+      datasets: ['DatasetFactory', '$stateParams', '$state', function(DatasetFactory, $stateParams, $state) {
         return DatasetFactory.getDatasets();
       }],
       compatibility: ['CompatibilityService', function(CompatibilityService) {
         return CompatibilityService.browserCompatibility();
       }],
-      dimensionServices: ['DimensionService', 'DatasetFactory', 'SOMService', function(DimensionService, DatasetFactory, SOMService) {
+      dimensionServices: ['DimensionService', 'DatasetFactory', 'SOMService', 'WindowHandler', function(DimensionService, DatasetFactory, SOMService, WindowHandler) {
+        console.log("!!Dimensions resolve called");
         var primary = DimensionService.create('vis.explore', true);
         DatasetFactory.setDimensionService(primary);
         var som = DimensionService.create('vis.som');
         SOMService.setDimensionService(som);
         var regression = DimensionService.create('vis.regression');
+
+        var exploreHandler = WindowHandler.create('vis.explore');
+        exploreHandler.setDimensionService( DimensionService.get('vis.explore') );
+
+        var somBottomHandler = WindowHandler.create('vis.som');
+        somBottomHandler.setDimensionService( DimensionService.get('vis.som') );
+
+        var somDistributionsHandler = WindowHandler.create('vis.som.distributions');
+        somDistributionsHandler.setDimensionService( DimensionService.get('vis.som') );
+
+        var somProfilesHandler = WindowHandler.create('vis.som.profiles');
+        somProfilesHandler.setDimensionService( DimensionService.get('vis.som') );
+
+        var regressionHandler = WindowHandler.create('vis.regression');
+        regressionHandler.setDimensionService( DimensionService.getPrimary() );
+
+      }],
+      loadState: ['UrlHandler', '$stateParams', 'variables', 'datasets', 'compatibility', 'dimensionServices', 
+      function(UrlHandler, $stateParams, variables, datasets, compatibility, dimensionServices) {
+        var stateHash = $stateParams.state;
+        return UrlHandler.load(stateHash);
       }]
     },
     views: {
@@ -64,18 +88,30 @@
         controller: 'HeaderCtrl'
       }
     }
+    // onEnter: ['$stateParams', '$state', '$injector', function($stateParams, $state, $injector) {
+    //   // var stateHash = $stateParams.state;
+    //   // if( _.isUndefined(stateHash) ) {
+    //   //   return;
+    //   // }
+    //   console.log("!!ONENTER called");
+    //   var UrlHandler = $injector.get('UrlHandler'),
+    //   stateHash = $stateParams.state;
+    //   UrlHandler.load(stateHash);
+    // }]
   };
 
   var explore = {
     name: 'vis.explore',
     url: 'explore',
     parent: 'vis',
+    reloadOnSearch: false,
     data: { pageTitle: 'Explore datasets and filter | Visualization' },
     resolve: {
       windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
-        var handler = WindowHandler.create('vis.explore');
-        handler.setDimensionService( DimensionService.get('vis.explore') );
-        return handler;
+        // var handler = WindowHandler.create('vis.explore');
+        // handler.setDimensionService( DimensionService.get('vis.explore') );
+        // return handler;
+        return WindowHandler.get('vis.explore');
       }]
     },
     views: {
@@ -97,13 +133,15 @@
     url: 'som',
     // parent: 'vis',
     // abstract: true,
+    reloadOnSearch: false,
     data: { pageTitle: 'Self-organizing maps | Visualization' },
     resolve: {
       // bottom portion of the page only!
       bottomWindowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
-        var handler = WindowHandler.create('vis.som');
-        handler.setDimensionService( DimensionService.get('vis.som') );
-        return handler;
+        // var handler = WindowHandler.create('vis.som');
+        // handler.setDimensionService( DimensionService.get('vis.som') );
+        // return handler;
+        return WindowHandler.get('vis.som');
       }]
     },
     views: {
@@ -123,22 +161,28 @@
         templateUrl: 'vis/som/som.bottom.content.tpl.html'
       }
     },
-    deepStateRedirect: true,
+    deepStateRedirect: {
+      default: { state: 'vis.som.profiles', params: {} },
+      params: ['state']
+    },
+    // deepStateRedirect: true,
     sticky: true
   };
   // abstract-like state, route elsewhere
-  $urlRouterProvider.when('/vis/som', '/vis/som/distributions');
+  // $urlRouterProvider.when('/vis/som', '/vis/som/distributions');
 
   var somDistributions = {
     name: 'vis.som.distributions',
     url: '/distributions',
     // parent: 'vis.som',
+    reloadOnSearch: false,
     data: { pageTitle: 'Compare distributions | Self-organizing maps | Visualization' },
     resolve: {
       windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
-        var handler = WindowHandler.create('vis.som.distributions');
-        handler.setDimensionService( DimensionService.get('vis.som') );
-        return handler;
+        // var handler = WindowHandler.create('vis.som.distributions');
+        // handler.setDimensionService( DimensionService.get('vis.som') );
+        // return handler;
+        return WindowHandler.get('vis.som.distributions');
       }]
     },
     views: {
@@ -162,9 +206,10 @@
     data: { pageTitle: 'Compare profiles | Self-organizing maps | Visualization' },
     resolve: {
       windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
-        var handler = WindowHandler.create('vis.som.profiles');
-        handler.setDimensionService( DimensionService.get('vis.som') );
-        return handler;
+        // var handler = WindowHandler.create('vis.som.profiles');
+        // handler.setDimensionService( DimensionService.get('vis.som') );
+        // return handler;
+        return WindowHandler.get('vis.som.profiles');
       }]
     },
     views: {
@@ -185,6 +230,7 @@
     name: 'vis.regression',
     url: 'regression',
     // parent: 'vis',
+    reloadOnSearch: false,
     data: { pageTitle: 'Regression analysis | Visualization' },
     views: {
       'submenu-regression@vis': {
@@ -198,9 +244,10 @@
     },
     resolve: {
       windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
-        var handler = WindowHandler.create('vis.regression');
-        handler.setDimensionService( DimensionService.getPrimary() );
-        return handler;
+        // var handler = WindowHandler.create('vis.regression');
+        // handler.setDimensionService( DimensionService.getPrimary() );
+        // return handler;
+        return WindowHandler.get('vis.regression');
       }]
     },
     sticky: true,
@@ -270,17 +317,12 @@
     $scope.usedVariables = $scope.dimensionService.getUsedVariables();
     $scope.activeVariables = $scope.dimensionService.getDimensions();
 
-    _.each( DatasetFactory.getSets(), function(set) {
-      set.toggle();
-      DatasetFactory.toggle(set);
-    });
-
-    $rootScope.$on('tab.changed', function(event, tabName) {
-      _.each( WindowHandler.getVisible(), function(hand) {
-        console.log("tab.changed triggered for", tabName);
-        // hand.redrawAll({ 'compute': false });
-      });
-    });
+    // $rootScope.$on('tab.changed', function(event, tabName) {
+    //   _.each( WindowHandler.getVisible(), function(hand) {
+    //     console.log("tab.changed triggered for", tabName);
+    //     // hand.redrawAll({ 'compute': false });
+    //   });
+    // });
 
 
 

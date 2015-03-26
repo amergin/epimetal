@@ -418,7 +418,7 @@ visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
 
       var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
         var retObj = _.chain($scope.window)
-        .pick(['type', 'grid', 'handler', 'variables', 'handler'])
+        .pick(['type', 'grid', 'handler', 'variables', 'pooled', 'handler'])
         .clone()
         .value();
 

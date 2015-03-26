@@ -30,7 +30,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
           .filter(function(s) {
             return _.some(hexagons, function(h) { 
               bmu = s.bmus.valueOf();
-              return (bmu.x == (h.j+1)) && (bmu.y == (h.i+1));
+              return (bmu.x == h.j) && (bmu.y == h.i);
             });
           })
           .value();
@@ -42,19 +42,52 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         .value();
       };
 
-      var deferred = $q.defer();
-      // fetches the data from API and adds it to dimensionservices
-      DatasetFactory.getVariableData(variables, windowHandler)
+
+      function fetchTotal(windowHandler) {
+        var def = $q.defer();
+        DatasetFactory.getVariableData(variables, windowHandler)
         .then(function() {
-          that.sampleDimension = windowHandler.getDimensionService().getSampleDimension();
+          var sampleDimension = windowHandler.getDimensionService().getSampleDimension();
           var retObject = {
-            circles: getSOMData(windowHandler),
+            // circles: getSOMData(windowHandler),
             total: {
-              samples: getRaw(that.sampleDimension.get().top(Infinity))
+              samples: getRaw(sampleDimension.get().top(Infinity))
             }
           };
-          deferred.resolve(retObject);
+          def.resolve(retObject);
+        }, function errFn() {
+          def.reject();
         });
+
+        return def.promise;
+      }
+
+      function fetchCircles(windowHandler) {
+        var def = $q.defer();
+        var somHandler = windowHandler.getService().get('vis.som');
+        DatasetFactory.getVariableData(variables, somHandler)
+        .then(function succFn(res) {
+          var sampleDimension = somHandler.getDimensionService().getSampleDimension();
+          var retObject = {
+            circles: getSOMData(somHandler)
+          };
+          def.resolve(retObject);
+        }, function errFn(res) {
+          def.reject();
+        });
+        return def.promise;
+      }
+
+      var deferred = $q.defer(),
+      promises = [fetchTotal(windowHandler), fetchCircles(windowHandler)];
+
+      $q.all(promises).then(function succFn(res) {
+        var combined = _.merge.apply(this, res);
+        deferred.resolve(combined);
+      }, function errFn() {
+        deferred.reject();
+      });
+
       return deferred.promise;
     };
 

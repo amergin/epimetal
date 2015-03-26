@@ -7,41 +7,6 @@ var vis =
     'services.som'
     ]);
 
-mod.run(['SOMService', 'DimensionService', function(SOMService, DimensionService) {
-
-  var defaultSOMInputs = [
-    'XXL-VLDL-L',
-    'XL-VLDL-L',
-    'L-VLDL-L',
-    'M-VLDL-L',
-    'S-VLDL-L',
-    'XS-VLDL-L',
-    'IDL-L',
-    'L-LDL-L',
-    'M-LDL-L',
-    'S-LDL-L',
-    'XL-HDL-L',
-    'L-HDL-L',
-    'M-HDL-L',
-    'S-HDL-L',
-    'Serum-C',
-    'Serum-TG',
-    'HDL-C',
-    'LDL-C',
-    'Glc',
-    'Cit',
-    'Phe',
-    'Gp',
-    'Tyr',
-    'FAw3toFA',
-    'FAw6toFA',
-    'SFAtoFA'
-    ];
-
-    SOMService.updateVariables(defaultSOMInputs);
-
-}]);
-
 mod.controller('SOMBottomMenuController', ['$scope', '$templateCache', '$rootScope', 'NotifyService', 'variables', 'DatasetFactory', 'SOMService', 'PlotService', 'bottomWindowHandler', '$timeout', 'DimensionService', 'FilterService',
   function SOMBottomMenuController($scope, $templateCache, $rootScope, NotifyService, variables, DatasetFactory, SOMService, PlotService, bottomWindowHandler, $timeout, DimensionService, FilterService) {
     $scope.windowHandler = bottomWindowHandler;

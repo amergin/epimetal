@@ -285,11 +285,11 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       if( $scope.window.somSpecial  ) {
         var name = 'total';
         var chart = dc.barChart($scope.histogram) //, constants.groups.histogram)
-.centerBar(true)
-.barPadding(0.15)
-.brushOn(true)
-.dimension($scope.totalDimension)
-.group(config.filter($scope.totalReduced, name), name)
+          .centerBar(true)
+          .barPadding(0.15)
+          .brushOn(true)
+          .dimension($scope.totalDimension)
+          .group(config.filter($scope.totalReduced, name), name)
           .valueAccessor(function(d) { // is y direction
             return d.value.counts[name];
           });
@@ -304,10 +304,11 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       $scope.histogram.compose(charts);
       $scope.histogram.render();
 
-      if( !_.isUndefined( $scope.window.filter ) ) {
+      if( !$scope.window.somSpecial && !_.isUndefined( $scope.window.filters ) && $scope.window.filters.length > 0) {
         $timeout( function() {
-          $scope.histogram.filter( $scope.window.filter );
-          $scope.histogram.redraw();
+          var filter = dc.filters.RangedFilter($scope.window.filters[0], $scope.window.filters[1]);
+          $scope.histogram.filter(filter);
+          $scope.histogram.render();
           $rootScope.$emit('scatterplot.redrawAll');
         });
       }
@@ -385,7 +386,7 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
         var retObj = _.chain($scope.window)
         .pick(['type', 'grid', 'somSpecial', 'pooled', 'variables', 'handler'])
         .clone()
-        .extend({ filters: $scope.histogram.filters() })
+        .extend({ filters: $scope.histogram.filters()[0] || [] })
         .value();
 
         callback(retObj);
@@ -393,30 +394,30 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
 
       $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind, gatherStateUnbind);
 
-$scope.$on('$destroy', function() {
-  console.log("destroying histogram for", $scope.window.variables.x);
-  _.each($scope.deregisters, function(unbindFn) {
-    unbindFn();
-  });
+      $scope.$on('$destroy', function() {
+        console.log("destroying histogram for", $scope.window.variables.x);
+        _.each($scope.deregisters, function(unbindFn) {
+          unbindFn();
+        });
 
-  $scope.groupInst.decrement();
-  if($scope.window.somSpecial) { $scope.totalGroupInst.decrement(); }
-  $scope.dimensionInst.decrement();
-});
+        $scope.groupInst.decrement();
+        if($scope.window.somSpecial) { $scope.totalGroupInst.decrement(); }
+        $scope.dimensionInst.decrement();
+      });
 
-ele.on('$destroy', function() {
-  $scope.$destroy();
-});
+      ele.on('$destroy', function() {
+        $scope.$destroy();
+      });
 
-}
+    }
 
-return {
-  scope: false,
-  restrict: 'C',
-  controller: 'HistogramPlotController',
-  link: {
-    post: postLink
+    return {
+      scope: false,
+      restrict: 'C',
+      controller: 'HistogramPlotController',
+      link: {
+        post: postLink
+      }
+    };
   }
-};
-}
-]);
+  ]);

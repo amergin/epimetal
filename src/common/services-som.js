@@ -1,7 +1,17 @@
 var mod = angular.module('services.som', ['services.dataset', 'services.dimensions', 'services.notify', 'services.tab']);
 
-mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', 'NotifyService', '$q', 'DatasetFactory', 'TabService',
-  function ($injector, $timeout, constants, $rootScope, NotifyService, $q, DatasetFactory, TabService) {
+mod.constant('PLANE_SIZE', { x: 9, y: 7 });
+mod.constant('SOM_DEFAULT_PLANES', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc']);
+mod.constant('SOM_DEFAULT_TESTVARS', 
+  ['XXL-VLDL-L', 'XL-VLDL-L', 'L-VLDL-L', 'M-VLDL-L', 
+    'S-VLDL-L', 'XS-VLDL-L', 'IDL-L', 'L-LDL-L',
+    'M-LDL-L', 'S-LDL-L', 'XL-HDL-L', 'L-HDL-L', 
+    'M-HDL-L', 'S-HDL-L', 'Serum-C', 'Serum-TG', 
+    'HDL-C', 'LDL-C', 'Glc', 'Cit', 'Phe', 'Gp', 'Tyr', 
+    'FAw3toFA', 'FAw6toFA', 'SFAtoFA']);
+
+mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', 'NotifyService', '$q', 'DatasetFactory', 'TabService', 'PLANE_SIZE', 'SOM_DEFAULT_PLANES', 'SOM_DEFAULT_TESTVARS',
+  function ($injector, $timeout, constants, $rootScope, NotifyService, $q, DatasetFactory, TabService, PLANE_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS) {
 
     var that = this;
 
@@ -10,13 +20,12 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
     this.trainSamples = [];
     that.inProgress = false;
     that.somSelection = {
-      variables: [],
+      variables: SOM_DEFAULT_TESTVARS,
       samples: undefined
     };
     that.SOMPlanes = {};
     that.dimensionService = undefined;
     that.sampleDimension = undefined;
-    that.defaultPlanes = ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'];
 
     var _colors = d3.scale.category10();
 
@@ -30,10 +39,12 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
       return that.bmus;
     };
 
-    service.defaultPlanes = function(x) {
-      if(!arguments.length) { return that.defaultPlanes; }
-      that.defaultPlanes = x;
-      return service;
+    service.defaultPlanes = function() {
+      return SOM_DEFAULT_PLANES;
+    };
+
+    service.planeSize = function() {
+      return PLANE_SIZE;
     };
 
     service.getSomId = function() {
@@ -47,10 +58,10 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
     };
 
     service.updateVariables = function(variables, windowHandler) {
-      var currNotEmpty = !_.isUndefined(that.somSelection.variables) && that.somSelection.variables.length > 0,
+      var currEmpty = _.isUndefined(that.somSelection.variables) || that.somSelection.variables.length === 0,
       sameVariables = _.difference(variables, that.somSelection.variables).length === 0;
 
-      if( sameVariables && currNotEmpty ) {
+      if( sameVariables && !currEmpty ) {
         return;
       }
       that.somSelection['variables'] = variables;
@@ -133,7 +144,7 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
         var skipNaNs = false;
         var data = getData(skipNaNs);
         that.trainSamples = data.samples;
-        that.som = SOM.create(7, 9, data.samples, data.columns);
+        that.som = SOM.create(PLANE_SIZE.y, PLANE_SIZE.x, data.samples, data.columns);
 
         var parallel = new Parallel(that.som, {
           evalPath: 'assets/threads/eval.js'

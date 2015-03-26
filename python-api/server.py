@@ -9,11 +9,15 @@ from flask.ext.mongoengine import MongoEngine
 
 import json
 
-from orm_models import Sample, HeaderSample, HeaderGroup
+from orm_models import Sample, HeaderSample, HeaderGroup, BrowsingState
 from flask_sockets import Sockets
 
 import io
 from base64 import b64decode
+
+import random
+from hashids import Hashids
+import hashlib
 
 app = Flask(__name__)
 config = Config('setup.config')
@@ -50,6 +54,14 @@ def _getModifiedParameters(variables):
 	for var in variables:
 		ret.append( prefix + var )
 	return ret
+
+def _getUrlSalt():
+	ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	return ''.join(random.choice(ALPHABET) for i in range(24))
+
+# run-based hash -> always unique
+URL_SALT = _getUrlSalt()
+hashids = Hashids(salt=URL_SALT)
 
 @app.route( config.getFlaskVar('prefix') + 'headers/NMR_results', methods=['GET'])
 def headers():
@@ -88,6 +100,147 @@ def headers():
 		response.status_code = 200
 		return response
 
+
+@app.route( config.getFlaskVar('prefix') + 'state/<hashId>', methods=['GET'] )
+def state(hashId):
+	def getError():
+		resp = flask.jsonify({
+		'success': 'false',
+		'query': request.path,
+		'result': { 'error': 'Hash not found' }
+		})
+		resp.status_code = 400
+		return resp
+
+	try:
+		if len(hashId) > 50:
+			return getError()
+		state = BrowsingState.objects.exclude('_id').exclude('stateHash').get(urlHash=hashId)
+		response = { 
+		'success': 'true',
+		'query': request.path,
+		'result': json.loads(state.to_json())
+		}
+		response = flask.jsonify(response)
+		response.status_code = 200
+		return response
+	except Exception, e:
+		print "exception", e
+		return getError()
+
+
+@app.route( config.getFlaskVar('prefix') + 'state', methods=['POST'] )
+def postState():
+	def getError():
+		resp = flask.jsonify({
+		'success': 'false',
+		'query': request.path,
+		'result': { 'error': 'Invalid query syntax.' }
+		})
+		resp.status_code = 400
+		return resp
+
+	def validDatasets(sets):
+		uniqueDatasets = Sample.objects.distinct('dataset')
+		atLeastOneSet = len(sets) > 0
+		for s in sets:
+			if not s in uniqueDatasets:
+				return False
+		print "validDatasets = ", uniqueDatasets
+		return atLeastOneSet
+
+	def validSOM(som, datasets):
+		def validSize(size):
+			val = isinstance(size, dict) and \
+			size.get('x') and isinstance(size.get('x'), int) and \
+			size.get('y') and isinstance(size.get('y'), int)
+			print "validSize = ", val
+			return val
+
+		def validSamples(bmus, datasets, size):
+			try:
+				for bmu in bmus:
+					x = bmu.get('x')
+					y = bmu.get('y')
+					sample = bmu.get('sample')
+					sampId = sample.get('sampleid')
+					validSet = sample.get('dataset') in datasets
+					if validSet and sample and sampId and (x <= size.get('x')) and (y <= size.get('y')):
+						# valid
+						pass
+					else:
+						return False
+				return True
+			except Exception, e:
+				return False
+
+		bmus = som.get('bmus')
+		planeSize = som.get('size')
+		return isinstance(som, dict) and \
+		isinstance(bmus, list) and \
+		validSize(planeSize) and \
+		validSamples(bmus, datasets, planeSize)
+
+	def validViews(views):
+		return True
+
+	def getViewSize(views):
+		ret = []
+		for view in views:
+			ret.append(len(view.get('figures')))
+		return ret
+
+	def getHash(stateDict):
+		stateString = json.dumps(stateDict, sort_keys=True, ensure_ascii=True, separators=(',',':'))
+		return hashlib.md5(stateString).hexdigest()
+
+	try:
+		payload = request.get_json()
+		activeState = payload.get('activeState')
+		datasets = payload.get('datasets')
+		sampleCount = payload.get('sampleCount')
+		som = payload.get('som')
+		views = payload.get('views')
+
+		print "validSOM = ", validSOM(som, datasets)
+
+		# check input validity
+		if validDatasets(datasets) and validSOM(som, datasets) and validViews(views):
+			# form the hash
+			stateHash = getHash(payload)
+			urlHash = None
+			try:
+				# try to fetch old one, if any
+				state = BrowsingState.objects.get(stateHash__exact=stateHash)
+				urlHash = state['urlHash']
+			except Exception, e:
+				# failed, does not exist
+				print "failed, does not exist"
+				viewSize = getViewSize(views)
+				urlHash = hashids.encode(sampleCount, len(som.get('bmus')), *viewSize)				
+				state = BrowsingState(urlHash=urlHash, stateHash=stateHash, activeState=activeState, \
+					datasets=datasets, som=som, sampleCount=sampleCount, views=views)
+				state.save()
+			finally:
+				response = { 
+				'success': 'true',
+				'query': request.path,
+				'result': urlHash
+				}
+				response = flask.jsonify(response)
+				response.status_code = 200
+				return response
+		else:
+			print "no except, but not valid"
+			return getError()
+	except Exception, e:
+		print "exception occured", e
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+		print(exc_type, fname, exc_tb.tb_lineno)
+		return getError()
+
+
 @app.route( config.getFlaskVar('prefix') + 'datasets', methods=['GET'] )
 def datasets():
 	def _getDatasetDetails(name):
@@ -103,7 +256,6 @@ def datasets():
 
 @app.route( config.getFlaskVar('prefix') + 'export/svg', methods=['POST'] )
 def exportSVG():
-
 	suffix = '.svg'
 	filename = request.form.get('filename', 'export') + suffix
 	try:

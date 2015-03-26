@@ -91,8 +91,8 @@ module.exports = {
       'vendor/angular-ui-router/release/angular-ui-router.js',
       'vendor/ui-router-extras/release/ct-ui-router-extras.js',
       'vendor/angular-ui-utils/modules/route/route.js',
-      'vendor/crossfilter/crossfilter-new-unmodified.js',
-      //'vendor/crossfilter/crossfilter.new.js',//crossfilter.custom.old.js', //crossfilter.custom.js',
+      // 'vendor/crossfilter/crossfilter-new-unmodified.js',
+      'vendor/crossfilter/crossfilter.new.js',//crossfilter.custom.old.js', //crossfilter.custom.js',
       'vendor/d3/d3.js',
       'vendor/dcjs/dc.js',
       'vendor/d3-tip/index.js',
@@ -118,9 +118,9 @@ module.exports = {
       'vendor/statistics-distributions-js/statistics-distributions-packaged.js',
       'vendor/hor-boxplot/horizontalboxplot.js',
       'vendor/SOM.js/SOM.js',
-      'vendor/ngprogress/build/ngProgress.js'
+      'vendor/ngprogress/build/ngProgress.js',
+      'vendor/spark-md5/spark-md5.js'
       // 'vendor/mathjs/dist/math.js'
-      // 'vendor/spark-md5/spark-md5.min.js'
     ],
     css: [
       'vendor/dcjs/dc.css',

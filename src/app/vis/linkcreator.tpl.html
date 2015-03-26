@@ -2,20 +2,14 @@
 	<div class="arrow"></div>
 	<h3 class="popover-title" ng-bind-html="title" ng-show="title"></h3>
 	<div class="popover-content">
+		<div growl inline="true" limit-messages="1" reference="linkcreatorinfo" class="am-fade container-fluid"></div>
 		<div class="container-fluid">
 			<form role="form">
 				<div class="row">
 					<div class="form-group col-sm-12">
-						<label for="longurl">Current URL</label>
-						<textarea select-on-click class="form-control" rows="3" id="longurl">{{currentUrl}}</textarea>
-					</div>
-				</div>
-				<div class="row">
-					<div class="form-group col-sm-12">
-						<label for="shorturl">Short Link</label>
 						<p>
-							<button href="" type="button" class="btn btn-primary" ng-click="getShort()" ng-show="!short">Create a short link</button>
-							<input ng-show="short" select-on-click type="text" class="form-control" placeholder="" value="{{short}}">
+							<button href="" type="button" class="btn btn-primary" ng-click="getStateLink()" ng-show="!stateLink">Create a link to this view</button>
+							<textarea ng-show="stateLink" select-on-click class="form-control" rows="3" id="longurl">{{stateLink}}</textarea>
 						</p>
 					</div>
 				</div>

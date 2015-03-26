@@ -19,6 +19,44 @@ var visu = angular.module('plotter.vis.plotting',
 visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'NotifyService', 'SOMService', '$q', 'RegressionService', 'TabService',
   function($injector, DimensionService, DatasetFactory, NotifyService, SOMService, $q, RegressionService, TabService) {
 
+    var that = this;
+
+    // function that determines which drawing function should be called based on the figure type.
+    // used by urlhandler
+    this.draw = function(type, config, windowHandler) {
+      var callFn = null;
+      switch(type) {
+        case 'scatterplot':
+          callFn = that.drawScatter;
+          break;
+
+        case 'histogram':
+          callFn = that.drawHistogram;
+          break;
+
+        case 'heatmap':
+          callFn = that.drawHeatmap;
+          break;
+
+        case 'profile-histogram':
+          callFn = that.drawProfileHistogram;
+          break;
+
+        case 'somplane':
+          callFn = that.drawSOM;
+          break;
+
+        case 'regression-plot':
+          callFn = that.drawRegression;
+          break;
+
+        default:
+          throw new Error('Undefined plot type');
+      }
+
+      return callFn.apply(this, Array.prototype.slice.call(arguments,1));
+    };
+
     this.drawScatter = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
         var type = 'scatterplot';
@@ -27,11 +65,13 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         windowHandler.add(config);
       };
 
+      var defer = $q.defer();
 
       var plottingDataPromise = DatasetFactory.getVariableData([config.variables.x, config.variables.y], windowHandler);
       plottingDataPromise.then(function successFn(res) {
           // draw the figure
           draw(config, windowHandler);
+          defer.resolve();
         },
         function errorFn(variable) {
           NotifyService.closeModal();
@@ -40,8 +80,10 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           message = 'Please check the selected combination is valid for the selected datasets.',
           level = 'danger';
           NotifyService.addTransient(title, message, level);
+          defer.reject();
         });
 
+      return defer.promise;
     };
 
     this.drawHistogram = function(config, windowHandler) {
@@ -65,7 +107,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         windowHandler.add(config);
       };
 
-      NotifyService.addSpinnerModal('Loading...');//, _callback);
+      var defer = $q.defer();
 
       var promises = [];
       var plottingDataPromise = DatasetFactory.getVariableData([config.variables.x], windowHandler);
@@ -85,6 +127,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           // draw the figure
           NotifyService.closeModal();
           draw(config, windowHandler);
+          defer.resolve();
         },
         function errorFn(variable) {
           NotifyService.closeModal();
@@ -93,7 +136,9 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           message = 'Please check the selected combination is valid for the selected datasets.',
           level = 'danger';
           NotifyService.addTransient(title, message, level);
+          defer.reject();
         });
+      return defer.promise;
     };
 
     this.drawHeatmap = function(config, windowHandler) {
@@ -104,7 +149,8 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         windowHandler.add(config);
       };
 
-      // NotifyService.addSpinnerModal('Loading...');//, _callback);
+      var defer = $q.defer();
+
       var title = "Loading correlation plot",
       message = 'Please wait',
       level = 'info';
@@ -116,6 +162,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           // draw the figure
           // NotifyService.closeModal();
           draw(config, windowHandler);
+          defer.resolve();
         },
         function errorFn(variable) {
           // NotifyService.closeModal();
@@ -124,12 +171,13 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           message = 'Please check the selected combination is valid for the selected datasets.',
           level = 'danger';
           NotifyService.addTransient(title, message, level);
+          defer.reject();
         })
       .finally(function() {
         // release tab change lock
         TabService.lock(false);
       });
-
+      return defer.promise;
     };
 
     this.drawProfileHistogram = function(config, windowHandler) {
@@ -144,7 +192,8 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         windowHandler.add(config);
       };
 
-      NotifyService.addSpinnerModal('Loading...');//, _callback);
+      var defer = $q.defer();
+
       // will need the data for the SOM dimensionservice 
       var promiseSOM = DatasetFactory.getVariableData(config.variables.x, windowHandler);
       // also for primary, for computing std etc. values
@@ -156,6 +205,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           NotifyService.closeModal();
           windowHandler.spinAll();
           draw(config, windowHandler);
+          defer.resolve();
         },
         function errorFn(variable) {
           NotifyService.closeModal();
@@ -164,10 +214,12 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           message = 'Please check the selected combination is valid for the selected datasets.',
           level = 'danger';
           NotifyService.addTransient(title, message, level);
+          defer.reject();
         })
         .finally( function() {
           windowHandler.stopAllSpins();
         });
+        return defer.promise;
     };
 
     this.drawSOM = function(config, windowHandler) {
@@ -177,21 +229,27 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         windowHandler.add(config);
       };
 
+      var defer = $q.defer();
+
       NotifyService.addTransient('Starting plane computation', 'The computation may take a while.', 'info');
       SOMService.getPlane(config.variables.x, windowHandler).then(
         function succFn(res) {
           NotifyService.addTransient('Plane computation ready', 'The requested new plane has now been drawn.', 'success');
           config['plane'] = res.plane;
           draw(config, windowHandler);
+          defer.resolve();
         },
         function errFn(res) {
           NotifyService.addTransient('Plane computation failed', res, 'error');
-        }
-      );
+          defer.reject();
+        });
+      return defer.promise;
     };
 
     // this should only be called once, otherwise duplicate charts will appear on the handler
     this.drawRegression = function(config, windowHandler) {
+      var defer = $q.defer();
+
       NotifyService.addTransient('Regression analysis started', 'Regression analysis computation started.', 'info');
       RegressionService.compute(config, windowHandler).then( function succFn(result) {
         NotifyService.addTransient('Regression analysis completed', 'Regression computation ready.', 'success');
@@ -200,11 +258,14 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           type: 'regression-plot'
         };
         windowHandler.add(config);
-        
+        defer.resolve();        
       }, function errFn(result) {
         var message = result.result[0].result.reason;
         NotifyService.addSticky('Regression analysis failed', message, 'error');
+        defer.reject();
       });
+
+      return defer.promise;
     };
 
   }

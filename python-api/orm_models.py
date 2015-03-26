@@ -43,3 +43,20 @@ class HeaderSample(Document):
 	'db_alias': 'samples'		
 	}
 
+
+class BrowsingState(DynamicDocument):
+	urlHash = StringField(required=True, unique=True, max_length=50)
+	stateHash = StringField(required=True, unique=True, max_length=50)
+	activeState = StringField(unique=False, max_length=30)
+	datasets = ListField(StringField(max_length=50))
+	sampleCount = IntField(required=True)
+	views = ListField(required=True)
+	som = DictField(required=True)
+
+	meta = {
+		'indexes': [
+			{'fields': ['urlHash'], 'unique': True },
+			{'fields': ['stateHash'], 'unique': True }
+		],
+	'db_alias': 'samples'		
+	}

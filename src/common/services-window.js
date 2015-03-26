@@ -42,8 +42,9 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
 
       this.add = function(config) {
         var id = _.uniqueId('win_');
-        windows.push( angular.extend(
-          config, 
+        // provide only default values, if url router
+        // has provided some of these, don't override
+        windows.push( _.defaults(config,
           { '_winid': id, 
           handler: that,
           grid: {
@@ -162,9 +163,11 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
 
     return  {
       create: function(name) {
-        var handler = new WindowHandler(name);
-        _handlers[name] = handler;
-        return handler;
+        if(_.isUndefined(_handlers[name])) {
+          var handler = new WindowHandler(name);
+          _handlers[name] = handler;
+        }
+        return _handlers[name];
       },
       get: function(name) {
         return _handlers[name];
@@ -179,19 +182,19 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         return _handlers;
       },
       // redraws all visible handlers
-      reRenderVisible: function(config) {
+      reRenderVisible: _.debounce(function(config) {
         var visibles = this.getVisible();
         _.each(visibles, function(hand) {
           hand.rerenderAll(config);
         });
-      },
+      }),
 
-      redrawVisible: function() {
+      redrawVisible: _.debounce(function() {
         var visibles = this.getVisible();
         _.each( visibles, function(hand) {
           hand.redrawAll();
         });
-      },
+      }),
       
       getVisible: function() {
         var res = [];

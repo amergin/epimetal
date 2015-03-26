@@ -34,16 +34,13 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
       DatasetFactory.checkActiveVariables(set).then( function succFn(res) {
 
         if( res === 'enabled' || res === 'disabled' ) {
-          // internally, this updates the dataset dimension 
-          // filter to include only the active ones
-          // Therefore, this is different from set.toggle() !!!
-          DatasetFactory.toggle(set);
+          DatasetFactory.updateDataset(set);
 
           // important!
           WindowHandler.reRenderVisible({ compute: true, dset: set, action: res });
         }
         else if( res === 'empty' ) {
-          DatasetFactory.toggle(set);
+          DatasetFactory.updateDataset(set);
         }
 
       }, function errFn(variable) {

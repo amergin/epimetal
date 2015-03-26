@@ -10,7 +10,7 @@ var App = angular.module('plotter', [
   'ngSanitize', 
   'ngAnimate',
   'angularSpinner'
-]);
+  ]);
 
 App.constant('constants', {
   nanValue: -1000,
@@ -39,8 +39,8 @@ App.constant('constants', {
   }
 });
 
-App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', '$injector', '$stickyStateProvider', '$locationProvider',
-  function ($stateProvider, $urlRouterProvider, $httpProvider, $injector, $stickyStateProvider, $locationProvider) {
+App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStateProvider', '$locationProvider', '$futureStateProvider',
+  function ($stateProvider, $urlRouterProvider, $injector, $stickyStateProvider, $locationProvider, $futureStateProvider) {
 
     $locationProvider
     // .html5Mode(true)
@@ -55,38 +55,16 @@ App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', '$injector'
 
     $stickyStateProvider.enableDebug(true);
 
-
-    // introduce response interceptor: logic for accepting/rejecting
-    // promises app-wide. This is used to redirect to login when
-    // unauth'd usage of the api occurs.
-    // see http://arthur.gonigberg.com/2013/06/29/angularjs-role-based-auth/
-    var errorInterceptor = function ($q, $location, NotifyService) {
-      var successFn = function (response) {
-        return response;
-      };
-
-      var errorFn = function (response) {
-        if (response.status === 403) {
-          $location.path('/login/');
-        }
-        return $q.reject(response);
-      };
-
-      // return the success/error functions
-      return function (promise) {
-        return promise.then(successFn, errorFn);
-      };
-
-    };
-    errorInterceptor.$inject = ['$q', '$location', 'NotifyService'];
-
-    $httpProvider.responseInterceptors.push(errorInterceptor);
+    // see https://github.com/christopherthielen/ui-router-extras/issues/138
+    $futureStateProvider.addResolve(function($q) { 
+      return $q.reject();
+    });
   }
-])
-  .run(['$rootScope', '$state', '$stateParams', '$location',
-    function ($rootScope, $state, $stateParams, $location) {
-      $rootScope.$state = $state;
-      $rootScope.$stateParams = $stateParams;
+  ])
+    .run(['$rootScope', '$state', '$stateParams', '$location',
+      function ($rootScope, $state, $stateParams, $location) {
+        $rootScope.$state = $state;
+        $rootScope.$stateParams = $stateParams;
 
       // debug ui-router
       // $rootScope.$on('$stateChangeStart',function(event, toState, toParams, fromState, fromParams){
@@ -111,8 +89,8 @@ App.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', '$injector'
       //   console.log(unfoundState, fromState, fromParams);
       // });
 
-    }
-  ]);
+}
+]);
 
 App.controller('AppCtrl', ['$scope', '$location', '$templateCache', 'CompatibilityService', 'NotifyService', 'usSpinnerService',
   function AppCtrl($scope, $location, $templateCache, CompatibilityService, NotifyService, usSpinnerService) {
@@ -142,7 +120,7 @@ App.controller('AppCtrl', ['$scope', '$location', '$templateCache', 'Compatibili
     // $scope.compatible = CompatibilityService.isCompatible();
 
   }
-]);
+  ]);
 
 
 // see http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs

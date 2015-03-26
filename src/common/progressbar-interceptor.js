@@ -1,6 +1,6 @@
 var mod = angular.module('progressBarInterceptor', ['ngProgress']);
 
-mod.factory('progressBarInterceptor', ['$injector', function($injector) {  
+mod.factory('progressBarInterceptor', ['$injector', '$q', function($injector, $q) {  
   var progressBarInterceptor = {
     request: function(config) {
       $injector.invoke(function(ngProgress, $templateCache) {
@@ -9,16 +9,29 @@ mod.factory('progressBarInterceptor', ['$injector', function($injector) {
           ngProgress.start();
         }
       });
-      return config;
-    }, 
+      return config || $q.when(config);
+    },
+    requestError: function(rejection) {
+      $injector.invoke(function(ngProgress) {
+        ngProgress.complete();
+      });
+      return $q.reject(rejection);
+    },
     response: function(response) {
       $injector.invoke(function(ngProgress, $templateCache) {
         if( $templateCache.get(response.config.url) === undefined ) {
           ngProgress.complete();
         }
       });
-      return response;
+      return response || $q.when(response);
+    },
+    responseError: function(rejection) {
+      $injector.invoke(function(ngProgress) {
+        ngProgress.complete();
+      });
+      return $q.reject(rejection);
     }
+
   };
   return progressBarInterceptor;
 }]);

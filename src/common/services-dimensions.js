@@ -627,15 +627,15 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
 
         // with vanilla crossfilter
         console.log("Crossfilter instance rebuild called on", this.getName());
-        this.clearFilters();
-        crossfilterInst.remove();
-        crossfilterInst.add(_.values(currSamples));
-        addFilterFunctions();
-        addHistogramFilters();
+        // this.clearFilters();
+        // crossfilterInst.remove();
+        // crossfilterInst.add(_.values(currSamples));
+        // addFilterFunctions();
+        // addHistogramFilters();
 
         // with forked crossfilter:
-        // crossfilterInst.remove(function() { return false; });
-        // crossfilterInst.add(_.values(currSamples));
+        crossfilterInst.remove(function() { return false; });
+        crossfilterInst.add(_.values(currSamples));
         // $injector.get('WindowHandler').reRenderVisible({ compute: true });
       };
 

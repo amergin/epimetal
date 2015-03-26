@@ -243,13 +243,9 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           });
 
           $scope.updateFilter(hexagons, circleId);
-
-          // var deb = _.debounce( $scope.updateFilter, 300 );
-          // deb(hexagons, circleId);
-          // $scope.updateFilter(hexagons, circleId);
         };
 
-        var resolveArea = _.throttle( resolveAreaCells, 900, { leading: false });
+        var resolveArea = _.debounce( resolveAreaCells, 400 );
 
         var innerDragMove = function(d) {
           var x = Math.max(0, Math.min(width -margin.left - margin.right + d.r, d3.event.x)),
@@ -308,7 +304,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         .attr('r', function(d) { return d.r; })
         .attr('fill', 'lightgray')
         .style('fill-opacity', 0)
-        .call( innerCircleDrag );
+        .call(innerCircleDrag);
 
         var circleText = circleAnchor
         .append('text')
@@ -354,8 +350,11 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         .attr('cursor', 'ew-resize')
         .call( outerCircleDrag );
 
-        // resolve intitial
+        // resolve initial
         resolveArea( innerCircle.data()[0], null );
+        // place initial position & radius
+        circle.position(innerCircle.data()[0]);
+        circle.radius(innerCircle.data()[0].r);
 
       }; // addcircle
 
