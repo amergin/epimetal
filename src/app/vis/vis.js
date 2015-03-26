@@ -314,16 +314,7 @@
 
 
     // for debugging
-    $scope.usedVariables = $scope.dimensionService.getUsedVariables();
+    // $scope.usedVariables = $scope.dimensionService.getUsedVariables();
     $scope.activeVariables = $scope.dimensionService.getDimensions();
-
-    // $rootScope.$on('tab.changed', function(event, tabName) {
-    //   _.each( WindowHandler.getVisible(), function(hand) {
-    //     console.log("tab.changed triggered for", tabName);
-    //     // hand.redrawAll({ 'compute': false });
-    //   });
-    // });
-
-
 
   }]);

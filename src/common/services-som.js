@@ -23,7 +23,6 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
       variables: SOM_DEFAULT_TESTVARS,
       samples: undefined
     };
-    that.SOMPlanes = {};
     that.dimensionService = undefined;
     that.sampleDimension = undefined;
 
@@ -196,20 +195,11 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
       return defer.promise;
     };
 
+    function somNotComputed() {
+      return _.isEmpty(that.trainSamples) || _.isEmpty(that.som);
+    }
+
     service.getPlane = function(testVar, windowHandler) {
-      TabService.lock(true);
-      var defer = $q.defer();
-      that.inProgress = true;
-
-      // important: without clearing filters there's a risk only the sample that
-      // are within the circles get passed
-      windowHandler.getDimensionService().clearFilters();
-
-      DatasetFactory.getVariableData([testVar], windowHandler)
-      .then(function succFn(res) {
-        doCall();
-      });
-
       function getThreadData(variable, skipNaNs) {
         function inTrainSamples(sample) {
           return _.any(that.trainSamples, function(d) { return _.isEqual(d, sample); });
@@ -268,7 +258,32 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
           that.inProgress = false;
           defer.reject('Plane computation of variable ' + testVar + ' failed');
         });
+      }
 
+      function startPlaneComputation(testVar) {
+        TabService.lock(true);
+        that.inProgress = true;
+
+        // important: without clearing filters there's a risk only the sample that
+        // are within the circles get passed
+        windowHandler.getDimensionService().clearFilters();
+
+        DatasetFactory.getVariableData([testVar], windowHandler)
+        .then(function succFn(res) {
+          doCall();
+        });
+      }
+
+      var defer = $q.defer();
+
+      if( somNotComputed() ) {
+        service.getSOM(windowHandler).then(function succFn(res) {
+          startPlaneComputation(testVar);
+        }, function errFn(res) {
+          defer.reject();
+        });
+      } else {
+        startPlaneComputation(testVar);
       }
 
       return defer.promise;

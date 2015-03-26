@@ -14,7 +14,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
       var dispSamples = {};
 
       // keep a record of added vars so dummy work is avoided
-      var usedVariables = {};
+      // var usedVariables = {};
 
       // initialized when samples arrive
       var crossfilterInst = null;
@@ -527,8 +527,9 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         // this.updateDatasetDimension();
       };
 
-      // receives new variable data
-      this.addVariableData = function (variable, samples) {
+      // receives new variable data. The function is called once for each dataset
+      // receiving data, and therefore the additions have to operate on a dataset-basis
+      this.addVariableData = function(samples, dataset) {
 
         var addSamples;
 
@@ -544,39 +545,48 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         }
 
         var dataWasAdded = true;
-        usedVariables[variable] = true;
+        // usedVariables[variable] = true;
 
-        _.every(addSamples, function (samp) {
+        if( !dataset.unread() ) {
+          dataWasAdded = false;
+          // nothing to do
+        }
+        else {
+          _.every(addSamples, function (samp) {
 
-          var key = _getSampleKey(samp.dataset, samp.sampleid);
+            var key = _getSampleKey(samp.dataset, samp.sampleid);
 
-          if (_.isUndefined(currSamples[key])) {
-            // sample has not been previously seen
-            currSamples[ key ] = samp;
-            currSamples[ key ]['bmus'] = {};
-          } else {
-            if( _.isUndefined( currSamples[key].variables ) ) {
-              // for some reason the variables is empty (unlikely)
-              currSamples[key].variables = {};
-            }
-            if( !_.isUndefined( currSamples[key].variables[ variable ] ) ) {
-              // defined and nothing to add
-              var DatasetFactory = $injector.get('DatasetFactory');
-              var dset = DatasetFactory.getSet(samp.dataset);
-              if( dset.unread() ) {
-                // newly-added data is present.
-                dset.unread(false);
-              } else {
-                // nothing new
-                dataWasAdded = false;
+            if (_.isUndefined(currSamples[key])) {
+              // sample has not been previously seen
+              currSamples[ key ] = samp;
+              currSamples[ key ]['bmus'] = {};
+            } else {
+              if( _.isUndefined( currSamples[key].variables ) ) {
+                // for some reason the variables is empty (unlikely)
+                currSamples[key].variables = {};
               }
-              return false; // stop iteration
-            }
 
-            angular.extend( currSamples[key].variables, samp.variables );
-          }
-          return true;
-        });
+              // extend and overwrite keys if not present
+              _.extend(currSamples[key].variables, samp.variables);
+              // variable is already defined for this dataset, do nothing
+              // if( !_.isUndefined( currSamples[key].variables[ variable ] ) ) {
+              //   if( dataset.unread() ) {
+              //     // newly-added data is present.
+              //     dset.unread(false);
+
+              //   } else {
+              //     // nothing new
+              //     dataWasAdded = false;
+              //   }
+              //   return false; // stop iteration
+              // }
+
+              // angular.extend( currSamples[key].variables, samp.variables );
+            }
+            return true;
+          });
+        }
+        dataset.unread(false);
         return dataWasAdded;
       };
 
@@ -646,9 +656,9 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
       // - plot something else involving variable C
       // now usedVariables would have A,B,C but only C is an *active* variable
       // This is because the once-fetched sample data is not purged, only the dimension
-      this.getUsedVariables = function() {
-        return usedVariables;
-      };
+      // this.getUsedVariables = function() {
+      //   return usedVariables;
+      // };
 
       this.getDimensions = function() {
         return dimensions;

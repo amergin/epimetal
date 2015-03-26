@@ -89,6 +89,56 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
           return defer.promise;
         };
 
+        function loadVariables(stateObj) {
+          var defer = $q.defer(),
+          promises = [];
+
+          var fetches = _.chain(stateObj.views)
+          .groupBy(function(view) {
+            return WindowHandler.get(view.name).getDimensionService().getName();
+          })
+          .map(function(views, somServiceName) {
+            var handler,
+            fetchVariables = _.chain(views)
+            .map(function(v) { return v.figures; })
+            .flatten()
+            .map(function(fig) { 
+              handler = fig.handler;
+              var isRegression = (fig.type == 'regression-plot');
+              if(isRegression) { return fig.computation.input; }
+              else {
+                return fig.variables;
+              }
+            })
+            .map(function(d) { 
+              return _.chain(d)
+              .pick('x', 'y', 'adjust', 'association', 'target')
+              .values()
+              .value();
+            })
+            .flattenDeep()
+            .value();
+
+            return {
+              handler: WindowHandler.get(handler),
+              variables: fetchVariables,
+              service: DimensionService.get(somServiceName)
+            };
+          })
+          .value();
+
+          _.each(fetches, function(obj) {
+            promises.push(DatasetFactory.getVariableData(obj.variables, obj.handler));
+          });
+
+          $q.all(promises).then(function succFn(res) {
+            defer.resolve();
+          }, function errFn(res) {
+            defer.reject();
+          });
+          return defer.promise;
+        }
+
         function addFigures(stateObj) {
           function addView(view, promises) {
             _.each(view.figures, function(figure) {
@@ -181,14 +231,22 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
         var defer = $q.defer();
 
         getState(hash).then(function succFn(stateObj) {
+
           selectDatasets(stateObj.datasets);
           loadSOM(stateObj);
-          addFigures(stateObj).then(function succFn() {
-            defer.resolve();
+          loadVariables(stateObj).then(function succFn() {
+            $timeout(function() {
+              addFigures(stateObj).then(function succFn() {
+                defer.resolve();
+              }, function errFn() {
+                defer.reject();
+              });
+            });
+
           }, function errFn() {
             defer.reject();
           });
-          defer.resolve();
+
         }, function errFn(result) {
           defer.reject();
         });
@@ -268,9 +326,15 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
           defer.resolve({ result: 'hash_success' });
         }, function errFn() {
           NotifyService.addSticky('Error', 
-            'Loading the state from the provided URL failed. Please check the link you followed', 
+            'Loading the state from the provided URL failed. Please check the link you followed.', 
             'error');
-          defer.resolve({ result: 'hash_failed' });
+          loadDefaultView().then(function succFn() {
+            console.log("default view loaded successfully");
+            defer.resolve({ result: 'default_success' });
+          }, function errFn() {
+            NotifyService.addSticky('Error', 'Loading the default figures failed.', 'error');
+            defer.resolve({ result: 'default_failed'});
+          });
         })
         .finally(function() {
           removeHash();

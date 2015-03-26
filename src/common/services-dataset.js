@@ -132,7 +132,11 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
               });
 
               // send the received data to dimension, to be further added to crossfilter instance
-              defer.resolve(response.result.values);
+              defer.resolve({
+                samples: response.result.values,
+                newVariables: vars,
+                dataset: dset
+              });
             })
             .error(function(response, status, headers, config) {
               defer.reject(response);
@@ -155,7 +159,11 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         } 
         else if( _.isEmpty(newVariables) ) {
           // nothing to done, everything already fetched
-          defer.resolve();
+          defer.resolve({
+            samples: [],
+            newVariables: newVariables,
+            dataset: dset
+          });
         } else {
           // fetch new variables
           performPost(newVariables);
@@ -274,19 +282,23 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         // var promises = [];
         var dataWasAdded = false;
 
-        set.getVarSamples(activeVars).then(function sucFn(samples) {
+        set.getVarSamples(activeVars).then(function sucFn(obj) {
 
-          if (_.isUndefined(samples)) {
+          if (_.isUndefined(obj.samples)) {
             defer.resolve('enabled');
             return;
           }
 
-          _.each(activeVars, function(variable) {
-            var dataAdded = that.dimensionService.addVariableData(variable, samples);
-            if (dataAdded) {
-              dataWasAdded = true;
-            }
-          });
+          var dataAdded = that.dimensionService.addVariableData(obj.samples, obj.dataset);
+          if (dataAdded) {
+            dataWasAdded = true;
+          }
+          // _.each(obj.newVariables, function(variable) {
+          //   var dataAdded = that.dimensionService.addVariableData(variable, obj.samples, obj.dataset);
+          //   if (dataAdded) {
+          //     dataWasAdded = true;
+          //   }
+          // });
 
           if (dataWasAdded) {
             that.dimensionService.rebuildInstance();
@@ -326,20 +338,25 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
           setPromises.push(set.getVarSamples(variables));
         });
 
-        $q.all(setPromises).then(function sucFn(resArray) {
-          _.each(resArray, function(setSamples) {
+        $q.all(setPromises).then(function sucFn(resObject) {
+          _.each(resObject, function(setObj) {
 
-            if (_.isUndefined(setSamples)) {
-              // nothing new was fetched
+            if (_.isUndefined(setObj.samples)) {
+              // nothing new was fetched for this dataset, continue loop
               return;
             }
 
-            _.each(variables, function(vari) {
-              var dataAdded = windowHandler.getDimensionService().addVariableData(vari, setSamples);
-              if (dataAdded) {
-                dataWasAdded = true;
-              }
-            });
+            var dataAdded = windowHandler.getDimensionService().addVariableData(setObj.samples, setObj.dataset);
+            if (dataAdded) {
+              dataWasAdded = true;
+            }
+
+            // _.each(setObj.newVariables, function(vari) {
+            //   var dataAdded = windowHandler.getDimensionService().addVariableData(vari, setObj.samples, setObj.dataset);
+            //   if (dataAdded) {
+            //     dataWasAdded = true;
+            //   }
+            // });
 
           });
 
