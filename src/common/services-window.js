@@ -178,6 +178,9 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
           return h.getDimensionService() == DimensionService.getPrimary();
         }).value();
       },
+      getSecondary: function() {
+        return this.get('vis.som');
+      },
       getAll: function() {
         return _handlers;
       },

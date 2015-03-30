@@ -16,7 +16,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         });
       };
       var getSOMData = function(windowHandler) {
-        var service = windowHandler.getService().get('vis.som'),
+        var service = windowHandler.getService().getSecondary(),
         somService = service.getDimensionService(),
         // samples that are currently selected in SOM circles
         samples = somService.getSampleDimension().get().top(Infinity),
@@ -47,9 +47,9 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         var def = $q.defer();
         DatasetFactory.getVariableData(variables, windowHandler)
         .then(function() {
-          var sampleDimension = windowHandler.getDimensionService().getSampleDimension();
+          var sampleDimension = windowHandler.getService().getSecondary().getDimensionService().getSampleDimension();
+          //windowHandler.getDimensionService().getSampleDimension();
           var retObject = {
-            // circles: getSOMData(windowHandler),
             total: {
               samples: getRaw(sampleDimension.get().top(Infinity))
             }

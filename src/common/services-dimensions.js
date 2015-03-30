@@ -529,7 +529,7 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
 
       // receives new variable data. The function is called once for each dataset
       // receiving data, and therefore the additions have to operate on a dataset-basis
-      this.addVariableData = function(samples, dataset) {
+      this.addVariableData = function(variables, samples, dataset) {
 
         var addSamples;
 
@@ -544,27 +544,37 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
           addSamples = samples;
         }
 
-        var dataWasAdded = true;
+        var dataWasAdded = false;
         // usedVariables[variable] = true;
 
-        _.every(addSamples, function (samp) {
+        var currentKeys = _getCurrentKeys(),
+        newVariables = _.difference(variables, currentKeys),
+        currentDatasets = _getCurrentDatasets(),
+        newDatasets = _.difference([dataset.getName()], currentDatasets);
 
-          var key = _getSampleKey(samp.dataset, samp.sampleid);
+        if(_.isEmpty(newVariables) && _.isEmpty(newDatasets)) {
+          // nothing new to add
+        }
+        else {
+          // something new to process:
+          dataWasAdded = true;
+          _.each(addSamples, function (samp) {
 
-          if (_.isUndefined(currSamples[key])) {
-            // sample has not been previously seen
-            currSamples[ key ] = samp;
-            currSamples[ key ]['bmus'] = {};
-          } else {
-            if( _.isUndefined( currSamples[key].variables ) ) {
-              // for some reason the variables is empty (unlikely)
-              currSamples[key].variables = {};
+            var key = _getSampleKey(samp.dataset, samp.sampleid);
+
+            if (_.isUndefined(currSamples[key])) {
+              // sample has not been previously seen
+              currSamples[ key ] = samp;
+              _.defaults(currSamples[ key ], { 'bmus': {} });
+            } else {
+              if( _.isUndefined( currSamples[key].variables ) ) {
+                // for some reason the variables is empty (unlikely)
+                currSamples[key].variables = {};
+              }
+              _.extend(currSamples[key].variables, samp.variables);
             }
-
-            _.extend(currSamples[key].variables, samp.variables);
-          }
-          return true;
-        });
+          });
+        }
         return dataWasAdded;
       };
 
@@ -654,6 +664,30 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
         });
       };
 
+      function _getCurrentKeys() {
+        return _.chain(currSamples)
+        .sample(4)
+        .values()
+        .map(function(d) { 
+          return _.keys(d.variables); 
+        })
+        .flatten()
+        .uniq()
+        .value();
+      }
+
+      function _getCurrentDatasets() {
+        return _.chain(currSamples)
+        .sample(4)
+        .values()
+        .map(function(d) { 
+          return d.dataset;
+        })
+        .flatten()
+        .uniq()
+        .value();        
+      }
+
       this.restart = function(primarySamples) {
         var getKey = function(samp) {
           return samp.dataset + "|" + samp.sampleid;
@@ -684,15 +718,7 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
         var defer = $q.defer();
 
         // what keys have been used in the past?
-        var currentKeys = _.chain(currSamples)
-        .sample(4)
-        .values()
-        .map(function(d) { 
-          return _.keys(d.variables); 
-        })
-        .flatten()
-        .uniq()
-        .value();
+        var currentKeys = _getCurrentKeys();
 
         if(_.isEmpty(currentKeys)) {
           // first transition to som, nothing pre-existing
@@ -753,6 +779,9 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
         .first()
         .value()
         .instance;
+      },
+      getScondary: function() {
+        return _service.get('vis.som');
       },
       equal: function(a, b) {
         return _.isEqual( a.getHash(), b.getHash() );

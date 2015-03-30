@@ -144,7 +144,8 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         function getResult(callVariables, newVariables, config, addedValues) {
           var retObj = {
             samples: {
-              added: []
+              added: [],
+              all: []
             },
             variables: {
               added: newVariables
@@ -156,10 +157,8 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
             retObj.samples.added = addedValues;
           }
 
-          if(config && config.getRawData === true) {
-            retObj.samples.subset = getAllVariables();
-            //getSubsetOfVariables(callVariables);
-          }
+          retObj.samples.all = getAllVariables();
+
           return retObj;
         }
 
@@ -323,7 +322,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
             return;
           }
 
-          var dataAdded = that.dimensionService.addVariableData(obj.samples.added, obj.dataset);
+          var dataAdded = that.dimensionService.addVariableData(activeVars, obj.samples.added, obj.dataset);
           if (dataAdded) {
             dataWasAdded = true;
           }
@@ -356,7 +355,12 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
       var DimensionService = $injector.get('DimensionService');
 
-      var setPromises = [];
+      var setPromises = [],
+      addData = true,
+      getRawData = configDefined && config.getRawData;        
+      if(configDefined && config.addToDimensionService === false) {
+        addData = false;
+      }
 
       if (_.isEmpty(variables)) {
         // do nothing
@@ -370,28 +374,23 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         $q.all(setPromises).then(function sucFn(res) {
           _.each(res, function(setObj) {
 
-            var addData = configDefined && config.addToDimensionService === false;
-
-            if(configDefined && config.getRawData) {
-              _.extend(result.samples, setObj.samples.subset);
-              // result.samples =   //result.samples.concat(setObj.samples.subset);
+            if(getRawData) {
+              // combine result samples
+              _.extend(result.samples, setObj.samples.all);
             }
 
-            if(_.isEmpty(setObj.samples.added)) {
-              // nothing new was fetched for this dataset, continue loop
+            if(!addData) {
               return;
-            }
-
-            if(addData || !configDefined) {
-              var dataAdded = windowHandler.getDimensionService().addVariableData(setObj.samples.added, setObj.dataset);
+            } else {
+              var dataAdded = windowHandler.getDimensionService().addVariableData(variables, setObj.samples.all, setObj.dataset);
               if (dataAdded) {
                 dataWasAdded = true;
-              }
+              }              
             }
 
           });
 
-          if (dataWasAdded && !(configDefined && config.addToDimensionService === true)) {
+          if (dataWasAdded && addData) {
             windowHandler.getDimensionService().rebuildInstance();
           }
 
