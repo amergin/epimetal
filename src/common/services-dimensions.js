@@ -1,8 +1,8 @@
 var dimMod = angular.module('services.dimensions', ['services.dataset', 'ui.router.state']);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$state',
-  function ($injector, constants, $rootScope, $state) {
+dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope', '$state',
+  function ($injector, $q, constants, $rootScope, $state) {
 
     var _instances = {};
 
@@ -547,46 +547,24 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         var dataWasAdded = true;
         // usedVariables[variable] = true;
 
-        if( !dataset.unread() ) {
-          dataWasAdded = false;
-          // nothing to do
-        }
-        else {
-          _.every(addSamples, function (samp) {
+        _.every(addSamples, function (samp) {
 
-            var key = _getSampleKey(samp.dataset, samp.sampleid);
+          var key = _getSampleKey(samp.dataset, samp.sampleid);
 
-            if (_.isUndefined(currSamples[key])) {
-              // sample has not been previously seen
-              currSamples[ key ] = samp;
-              currSamples[ key ]['bmus'] = {};
-            } else {
-              if( _.isUndefined( currSamples[key].variables ) ) {
-                // for some reason the variables is empty (unlikely)
-                currSamples[key].variables = {};
-              }
-
-              // extend and overwrite keys if not present
-              _.extend(currSamples[key].variables, samp.variables);
-              // variable is already defined for this dataset, do nothing
-              // if( !_.isUndefined( currSamples[key].variables[ variable ] ) ) {
-              //   if( dataset.unread() ) {
-              //     // newly-added data is present.
-              //     dset.unread(false);
-
-              //   } else {
-              //     // nothing new
-              //     dataWasAdded = false;
-              //   }
-              //   return false; // stop iteration
-              // }
-
-              // angular.extend( currSamples[key].variables, samp.variables );
+          if (_.isUndefined(currSamples[key])) {
+            // sample has not been previously seen
+            currSamples[ key ] = samp;
+            currSamples[ key ]['bmus'] = {};
+          } else {
+            if( _.isUndefined( currSamples[key].variables ) ) {
+              // for some reason the variables is empty (unlikely)
+              currSamples[key].variables = {};
             }
-            return true;
-          });
-        }
-        dataset.unread(false);
+
+            _.extend(currSamples[key].variables, samp.variables);
+          }
+          return true;
+        });
         return dataWasAdded;
       };
 
@@ -665,6 +643,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
       };
 
       this.copy = function() {
+        // careful: you're not supposed to modify these...
         return this.getSampleDimension().get().top(Infinity);
         // return angular.copy( this.getSampleDimension().get().top(Infinity) );
       };
@@ -675,7 +654,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
         });
       };
 
-      this.restart = function(copy) {
+      this.restart = function(primarySamples) {
         var getKey = function(samp) {
           return samp.dataset + "|" + samp.sampleid;
         };
@@ -684,14 +663,56 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
           that.getSOMDimension().filterAll();          
         };
 
-        currSamples = {};
-        _.each( copy, function(samp) {
-          currSamples[ getKey(samp) ] = samp;
-        });
+        function finish(primarySamples, samplesLookup) {
+          _.each(primarySamples, function(samp) {
+            var key = getKey(samp);
+            if(samplesLookup) {
+              currSamples[key] = samplesLookup[key];
+            } else {
+              currSamples[key] = samp;
+            }
+          });
+          that.rebuildInstance();
+          that.clearFilters();
+          // clearBMUFilter();
+        }
 
-        this.rebuildInstance();
-        this.clearFilters();
-        clearBMUFilter();
+        function getActiveSamples(primarySamples) {
+
+        }
+
+        var defer = $q.defer();
+
+        // what keys have been used in the past?
+        var currentKeys = _.chain(currSamples)
+        .sample(4)
+        .values()
+        .map(function(d) { 
+          return _.keys(d.variables); 
+        })
+        .flatten()
+        .uniq()
+        .value();
+
+        if(_.isEmpty(currentKeys)) {
+          // first transition to som, nothing pre-existing
+          finish(primarySamples);
+          defer.resolve();
+        } else {
+          var DatasetFactory = $injector.get('DatasetFactory');
+          DatasetFactory.getVariableData(currentKeys, null, 
+            { addToDimensionService: false, getRawData: true })
+          .then(function succFn(result) {
+            currSamples = {};
+            finish(primarySamples, result.samples);
+            defer.resolve();
+          }, function errFn(result) {
+            console.log("DatasetFactory variable fetch failed!");
+            defer.reject();
+          });
+        }
+
+        return defer.promise;
       };
 
       // start by initializing crossfilter
@@ -738,7 +759,7 @@ dimMod.factory('DimensionService', ['$injector', 'constants', '$rootScope', '$st
       },
       restart: function(restartInstance, sourceInstance) {
         var copy = sourceInstance.copy();
-        restartInstance.restart(copy);
+        return restartInstance.restart(copy);
       }
 
     };

@@ -178,7 +178,7 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
 
       if( !computationNeeded() ) {
         $timeout(function() {
-          defer.reject('not_needed');
+          defer.resolve('not_needed');
         }, 5);
 
       } else {

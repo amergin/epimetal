@@ -84,12 +84,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       samples = {},
 
       active = false,
-      size = null || noSamples,
-
-      // flag that is used to determine whether newly acquired
-      // data is added. check addVariableData fn on 
-      // services-dimensions!
-      unreadData = false;
+      size = null || noSamples;
 
       var dset = {};
 
@@ -111,16 +106,69 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       };
 
       // 'variables' is a list
-      dset.getVarSamples = function(variables) {
-        var defer = $q.defer();
+      dset.getVarSamples = function(variables, config) {
+        var defer = $q.defer(),
+        configDefined = !_.isUndefined(config);
 
-        var performPost = function(vars) {
+        function getSubsetOfVariables(callVariables) {
+          var lookup = {};
+          function getKey(samp) {
+            return samp.dataset + "|" + samp.sampleid;
+          }
+          _.chain(samples)
+          .map(function(samp, key) { 
+            var obj = {},
+            baseDetails = _.chain(samp).omit('variables').value();
+            _.chain(obj)
+            .extend(baseDetails)
+            .extend({'variables': _.pick(samp.variables, callVariables)})
+            .value();
+            lookup[getKey(samp)] = obj;
+          })
+          .value();
+          return lookup;
+        }
+
+        // this is probably significantly faster
+        function getAllVariables() {
+          var lookup = {};
+          function getKey(samp) {
+            return samp.dataset + "|" + samp.sampleid;
+          }
+          _.each(samples, function(samp) {
+            lookup[getKey(samp)] = samp;
+          });
+          return lookup;
+        }
+
+        function getResult(callVariables, newVariables, config, addedValues) {
+          var retObj = {
+            samples: {
+              added: []
+            },
+            variables: {
+              added: newVariables
+            },
+            dataset: dset
+          };
+
+          if(addedValues) {
+            retObj.samples.added = addedValues;
+          }
+
+          if(config && config.getRawData === true) {
+            retObj.samples.subset = getAllVariables();
+            //getSubsetOfVariables(callVariables);
+          }
+          return retObj;
+        }
+
+        var performPost = function(vars, config) {
           $http.post(that.config.multipleVariablesURL, {
             variables: vars,
             dataset: name
           })
             .success(function(response) {
-              unreadData = true;
               _.each(response.result.values, function(sample) {
                 if (_.isUndefined(samples[sample.sampleid])) {
                   // previously unknown sample
@@ -131,12 +179,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
                 }
               });
 
-              // send the received data to dimension, to be further added to crossfilter instance
-              defer.resolve({
-                samples: response.result.values,
-                newVariables: vars,
-                dataset: dset
-              });
+              defer.resolve(getResult(variables, vars, config, response.result.values));
             })
             .error(function(response, status, headers, config) {
               defer.reject(response);
@@ -156,18 +199,14 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
         if(empty) {
           // get all variables
-          performPost(variables);
+          performPost(variables, config);
         } 
         else if( _.isEmpty(newVariables) ) {
           // nothing to done, everything already fetched
-          defer.resolve({
-            samples: [],
-            newVariables: newVariables,
-            dataset: dset
-          });
+          defer.resolve(getResult(variables, newVariables, config));
         } else {
           // fetch new variables
-          performPost(newVariables);
+          performPost(newVariables, config);
         }
 
         return defer.promise;
@@ -202,12 +241,6 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
       dset.getSize = function() {
         return size || _.size(samples);
-      };
-
-      dset.unread = function(x) {
-        if(!arguments.length) { return unreadData; }
-        unreadData = x;
-        return dset;
       };
 
       return dset;
@@ -285,21 +318,15 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
         set.getVarSamples(activeVars).then(function sucFn(obj) {
 
-          if (_.isUndefined(obj.samples)) {
+          if(_.isEmpty(obj.samples.added)) {
             defer.resolve('enabled');
             return;
           }
 
-          var dataAdded = that.dimensionService.addVariableData(obj.samples, obj.dataset);
+          var dataAdded = that.dimensionService.addVariableData(obj.samples.added, obj.dataset);
           if (dataAdded) {
             dataWasAdded = true;
           }
-          // _.each(obj.newVariables, function(variable) {
-          //   var dataAdded = that.dimensionService.addVariableData(variable, obj.samples, obj.dataset);
-          //   if (dataAdded) {
-          //     dataWasAdded = true;
-          //   }
-          // });
 
           if (dataWasAdded) {
             that.dimensionService.rebuildInstance();
@@ -315,56 +342,62 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       return defer.promise;
     };
 
-    // this is called whenever a plot is drawn to check if variable data
-    // is to be fetched beforehand. 
-    // Example: 
-    // 1. select three datasets
-    // 2. select varA for histogram
-    // 3. plot -> this is called
-    service.getVariableData = function(variables, windowHandler) {
-      var defer = $q.defer();
-      var activeSets = service.activeSets();
-      var dataWasAdded = false;
+
+    // Fetches and permanently stores the fetched variable data.
+    // By default, the windowHandler 
+    service.getVariableData = function(variables, windowHandler, config) {
+      var defer = $q.defer(),
+      dataWasAdded = false,
+      configDefined = !_.isUndefined(config),
+      result = {
+        dataWasAdded: undefined,
+        samples: {}
+      };
 
       var DimensionService = $injector.get('DimensionService');
 
       var setPromises = [];
 
       if (_.isEmpty(variables)) {
-
+        // do nothing
         defer.resolve();
       } else {
         // check every set
-        _.each(activeSets, function(set) {
-          setPromises.push(set.getVarSamples(variables));
+        _.each(service.activeSets(), function(set) {
+          setPromises.push(set.getVarSamples(variables, config));
         });
 
-        $q.all(setPromises).then(function sucFn(resObject) {
-          _.each(resObject, function(setObj) {
+        $q.all(setPromises).then(function sucFn(res) {
+          _.each(res, function(setObj) {
 
-            if (_.isUndefined(setObj.samples)) {
+            var addData = configDefined && config.addToDimensionService === false;
+
+            if(configDefined && config.getRawData) {
+              _.extend(result.samples, setObj.samples.subset);
+              // result.samples =   //result.samples.concat(setObj.samples.subset);
+            }
+
+            if(_.isEmpty(setObj.samples.added)) {
               // nothing new was fetched for this dataset, continue loop
               return;
             }
 
-            var dataAdded = windowHandler.getDimensionService().addVariableData(setObj.samples, setObj.dataset);
-            if (dataAdded) {
-              dataWasAdded = true;
+            if(addData || !configDefined) {
+              var dataAdded = windowHandler.getDimensionService().addVariableData(setObj.samples.added, setObj.dataset);
+              if (dataAdded) {
+                dataWasAdded = true;
+              }
             }
-
-            // _.each(setObj.newVariables, function(vari) {
-            //   var dataAdded = windowHandler.getDimensionService().addVariableData(vari, setObj.samples, setObj.dataset);
-            //   if (dataAdded) {
-            //     dataWasAdded = true;
-            //   }
-            // });
 
           });
 
-          if (dataWasAdded) {
+          if (dataWasAdded && !(configDefined && config.addToDimensionService === true)) {
             windowHandler.getDimensionService().rebuildInstance();
           }
-          defer.resolve(dataWasAdded);
+
+          // return result
+          result.dataWasAdded = dataWasAdded;
+          defer.resolve(result);
         }, function errFn(res) {
           defer.reject(res);
         });

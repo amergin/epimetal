@@ -87,15 +87,9 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
     }
 
     function checkSOMState() {
-      var primary  = DimensionService.getPrimary(),
-      current = DimensionService.get('vis.som'),
-      SOMService = $injector.get('SOMService'),
-      somBottomHandler = WindowHandler.get('vis.som');
-
-      if( !DimensionService.equal( primary, current ) ) {
-        console.log("dimension instances not equal, need to restart");
-        DimensionService.restart( current, primary );
-        WindowHandler.spinAllVisible();
+      function startSOMComputation() {
+        var SOMService = $injector.get('SOMService'),
+        somBottomHandler = WindowHandler.get('vis.som');
 
         SOMService.getSOM(somBottomHandler).then( function succFn() {
           checkDefaultPlanes();
@@ -122,6 +116,16 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
               }
             });
           });
+        });        
+      }
+      var primary  = DimensionService.getPrimary(),
+      current = DimensionService.get('vis.som');
+
+      if( !DimensionService.equal( primary, current ) ) {
+        console.log("dimension instances not equal, need to restart");
+        WindowHandler.spinAllVisible();
+        DimensionService.restart( current, primary ).then(function succFn(res) {
+          startSOMComputation();
         });
       }      
 
