@@ -78,7 +78,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
 
           var title = 'Variable ' + variable + ' could not be loaded\n',
           message = 'Please check the selected combination is valid for the selected datasets.',
-          level = 'danger';
+          level = 'error';
           NotifyService.addTransient(title, message, level);
           defer.reject();
         });
@@ -134,7 +134,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
 
           var title = 'Variable ' + variable + ' could not be loaded\n',
           message = 'Please check the selected combination is valid for the selected datasets.',
-          level = 'danger';
+          level = 'error';
           NotifyService.addTransient(title, message, level);
           defer.reject();
         });
@@ -169,7 +169,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
 
           var title = 'Variable ' + variable + ' could not be loaded\n',
           message = 'Please check the selected combination is valid for the selected datasets.',
-          level = 'danger';
+          level = 'error';
           NotifyService.addTransient(title, message, level);
           defer.reject();
         })
@@ -212,7 +212,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
 
           var title = 'Variable ' + variable + ' could not be loaded\n',
           message = 'Please check the selected combination is valid for the selected datasets.',
-          level = 'danger';
+          level = 'error';
           NotifyService.addTransient(title, message, level);
           defer.reject();
         })

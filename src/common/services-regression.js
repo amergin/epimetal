@@ -8,6 +8,11 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
 
     var _inProgress = false;
     var _result = {};
+    var _variables = {
+      target: null,
+      association: [],
+      adjust: []
+    };
 
     var getData = function(variables, windowHandler) {
       var getRaw = function(samples) {
@@ -345,6 +350,12 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
 
     service.inProgress = function() {
       return _inProgress;
+    };
+
+    service.selectedVariables = function(x) {
+      if(!arguments.length) { return _variables; }
+      _variables = x;
+      return service;
     };
 
     service.compute = function(config, windowHandler) {

@@ -52,6 +52,7 @@ class BrowsingState(DynamicDocument):
 	sampleCount = IntField(required=True)
 	views = ListField(required=True)
 	som = DictField(required=True)
+	regression = DictField(required=True)
 
 	meta = {
 		'indexes': [

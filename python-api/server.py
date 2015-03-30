@@ -146,7 +146,6 @@ def postState():
 		for s in sets:
 			if not s in uniqueDatasets:
 				return False
-		print "validDatasets = ", uniqueDatasets
 		return atLeastOneSet
 
 	def validSOM(som, datasets):
@@ -154,7 +153,6 @@ def postState():
 			val = isinstance(size, dict) and \
 			size.get('x') and isinstance(size.get('x'), int) and \
 			size.get('y') and isinstance(size.get('y'), int)
-			print "validSize = ", val
 			return val
 
 		def validSamples(bmus, datasets, size):
@@ -181,6 +179,12 @@ def postState():
 		validSize(planeSize) and \
 		validSamples(bmus, datasets, planeSize)
 
+	def validRegression(regression):
+		selectedVariables = regression.get('selected')
+		return isinstance(regression, dict) and \
+		selectedVariables is not None and \
+		isinstance(selectedVariables, dict)
+
 	def validViews(views):
 		return True
 
@@ -200,12 +204,11 @@ def postState():
 		datasets = payload.get('datasets')
 		sampleCount = payload.get('sampleCount')
 		som = payload.get('som')
+		regression = payload.get('regression')
 		views = payload.get('views')
 
-		print "validSOM = ", validSOM(som, datasets)
-
 		# check input validity
-		if validDatasets(datasets) and validSOM(som, datasets) and validViews(views):
+		if validDatasets(datasets) and validSOM(som, datasets) and validViews(views) and validRegression(regression):
 			# form the hash
 			stateHash = getHash(payload)
 			urlHash = None
@@ -215,11 +218,11 @@ def postState():
 				urlHash = state['urlHash']
 			except Exception, e:
 				# failed, does not exist
-				print "failed, does not exist"
+				#print "failed, does not exist"
 				viewSize = getViewSize(views)
 				urlHash = hashids.encode(sampleCount, len(som.get('bmus')), *viewSize)				
 				state = BrowsingState(urlHash=urlHash, stateHash=stateHash, activeState=activeState, \
-					datasets=datasets, som=som, sampleCount=sampleCount, views=views)
+					datasets=datasets, som=som, sampleCount=sampleCount, views=views, regression=regression)
 				state.save()
 			finally:
 				response = { 
@@ -231,7 +234,7 @@ def postState():
 				response.status_code = 200
 				return response
 		else:
-			print "no except, but not valid"
+			#print "no except, but not valid"
 			return getError()
 	except Exception, e:
 		print "exception occured", e

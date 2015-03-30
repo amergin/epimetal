@@ -36,7 +36,8 @@ visu.directive('regressionPlot', ['constants', '$timeout', '$rootScope', '$injec
 
     function postLink($scope, ele, attrs, ctrl) {
       function updateChart() {
-        RegressionService.compute({ variables: $scope.window.computation.input }, $scope.window.handler)
+        var selectedVariables = RegressionService.selectedVariables();
+        RegressionService.compute({ variables: selectedVariables }, $scope.window.handler)
         .then(function succFn(result) {
           $scope.window.computation = result;
           $scope.updateChart($scope, $scope.window.computation.result);

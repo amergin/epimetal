@@ -357,6 +357,8 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
       adjust: []
     };
 
+    $scope.selection = RegressionService.selectedVariables();
+
     var associationScope = $scope.$new({ isolate: true });
     associationScope.extend = {
       canSubmit: function() { return true; },
@@ -410,6 +412,8 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
       var config = {
         variables: $scope.selection
       };
+
+      RegressionService.selectedVariables($scope.selection);
 
       // only draw on first window, on subsequent, force redraw
       if( $scope.handler.get().length > 0 ) {

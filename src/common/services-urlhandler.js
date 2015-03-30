@@ -39,7 +39,8 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
         .map(function(set) { return set.getName(); })
         .value();
 
-        var FilterService = $injector.get('FilterService');
+        var FilterService = $injector.get('FilterService'),
+        RegressionService = $injector.get('RegressionService');
 
         function getSOMFilters() {
           return _.map(FilterService.getSOMFilters(), function(filter) {
@@ -56,6 +57,9 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
             bmus: SOMService.getBMUs(),
             testVars: SOMService.getVariables(),
             filters: getSOMFilters()
+          },
+          regression: {
+            selected: RegressionService.selectedVariables()
           },
           sampleCount: DimensionService.getPrimary().getSampleInfo().active
         };
@@ -241,12 +245,22 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
           addTestVars(stateObj.som.testVars);
         }
 
+        function loadRegression(stateObj) {
+          try {
+            var RegressionService = $injector.get('RegressionService');
+            RegressionService.selectedVariables(stateObj.regression.selected);
+          } catch(e) {
+            throw new Error('Invalid Regression info');
+          }
+        }
+
         var defer = $q.defer();
 
         getState(hash).then(function succFn(stateObj) {
 
           selectDatasets(stateObj.datasets);
           loadSOM(stateObj);
+          loadRegression(stateObj);
           loadVariables(stateObj).then(function succFn() {
             $timeout(function() {
               addFigures(stateObj).then(function succFn() {
