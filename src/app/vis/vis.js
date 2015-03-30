@@ -90,17 +90,7 @@
         templateUrl: 'vis/vis.header.tpl.html',
         controller: 'HeaderCtrl'
       }
-    },
-    onEnter: ['$stateParams', '$state', '$injector', function($stateParams, $state, $injector) {
-      // var stateHash = $stateParams.state;
-      // if( _.isUndefined(stateHash) ) {
-      //   return;
-      // }
-      console.log("!!ONENTER called");
-      // var UrlHandler = $injector.get('UrlHandler'),
-      // stateHash = $stateParams.state;
-      // UrlHandler.load(stateHash);
-    }]
+    }
   };
 
   var explore = {

@@ -56,6 +56,10 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
       return service;
     };
 
+    service.getDimensionService = function() {
+      return that.dimensionService;
+    };
+
     service.updateVariables = function(variables, windowHandler) {
       var currEmpty = _.isUndefined(that.somSelection.variables) || that.somSelection.variables.length === 0,
       sameVariables = _.difference(variables, that.somSelection.variables).length === 0;

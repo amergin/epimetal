@@ -41,14 +41,6 @@ App.constant('constants', {
 App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStateProvider', '$locationProvider', '$futureStateProvider',
   function ($stateProvider, $urlRouterProvider, $injector, $stickyStateProvider, $locationProvider, $futureStateProvider) {
 
-    // var root = {
-    //   name: 'root',
-    //   url: '',
-    //   abstract: true
-    // };
-    // $stateProvider.state(root);
-    // $urlRouterProvider.otherwise('/vis/explore');
-
     $locationProvider
     // .html5Mode(true)
     .hashPrefix('!');
@@ -57,7 +49,6 @@ App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStatePr
     dc.constants.EVENT_DELAY = 150;
 
     // default route
-    // $urlRouterProvider.when('', '/vis/explore');
     $urlRouterProvider.when('', ['$state', '$stateParams', function($state, $stateParams) {
       $state.go('vis.explore', { state: undefined });
     }]);

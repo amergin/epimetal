@@ -16,7 +16,8 @@ serv.config(['growlProvider', function(growlProvider) {
 serv.factory('NotifyService', ['$injector', '$timeout', 'growl',
   function NotifyService($injector, $timeout, growl) {
 
-    var _modalInstanceRef = null;
+    var _modalInstanceRef = null,
+    _disabled = false;
 
     getAlertFunction = function(msgClass) {
       switch(msgClass) {
@@ -35,8 +36,15 @@ serv.factory('NotifyService', ['$injector', '$timeout', 'growl',
 
     return {
 
+      disabled: function(x) {
+        if(!arguments.length) { return _disabled; }
+        _disabled = x;
+        return this;
+      },
+
       // alerts
       addSticky: function (title, message, level, config) {
+        if(_disabled) { return; }
         var call = getAlertFunction(level);
         var obj = _.extend({ title: title, ttl: -1 }, config);
         call(message, obj);
@@ -44,6 +52,7 @@ serv.factory('NotifyService', ['$injector', '$timeout', 'growl',
 
       // alerts
       addTransient: function (title, message, level, config) {
+        if(_disabled) { return; }        
         var call = getAlertFunction(level);
         var obj = _.extend({ title: title }, config);
         call(message, obj);

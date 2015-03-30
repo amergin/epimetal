@@ -90,6 +90,11 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
         };
 
         function loadVariables(stateObj) {
+          function addSOMTestVariables(stateObj, fetchVariables) {
+            var testVars = stateObj.som.testVars;
+            return _.union(fetchVariables, testVars);
+          }
+
           var defer = $q.defer(),
           promises = [];
 
@@ -119,8 +124,16 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
             .flattenDeep()
             .value();
 
+            var handlerInstance = WindowHandler.get(handler);
+
+            if( SOMService.getDimensionService() == handlerInstance.getDimensionService() ) {
+              // add SOM test variables to be fetched, too
+              fetchVariables = addSOMTestVariables(stateObj, fetchVariables);
+
+            }
+
             return {
-              handler: WindowHandler.get(handler),
+              handler: handlerInstance,
               variables: fetchVariables,
               service: DimensionService.get(somServiceName)
             };
@@ -337,6 +350,7 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
           });
         })
         .finally(function() {
+          NotifyService.disabled(false);
           removeHash();
           _loaded = true;
         });
