@@ -42,7 +42,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         })
         .error( function() {
           that.variables = angular.copy([]);
-          NotifyService.addSticky('Error!', 'Something went wrong while fetching variables. Please reload the page', 'danger');
+          NotifyService.addSticky('Error', 'Something went wrong while fetching variables. Please reload the page', 'error');
           defer.reject('Something went wrong while fetching variables. Please reload the page');
         });
       return defer.promise;

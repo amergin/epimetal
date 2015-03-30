@@ -193,11 +193,10 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
       };
 
-      $scope.$watch('limitDisp', function(val) {
-        if(!val) { return; }
-
+      function addLimit() {
         $scope.$parent.settingsDropdown.push({
           'text': '<i class="fa fa-sliders"></i> Show correlations with p > <b>' + $scope.limitDisp + '</b>',
+          'type': 'correlations',
           'click': function() {
             var entry = _.last($scope.$parent.settingsDropdown).text;
             $scope.filtered = !$scope.filtered;
@@ -211,8 +210,44 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
             $scope.heatmap.render();
           }
         });
+      }
 
+      _.once(function() {
+        addLimit();
       });
+
+      $scope.$watch('limitDisp', function(value) {
+        if(!val) { return; }
+        var index = Utils.indexOf($scope.$parent.settingsDropdown, function(drop) {
+          return drop.type == 'correlations';
+        });
+
+        if(index != -1) {
+          $scope.$parent.settingsDropdown.splice(index, 1);
+        }
+        addLimit();
+      });
+
+      // $scope.$watch('limitDisp', function(val) {
+      //   if(!val) { return; }
+
+      //   $scope.$parent.settingsDropdown.push({
+      //     'text': '<i class="fa fa-sliders"></i> Show correlations with p > <b>' + $scope.limitDisp + '</b>',
+      //     'click': function() {
+      //       var entry = _.last($scope.$parent.settingsDropdown).text;
+      //       $scope.filtered = !$scope.filtered;
+      //       if($scope.filtered) { 
+      //         $scope.$parent.headerText[2] = '(p < ' + $scope.limitDisp + ')';
+      //         _.last($scope.$parent.settingsDropdown).text = entry.replace(/Hide/, 'Show');
+      //       } else {
+      //         $scope.$parent.headerText[2] = '';
+      //         _.last($scope.$parent.settingsDropdown).text = entry.replace(/Show/, 'Hide');
+      //       }
+      //       $scope.heatmap.render();
+      //     }
+      //   });
+
+      // });
 
       var callback = function() {
         // update the chart and redraw

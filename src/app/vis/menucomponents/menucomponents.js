@@ -174,7 +174,7 @@ vis.controller('SOMFormController',
         function succFn(som) {
           NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
         }, function errFn(res) {
-          NotifyService.addTransient('SOM computation failed', res, 'danger');
+          NotifyService.addTransient('SOM computation failed', res, 'error');
         });
     };
   }
