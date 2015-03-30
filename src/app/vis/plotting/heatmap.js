@@ -278,7 +278,9 @@ visu.directive('heatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFactory
           $scope.limitDisp = $scope.format($scope.limit);
           
           $scope.crossfilter.add($scope.window.coordinates);
-          draw();
+          $timeout(function() {
+            draw();
+          });
         } else {
           // default route to do things
           $scope.computeVariables(function() {

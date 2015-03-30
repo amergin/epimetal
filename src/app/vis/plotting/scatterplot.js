@@ -354,10 +354,13 @@ visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
       $scope.element = ele;
       $scope.$parent.element = ele;
 
-      $scope.width = ele.width() || 490;
-      $scope.height = ele.height() || 345;
+      $timeout(function() {
+        $scope.width = ele.width() || 490;
+        $scope.height = ele.height() || 345;
 
-      $scope.redrawAll();
+        $scope.redrawAll();
+      });
+
 
       NotifyService.addTransient(
         'Scatter plot added', 
@@ -378,9 +381,9 @@ visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
 
       var redrawUnbind =  $rootScope.$on('window-handler.redraw', function(event, winHandler) {
         if( winHandler == $scope.window.handler ) {
-          $timeout( function() {
-          // nothing to do
-        });
+        //   $timeout( function() {
+        //   // nothing to do
+        // });
         }
       });
 

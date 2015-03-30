@@ -151,7 +151,8 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         .flatten()
         .uniq()
         .value(),
-        newVariables = _.difference(variables, currentVariables);
+        intersection = _.intersection(currentVariables, variables),
+        newVariables = _.difference(variables, intersection);
 
         if(empty) {
           // get all variables

@@ -2,7 +2,6 @@ var App = angular.module('plotter', [
   'templates-app',
   'templates-common',
   'plotter.vis',
-  'plotter.login',
   'ui.router.state',
   'ui.router',
   'services.compatibility',
@@ -42,6 +41,14 @@ App.constant('constants', {
 App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStateProvider', '$locationProvider', '$futureStateProvider',
   function ($stateProvider, $urlRouterProvider, $injector, $stickyStateProvider, $locationProvider, $futureStateProvider) {
 
+    // var root = {
+    //   name: 'root',
+    //   url: '',
+    //   abstract: true
+    // };
+    // $stateProvider.state(root);
+    // $urlRouterProvider.otherwise('/vis/explore');
+
     $locationProvider
     // .html5Mode(true)
     .hashPrefix('!');
@@ -50,9 +57,11 @@ App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStatePr
     dc.constants.EVENT_DELAY = 150;
 
     // default route
-    // $urlRouterProvider.otherwise('/vis/explore');
-    $urlRouterProvider.otherwise('/vis/explore');
-
+    // $urlRouterProvider.when('', '/vis/explore');
+    // $urlRouterProvider.when('', ['$state', function($state) {
+    //   console.log("when", arguments);
+    //   // $state.go('vis.explore', { state: undefined });
+    // }]);
     $stickyStateProvider.enableDebug(true);
 
     // see https://github.com/christopherthielen/ui-router-extras/issues/138
@@ -67,27 +76,29 @@ App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStatePr
         $rootScope.$stateParams = $stateParams;
 
       // debug ui-router
-      // $rootScope.$on('$stateChangeStart',function(event, toState, toParams, fromState, fromParams){
-      //   console.log('$stateChangeStart to '+toState.to+'- fired when the transition begins. toState,toParams : \n',toState, toParams);
-      // });
-      // $rootScope.$on('$stateChangeError',function(event, toState, toParams, fromState, fromParams){
-      //   console.log('$stateChangeError - fired when an error occurs during transition.');
-      //   console.log(arguments);
-      // });
-      // $rootScope.$on('$stateChangeSuccess',function(event, toState, toParams, fromState, fromParams){
-      //   console.log('$stateChangeSuccess to '+toState.name+'- fired once the state transition is complete.');
-      // });
-      // // $rootScope.$on('$viewContentLoading',function(event, viewConfig){
-      // //   // runs on individual scopes, so putting it in "run" doesn't work.
-      // //   console.log('$viewContentLoading - view begins loading - dom not rendered',viewConfig);
-      // // });
-      // $rootScope.$on('$viewContentLoaded',function(event){
-      //   console.log('$viewContentLoaded - fired after dom rendered',event);
-      // });
-      // $rootScope.$on('$stateNotFound',function(event, unfoundState, fromState, fromParams){
-      //   console.log('$stateNotFound '+unfoundState.to+'  - fired when a state cannot be found by its name.');
-      //   console.log(unfoundState, fromState, fromParams);
-      // });
+      $rootScope.$on('$stateChangeStart',function(event, toState, toParams, fromState, fromParams){
+        console.log('$stateChangeStart to '+toState.to+'- fired when the transition begins. toState,toParams : \n',toState, toParams);
+      });
+      $rootScope.$on('$stateChangeError',function(event, toState, toParams, fromState, fromParams){
+        console.log('$stateChangeError - fired when an error occurs during transition.');
+        console.log(arguments);
+      });
+      $rootScope.$on('$stateChangeSuccess',function(event, toState, toParams, fromState, fromParams){
+        console.log('$stateChangeSuccess to '+toState.name+'- fired once the state transition is complete.');
+      });
+      $rootScope.$on('$viewContentLoading',function(event, viewConfig){
+        // runs on individual scopes, so putting it in "run" doesn't work.
+        console.log('$viewContentLoading - view begins loading - dom not rendered',viewConfig);
+      });
+      $rootScope.$on('$viewContentLoaded',function(event){
+        console.log('$viewContentLoaded - fired after dom rendered',event);
+      });
+      $rootScope.$on('$stateNotFound',function(event, unfoundState, fromState, fromParams){
+        console.log('$stateNotFound '+unfoundState.to+'  - fired when a state cannot be found by its name.');
+        console.log(unfoundState, fromState, fromParams);
+      });
+
+      $state.go('vis.explore');
 
 }
 ]);
@@ -99,9 +110,6 @@ App.controller('AppCtrl', ['$scope', '$location', '$templateCache', 'Compatibili
       if (toState.resolve) {
         usSpinnerService.spin('main');
       }
-    });
-
-    $scope.$on('$stateChangeError', function (event, toState, toParams, fromState, fromParams) {
     });
 
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
@@ -116,29 +124,5 @@ App.controller('AppCtrl', ['$scope', '$location', '$templateCache', 'Compatibili
     });
 
     $scope.loading = { spinner: true };
-
-    // $scope.compatible = CompatibilityService.isCompatible();
-
   }
   ]);
-
-
-// see http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
-// App.config(['$provide', function ($provide) {
-//     $provide.decorator('$rootScope', ['$delegate',
-//       function ($delegate) {
-
-//         Object.defineProperty($delegate.constructor.prototype, '$onRootScope', {
-//           value: function (name, listener) {
-//             var unsubscribe = $delegate.$on(name, listener);
-//             this.$on('$destroy', unsubscribe);
-//           },
-//           enumerable: false
-//         });
-
-
-//         return $delegate;
-//       }
-//     ]);
-//   }
-// ]);

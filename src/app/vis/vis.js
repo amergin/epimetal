@@ -34,6 +34,9 @@
     // don't reload state when query parameter is modified
     reloadOnSearch: false,
     data: { pageTitle: 'Visualization' },
+    params: {
+      state: undefined
+    },
     // templateUrl: 'vis/vis.tpl.html',
     // important: the app will NOT change state to 'vis' until
     // these object promises have been resolved. Failure is generally indication
@@ -72,14 +75,14 @@
         regressionHandler.setDimensionService( DimensionService.getPrimary() );
 
       }],
-      loadState: ['UrlHandler', '$stateParams', 'variables', 'datasets', 'compatibility', 'dimensionServices', 
-      function(UrlHandler, $stateParams, variables, datasets, compatibility, dimensionServices) {
+      loadState: ['UrlHandler', '$stateParams', '$state', 'variables', 'datasets', 'compatibility', 'dimensionServices', 
+      function(UrlHandler, $stateParams, $state, variables, datasets, compatibility, dimensionServices) {
         var stateHash = $stateParams.state;
         return UrlHandler.load(stateHash);
       }]
     },
     views: {
-      'content': {
+      'content@': {
         templateUrl: 'vis/vis.content.tpl.html',
         controller: 'VisCtrl',
       },

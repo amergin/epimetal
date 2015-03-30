@@ -29,19 +29,19 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
       changeDimensionService(toState.name);
 
       // abstract root state -> somewhere, should be initial load
-      if(fromState.name === '') {
-        // page load -> vis.som.*
-         if( _.startsWith(toState.name, 'vis.explore' ) ) {
-            // pass
-         } 
+      // if(fromState.name === '') {
+      //   // page load -> vis.som.*
+      //    if( _.startsWith(toState.name, 'vis.explore' ) ) {
+      //       // pass
+      //    } 
 
-         else {
-          $state.go('vis.explore');
-         }
-      }
+      //    else {
+      //     $state.go('vis.explore');
+      //    }
+      // }
 
       // som -> somewhere
-      else if( _.startsWith(fromState.name, 'vis.som' ) ) {
+      if( _.startsWith(fromState.name, 'vis.som' ) ) {
 
         // som -> regression
         if( _.startsWith(toState.name, 'vis.regression') ) {
