@@ -20,9 +20,10 @@ module.directive('replaceAndCompile', ['$compile', '$timeout', function($compile
   return {
     scope: { 
       name: '=reName', 
-      window: '=reWindow'
+      window: '=reWindow',
     },
     restrict: 'A',
+    priority: 200,
     link: {
       post: function(scope, element, attrs) {
         $timeout( function() {

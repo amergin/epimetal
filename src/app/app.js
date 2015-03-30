@@ -58,10 +58,9 @@ App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStatePr
 
     // default route
     // $urlRouterProvider.when('', '/vis/explore');
-    // $urlRouterProvider.when('', ['$state', function($state) {
-    //   console.log("when", arguments);
-    //   // $state.go('vis.explore', { state: undefined });
-    // }]);
+    $urlRouterProvider.when('', ['$state', '$stateParams', function($state, $stateParams) {
+      $state.go('vis.explore', { state: undefined });
+    }]);
     $stickyStateProvider.enableDebug(true);
 
     // see https://github.com/christopherthielen/ui-router-extras/issues/138
@@ -98,7 +97,7 @@ App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStatePr
         console.log(unfoundState, fromState, fromParams);
       });
 
-      $state.go('vis.explore');
+      // $state.go('vis.explore');
 
 }
 ]);
