@@ -217,7 +217,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       });
 
       $scope.$watch('limitDisp', function(value) {
-        if(!val) { return; }
+        if(!value) { return; }
         var index = Utils.indexOf($scope.$parent.settingsDropdown, function(drop) {
           return drop.type == 'correlations';
         });
