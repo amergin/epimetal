@@ -54,7 +54,7 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
           datasets: activeSets,
           som: {
             size: SOMService.planeSize(),
-            bmus: SOMService.getBMUs(),
+            bmus: SOMService.bmus(),
             testVars: SOMService.getVariables(),
             filters: getSOMFilters()
           },
@@ -226,6 +226,7 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
           function addBMUs(bmus) {
             try {
               if(!bmus || bmus.length === 0 ) { return; }
+              SOMService.bmus(bmus);
               DimensionService.get('vis.som').addBMUs(bmus);
             } catch(e) {
               throw new Error('Invalid bmu samples');

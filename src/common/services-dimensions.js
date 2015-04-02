@@ -534,7 +534,7 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
         var addSamples;
 
         // workaround: for secondary, don't add samples not in your scope:
-        if( _service.getPrimary() !== that ) {
+        if( _service.getPrimary() !== that && crossfilterInst.size() > 0) {
           addSamples = _.filter(samples, function(s) { 
             var id = _getSampleKey(s.dataset, s.sampleid);
             return _.isUndefined(currSamples[id]) ? false : true;

@@ -34,8 +34,10 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
       return !that.inProgress;
     };
 
-    service.getBMUs = function() {
-      return that.bmus;
+    service.bmus = function(x) {
+      if(!arguments.length) { return that.bmus; }
+      that.bmus = x;
+      return service;
     };
 
     service.defaultPlanes = function() {
