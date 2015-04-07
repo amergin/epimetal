@@ -1,7 +1,11 @@
 var mod = angular.module('services.correlation', ['services.dataset', 'services.notify']);
 
-mod.factory('CorrelationService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'NotifyService',
-  function CorrelationService($injector, $q, $rootScope, DatasetFactory, NotifyService) {
+mod.constant('CORRELATION_SPLIT_MAX', 10);
+mod.constant('CORRELATION_SPLIT_MIN', 4);
+mod.constant('CORRELATION_VAR_THRESHOLD', 40);
+
+mod.factory('CorrelationService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'NotifyService', 'CORRELATION_SPLIT_MAX', 'CORRELATION_SPLIT_MIN', 'CORRELATION_VAR_THRESHOLD',
+  function CorrelationService($injector, $q, $rootScope, DatasetFactory, NotifyService, CORRELATION_SPLIT_MAX, CORRELATION_SPLIT_MIN, CORRELATION_VAR_THRESHOLD) {
     var that = this;
     var service = {};
 
@@ -49,9 +53,10 @@ mod.factory('CorrelationService', ['$injector', '$q', '$rootScope', 'DatasetFact
         });
       });
 
+      var subArrayCount = (variables.length <= CORRELATION_VAR_THRESHOLD) ? CORRELATION_SPLIT_MIN : CORRELATION_SPLIT_MAX;
       return {
         diagonals: diagonals,
-        coordinates: Utils.subarrays(coordinates, 20)
+        coordinates: Utils.subarrays(coordinates, subArrayCount)
       };
     };
 
@@ -130,7 +135,6 @@ mod.factory('CorrelationService', ['$injector', '$q', '$rootScope', 'DatasetFact
             }
           })
           .require('underscore-min.js')
-          // .require('d3.min.js')
           .require({ fn: Utils.stDeviation, name: 'stDeviation' })
           .require({ fn: Utils.sampleCorrelation, name: 'sampleCorrelation' })
           .require({ fn: Utils.calcPForPearsonR, name: 'calcPForPearsonR' })

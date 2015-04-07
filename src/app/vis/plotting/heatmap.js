@@ -228,49 +228,22 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         addLimit();
       });
 
-      // $scope.$watch('limitDisp', function(val) {
-      //   if(!val) { return; }
-
-      //   $scope.$parent.settingsDropdown.push({
-      //     'text': '<i class="fa fa-sliders"></i> Show correlations with p > <b>' + $scope.limitDisp + '</b>',
-      //     'click': function() {
-      //       var entry = _.last($scope.$parent.settingsDropdown).text;
-      //       $scope.filtered = !$scope.filtered;
-      //       if($scope.filtered) { 
-      //         $scope.$parent.headerText[2] = '(p < ' + $scope.limitDisp + ')';
-      //         _.last($scope.$parent.settingsDropdown).text = entry.replace(/Hide/, 'Show');
-      //       } else {
-      //         $scope.$parent.headerText[2] = '';
-      //         _.last($scope.$parent.settingsDropdown).text = entry.replace(/Show/, 'Hide');
-      //       }
-      //       $scope.heatmap.render();
-      //     }
-      //   });
-
-      // });
-
-      var callback = function() {
-        // update the chart and redraw
-        $scope.heatmap.dimension($scope.coordDim);
-        $scope.heatmap.group($scope.coordGroup);
-
-        // remember to clear any filters that may have been applied
-        //$scope.heatmap.filterAll();
-        $scope.heatmap.render();
-      };
-
-      $scope.throttled = _.debounce(function() {
-        $scope.computeVariables(callback);
-      }, 300, { maxWait: 600, trailing: true });
-
-      $scope.redraw = function() {
-      $scope.throttled();
-    };
-
     $scope.filter = function() {
       $scope.filtered = !$scope.filtered;
       $scope.heatmap.render();
     };
+
+    var callback = function() {
+      // update the chart and redraw
+      $scope.heatmap.dimension($scope.coordDim);
+      $scope.heatmap.group($scope.coordGroup);
+
+      $scope.heatmap.render();
+    };
+
+    $scope.redraw = _.debounce(function() {
+      $scope.computeVariables(callback);
+    }, 0, { maxWait: 600, trailing: true });
 
   }]);
 
