@@ -216,7 +216,9 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
             try {
               _.each(circles, function(circle) {
                 var filter = FilterService.getSOMFilter(circle.id);
-                filter.position(circle.position).radius(circle.radius);
+                if(circle.position && circle.radius) {
+                  filter.position(circle.position).radius(circle.radius);
+                }
               });
             } catch(e) {
               throw new Error('Invalid SOM filters');
