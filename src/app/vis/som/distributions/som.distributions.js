@@ -13,7 +13,6 @@ var vis =
 mod.controller('SOMDistributionsController', ['$scope', '$templateCache', '$rootScope', 'windowHandler', 'PlotService',
   function SOMDistributionsController($scope, $templateCache, $rootScope, windowHandler, PlotService) {
     $scope.windowHandler = windowHandler;
-    $scope.windowHandler.filtersEnabled(false);
     $scope.windows  = $scope.windowHandler.get();    
 
     $scope.itemMapper = {

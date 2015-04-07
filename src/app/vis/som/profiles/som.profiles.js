@@ -13,7 +13,6 @@ var vis =
 mod.controller('SOMProfilesController', ['$scope', '$templateCache', '$rootScope', 'PlotService', 'DatasetFactory', 'windowHandler',
   function SOMProfilesController($scope, $templateCache, $rootScope, PlotService, DatasetFactory, windowHandler) {
   $scope.windowHandler = windowHandler;
-  $scope.windowHandler.filtersEnabled(false);
   $scope.windows = $scope.windowHandler.get();
 
   $scope.getClass = function(type) {

@@ -97,12 +97,14 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
             height: 300,
             aspectRatio: 'preserve'
           };
+          config.filterEnabled = false;
         } else {
           config.size = {
             width: 450,
             height: 375,
             aspectRatio: 'stretch'
           };
+          config.filterEnabled = true;
         }
         windowHandler.add(config);
       };

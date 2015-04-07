@@ -9,7 +9,6 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
       var windows = [];
       var _name = name;
       var that = this;
-      var _filtersEnabled = true;
       var _dimensionService = null;
       var _ignoreRedraws = false;
 
@@ -59,8 +58,7 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
               x: 0,
               y: 0,
             }
-          },
-          filterEnabled: _filtersEnabled
+          }
         }) );
 
         $rootScope.$emit('variable:add', config.type, config.variables);
@@ -95,11 +93,6 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         return that;
       };
 
-      this.filtersEnabled = function(val) {
-        if(!arguments.length) { return _filtersEnabled; }
-        _filtersEnabled = val;
-      };
-
       this.removeByType = function(type) {
         var ind = Utils.indexOf(windows, function(win) {
           return win.type == type;
@@ -109,7 +102,6 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
 
         var win = windows.splice(ind,1);
         win = _.first(win);
-        // $rootScope.$emit('variable:remove', win.type, win.variables);
         return that;
       };
 
