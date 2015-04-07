@@ -4,7 +4,7 @@
   "devDependencies": {
     "angular": "1.2.26",
     "angular-mocks": "~1.3",
-    "angular-gridster": "#71b4ce326422cc3548c59309e1baa4b84015fdde",
+    "angular-gridster": "master",
     "bootstrap": "3.1.1",
     "angular-ui-router": "0.2.13",
     "ui-router-extras": "0.0.13",
