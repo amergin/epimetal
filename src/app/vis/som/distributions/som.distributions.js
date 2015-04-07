@@ -26,7 +26,7 @@ mod.controller('SOMDistributionsController', ['$scope', '$templateCache', '$root
     $scope.gridOptions = {
       pushing: false,
       floating: true,
-      swapping: false,
+      swapping: true,
       margins: [10, 10],
       outerMargin: true,
       draggable: {
