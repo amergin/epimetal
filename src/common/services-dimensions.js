@@ -780,7 +780,7 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
         .value()
         .instance;
       },
-      getScondary: function() {
+      getSecondary: function() {
         return _service.get('vis.som');
       },
       equal: function(a, b) {

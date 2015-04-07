@@ -8,6 +8,8 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
 
     var _inProgress = false;
     var _result = {};
+    // sample count before 
+    var _sampleCount = {};
     var _variables = {
       target: null,
       association: [],
@@ -331,6 +333,15 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       return _.union(indices);
     };
 
+    function updateSampleCount() {
+      var DimensionService = $injector.get('DimensionService'),
+      secondary = DimensionService.getSecondary(),
+      primary = DimensionService.getPrimary();
+
+      _sampleCount.primary = primary.getSampleDimension().groupAll().get().value();
+      _sampleCount.secondary = secondary.getSampleDimension().groupAll().get().value();
+    }
+
     var getAllNaNs = function(targetData, targetVar, adjustData, adjustVars) {
       var obj = {
         total: [],
@@ -401,6 +412,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
             console.log("Regression result = ", result);
             _inProgress = false;
             _result = result;
+            updateSampleCount();
             TabService.lock(false);
 
             if( !result[0].result.success ) {
@@ -418,6 +430,8 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
           }, function errFn(result) {
             _inProgress = false;
             TabService.lock(false);
+            _result = {};
+            updateSampleCount();
             deferred.reject({
               input: config.variables,
               result: result
@@ -425,6 +439,15 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
           });
       });
       return deferred.promise;
+    };
+
+    // only get
+    service.result = function() {
+      return _result;
+    };
+
+    service.sampleCount = function() {
+      return _sampleCount;
     };
 
     return service;

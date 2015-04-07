@@ -46,12 +46,12 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
         // som -> regression
         if( _.startsWith(toState.name, 'vis.regression') ) {
           // update regression view
-          WindowHandler.get(toState.name).redrawAll();
+          checkRegressionState(toState.name);
         } 
         // som -> explore
-        else if( _.startsWith(toState.name, 'vis.explore') ) {
-          // do nothing
-        }
+        // else if( _.startsWith(toState.name, 'vis.explore') ) {
+        //   // do nothing
+        // }
       } 
       // explore -> somewhere
       else if( _.startsWith(fromState.name, 'vis.explore') ) {
@@ -67,9 +67,9 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
         }
       } 
       // regression -> somewhere
-      else if( _.startsWith(fromState.name, 'vis.regression') ) {
-        // no actions
-      }
+      // else if( _.startsWith(fromState.name, 'vis.regression') ) {
+      //   // no actions
+      // }
     });
 
     function checkDefaultPlanes() {
@@ -83,6 +83,26 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
         _.each( defaultPlanes, function(variable) {
           PlotService.drawSOM({ variables: { x: variable } }, planeHandler);
         });
+      }
+    }
+
+    function checkRegressionState(toName) {
+      function sameSamples() {
+        var RegressionService = $injector.get('RegressionService'),
+        DimensionService = $injector.get('DimensionService'),
+        primary = DimensionService.getPrimary(),
+        secondary = DimensionService.getSecondary(),
+        regressionCount = RegressionService.sampleCount(),
+        primaryCount = primary.getSampleDimension().groupAll().get().value(),
+        secondaryCount = secondary.getSampleDimension().groupAll().get().value();
+
+        var primaryIsSame = (primaryCount == regressionCount.primary),
+        secondaryIsSame = (secondaryCount == regressionCount.secondary);
+
+        return primaryIsSame && secondaryIsSame;
+      }
+      if(!sameSamples()) {
+        WindowHandler.get(toName).redrawAll();
       }
     }
 
