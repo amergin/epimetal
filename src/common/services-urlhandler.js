@@ -366,7 +366,9 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
         })
         .finally(function() {
           NotifyService.disabled(false);
-          removeHash();
+          $timeout(function() {
+            removeHash();
+          });
           _loaded = true;
         });
       }
