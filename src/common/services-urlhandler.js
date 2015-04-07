@@ -315,6 +315,7 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
 
       function removeHash() {
         // remove the state hash from url
+        $state.params['state'] = undefined;
         $location.search('state', undefined);
         $location.url($location.path());
       }

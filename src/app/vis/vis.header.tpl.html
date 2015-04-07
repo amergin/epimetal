@@ -16,8 +16,7 @@
   <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
     <ul class="nav navbar-nav">
      <li ng-repeat="tab in tabs" ng-class="{active:$state.includes('vis.' + tab.name)}">
-      <a href ui-sref="{{ 'vis.' + tab.name }}" eat-click-if="!tabChangeEnabled(tab)" role="tab" data-toggle="tab">{{tab.title}}</a>
-      <!-- <a href ui-sref="{{ 'vis.' + tab.name }}" role="tab" data-toggle="tab">{{tab.title}}</a> -->
+      <a href ui-sref="{{ 'vis.' + tab.name }}({ state: undefined })" eat-click-if="!tabChangeEnabled(tab)" role="tab" data-toggle="tab">{{tab.title}}</a>
     </li>
   </ul>
   <ul class="nav navbar-nav navbar-right navbar-vertical-align">
@@ -28,7 +27,9 @@
       <div class="filter-info"></div>
     </li>
     <li>
-      <div class="link-creator"></div>
+        <a href data-trigger="click" data-placement="bottom-right" data-content="cont" data-template="vis/menucomponents/new.linkcreator.tpl.html" data-animation="am-fade" title="Copy a link to this view" bs-popover data-auto-close="1">
+          <i class="fa fa-link"></i> Link this view  <i class="fa fa-caret-down"></i>
+        </a>
     </li>
   </ul>
 </div><!-- /.navbar-collapse -->

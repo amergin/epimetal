@@ -3,13 +3,18 @@
 	<h3 class="popover-title" ng-bind-html="title" ng-show="title"></h3>
 	<div class="popover-content">
 		<div growl inline="true" limit-messages="1" reference="linkcreatorinfo" class="am-fade container-fluid"></div>
+		<span us-spinner="{radius:30, width:8, length: 16}" spinner-key="linkcreator"></span>
 		<div class="container-fluid">
 			<form role="form">
 				<div class="row">
 					<div class="form-group col-sm-12">
 						<p>
-							<button href="" type="button" class="btn btn-primary" ng-click="getStateLink()" ng-show="!stateLink">Create a link to this view</button>
-							<textarea ng-show="stateLink" select-on-click class="form-control" rows="3" id="longurl">{{stateLink}}</textarea>
+							<textarea readonly ng-show="stateLink" select-on-click class="form-control" rows="3" id="longurl">{{stateLink}}</textarea>
+						</p>
+						<p>
+							<button type="button" class="btn btn-primary" clip-click="clicked()" clip-copy="stateLink">
+							<i class="fa fa-clipboard"></i> Copy to clipboard
+							</button>
 						</p>
 					</div>
 				</div>

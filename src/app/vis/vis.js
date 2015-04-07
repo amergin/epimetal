@@ -13,7 +13,6 @@
   'plotter.vis.regression',
   'plotter.vis.menucomponents',
   'services.urlhandler',
-  'plotter.vis.linkcreator',
   'plotter.vis.filterinfo',
   'plotter.vis.sampleinfo',
   'mgcrea.ngStrap.popover',

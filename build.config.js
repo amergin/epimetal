@@ -119,7 +119,9 @@ module.exports = {
       'vendor/hor-boxplot/horizontalboxplot.js',
       'vendor/SOM.js/SOM.js',
       'vendor/ngprogress/build/ngProgress.js',
-      'vendor/spark-md5/spark-md5.js'
+      'vendor/spark-md5/spark-md5.js',
+      'vendor/ng-clip/dest/ng-clip.min.js',
+      'vendor/zeroclipboard/dist/ZeroClipboard.js'
       // 'vendor/mathjs/dist/math.js'
     ],
     css: [
@@ -133,7 +135,8 @@ module.exports = {
     ],
     assets: [
       'vendor/font-awesome/fonts/*',
-      'vendor/bootstrap-chosen/chosen-sprite*'
+      'vendor/bootstrap-chosen/chosen-sprite*',
+      'vendor/zeroclipboard/dist/ZeroClipboard.swf'
     ]
   },
 };
