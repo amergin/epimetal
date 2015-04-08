@@ -92,27 +92,6 @@ module.directive('eatClickIf', ['$parse', '$rootScope',
   }
 ]);
 
-Utils.getVariables = function(windowType, selection, splitScatter) {
-  switch(windowType) {
-    case 'scatterplot':
-      if (splitScatter) {
-        return [selection.x + "|" + selection.y];
-      }
-      return [selection.x, selection.y];
-    case 'histogram':
-      return [selection.x];
-    case 'heatmap':
-    case 'profile-histogram':
-      return selection.x;
-    case 'somplane':
-      return [];
-    case 'regression-plot':
-      return [];
-    default:
-      console.log('Undefined type!');
-  }
-};
-
 Utils.stDeviation = function(array, mean, accessFn) { //variable) {
   // for loop is actually fastest vs js map-reduce
   // http://stackoverflow.com/questions/3762589/fastest-javascript-summation

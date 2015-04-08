@@ -12,6 +12,8 @@ import json
 from orm_models import Sample, HeaderSample, HeaderGroup, BrowsingState
 from flask_sockets import Sockets
 
+from pymongo import ReadPreference
+
 import io
 from base64 import b64decode
 
@@ -24,10 +26,11 @@ config = Config('setup.config')
 app.config['DEBUG'] = True
 app.config['SECRET_KEY'] = os.urandom(24)
 app.config['MONGODB_SETTINGS'] = {
-	'DB': config.getMongoVar('db'),
+	'db': config.getMongoVar('db'),
 	'alias': 'samples',
 	'HOST': config.getMongoVar('host'),
-	'PORT': int( config.getMongoVar('port') )
+	'PORT': int( config.getMongoVar('port') ),
+	'read_preference': ReadPreference.PRIMARY_PREFERRED
 }
 
 register_connection(
@@ -63,6 +66,13 @@ def _getUrlSalt():
 URL_SALT = _getUrlSalt()
 hashids = Hashids(salt=URL_SALT)
 
+def withoutKeys(dictionary, keys):
+	for excludeKey in keys:
+		dictionary.pop(excludeKey, None)
+
+def dictSubset(dictionary, keys):
+	return dict([(i, dictionary[i]) for i in keys if i in dictionary])	
+
 @app.route( config.getFlaskVar('prefix') + 'headers/NMR_results', methods=['GET'])
 def headers():
 	def _getFormatted():
@@ -73,14 +83,13 @@ def headers():
 				'name_order': no,
 				'desc': header.desc,
 				'group': { 'name': header.group.name, 'order': header.group.order },
-				'unit': header['unit'],
-				'unit': header['unit'],
+				'classed': header.classed or False
 			}
 
 		formatted = []
 		for group in HeaderGroup.objects.all():
-			for no, header in enumerate(group.variables):
-				formatted.append( _getHeader(header, no) )
+			for no, sample in enumerate(group.variables):
+				formatted.append( _getHeader(sample, no) )
 		return formatted
 
 
@@ -95,7 +104,6 @@ def headers():
 	else:
 		retDict['success'] = True
 		retDict['result'] = headers
-
 		response = flask.jsonify( retDict )
 		response.status_code = 200
 		return response
@@ -303,7 +311,7 @@ def getBulk():
 			response = flask.jsonify({
 				'success': 'true',
 				'query': { 'variables': variables, 'dataset': dataset },
-				'result': { 'values': json.loads(samples.to_json()) } #getSamples(samples, variables) }
+				'result': { 'values': samples.as_pymongo() }
 			})
 			response.status_code = 200
 			return response

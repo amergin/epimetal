@@ -81,6 +81,9 @@ mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService
       if(filter.type == 'range') {
         FilterService.removeHistogramFilter(filter, redraw);
       }
+      else if(filter.type == 'classed') {
+        FilterService.removeClassedFilter(filter, redraw);
+      }
     };
 
     $scope.canEdit = function() {

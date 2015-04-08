@@ -48,6 +48,17 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
         return crossfilterInst.size();
       };
 
+      // for primary
+      this.activeVariables = function() {
+        var ret = [];
+        _.each(dimensions, function(dim) {
+          if(dim.type() == 'normal') {
+            ret = ret.concat(dim.variable());
+          }
+        });
+        return ret;
+      };
+
       var getDimensionKey = function(type, variable) {
         return _.toArray(arguments).join("|");
         // return [type, variable].join("|");
@@ -63,7 +74,8 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
               }
               else {
                 // a little checking to make sure NaN's are not returned
-                return +d.variables[variable] || constants.nanValue;
+                var value = +d.variables[variable];
+                return _.isNaN(value) ? constants.nanValue : value;
               }
             };
 
@@ -78,6 +90,31 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
         }
         return dimensions[key];
       };
+
+      this.classHistogramDimension = function (classvar) {
+        var creationFn = function (d) {
+          return {
+            classed: d.variables[classvar],
+            dataset: d.dataset,
+            valueOf: function() {
+              return _.isUndefined(this.classed) ? constants.nanValue : this.classed + "|" + this.dataset;
+            }
+          };
+        };
+
+        key = getDimensionKey('normal', classvar);
+        if(dimensions[key]) {
+          //pass
+        } else {
+          var destructFn = _.once(function() {
+            delete dimensions[key];
+          });
+          dimensions[key] = new CrossfilterDimension('normal', classvar, $injector, crossfilterInst, creationFn, destructFn);
+        }
+        return dimensions[key];
+      };
+
+
 
       this.getVariableBMUDimension = function() {
         var creationFn = function(d) {
@@ -234,7 +271,7 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
 
       // call this to get combined dimension for x-y scatterplots
       this.getXYDimension = function (selection) {
-        var key = getDimensionKey('xy', selection.x, selection.y);
+        var key = getDimensionKey('normal', selection.x, selection.y);
         var creationFn = function (d) {
             return {
               x: +d.variables[selection.x],
@@ -254,7 +291,7 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
           var destructFn = _.once(function() {
             delete dimensions[key];
           });
-          dimensions[key] = new CrossfilterDimension('xy', selection, $injector, crossfilterInst, creationFn, destructFn);
+          dimensions[key] = new CrossfilterDimension('normal', [selection.x, selection.y], $injector, crossfilterInst, creationFn, destructFn);
         }
         return dimensions[key];
       };
@@ -529,7 +566,7 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
 
       // receives new variable data. The function is called once for each dataset
       // receiving data, and therefore the additions have to operate on a dataset-basis
-      this.addVariableData = function(variables, samples, dataset) {
+      this.addVariableData = function(variables, samples, dataset, force) {
 
         var addSamples;
 
@@ -550,9 +587,10 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
         var currentKeys = _getCurrentKeys(),
         newVariables = _.difference(variables, currentKeys),
         currentDatasets = _getCurrentDatasets(),
-        newDatasets = _.difference([dataset.getName()], currentDatasets);
+        newDatasets = _.difference([dataset.getName()], currentDatasets),
+        forcedUpdate = !_.isUndefined(force) && force;
 
-        if(_.isEmpty(newVariables) && _.isEmpty(newDatasets)) {
+        if(_.isEmpty(newVariables) && _.isEmpty(newDatasets) && !forcedUpdate ) {
           // nothing new to add
         }
         else {
@@ -800,7 +838,7 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
 function CrossfilterDimension(type, variable, injector, crossfilterInst, creationFn, destructFn) {
 
   var _type = type,
-  _variable = variable,
+  _variable = variable || [],
   _count = 0,
   $injector = injector,
   _groups = {},

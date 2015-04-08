@@ -14,35 +14,29 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       multipleVariablesURL: '/API/list/'
     };
     that.colors = d3.scale.category20();
+    that.classedVariables = {};
+    that.variableCache = {};
 
     // primary from dimension service
     that.dimensionService = null;
-
-    // notice: these cannot be kept in DimensionService, since
-    // not all variables rely on crossfilter-dimension setup!
-    // SOM variables are not added here since they do not require
-    // API loading.
-    that.activeVariables = {};
 
     var initVariables = _.once(function() {
       var defer = $q.defer();
       $http.get(that.config.variablesURL)
         .success(function(response) {
           console.log("Load variable list");
-          // empty just in case it's not empty
-          var res = [];
-          _.each(response.result, function(varNameObj, ind) {
-            res.push(varNameObj);
+          _.each(response.result, function(variable) {
+            if(variable.classed) {
+              that.classedVariables[variable.name] = variable;
+            }
+            that.variableCache[variable.name] = variable;
           });
-          res = _.sortBy(res, function(obj) {
-            return obj.desc || obj.name;
-          });
-          that.variables = angular.copy(res);
+          that.variables = response.result;
           defer.resolve(that.variables);
         })
         .error( function() {
           that.variables = angular.copy([]);
-          NotifyService.addSticky('Error', 'Something went wrong while fetching variables. Please reload the page', 'error');
+          NotifyService.addSticky('Error', 'Something went wrong while fetching variables. Please reload the page.', 'error');
           defer.reject('Something went wrong while fetching variables. Please reload the page');
         });
       return defer.promise;
@@ -249,6 +243,14 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
     var service = {};
 
+    service.isClassVariable = function(v) {
+      return !_.isUndefined(that.classedVariables[v]);
+    };
+
+    service.getVariable = function(v) {
+      return that.variableCache[v];
+    };
+
     service.getColorScale = function() {
       return that.colors;
     };
@@ -300,8 +302,8 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
     service.checkActiveVariables = function(set) {
 
       var defer = $q.defer();
-      // var DimensionService = $injector.get('DimensionService');
-      var activeVars = service.getActiveVariables();
+      var DimensionService = $injector.get('DimensionService');
+      var activeVars = DimensionService.getPrimary().activeVariables();
 
       // nothing to add if disabled
       if (!set.isActive()) {
@@ -322,7 +324,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
             return;
           }
 
-          var dataAdded = that.dimensionService.addVariableData(activeVars, obj.samples.added, obj.dataset);
+          var dataAdded = that.dimensionService.addVariableData(activeVars, obj.samples.added, obj.dataset, true);
           if (dataAdded) {
             dataWasAdded = true;
           }
@@ -436,46 +438,9 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       return that.sets[name].active();
     };
 
-
-    service._addActiveVariable = function(variable) {
-      if (_.isUndefined(that.activeVariables[variable])) {
-        that.activeVariables[variable] = {
-          count: 1
-        };
-      } else {
-        ++that.activeVariables[variable].count;
-      }
-    };
-
-    service._removeActiveVariable = function(variable) {
-      --that.activeVariables[variable].count;
-    };
-
-    service.getActiveVariables = function() {
-      return _.without(
-        _.map(that.activeVariables, function(val, key) {
-          if (val.count > 0) {
-            return key;
-          }
-        }),
-        undefined);
-    };
-
     service.setDimensionService = function(dimensionService) {
       that.dimensionService = dimensionService;
     };
-
-    $rootScope.$on('variable:add', function(event, type, selection) {
-      _.each(Utils.getVariables(type, selection), function(variable) {
-        service._addActiveVariable(variable);
-      });
-    });
-
-    $rootScope.$on('variable:remove', function(event, type, selection) {
-      _.each(Utils.getVariables(type, selection), function(variable) {
-        service._removeActiveVariable(variable);
-      });
-    });
 
     return service;
   }

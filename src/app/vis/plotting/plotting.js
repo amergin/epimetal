@@ -7,6 +7,7 @@ var visu = angular.module('plotter.vis.plotting',
   'plotter.vis.plotting.som',
   'plotter.vis.plotting.profile-histogram',
   'plotter.vis.plotting.regression',
+  'plotter.vis.plotting.classedbarchart',
   'services.dimensions', 
   'services.dataset', 
   'services.window',
@@ -88,8 +89,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
 
     this.drawHistogram = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
-        var type = 'histogram';
-        config.type = type;
+        config.type = 'histogram';
         config.somSpecial = config.somSpecial || false;
         if(config.somSpecial) {
           config.size = {
@@ -98,7 +98,8 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
             aspectRatio: 'preserve'
           };
           config.filterEnabled = false;
-        } else {
+        }
+        else {
           config.size = {
             width: 450,
             height: 375,
@@ -106,6 +107,10 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           };
           config.filterEnabled = true;
         }
+        if( DatasetFactory.isClassVariable(config.variables.x) ) {
+          config.type = 'classed-bar-chart';
+        }
+
         windowHandler.add(config);
       };
 

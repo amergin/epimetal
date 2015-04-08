@@ -33,7 +33,7 @@ class HeaderSample(Document):
 	group = ReferenceField('HeaderGroup', required=True, reverse_delete_rule=CASCADE)
 	name = StringField(unique=True, required=True)
 	unit = DynamicField(required=True) #StringField()
-	classVariable = BooleanField(required=True, default=False)
+	classed = BooleanField(required=True, default=False)
 	desc = StringField()
 
 	meta = {
@@ -43,21 +43,6 @@ class HeaderSample(Document):
 		],
 	'db_alias': 'samples'		
 	}
-
-# class HeaderClassSample(Document):
-# 	group = ReferenceField('HeaderGroup', required=True, reverse_delete_rule=CASCADE)
-# 	name = StringField(unique=True, required=True)
-# 	unit = DictField(required=True)
-# 	desc = StringField()
-
-# 	meta = {
-# 	'indexes': [
-# 		{'fields': ['desc'] },
-# 		{'fields': ['name'], 'unique': True }
-# 		],
-# 	'db_alias': 'samples'
-# 	}
-
 
 class BrowsingState(DynamicDocument):
 	urlHash = StringField(required=True, unique=True, max_length=50)

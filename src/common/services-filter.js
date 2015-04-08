@@ -10,6 +10,7 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       'som': [ { type: 'som', circle: new CircleFilter('circle1', $injector).name('A') },
        { type: 'som', circle: new CircleFilter('circle2', $injector).name('B') } ]
     };
+    var _disabled = false;
 
     var _somDimensionInst = _activeDimensionService.getSOMDimension();
     var _somDimension = _somDimensionInst.get();
@@ -32,6 +33,12 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
     var _circleFilterReturnHandle = getCircleFilterInitial();
 
     var service = {};
+
+    service.disabled = function(x) {
+      if(!arguments.length) { return _disabled; }
+      _disabled = x;
+      return service;
+    };
 
     service.tabChange = function(tabName) {
       function changeDimension() {
@@ -68,13 +75,58 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       return _circleFilterReturnHandle;
     };
 
+    service.addClassedFilter = function(config) {
+      if(service.disabled()) { return; }
+      var type = 'histogram';
+      _filters[type].push(config);
+      updateReturnFilters();
+    };
+
+    service.removeClassedFilter = function(filter, redraw) {
+      if(service.disabled()) { return; }
+      var ind = Utils.indexOf( _filters['histogram'], function(f,i) { 
+        return _.isEqual( f.id, filter.id ) && _.isEqual(f.filter, filter.filter);
+      });
+
+      if( ind == -1 ) { return; }
+      else {
+        _filters['histogram'].splice(ind,1);
+      }
+
+      if( filter.chart ) {
+        service.disabled(true);
+        var oldFilters = filter.chart.filters();
+        filter.chart.filter(null);
+        var filtInd = Utils.indexOf(oldFilters, function(f,i) { 
+          return _.isEqual(f, filter.filter);
+        });
+        if(filtInd != -1) {
+          oldFilters.splice(filtInd,1);
+        }
+        _.each(oldFilters, function(filt) { 
+          filter.chart.filter(filt);
+        });
+        $timeout(function() {
+          service.disabled(false);        
+        });
+      }
+
+      if( redraw ) {
+        $injector.get('WindowHandler').redrawVisible();
+      }
+      updateReturnFilters();
+    };
+
+
     service.addHistogramFilter = function(config) {
+      if(service.disabled()) { return; }
       var type = 'histogram';
       _filters[type].push(config);
       updateReturnFilters();
     };
 
     service.removeHistogramFilter = function(filter, redraw) {
+      if(service.disabled()) { return; }
       var ind = Utils.indexOf( _filters['histogram'], function(f,i) { 
         return _.isEqual( f.id, filter.id );
       });

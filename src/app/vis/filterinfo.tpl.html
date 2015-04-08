@@ -24,6 +24,13 @@
 						<span class="spaced">&lt;</span>
 						{{formatNumber(filter.filter[1])}}
 					</span>
+					<span ng-switch-when="classed">
+						<strong>{{filter.var}}</strong>
+						<span class="spaced">|</span>
+						{{filter.filter.name}}
+						<span class="spaced">|</span>
+						{{filter.filter.dataset}}
+					</span>
 					<span ng-switch-default>
 						(No information of filter)
 					</span>

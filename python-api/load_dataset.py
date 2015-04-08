@@ -83,7 +83,7 @@ class DataLoader( object ):
 					if not samp:
 						payload = rowDict
 						if _isClassVariable(payload):
-							payload['clasVariable'] = True
+							payload['classed'] = True
 							payload['unit'] = getSplitClassVariable(payload)
 
 						payload['group'] = group
