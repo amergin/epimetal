@@ -1,9 +1,9 @@
 from mongoengine import Document, DynamicDocument, CASCADE
-from mongoengine.fields import StringField, ListField, DictField, IntField, ReferenceField, GenericReferenceField
+from mongoengine.fields import StringField, ListField, DictField, IntField, ReferenceField, GenericReferenceField, DynamicField, BooleanField
 
 class Sample(DynamicDocument):
-	dataset = StringField()
-	sampleid = StringField()
+	dataset = StringField(required=True, unique=False)
+	sampleid = StringField(required=True, unique=False)
 	variables = DictField()
 	#'variables' will be added dynamically later on
 
@@ -32,7 +32,8 @@ class HeaderGroup(Document):
 class HeaderSample(Document):
 	group = ReferenceField('HeaderGroup', required=True, reverse_delete_rule=CASCADE)
 	name = StringField(unique=True, required=True)
-	unit = StringField()
+	unit = DynamicField(required=True) #StringField()
+	classVariable = BooleanField(required=True, default=False)
 	desc = StringField()
 
 	meta = {
@@ -42,6 +43,20 @@ class HeaderSample(Document):
 		],
 	'db_alias': 'samples'		
 	}
+
+# class HeaderClassSample(Document):
+# 	group = ReferenceField('HeaderGroup', required=True, reverse_delete_rule=CASCADE)
+# 	name = StringField(unique=True, required=True)
+# 	unit = DictField(required=True)
+# 	desc = StringField()
+
+# 	meta = {
+# 	'indexes': [
+# 		{'fields': ['desc'] },
+# 		{'fields': ['name'], 'unique': True }
+# 		],
+# 	'db_alias': 'samples'
+# 	}
 
 
 class BrowsingState(DynamicDocument):

@@ -10,7 +10,6 @@ import re
 import csv
 
 LINE_SEPARATOR = "\t"
-SAMPLEID_STRING ="sampleid"
 
 # Utilities, not part of the class
 def _getEscapedVar(var):
@@ -34,7 +33,9 @@ class DataLoader( object ):
 	def __init__(self, config, fileName):
 		self.cfg = Config(config)
 		self.file = fileName
-		connect( db=self.cfg.getMongoVar('db'), host=self.cfg.getMongoVar('host'), port=int(self.cfg.getMongoVar('port')), w=1 )
+		connect( db=self.cfg.getMongoVar('db'), alias='samples', host=self.cfg.getMongoVar('host'), port=int(self.cfg.getMongoVar('port')), w=1 )
+		# has 'C|' in the beginning
+		self.classVarRegex = re.compile('(C\|)(.+)', re.IGNORECASE)
 
 	def load(self):
 		self._loadSamples()
@@ -56,6 +57,16 @@ class DataLoader( object ):
 			def _getSample(name):
 				return HeaderSample.objects(name=name)
 
+			def _isClassVariable(payload):
+				unit = payload.get('unit')
+				return self.classVarRegex.search(unit) is not None
+
+			def getSplitClassVariable(payload):
+				unit = payload.get('unit')
+				content = self.classVarRegex.search(unit).group(2)
+				return dict( keypair.split("=") for keypair in content.split("|") )
+
+
 			fileName = self.cfg.getDataLoaderVar('header_file')
 			# assume header contains: [name, desc, unit, group]
 			with open( fileName, 'r' ) as tsv:
@@ -66,13 +77,17 @@ class DataLoader( object ):
 						continue
 					rowDict = dict(zip(header, line))
 					rowDict['name'] = _getEscapedVar( rowDict.get('name') )
-					
+
 					group, created = _getGroup( rowDict.get('group') )
 					samp = _getSample(rowDict.get('name'))
 					if not samp:
 						payload = rowDict
+						if _isClassVariable(payload):
+							payload['clasVariable'] = True
+							payload['unit'] = getSplitClassVariable(payload)
+
 						payload['group'] = group
-						samp =HeaderSample(**payload)
+						samp = HeaderSample(**payload)
 						samp.save()
 						group.variables.append(samp)
 						group.save()
@@ -80,12 +95,13 @@ class DataLoader( object ):
 						# header already exists, do nothing
 						pass
 
-		# omit sampleid
-		header = filter(lambda a: a != SAMPLEID_STRING, headerList)
+		# omit sampleid & dataset
+		datasetKey = self.cfg.getDataLoaderVar('dataset_identifier')
+		sampleidKey = self.cfg.getDataLoaderVar('sampleid_identifier')
+		header = filter(lambda a: (a != sampleidKey and a != datasetKey), headerList)
 
 		# create new header info if necessary
 		_createHeaderObjects(header)
-
 
 
 	def _loadSamples(self):
@@ -98,8 +114,15 @@ class DataLoader( object ):
 				return 'inf'
 			return f
 
+		def checkHeaderAndSampleDimensions(headerList, valuesDict, lineNo):
+			if len(headerList) != len(valuesDict):
+				print '[Error] Header and line lengths must agree, error at line %i' %lineNo
+				sys.exit(-1)
+
 		with open( self.file ) as fi:
 			header = None
+			datasetKey = self.cfg.getDataLoaderVar('dataset_identifier')
+			sampleidKey = self.cfg.getDataLoaderVar('sampleid_identifier')
 			for lineNo, line in enumerate(fi):
 				if( lineNo == 0):
 					# header
@@ -108,18 +131,27 @@ class DataLoader( object ):
 					header = _getEscapedHeader(header)
 					continue
 
-				# normal line
-				values = line.split(LINE_SEPARATOR)
+				line = line.strip()
 
-				# assume first is always dataset
-				dataset = values[0]
-				valuesDict = dict( zip( header, values[1:] ) )
+				if len(line) is 0:
+					# empty line, silently continue
+					continue
+
+				# normal line
+				values = line.strip().split(LINE_SEPARATOR)
+
+				valuesDict = dict( zip( header, values ) )
+
+				dataset = valuesDict[datasetKey]
+				checkHeaderAndSampleDimensions(header, valuesDict, lineNo)
+
 				variables = {}
 				for key, value in valuesDict.iteritems():
-					if key == SAMPLEID_STRING:
+					if key == datasetKey or key == sampleidKey:
 						continue
+					# print "ffloat call = ", valuesDict[key]
 					variables[key.encode('ascii')] = ffloat( float(valuesDict[key]) )
-				sample = Sample( dataset=dataset, sampleid=valuesDict[SAMPLEID_STRING], variables=variables)
+				sample = Sample( dataset=dataset, sampleid=valuesDict[sampleidKey], variables=variables)
 				sample.save()
 
 

@@ -1,0 +1,237 @@
+name	desc	unit	group
+XXL-VLDL-P	Concentration of chylomicrons and extremely large VLDL particles	mol/l	Chylomicrons and extremely large VLDL
+XXL-VLDL-L	Total lipids in chylomicrons and extremely large VLDL 	mmol/l	Chylomicrons and extremely large VLDL
+XXL-VLDL-PL	Phospholipids in chylomicrons and extremely large VLDL 	mmol/l	Chylomicrons and extremely large VLDL
+XXL-VLDL-C	Total cholesterol in chylomicrons and extremely large VLDL 	mmol/l	Chylomicrons and extremely large VLDL
+XXL-VLDL-CE	Cholesterol esters in chylomicrons and extremely large VLDL 	mmol/l	Chylomicrons and extremely large VLDL
+XXL-VLDL-FC	Free cholesterol in chylomicrons and extremely large VLDL 	mmol/l	Chylomicrons and extremely large VLDL
+XXL-VLDL-TG	Triglycerides in chylomicrons and extremely large VLDL 	mmol/l	Chylomicrons and extremely large VLDL
+XL-VLDL-P	Concentration of very large VLDL particles	mol/l	Very large VLDL
+XL-VLDL-L	Total lipids in very large VLDL 	mmol/l	Very large VLDL
+XL-VLDL-PL	Phospholipids in very large VLDL 	mmol/l	Very large VLDL
+XL-VLDL-C	Total cholesterol in very large VLDL 	mmol/l	Very large VLDL
+XL-VLDL-CE	Cholesterol esters in very large VLDL 	mmol/l	Very large VLDL
+XL-VLDL-FC	Free cholesterol in very large VLDL 	mmol/l	Very large VLDL
+XL-VLDL-TG	Triglycerides in very large VLDL 	mmol/l	Very large VLDL
+L-VLDL-P	Concentration of large VLDL particles	mol/l	Large VLDL
+L-VLDL-L	Total lipids in large VLDL 	mmol/l	Large VLDL
+L-VLDL-PL	Phospholipids in large VLDL 	mmol/l	Large VLDL
+L-VLDL-C	Total cholesterol in large VLDL 	mmol/l	Large VLDL
+L-VLDL-CE	Cholesterol esters in large VLDL 	mmol/l	Large VLDL
+L-VLDL-FC	Free cholesterol in large VLDL 	mmol/l	Large VLDL
+L-VLDL-TG	Triglycerides in large VLDL 	mmol/l	Large VLDL
+M-VLDL-P	Concentration of medium VLDL particles	mol/l	Medium VLDL
+M-VLDL-L	Total lipids in medium VLDL 	mmol/l	Medium VLDL
+M-VLDL-PL	Phospholipids in medium VLDL 	mmol/l	Medium VLDL
+M-VLDL-C	Total cholesterol in medium VLDL 	mmol/l	Medium VLDL
+M-VLDL-CE	Cholesterol esters in medium VLDL 	mmol/l	Medium VLDL
+M-VLDL-FC	Free cholesterol in medium VLDL 	mmol/l	Medium VLDL
+M-VLDL-TG	Triglycerides in medium VLDL 	mmol/l	Medium VLDL
+S-VLDL-P	Concentration of small VLDL particles	mol/l	Small VLDL
+S-VLDL-L	Total lipids in small VLDL 	mmol/l	Small VLDL
+S-VLDL-PL	Phospholipids in small VLDL 	mmol/l	Small VLDL
+S-VLDL-C	Total cholesterol in small VLDL 	mmol/l	Small VLDL
+S-VLDL-CE	Cholesterol esters in small VLDL 	mmol/l	Small VLDL
+S-VLDL-FC	Free cholesterol in small VLDL 	mmol/l	Small VLDL
+S-VLDL-TG	Triglycerides in small VLDL 	mmol/l	Small VLDL
+XS-VLDL-P	Concentration of very small VLDL particles	mol/l	Very small VLDL
+XS-VLDL-L	Total lipids in very small VLDL 	mmol/l	Very small VLDL
+XS-VLDL-PL	Phospholipids in very small VLDL 	mmol/l	Very small VLDL
+XS-VLDL-C	Total cholesterol in very small VLDL 	mmol/l	Very small VLDL
+XS-VLDL-CE	Cholesterol esters in very small VLDL 	mmol/l	Very small VLDL
+XS-VLDL-FC	Free cholesterol in very small VLDL 	mmol/l	Very small VLDL
+XS-VLDL-TG	Triglycerides in very small VLDL 	mmol/l	Very small VLDL
+IDL-P	Concentration of IDL particles	mol/l	IDL
+IDL-L	Total lipids in IDL 	mmol/l	IDL
+IDL-PL	Phospholipids in IDL 	mmol/l	IDL
+IDL-C	Total cholesterol in IDL 	mmol/l	IDL
+IDL-CE	Cholesterol esters in IDL 	mmol/l	IDL
+IDL-FC	Free cholesterol in IDL 	mmol/l	IDL
+IDL-TG	Triglycerides in IDL 	mmol/l	IDL
+L-LDL-P	Concentration of large LDL particles	mol/l	Large LDL
+L-LDL-L	Total lipids in large LDL 	mmol/l	Large LDL
+L-LDL-PL	Phospholipids in large LDL 	mmol/l	Large LDL
+L-LDL-C	Total cholesterol in large LDL 	mmol/l	Large LDL
+L-LDL-CE	Cholesterol esters in large LDL 	mmol/l	Large LDL
+L-LDL-FC	Free cholesterol in large LDL 	mmol/l	Large LDL
+L-LDL-TG	Triglycerides in large LDL 	mmol/l	Large LDL
+M-LDL-P	Concentration of medium LDL particles	mol/l	Medium LDL
+M-LDL-L	Total lipids in medium LDL 	mmol/l	Medium LDL
+M-LDL-PL	Phospholipids in medium LDL 	mmol/l	Medium LDL
+M-LDL-C	Total cholesterol in medium LDL 	mmol/l	Medium LDL
+M-LDL-CE	Cholesterol esters in medium LDL 	mmol/l	Medium LDL
+M-LDL-FC	Free cholesterol in medium LDL 	mmol/l	Medium LDL
+M-LDL-TG	Triglycerides in medium LDL 	mmol/l	Medium LDL
+S-LDL-P	Concentration of small LDL particles	mol/l	Small LDL
+S-LDL-L	Total lipids in small LDL 	mmol/l	Small LDL
+S-LDL-PL	Phospholipids in small LDL 	mmol/l	Small LDL
+S-LDL-C	Total cholesterol in small LDL 	mmol/l	Small LDL
+S-LDL-CE	Cholesterol esters in small LDL 	mmol/l	Small LDL
+S-LDL-FC	Free cholesterol in small LDL 	mmol/l	Small LDL
+S-LDL-TG	Triglycerides in small LDL 	mmol/l	Small LDL
+XL-HDL-P	Concentration of very large HDL particles	mol/l	Very large HDL
+XL-HDL-L	Total lipids in very large HDL 	mmol/l	Very large HDL
+XL-HDL-PL	Phospholipids in very large HDL 	mmol/l	Very large HDL
+XL-HDL-C	Total cholesterol in very large HDL 	mmol/l	Very large HDL
+XL-HDL-CE	Cholesterol esters in very large HDL 	mmol/l	Very large HDL
+XL-HDL-FC	Free cholesterol in very large HDL 	mmol/l	Very large HDL
+XL-HDL-TG	Triglycerides in very large HDL 	mmol/l	Very large HDL
+L-HDL-P	Concentration of large HDL particles	mol/l	Large HDL
+L-HDL-L	Total lipids in large HDL 	mmol/l	Large HDL
+L-HDL-PL	Phospholipids in large HDL 	mmol/l	Large HDL
+L-HDL-C	Total cholesterol in large HDL 	mmol/l	Large HDL
+L-HDL-CE	Cholesterol esters in large HDL 	mmol/l	Large HDL
+L-HDL-FC	Free cholesterol in large HDL 	mmol/l	Large HDL
+L-HDL-TG	Triglycerides in large HDL 	mmol/l	Large HDL
+M-HDL-P	Concentration of medium HDL particles	mol/l	Medium HDL
+M-HDL-L	Total lipids in medium HDL 	mmol/l	Medium HDL
+M-HDL-PL	Phospholipids in medium HDL 	mmol/l	Medium HDL
+M-HDL-C	Total cholesterol in medium HDL 	mmol/l	Medium HDL
+M-HDL-CE	Cholesterol esters in medium HDL 	mmol/l	Medium HDL
+M-HDL-FC	Free cholesterol in medium HDL 	mmol/l	Medium HDL
+M-HDL-TG	Triglycerides in medium HDL 	mmol/l	Medium HDL
+S-HDL-P	Concentration of small HDL particles	mol/l	Small HDL
+S-HDL-L	Total lipids in small HDL 	mmol/l	Small HDL
+S-HDL-PL	Phospholipids in small HDL 	mmol/l	Small HDL
+S-HDL-C	Total cholesterol in small HDL 	mmol/l	Small HDL
+S-HDL-CE	Cholesterol esters in small HDL 	mmol/l	Small HDL
+S-HDL-FC	Free cholesterol in small HDL 	mmol/l	Small HDL
+S-HDL-TG	Triglycerides in small HDL 	mmol/l	Small HDL
+XXL-VLDL-PL_%	Phospholipids to total lipds ratio in chylomicrons and extremely large VLDL 	%	Chylomicrons and extremely large VLDL (%)
+XXL-VLDL-C_%	Total cholesterol to total lipids ratio in chylomicrons and extremely large VLDL 	%	Chylomicrons and extremely large VLDL (%)
+XXL-VLDL-CE_%	Cholesterol esters to total lipids ratio in chylomicrons and extremely large VLDL 	%	Chylomicrons and extremely large VLDL (%)
+XXL-VLDL-FC_%	Free cholesterol to total lipids ratio in chylomicrons and extremely large VLDL 	%	Chylomicrons and extremely large VLDL (%)
+XXL-VLDL-TG_%	Triglycerides to total lipids ratio in chylomicrons and extremely large VLDL 	%	Chylomicrons and extremely large VLDL (%)
+XL-VLDL-PL_%	Phospholipids to total lipds ratio in very large VLDL 	%	Very large VLDL (%)
+XL-VLDL-C_%	Total cholesterol to total lipids ratio in very large VLDL 	%	Very large VLDL (%)
+XL-VLDL-CE_%	Cholesterol esters to total lipids ratio in very large VLDL 	%	Very large VLDL (%)
+XL-VLDL-FC_%	Free cholesterol to total lipids ratio in very large VLDL 	%	Very large VLDL (%)
+XL-VLDL-TG_%	Triglycerides to total lipids ratio in very large VLDL 	%	Very large VLDL (%)
+L-VLDL-PL_%	Phospholipids to total lipds ratio in large VLDL 	%	Large VLDL (%)
+L-VLDL-C_%	Total cholesterol to total lipids ratio in large VLDL 	%	Large VLDL (%)
+L-VLDL-CE_%	Cholesterol esters to total lipids ratio in large VLDL 	%	Large VLDL (%)
+L-VLDL-FC_%	Free cholesterol to total lipids ratio in large VLDL 	%	Large VLDL (%)
+L-VLDL-TG_%	Triglycerides to total lipids ratio in large VLDL 	%	Large VLDL (%)
+M-VLDL-PL_%	Phospholipids to total lipds ratio in medium VLDL 	%	Medium VLDL (%)
+M-VLDL-C_%	Total cholesterol to total lipids ratio in medium VLDL 	%	Medium VLDL (%)
+M-VLDL-CE_%	Cholesterol esters to total lipids ratio in medium VLDL 	%	Medium VLDL (%)
+M-VLDL-FC_%	Free cholesterol to total lipids ratio in medium VLDL 	%	Medium VLDL (%)
+M-VLDL-TG_%	Triglycerides to total lipids ratio in medium VLDL 	%	Medium VLDL (%)
+S-VLDL-PL_%	Phospholipids to total lipds ratio in small VLDL 	%	Small VLDL (%)
+S-VLDL-C_%	Total cholesterol to total lipids ratio in small VLDL 	%	Small VLDL (%)
+S-VLDL-CE_%	Cholesterol esters to total lipids ratio in small VLDL 	%	Small VLDL (%)
+S-VLDL-FC_%	Free cholesterol to total lipids ratio in small VLDL 	%	Small VLDL (%)
+S-VLDL-TG_%	Triglycerides to total lipids ratio in small VLDL 	%	Small VLDL (%)
+XS-VLDL-PL_%	Phospholipids to total lipds ratio in very small VLDL 	%	Very small VLDL (%)
+XS-VLDL-C_%	Total cholesterol to total lipids ratio in very small VLDL 	%	Very small VLDL (%)
+XS-VLDL-CE_%	Cholesterol esters to total lipids ratio in very small VLDL 	%	Very small VLDL (%)
+XS-VLDL-FC_%	Free cholesterol to total lipids ratio in very small VLDL 	%	Very small VLDL (%)
+XS-VLDL-TG_%	Triglycerides to total lipids ratio in very small VLDL 	%	Very small VLDL (%)
+IDL-PL_%	Phospholipids to total lipds ratio in IDL 	%	IDL (%)
+IDL-C_%	Total cholesterol to total lipids ratio in IDL 	%	IDL (%)
+IDL-CE_%	Cholesterol esters to total lipids ratio in IDL 	%	IDL (%)
+IDL-FC_%	Free cholesterol to total lipids ratio in IDL 	%	IDL (%)
+IDL-TG_%	Triglycerides to total lipids ratio in IDL 	%	IDL (%)
+L-LDL-PL_%	Phospholipids to total lipds ratio in large LDL 	%	Large LDL (%)
+L-LDL-C_%	Total cholesterol to total lipids ratio in large LDL 	%	Large LDL (%)
+L-LDL-CE_%	Cholesterol esters to total lipids ratio in large LDL 	%	Large LDL (%)
+L-LDL-FC_%	Free cholesterol to total lipids ratio in large LDL 	%	Large LDL (%)
+L-LDL-TG_%	Triglycerides to total lipids ratio in large LDL 	%	Large LDL (%)
+M-LDL-PL_%	Phospholipids to total lipds ratio in medium LDL 	%	Medium LDL (%)
+M-LDL-C_%	Total cholesterol to total lipids ratio in medium LDL 	%	Medium LDL (%)
+M-LDL-CE_%	Cholesterol esters to total lipids ratio in medium LDL 	%	Medium LDL (%)
+M-LDL-FC_%	Free cholesterol to total lipids ratio in medium LDL 	%	Medium LDL (%)
+M-LDL-TG_%	Triglycerides to total lipids ratio in medium LDL 	%	Medium LDL (%)
+S-LDL-PL_%	Phospholipids to total lipds ratio in small LDL 	%	Small LDL (%)
+S-LDL-C_%	Total cholesterol to total lipids ratio in small LDL 	%	Small LDL (%)
+S-LDL-CE_%	Cholesterol esters to total lipids ratio in small LDL 	%	Small LDL (%)
+S-LDL-FC_%	Free cholesterol to total lipids ratio in small LDL 	%	Small LDL (%)
+S-LDL-TG_%	Triglycerides to total lipids ratio in small LDL 	%	Small LDL (%)
+XL-HDL-PL_%	Phospholipids to total lipds ratio in very large HDL 	%	Very large HDL (%)
+XL-HDL-C_%	Total cholesterol to total lipids ratio in very large HDL 	%	Very large HDL (%)
+XL-HDL-CE_%	Cholesterol esters to total lipids ratio in very large HDL 	%	Very large HDL (%)
+XL-HDL-FC_%	Free cholesterol to total lipids ratio in very large HDL 	%	Very large HDL (%)
+XL-HDL-TG_%	Triglycerides to total lipids ratio in very large HDL 	%	Very large HDL (%)
+L-HDL-PL_%	Phospholipids to total lipds ratio in large HDL 	%	Large HDL (%)
+L-HDL-C_%	Total cholesterol to total lipids ratio in large HDL 	%	Large HDL (%)
+L-HDL-CE_%	Cholesterol esters to total lipids ratio in large HDL 	%	Large HDL (%)
+L-HDL-FC_%	Free cholesterol to total lipids ratio in large HDL 	%	Large HDL (%)
+L-HDL-TG_%	Triglycerides to total lipids ratio in large HDL 	%	Large HDL (%)
+M-HDL-PL_%	Phospholipids to total lipds ratio in medium HDL 	%	Medium HDL (%)
+M-HDL-C_%	Total cholesterol to total lipids ratio in medium HDL 	%	Medium HDL (%)
+M-HDL-CE_%	Cholesterol esters to total lipids ratio in medium HDL 	%	Medium HDL (%)
+M-HDL-FC_%	Free cholesterol to total lipids ratio in medium HDL 	%	Medium HDL (%)
+M-HDL-TG_%	Triglycerides to total lipids ratio in medium HDL 	%	Medium HDL (%)
+S-HDL-PL_%	Phospholipids to total lipds ratio in small HDL 	%	Small HDL (%)
+S-HDL-C_%	Total cholesterol to total lipids ratio in small HDL 	%	Small HDL (%)
+S-HDL-CE_%	Cholesterol esters to total lipids ratio in small HDL 	%	Small HDL (%)
+S-HDL-FC_%	Free cholesterol to total lipids ratio in small HDL 	%	Small HDL (%)
+S-HDL-TG_%	Triglycerides to total lipids ratio in small HDL 	%	Small HDL (%)
+VLDL-D	Mean diameter for VLDL particles	nm	Lipoprotein particle size
+LDL-D	Mean diameter for LDL particles	nm	Lipoprotein particle size
+HDL-D	Mean diameter for HDL particles	nm	Lipoprotein particle size
+Serum-C	Serum total cholesterol	mmol/l	Cholesterol
+VLDL-C	Total cholesterol in VLDL	mmol/l	Cholesterol
+Remnant-C	Remnant cholesterol (non-HDL, non-LDL -cholesterol)	mmol/l	Cholesterol
+LDL-C	Total cholesterol in LDL	mmol/l	Cholesterol
+HDL-C	Total cholesterol in HDL	mmol/l	Cholesterol
+HDL2-C	Total cholesterol in HDL2	mmol/l	Cholesterol
+HDL3-C	Total cholesterol in HDL3	mmol/l	Cholesterol
+EstC	Esterified cholesterol	mmol/l	Cholesterol
+FreeC	Free cholesterol	mmol/l	Cholesterol
+Serum-TG	Serum total triglycerides	mmol/l	Glycerides and phospholipids
+VLDL-TG	Triglycerides in VLDL	mmol/l	Glycerides and phospholipids
+LDL-TG	Triglycerides in LDL	mmol/l	Glycerides and phospholipids
+HDL-TG	Triglycerides in HDL	mmol/l	Glycerides and phospholipids
+DAG	Diacylglycerol	mmol/l	Glycerides and phospholipids
+DAG/TG	Ratio of diacylglycerol to triglycerides		Glycerides and phospholipids
+TotPG	Total phosphoglycerides	mmol/l	Glycerides and phospholipids
+TG/PG	Ratio of triglycerides to phosphoglycerides		Glycerides and phospholipids
+PC	Phosphatidylcholine and other cholines	mmol/l	Glycerides and phospholipids
+SM	Sphingomyelins	mmol/l	Glycerides and phospholipids
+TotCho	Total cholines	mmol/l	Glycerides and phospholipids
+ApoA1	Apolipoprotein A-I	mmol/l	Apolipoproteins
+ApoB	Apolipoprotein B	mmol/l	Apolipoproteins
+ApoB/ApoA1	Ratio of apolipoprotein B to apolipoprotein A-I		Apolipoproteins
+TotFA	Total fatty acids	mmol/l	Total fatty acids and saturation measures
+FALen	Estimated description of fatty acid chain length, not actual carbon number		Total fatty acids and saturation measures
+UnSat	Estimated degree of unsaturation		Total fatty acids and saturation measures
+DHA	22:6, docosahexaenoic acid	mmol/l	Fatty acids
+LA	18:2, linoleic acid	mmol/l	Fatty acids
+CLA	Conjugated linoleic acid	mmol/l	Fatty acids
+FAw3	Omega-3 fatty acids	mmol/l	Fatty acids
+FAw6	Omega-6 fatty acids	mmol/l	Fatty acids
+PUFA	Polyunsaturated fatty acids	mmol/l	Fatty acids
+MUFA	Monounsaturated fatty acids; 16:1, 18:1	mmol/l	Fatty acids
+SFA	Saturated fatty acids	mmol/l	Fatty acids
+DHA/FA	Ratio of 22:6 docosahexaenoic acid to total fatty acids	%	Fatty acids (%)
+LA/FA	Ratio of 18:2 linoleic acid to total fatty acids	%	Fatty acids (%)
+CLA/FA	Ratio of conjugated linoleic acid to total fatty acids	%	Fatty acids (%)
+FAw3/FA	Ratio of omega-3 fatty acids to total fatty acids	%	Fatty acids (%)
+FAw6/FA	Ratio of omega-6 fatty acids to total fatty acids	%	Fatty acids (%)
+PUFA/FA	Ratio of polyunsaturated fatty acids to total fatty acids	%	Fatty acids (%)
+MUFA/FA	Ratio of monounsaturated fatty acids to total fatty acids	%	Fatty acids (%)
+SFA/FA	Ratio of saturated fatty acids to total fatty acids	%	Fatty acids (%)
+Glc	Glucose	mmol/l	Glycolysis related metabolites
+Lac	Lactate	mmol/l	Glycolysis related metabolites
+Pyr	Pyruvate	mmol/l	Glycolysis related metabolites
+Cit	Citrate	mmol/l	Glycolysis related metabolites
+Glol	Glycerol	mmol/l	Glycolysis related metabolites
+Ala	Alanine	mmol/l	Amino acids
+Gln	Glutamine	mmol/l	Amino acids
+Gly	Glycine	mmol/l	Amino acids
+His	Histidine	mmol/l	Amino acids
+Ile	Isoleucine	mmol/l	Branched-chain amino acids
+Leu	Leucine	mmol/l	Branched-chain amino acids
+Val	Valine	mmol/l	Branched-chain amino acids
+Phe	Phenylalanine	mmol/l	Aromatic amino acids
+Tyr	Tyrosine	mmol/l	Aromatic amino acids
+Ace	Acetate	mmol/l	Ketone bodies
+AcAce	Acetoacetate	mmol/l	Ketone bodies
+bOHBut	3-hydroxybutyrate	mmol/l	Ketone bodies
+Crea	Creatinine	mmol/l	Fluid balance
+Alb	Albumin	signal area	Fluid balance
+Gp	Glycoprotein acetyls, mainly a1-acid glycoprotein	mmol/l	Inflammation
+Age	Patient age	years	Clinical data
+Gender	Patient gender	C|0=female|1=male	Clinical data
+BMI	Body Mass Index	kg/m2	Clinical data
