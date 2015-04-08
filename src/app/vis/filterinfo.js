@@ -94,8 +94,13 @@ mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService
       if( checkEdit() ) { return; }
 
       _.each( angular.copy($scope.filters), function(f) {
-        $scope.close(f, false);
+        if(f.type == 'classed') {
+          f.chart.filterAll();
+        } else {
+          $scope.close(f, false);
+        }
       });
+
       $injector.get('WindowHandler').redrawVisible();
     };
   }

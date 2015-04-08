@@ -83,7 +83,7 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
     };
 
     service.removeClassedFilter = function(filter, redraw) {
-      if(service.disabled()) { return; }
+      if(!redraw && service.disabled()) { return; }
       var ind = Utils.indexOf( _filters['histogram'], function(f,i) { 
         return _.isEqual( f.id, filter.id ) && _.isEqual(f.filter, filter.filter);
       });
@@ -107,7 +107,7 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
           filter.chart.filter(filt);
         });
         $timeout(function() {
-          service.disabled(false);        
+          service.disabled(false);
         });
       }
 

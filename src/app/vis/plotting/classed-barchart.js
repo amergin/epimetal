@@ -15,6 +15,18 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
       return $scope.window.somSpecial;
     };
 
+    $scope.addStateFilters = function() {
+      if(!$scope.window.filters) { return; }
+      _.each($scope.window.filters, function(filter) {
+        if(!$scope.isSpecial()) {
+          filter.valueOf = function() {
+            return _.isUndefined(this.classed) ? constants.nanValue : this.classed + "|" + this.dataset;
+          };
+        }
+        $scope.chart.filter(filter);
+      });
+    };
+
     function initSOMSpecial() {
       $scope.primary = $injector.get('DimensionService').getPrimary();
       $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables);
@@ -56,15 +68,6 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
       $scope.chart.filterAll();
       $scope.window.handler.redrawAll();
       $scope.window.showResetBtn = false;
-    };
-
-    $scope.redraw = function() {
-      // only redraw if the dashboard is visible
-      if( $state.current.name === $scope.window.handler.getName() ) {
-        $scope.computeExtent();
-        $scope.chart.x(d3.scale.linear().domain($scope.extent).range([0, $scope.noBins]));
-        $scope.chart.render();
-      }
     };
 
     // share information with the plot window
@@ -222,8 +225,7 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
 
       };
 
-        plainchart();
-        $scope.chart.render();
+      plainchart();
 
     };
 
@@ -322,9 +324,7 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
 
       };
 
-        plainchart();
-        $scope.chart.render();
-
+      plainchart();
     };
 
 
@@ -373,9 +373,9 @@ visu.directive('classedBarChart', ['constants', '$timeout', '$rootScope', '$inje
 
       $timeout(function() {
         drawFunction(config);
+        $scope.addStateFilters();
+        $scope.chart.render();
       });
-
-
 
 
       $scope.deregisters = [];
@@ -410,9 +410,9 @@ visu.directive('classedBarChart', ['constants', '$timeout', '$rootScope', '$inje
 
       var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
         var retObj = _.chain($scope.window)
-        .pick(['type', 'grid', 'variables', 'handler'])
+        .pick(['type', 'grid', 'somSpecial', 'variables', 'handler'])
         .clone()
-        .extend({ filters: $scope.chart.filters()[0] || [] })
+        .extend({ filters: $scope.chart.filters() || [] }) //$scope.chart.filters()[0] || [] })
         .value();
 
         callback(retObj);
