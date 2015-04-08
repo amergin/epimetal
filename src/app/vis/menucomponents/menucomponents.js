@@ -242,32 +242,35 @@ vis.directive('heatmapForm', function () {
   };
 });
 
-// controller for the histogram form
 vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'PlotService', '$timeout', '$location', '$anchorScroll', '$modalInstance',
   function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService, $timeout, $location, $anchorScroll, $modalInstance) {
-    // $scope.handler comes when the directive is called in a template
-
     $scope.variables = [];
 
     $scope.sideGroups = [];
 
-    DatasetFactory.getVariables().then( function(res) { 
-      // always operate on a copy: otherwise the selections are preserved in the service... -> deep copy, shallow not enough
-      $scope.variables = angular.copy(res);
-
-      var groups = _.chain($scope.variables)
+    function groupVariables(variables) {
+      return _.chain(variables)
       .groupBy(function(v) { return v.group.name; } )
       .values()
       .sortBy(function(g) { return g[0].group.order; } )
-      .value();
+      .value();      
+    }
 
-      if($scope.extend.groups && $scope.extend.groups.length > 0) {
-        // previous selections
-        $scope.groups = angular.copy($scope.extend.groups);
-      } else {
-        $scope.groups = Utils.chunk(groups, 3);
+
+    DatasetFactory.getVariables().then(function(res) {
+      if($scope.extend.variables && $scope.extend.variables.length > 0) {
+        // load state
+        $scope.groups = Utils.chunk( groupVariables($scope.extend.variables), 3 );
       }
-
+      else if( !_.isEmpty($scope.extend.groups) ) {
+        // previous selections
+        $scope.groups = $scope.extend.groups;
+      }
+      else {
+        // nothing pre-existing...
+        $scope.variables = angular.copy(res);
+        $scope.groups = Utils.chunk( groupVariables($scope.variables), 3 );
+      }
 
       $scope.sideGroups = _.chain($scope.groups)
       .flatten(false)//true)
@@ -323,6 +326,7 @@ vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory',
         return;
       } 
       $scope.$parent.extend['groups'] = $scope.groups;
+      $scope.extend.variables = [];
       $modalInstance.close(bare);
     };
 
@@ -364,12 +368,22 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
 
     $scope.selection = RegressionService.selectedVariables();
 
+    function getGroupSelections(selection, variables) {
+      var copy = angular.copy(variables);
+      _.each(copy, function(v) {
+        var contains = _.some(selection, function(s) { return v.name == s; });
+        if(contains) { v.selected = true; }
+      });
+      return copy;
+    }
+
     var associationScope = $scope.$new({ isolate: true });
     associationScope.extend = {
       canSubmit: function() { return true; },
       title: 'Select association variable(s) for regression analysis',
       submitButton: 'Select',
-      groups: []
+      groups: [],
+      variables: []
     };
 
     var adjustScope = $scope.$new({ isolate: true });
@@ -378,10 +392,15 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
       title: 'Select adjust variable(s) for regression analysis',
       submitButton: 'Select',
       groups: [],
+      variables: [],
       lowerLimit: 0
     };
 
-    DatasetFactory.getVariables().then( function(res) { $scope.variables = res; } );
+    DatasetFactory.getVariables().then( function(res) { 
+      $scope.variables = res;
+      associationScope.extend.variables = getGroupSelections($scope.selection.association, $scope.variables);
+      adjustScope.extend.variables = getGroupSelections($scope.selection.adjust, $scope.variables);
+    });
 
     $scope.canEdit = function () {
       return DatasetFactory.activeSets().length > 0;
@@ -439,11 +458,8 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
       promise.then( function succFn(variables) {
         $scope.selection.association = variables;
       }, function errFn(res) {
-        // cancelled
-        // $scope.selection.association = [];
       })
       .finally(function() {
-        // $modalScope.$destroy();
       });
     };
 
@@ -458,11 +474,8 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
       promise.then( function succFn(variables) {
         $scope.selection.adjust = variables;
       }, function errFn(res) {
-        // cancelled
-        // $scope.selection.adjust = [];
       })
       .finally(function() {
-        // $modalScope.$destroy();
       });
     };
 
