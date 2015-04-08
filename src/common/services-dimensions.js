@@ -512,12 +512,10 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
           else {
             var bmuId = bmuStrId(v.bmus);
             if( !_.isUndefined(p.counts[bmuId]) ) {
-              // PROBLEM SPOT!
               p.counts[bmuId].count = p.counts[bmuId].count - 1;
             }
           } 
           p.counts.total = p.counts.total - 1;
-          // console.log("--> REMOVE, P = ", JSON.stringify(p));
           return p;         
         };
 
@@ -534,7 +532,6 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
           initial: reduceInitial
         });
         return dimensionGroup;
-        // return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
       };
 
 

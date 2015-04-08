@@ -138,6 +138,10 @@ vis.controller('HistogramFormController', ['$scope', '$rootScope', 'DatasetFacto
       return $scope.canEdit() && !_.isUndefined($scope.selection.x);
     };
 
+    $scope.isClassVariable = function(x) {
+      return DatasetFactory.isClassVariable(x);
+    };
+
     $scope.add = function (select) {
       $scope.$parent.$hide();
 

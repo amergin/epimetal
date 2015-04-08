@@ -48,10 +48,6 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
       return PLANE_SIZE;
     };
 
-    service.getSomId = function() {
-      return that.som.id;
-    };
-
     service.setDimensionService = function(dimensionService) {
       that.dimensionService = dimensionService;
       that.sampleDimension = that.dimensionService.getSampleDimension().get();

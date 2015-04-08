@@ -32,6 +32,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
           break;
 
         case 'histogram':
+        case 'classed-bar-chart':
           callFn = that.drawHistogram;
           break;
 

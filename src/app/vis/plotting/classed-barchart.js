@@ -10,20 +10,52 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
   function ClassedBarChartPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout) {
 
     $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
-    $scope.dimensionInst = $scope.dimensionService.classHistogramDimension($scope.window.variables.x);
-    $scope.dimension = $scope.dimensionInst.get();
-    $scope.groupInst = null;
-    $scope.totalGroupInst = null;
 
-    if( $scope.window.somSpecial ) {
+    $scope.isSpecial = function() {
+      return $scope.window.somSpecial;
+    };
+
+    function initSOMSpecial() {
       $scope.primary = $injector.get('DimensionService').getPrimary();
       $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables);
       $scope.totalDimension = $scope.totalDimensionInst.get();
+      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables);
+      $scope.dimension = $scope.dimensionInst.get();
+      $scope.groupInst = $scope.dimensionInst.groupDefault();
+
+      $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables.x);
+      $scope.reduced = $scope.groupInst.get();
+      // total will always have largest count
+      $scope.extent = [0, $scope.totalDimensionInst.groupAll().get().reduceCount().value()];
+
+      var filters = $injector.get('FilterService').getSOMFilters();
+      $scope.groupNames = _.map(filters, function(f) { return f.id(); } );
+      $scope.colorScale = $injector.get('FilterService').getSOMFilterColors();
+    }
+
+    function initDefault() {
+      $scope.dimensionInst = $scope.dimensionService.classHistogramDimension($scope.window.variables.x);
+      $scope.dimension = $scope.dimensionInst.get();
+      $scope.groupInst = $scope.dimensionInst.groupDefault();
+
+      $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables.x);
+      $scope.reduced = $scope.groupInst.get();
+      $scope.extent = [0, d3.max($scope.dimension.group().all(), function(d) { return d.value; } )];
+
+      $scope.groupNames = DatasetFactory.getSetNames();
+      $scope.colorScale = DatasetFactory.getColorScale();
+    }
+
+    if( $scope.isSpecial() ) {
+      initSOMSpecial();
+    } else {
+      initDefault();
     }
 
     $scope.$parent.resetFilter = function() {
       $scope.chart.filterAll();
       $scope.window.handler.redrawAll();
+      $scope.window.showResetBtn = false;
     };
 
     $scope.redraw = function() {
@@ -39,108 +71,87 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
     $scope.$parent.headerText = ['Histogram of', $scope.window.variables.x, ''];
     $scope.$parent.showResetBtn = false;
 
-    $scope.computeExtent = function() {
-      // remove older ones
-      if($scope.groupInst) { $scope.groupInst.decrement(); }
-      if($scope.totalGroupInst) { $scope.totalGroupInst.decrement(); }
-
-      // var allValues;
-      // if( $scope.window.somSpecial ) {
-      //   allValues = $scope.totalDimension.group().all().filter( function(d) {
-      //     return d.value > 0 && d.key != constants.nanValue;
-      //   });
-      // }
-      // else {
-      //   allValues = $scope.dimension.group().all().filter(function(d) {
-      //     return d.value > 0 && d.key != constants.nanValue;
-      //   });
-      // }
-
-      // $scope.extent = d3.extent(allValues, function(d) {
-      //   return d.key;
-      // });
-
-$scope.extent = [0, d3.max($scope.dimension.group().all(), function(d) { return d.value; } )];
-
-$scope.groupInst = $scope.dimensionInst.groupDefault();
-
-if( $scope.window.somSpecial ) {
-        // circle
-        // $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables.x);
-        // $scope.reduced = $scope.groupInst.get();
-
-        // $scope.totalGroupInst = $scope.totalDimensionInst.group(function(d) {
-        //   return Math.floor(d / $scope.binWidth) * $scope.binWidth;
-        // });
-        // // total
-        // $scope.primary.getReducedGroupHisto($scope.totalGroupInst, $scope.window.variables.x);
-        // $scope.totalReduced = $scope.totalGroupInst.get();
-      }
-      else {
-        $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables.x);
-        $scope.reduced = $scope.groupInst.get();
-      }
-
-      if($scope.chart) {
-        $scope.chart.group($scope.filterOnSet($scope.reduced));
-      }
-
-      console.log("histogram extent is ", $scope.extent, "on windowHandler = ", $scope.window.handler.getName(), "variable = ", $scope.window.variables.x);
-    };
-
-    $scope.computeExtent();
-
-    // individual charts that are part of the composite chart
-    $scope.barCharts = {};
-
-    if( $scope.window.somSpecial ) {
-      var somId = $injector.get('SOMService').getSomId();
-      var filters = $injector.get('FilterService').getSOMFilters();
-      $scope.groupNames = _.map(filters, function(f) { return f.id(); } );
-      $scope.colorScale = $injector.get('FilterService').getSOMFilterColors();
-
-    } else {
-      $scope.groupNames = DatasetFactory.getSetNames();
-      $scope.colorScale = DatasetFactory.getColorScale();      
-    }
-
     // see https://github.com/dc-js/dc.js/wiki/FAQ#filter-the-data-before-its-charted
     // this used to filter to only the one set & limit out NaN's
-    $scope.filterOnSet = function(group, name) {
+    $scope.filterSOMSpecial = function(group) {
+      var FilterService = $injector.get('FilterService'),
+      info = DatasetFactory.getVariable($scope.window.variables.x);
+
+      function getCircleLookup(grp) {
+        var lookup = {};
+        // for each bmu coordinate
+        _.each(grp.value.counts, function(countObj, id) {
+          if( id == 'total' ) { return; } // continue
+          var circles = FilterService.inWhatCircles(countObj.bmu);
+
+          // that may exist in many circle filters
+          _.each(circles, function(circleId) {
+            if( !lookup[circleId] ) { 
+              lookup[circleId] = {
+                count: 0,
+                circle: FilterService.getSOMFilter(circleId)
+              };
+            }
+            // add the amount info
+            lookup[circleId].count = lookup[circleId].count + countObj.count;
+          });
+
+        });
+        return lookup;
+      }
+
+      function getReturnObj(group, name, valObj) {
+        return {
+          key: {
+            classed: group.key,
+            name: info.unit[Number(group.key).toString()]
+          }, 
+          value: {
+            type: 'circle',
+            circle: valObj.circle,
+            count: valObj.count
+          }
+        };
+      }
+
+      function getTotalObj() {
+        return {
+          key: {
+            classed: NaN,
+            name: 'Total'
+          },
+          value: {
+            type: 'total',
+            count: $scope.totalDimension.groupAll().value()
+          }
+        };
+      }
+
+      return {
+        all: function() {
+          var ret = [];
+
+          _.chain(group.all())
+          .reject(function(grp) { return grp.key < constants.legalMinValue; })
+          .each(function(grp) {
+            var lookup = getCircleLookup(grp);
+            _.each(lookup, function(val, key, obj) {
+              ret.push(getReturnObj(grp, key, val));
+            });
+          })
+          .value();
+
+          // add total
+          ret.push(getTotalObj());
+
+          return ret;  
+        }
+      };
+    };
+
+    $scope.filterDefault = function(group) {
       return {
         'all': function() {
-          // special
-          if( $scope.window.somSpecial && name != 'total' ) {
-            // var ret = _.chain(group.all())
-            // .reject(function(grp) { return grp.key < constants.legalMinValue; })
-            // .map(function(grp) {
-            //   var lookup = {};
-
-            //   // for each bmu coordinate
-            //   _.each(grp.value.counts, function(countObj, id) {
-            //     if( id == 'total' ) { return; } // continue
-            //     var circles = $injector.get('FilterService').inWhatCircles(countObj.bmu);
-
-            //     // that may exist in many circle filters
-            //     _.each(circles, function(circleId) {
-            //       if( !lookup[circleId] ) { lookup[circleId] = 0; }
-            //       // add the amount info
-            //       lookup[circleId] = lookup[circleId] + countObj.count;
-            //     });
-
-            //   });
-            //   return {
-            //     key: grp.key,
-            //     value: {
-            //       counts: angular.extend(lookup, { total: grp.value.counts.total })
-            //     }
-            //   };
-            // })
-            // .reject(function(grp) { return grp.value.counts[name] === 0; })
-            // .value();
-
-            // return ret;
-          } else {
             var legalGroups = group.all().filter(function(d) {
               return (d.value.counts[d.key.dataset] > 0) && (d.key.valueOf() !== constants.nanValue);
             }),
@@ -153,30 +164,12 @@ if( $scope.window.somSpecial ) {
                 value: group.value
               });
             });
-
-            return ret;            
-
-            // var legalGroups = group.all().filter(function(d) {
-            //   return (d.value.counts[name] > 0) && (d.key.valueOf() !== constants.nanValue);
-            // }),
-            // info = DatasetFactory.getVariable($scope.window.variables.x),
-            // ret = [];
-
-            // _.each(legalGroups, function(group) {
-            //   ret.push({
-            //     key: _.extend(group.key, { name: info.unit[Number(group.key.classed).toString()] }),
-            //     value: group.value
-            //   });
-            // });
-
-            // return ret;
-          }
+            return ret;
         }
       };
     };
 
-    $scope.draw = function(config) {
-
+    $scope.drawSOMSpecial = function(config) {
       var resizeSVG = function(chart) {
         var ratio = config.size.aspectRatio === 'stretch' ? 'none' : 'xMinYMin';
         chart.select("svg")
@@ -187,7 +180,66 @@ if( $scope.window.somSpecial ) {
       };
 
       var plainchart = function() {
-        $scope.chart = dc.rowChart(config.element)
+        $scope.chart = dc.rowChart(config.element, config.chartGroup)
+        .elasticX(true)
+        .label(function(d) {
+          var name = _.capitalize(d.key.name),
+          arr = [name, ", count: ", d.value.count],
+          label = d.value.type == 'total' ? undefined : " (circle " + d.value.circle.name() + ")";
+          arr.push(label);
+          return arr.join("");
+        })
+        .title(function(d) {
+          var label = d.value.type == 'total' ? undefined : 'Circle: ' + d.value.circle.name(),
+          arr = [label,
+          'Category: ' + d.key.name,
+          'Count: ' + d.value.count];
+          return arr.join("\n");
+        })
+        .renderTitleLabel(false)
+        .titleLabelOffsetX(5)
+        .width(config.size.width)
+        .height(config.size.height)
+        .x(d3.scale.linear().domain(config.extent))
+        .renderLabel(true)
+        .dimension(config.dimension)
+        .colorAccessor(function(d) {
+          return d.value.type == 'total' ? 'total' : d.value.circle.id();
+        })
+        .group(config.filter(config.reduced))
+        .valueAccessor(function(d) {
+          return d.value.count;
+        })
+        .colors(config.colorScale)
+        .on("postRender", resizeSVG)
+        .on("postRedraw", resizeSVG)
+        .ordering(function(d) {
+          return d.value.type == 'total' ? 'total|' : d.value.circle.id() + "|" + d.key.name;
+        });
+
+        // disable filtering
+        $scope.chart.onClick = function() {};
+
+      };
+
+        plainchart();
+        $scope.chart.render();
+
+    };
+
+
+    $scope.drawDefault = function(config) {
+      var resizeSVG = function(chart) {
+        var ratio = config.size.aspectRatio === 'stretch' ? 'none' : 'xMinYMin';
+        chart.select("svg")
+        .attr("viewBox", "0 0 " + [config.size.width, config.size.height].join(" ") )
+        .attr("preserveAspectRatio", ratio)
+        .attr("width", "100%")
+        .attr("height", "100%");
+      };
+
+      var plainchart = function() {
+        $scope.chart = dc.rowChart(config.element, config.chartGroup)
         // .gap(10)
         .elasticX(true)
         .label(function(d) {
@@ -226,8 +278,9 @@ if( $scope.window.somSpecial ) {
             $timeout(function() {
               $injector.get('FilterService').addClassedFilter({ 'type': 'classed', 'filter': filter,
                 'var': $scope.window.variables.x, 'id': $scope.window._winid,
-                'chart': $scope.chart
-              });
+                'chart': $scope.chart });
+              $scope.window.handler.getService().redrawVisible();
+              $scope.window.showResetBtn = true;
             });
           }
 
@@ -248,11 +301,23 @@ if( $scope.window.somSpecial ) {
           function custom(filters, filter) {
             $timeout(function() {
               $injector.get('FilterService').removeClassedFilter({ id: $scope.window._winid, filter: filter });
+              $scope.window.handler.getService().redrawVisible();
+              var hideButton = $scope.chart.filters().length === 0;
+              if(hideButton) { $scope.window.showResetBtn = false; }
             });
           }
 
           custom.apply(this, arguments);
           return defaultFn.apply(this, arguments);
+        })
+        .resetFilterHandler(function(filters) {
+          $timeout(function() {
+            _.each(filters, function(filter) {
+              $injector.get('FilterService').removeClassedFilter({ id: $scope.window._winid, filter: filter });
+            });
+            $scope.window.handler.getService().redrawVisible();
+          });
+          return [];
         });
 
       };
@@ -272,27 +337,46 @@ visu.directive('classedBarChart', ['constants', '$timeout', '$rootScope', '$inje
     function postLink($scope, ele, attrs, ctrl) {
 
       $scope.$parent.element = ele;
+      var drawFunction = null,
+      config;
 
-      var config = {
-        element: ele[0],
-        poolingColor: '#000000',
-        size: $scope.window.size,
-        extent: $scope.extent,
-        pooled: $scope.window.pooled || false,
-        filter: $scope.filterOnSet,
-        filterEnabled: $scope.window.filterEnabled,
-        groupNames: $scope.groupNames,
-        colorScale: $scope.colorScale,
-        dimension: $scope.dimension,
-        reduced: $scope.reduced,
-        somSpecial: $scope.window.somSpecial,
-        chartGroup: $scope.window.somSpecial ? constants.groups.histogram.nonInteractive : constants.groups.histogram.interactive,
-        variable: $scope.window.variables.x
-      };
+      if($scope.isSpecial()) {
+        drawFunction = $scope.drawSOMSpecial;
+        config = {
+          element: ele[0],
+          size: $scope.window.size,
+          extent: $scope.extent,
+          filter: $scope.filterSOMSpecial,
+          groupNames: $scope.groupNames,
+          colorScale: $scope.colorScale,
+          dimension: $scope.dimension,
+          reduced: $scope.reduced,
+          chartGroup: constants.groups.histogram.nonInteractive,
+          variable: $scope.window.variables.x
+        };
+
+      } else {
+        config = {
+          element: ele[0],
+          size: $scope.window.size,
+          extent: $scope.extent,
+          filter: $scope.filterDefault,
+          groupNames: $scope.groupNames,
+          colorScale: $scope.colorScale,
+          dimension: $scope.dimension,
+          reduced: $scope.reduced,
+          chartGroup: constants.groups.histogram.interactive,
+          variable: $scope.window.variables.x
+        };
+        drawFunction = $scope.drawDefault;
+      }
 
       $timeout(function() {
-        $scope.draw(config);
+        drawFunction(config);
       });
+
+
+
 
       $scope.deregisters = [];
 
@@ -304,27 +388,17 @@ visu.directive('classedBarChart', ['constants', '$timeout', '$rootScope', '$inje
 
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
         if( winHandler == $scope.window.handler ) {
-          $scope.chart.group($scope.filterOnSet($scope.reduced));
-          $scope.chart.redraw();
-          // $timeout( function() {
-          //   if(config.compute) {
-          //     $scope.redraw();
 
-          //     if(!$scope.somSpecial) {
-          //       var oldFilters = $scope.chart.filters();
-          //       $scope.chart.filter(null);
-          //       _.each(oldFilters, function(filter) {
-          //         $scope.chart.filter(filter);
-          //       });
-          //       $scope.chart.redraw();
-          //     }
-          //   }
-          //   else {
-          //     $scope.chart.redraw();
-          //   }
-          // });
-    }
-  });
+          $timeout(function() {
+            if($scope.isSpecial()) {
+              $scope.chart.group($scope.filterSOMSpecial($scope.reduced));
+            } else {
+              $scope.chart.group($scope.filterDefault($scope.reduced));
+            }
+          });
+          $scope.chart.redraw();
+        }
+      });
 
       var redrawUnbind = $rootScope.$on('window-handler.redraw', function(event, winHandler) {
         if( winHandler == $scope.window.handler ) {
@@ -336,7 +410,7 @@ visu.directive('classedBarChart', ['constants', '$timeout', '$rootScope', '$inje
 
       var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
         var retObj = _.chain($scope.window)
-        .pick(['type', 'grid', 'pooled', 'variables', 'handler'])
+        .pick(['type', 'grid', 'variables', 'handler'])
         .clone()
         .extend({ filters: $scope.chart.filters()[0] || [] })
         .value();
@@ -353,7 +427,9 @@ visu.directive('classedBarChart', ['constants', '$timeout', '$rootScope', '$inje
         });
 
         $scope.groupInst.decrement();
-        if($scope.window.somSpecial) { $scope.totalGroupInst.decrement(); }
+        if($scope.isSpecial()) { 
+          $scope.totalDimensionInst.decrement();
+        }
         $scope.dimensionInst.decrement();
       });
 

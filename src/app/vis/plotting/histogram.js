@@ -107,7 +107,6 @@ if( $scope.window.somSpecial ) {
     $scope.barCharts = {};
 
     if( $scope.window.somSpecial ) {
-      var somId = $injector.get('SOMService').getSomId();
       var filters = $injector.get('FilterService').getSOMFilters();
       $scope.groupNames = _.map(filters, function(f) { return f.id(); } );
       $scope.colorScale = $injector.get('FilterService').getSOMFilterColors();
