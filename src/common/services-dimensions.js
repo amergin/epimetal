@@ -13,9 +13,6 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
       // for displaying active sample count
       var dispSamples = {};
 
-      // keep a record of added vars so dummy work is avoided
-      // var usedVariables = {};
-
       // initialized when samples arrive
       var crossfilterInst = null;
 
@@ -563,10 +560,9 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
 
       // receives new variable data. The function is called once for each dataset
       // receiving data, and therefore the additions have to operate on a dataset-basis
-      this.addVariableData = function(variables, samples, dataset, force) {
-
-        var addSamples;
-
+      this.addVariableData = function(config) {
+        var addSamples,
+        samples = config.samples.all;
         // workaround: for secondary, don't add samples not in your scope:
         if( _service.getPrimary() !== that && crossfilterInst.size() > 0) {
           addSamples = _.filter(samples, function(s) { 
@@ -578,14 +574,11 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
           addSamples = samples;
         }
 
-        var dataWasAdded = false;
-        // usedVariables[variable] = true;
-
-        var currentKeys = _getCurrentKeys(),
-        newVariables = _.difference(variables, currentKeys),
+        var dataWasAdded = false,
+        newVariables = config.variables.added,
         currentDatasets = _getCurrentDatasets(),
-        newDatasets = _.difference([dataset.getName()], currentDatasets),
-        forcedUpdate = !_.isUndefined(force) && force;
+        newDatasets = _.difference([config.dataset.getName()], currentDatasets),
+        forcedUpdate = !_.isUndefined(config.force) && config.force;
 
         if(_.isEmpty(newVariables) && _.isEmpty(newDatasets) && !forcedUpdate ) {
           // nothing new to add
@@ -672,17 +665,6 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
         // $injector.get('WindowHandler').reRenderVisible({ compute: true });
       };
 
-      // important! these values are not *necessarily* the same as the ones
-      // currently shown: Example:
-      // - plot variables A,B
-      // - close windows for variables A,B
-      // - plot something else involving variable C
-      // now usedVariables would have A,B,C but only C is an *active* variable
-      // This is because the once-fetched sample data is not purged, only the dimension
-      // this.getUsedVariables = function() {
-      //   return usedVariables;
-      // };
-
       this.getDimensions = function() {
         return dimensions;
       };
@@ -744,10 +726,6 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
           that.rebuildInstance();
           that.clearFilters();
           // clearBMUFilter();
-        }
-
-        function getActiveSamples(primarySamples) {
-
         }
 
         var defer = $q.defer();

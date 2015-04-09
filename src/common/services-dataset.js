@@ -181,12 +181,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
 
         var empty = _.isEmpty(samples),
-        currentVariables = _.chain(samples)
-        .sample(4)
-        .map(function(d) { return _.keys(d.variables); })
-        .flatten()
-        .uniq()
-        .value(),
+        currentVariables = dset.variables(),
         intersection = _.intersection(currentVariables, variables),
         newVariables = _.difference(variables, intersection);
 
@@ -234,6 +229,26 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
       dset.getSize = function() {
         return size || _.size(samples);
+      };
+
+      dset.variables = function() {
+        return _.chain(samples)
+        .sample(4)
+        .map(function(d) { return _.keys(d.variables); })
+        .flatten()
+        .uniq()
+        .value();
+      };
+
+      dset.hasVariable = function(x) {
+        return _.chain(samples)
+        .sample(3)
+        .values()
+        .map(function(d) { 
+          return _.has(d.variables, x); 
+        })
+        .some(Boolean)
+        .value();
       };
 
       return dset;
@@ -324,7 +339,9 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
             return;
           }
 
-          var dataAdded = that.dimensionService.addVariableData(activeVars, obj.samples.added, obj.dataset, true);
+          var config = _.extend(obj, { force: true });
+
+          var dataAdded = that.dimensionService.addVariableData(config); //(activeVars, obj.samples.added, obj.dataset, true);
           if (dataAdded) {
             dataWasAdded = true;
           }
@@ -381,10 +398,12 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
               _.extend(result.samples, setObj.samples.all);
             }
 
+            var config = setObj;
+
             if(!addData) {
               return;
             } else {
-              var dataAdded = windowHandler.getDimensionService().addVariableData(variables, setObj.samples.all, setObj.dataset);
+              var dataAdded = windowHandler.getDimensionService().addVariableData(config);
               if (dataAdded) {
                 dataWasAdded = true;
               }              
