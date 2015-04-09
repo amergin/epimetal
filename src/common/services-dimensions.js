@@ -222,7 +222,7 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
 
         var filterFunction = function (dsetName) {
           return _.any(activeSets, function (set) { 
-            return set.getName() === dsetName; 
+            return set.name() === dsetName; 
           });
         };
 
@@ -577,7 +577,7 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
         var dataWasAdded = false,
         newVariables = config.variables.added,
         currentDatasets = _getCurrentDatasets(),
-        newDatasets = _.difference([config.dataset.getName()], currentDatasets),
+        newDatasets = _.difference([config.dataset.name()], currentDatasets),
         forcedUpdate = !_.isUndefined(config.force) && config.force;
 
         if(_.isEmpty(newVariables) && _.isEmpty(newDatasets) && !forcedUpdate ) {

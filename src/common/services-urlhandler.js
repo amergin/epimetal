@@ -36,7 +36,7 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
         var activeSets = _.chain( DatasetFactory.getSets() )
         .values()
         .filter(function(set) { return set.isActive(); })
-        .map(function(set) { return set.getName(); })
+        .map(function(set) { return set.name(); })
         .value();
 
         var FilterService = $injector.get('FilterService'),
@@ -302,7 +302,7 @@ mod.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory
 
         var selectDatasets = function() {
           _.each(DatasetFactory.getSets(), function(set) {
-            set.enable();
+            set.active(true);
           });
           DatasetFactory.updateDataset();
         };
