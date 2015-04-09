@@ -99,7 +99,7 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
           };
         };
 
-        key = getDimensionKey('normal', classvar);
+        key = getDimensionKey('normal', classvar, 'dataset');
         if(dimensions[key]) {
           //pass
         } else {
