@@ -516,7 +516,10 @@ vis.controller('LinkCreatorController', ['$scope', 'UrlHandler', 'NotifyService'
       usSpinnerService.spin('linkcreator');
       UrlHandler.create()
       .then(function succFn(hash) {
-        $scope.stateLink = $state.href($state.current.name, { state: hash }, { absolute: true });
+        var baseUrl = window.location.origin + window.location.pathname;
+        $scope.stateLink = baseUrl + $state.href($state.current.name, { state: hash }, { relative: true });
+        // does not work:
+        //$state.href($state.current.name, { state: hash }, { absolute: true });
       }, function errFn(res) {
         NotifyService.addSticky('Error', 'The current state could not be saved. Please try again.', 'error', 
           { referenceId: 'linkcreatorinfo' });
