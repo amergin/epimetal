@@ -34,11 +34,11 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
     };
 
     $scope._createCanvas = function(set, zIndex) {
-      var name = set.getName();
+      var name = set.name();
       var data = $scope.group.all().filter(function(d) {
         return (d.value.counts[name] > 0) && d.key.valueOf() >= constants.legalMinValue;
       });
-      var color = $scope.window.pooled ? 'black' : set.getColor();
+      var color = $scope.window.pooled ? 'black' : set.color();
       var canvas = $scope.createCanvas(
         $scope.element,
         $scope.width,
@@ -55,7 +55,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
         name,
         color
         );
-      $scope.canvases[set.getName()] = {
+      $scope.canvases[set.name()] = {
         'zindex': zIndex,
         'canvas': canvas
       };
@@ -67,8 +67,8 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
       _.each($scope.sets, function(set, ind) {
         // remove previous canvas, if any
-        if( !_.isUndefined( $scope.canvases[set.getName()] ) ) {
-          $($scope.canvases[set.getName()].canvas.canvas).remove();
+        if( !_.isUndefined( $scope.canvases[set.name()] ) ) {
+          $($scope.canvases[set.name()].canvas.canvas).remove();
         }
 
         // create a new one
@@ -106,12 +106,12 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
     $scope.zIndexCount = 1;
 
     $scope.disable = function(set) {
-      var ctx = $scope.canvases[set.getName()].canvas;
+      var ctx = $scope.canvases[set.name()].canvas;
       ctx.canvas.style.display = 'none';
     };
 
     $scope.enable = function(set) {
-      var ctx = $scope.canvases[set.getName()].canvas;
+      var ctx = $scope.canvases[set.name()].canvas;
       ctx.canvas.style.display = '';
     };
 
@@ -402,7 +402,7 @@ visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
                 $scope.disable(dset);
               } else if (action === 'enabled') {
 
-                var canvas = $scope.canvases[dset.getName()];
+                var canvas = $scope.canvases[dset.name()];
                 if (_.isUndefined(canvas)) {
                 // new, not drawn before
 

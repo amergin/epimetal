@@ -30,7 +30,28 @@ vis.directive('datasetForm', function () {
 vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService', 'constants', '$location', 'UrlHandler', 'WindowHandler',
   function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService, constants, $location, UrlHandler, WindowHandler) {
 
-    $scope.datasets = DatasetFactory.getSets();
+    $scope.$watch(function() {
+      return DatasetFactory.getSets();
+    }, function(sets) {
+      $scope.datasets = _.values(sets);
+    }, true);
+
+    $scope.isDatabase = function(set) {
+      return set.type() == 'database';
+    };
+
+    $scope.isDerived = function(set) {
+      return set.type() == 'derived';
+    };
+
+    $scope.createDerived = function(name) {
+      try {
+        DatasetFactory.createDerived(name);
+      }
+      catch(err) {
+        NotifyService.addSticky('Error', err.message, 'error', { referenceId: 'datasetinfo' });
+      }
+    };
 
     $scope.toggle = function(set) {
       WindowHandler.spinAllVisible();

@@ -38,6 +38,8 @@ App.constant('constants', {
   }
 });
 
+var plotter = plotter || {};
+
 App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStateProvider', '$locationProvider', '$futureStateProvider',
   function ($stateProvider, $urlRouterProvider, $injector, $stickyStateProvider, $locationProvider, $futureStateProvider) {
 

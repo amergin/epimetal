@@ -86,6 +86,10 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
       // public functions:
 
+      dset.type = function() {
+        throw new Error("not implemented");
+      };
+
       dset.name = function(x) {
         if(!arguments.length) { return priv.name; }
         priv.name = x;
@@ -169,11 +173,11 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         return retObj;
       };
 
-      priv.getVariables = function(variables, config, defer) {
-        var performPost = function(vars, config, defer) {
+      priv.getVariables = function(variables, config, defer, datasetName) {
+        var performPost = function(vars, config, defer, datasetName) {
           $http.post(that.config.multipleVariablesURL, {
             variables: vars,
-            dataset: dset.name()
+            dataset: datasetName
           }, { cache: true })
           .success(function(response) {
             _.each(response.result.values, function(sample) {
@@ -193,7 +197,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
           });
         };
 
-        performPost(variables, config, defer);
+        performPost(variables, config, defer, datasetName);
       };
 
       return dset;
@@ -207,6 +211,10 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       var dset = this.dset,
       priv = this.privates;
 
+      dset.type = function() {
+        return 'database';
+      };
+
       // 'variables' is a list
       dset.getVariables = function(variables, config) {
         var defer = $q.defer(),
@@ -219,14 +227,14 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
         if(empty) {
           // get all variables
-          priv.getVariables(variables, config, defer);
+          priv.getVariables(variables, config, defer, dset.name());
         } 
         else if( _.isEmpty(newVariables) ) {
           // nothing to done, everything already fetched
           defer.resolve(priv.getResult(variables, newVariables, config));
         } else {
           // fetch new variables
-          priv.getVariables(newVariables, config, defer);
+          priv.getVariables(newVariables, config, defer, dset.name());
         }
         return defer.promise;
       };
@@ -238,24 +246,112 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       'constructor': BaseDataset
     });
 
-    function DefivedDataset() {
+    function DerivedDataset() {
       // call super
       BaseDataset.call(this);
 
       var dset = this.dset,
       priv = this.privates;
 
+      dset.type = function() {
+        return 'derived';
+      };
+
+      dset.variables = function(name) {
+        return _.chain(priv.samplesByDataset[name])
+        .sample(4)
+        .map(function(d) { return _.keys(d.variables); })
+        .flatten()
+        .uniq()
+        .value();
+      };
+
+      // get
+      priv.getDatasets = function() {
+        return _.keys(priv.samplesByDataset);
+      };
+
+      // 'variables' is a list
+      dset.getVariables = function(variables, config) {
+        var configDefined = !_.isUndefined(config),
+        allDefer = $q.defer(),
+        promises = [];
+
+        _.each(priv.getDatasets(), function(dsetName) {
+          var defer = $q.defer(),
+          empty = _.isEmpty(priv.samples),
+          currentVariables = dset.variables(dsetName),
+          intersection = _.intersection(currentVariables, variables),
+          newVariables = _.difference(variables, intersection);
+
+          if(empty) {
+            // get all variables
+            priv.getVariables(variables, config, defer, dsetName);
+          } 
+          else if( _.isEmpty(newVariables) ) {
+            // nothing to done, everything already fetched
+            defer.resolve(priv.getResult(variables, newVariables, config));
+          } else {
+            // fetch new variables
+            priv.getVariables(newVariables, config, defer, dsetName);
+          }
+
+          promises.push(defer.promise);
+        });
+
+        $q.all(promises).then(function succFn(resArray) {
+          // concatenate results into one object and return it
+          var retObj = {
+            samples: {
+              added: [],
+              all: {}
+            },
+            variables: {
+              added: []
+            },
+            dataset: dset
+          };
+
+          _.each(resArray, function(setResult) {
+            retObj.samples.added = retObj.samples.added.concat(setResult.samples.added);
+            // retObj.samples._ = all.merge.apply(this, setResult.samples.all
+            // retObj.samples.all.concat(setResult.samples.all);
+
+            retObj.variables.added = retObj.variables.added.concat(setResult.variables.added);
+          });
+          var all = _.chain(resArray)
+          .map(function(obj) { return obj.samples.all; })
+          .value();
+          retObj.samples.all = _.merge.apply(this, all);
+          retObj.variables.added = _.uniq(retObj.variables.added);
+
+          allDefer.resolve(retObj);
+        }, function errFn(res) {
+          allDefer.reject(res);
+        });
+        return allDefer.promise;
+      };
+
       // only set
       dset.samples = function(samples) {
+        if(!arguments.length) { return priv.samples; }
+        priv.samplesByDataset = {};
+        var copySample;
         _.each(samples, function(samp, id) {
-          priv.samples[priv.getKey(samp)] = samp;
+          if(!priv.samplesByDataset[samp.dataset]) { priv.samplesByDataset[samp.dataset] = []; }
+          copySample = angular.copy(samp);
+          copySample.originalDataset = samp.dataset;
+          copySample.dataset = priv.name;
+          priv.samplesByDataset[copySample.originalDataset].push(copySample);
+          priv.samples[priv.getKey(copySample)] = copySample;
         });
         return dset;
       };
 
+      return dset;
     }
 
-    DefivedDataset.prototype = _.create(DefivedDataset.prototype, {
+    DerivedDataset.prototype = _.create(DerivedDataset.prototype, {
       'constructor': BaseDataset
     });
 
@@ -431,6 +527,38 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       return defer.promise;
     };
 
+    service.createDerived = function(name) {
+      if(!that.sets[name]) {
+        var DimensionService = $injector.get('DimensionService'),
+        primary = DimensionService.getPrimary(),
+        sampleDimension = primary.getSampleDimension(),
+        samples = sampleDimension.get().top(Infinity),
+        dataWasAdded;
+
+        var derived = new DerivedDataset()
+        .name(name)
+        .size(samples.length)
+        .color(that.colors(name))
+        .samples(samples);
+
+        that.sets[name] = derived;
+        dataWasAdded = primary.addVariableData({
+          dataset: derived,
+          samples: {
+            all: derived.samples(),
+            added: []
+          },
+          variables: {
+            added: []
+          }
+        });
+        primary.rebuildInstance();
+
+        return derived;
+      } else {
+        throw new Error('Dataset name exists');
+      }
+    };
 
     // assumes getDatasets is called and therefore the service is initialized
     service.getSets = function() {
