@@ -7,29 +7,29 @@
 	      <thead>
 	        <tr>
 	          <th class="col-sm-9">Filter</th>
-	          <th class="col-sm-3">Delete</th>
+	          <th class="col-sm-3 text-center">Delete</th>
 	        </tr>
 	      </thead>
 	      <tbody>
 	        <tr ng-repeat="filter in filteredFilters = ( filters | orderBy:filterOrder | filter:showFilter )"  class="am-fade-and-slide-top">
-	          <td  class="col-sm-9" ng-switch="filter.type">
-					<span ng-switch-when="som">
-						<span ng-style="{ 'color': filter.circle.color() }">Circle filter {{filter.circle.name()}}</span> 
-						(<strong>{{ somFilterCount( filter.circle.id() ) }}</strong> samples)
+	          <td  class="col-sm-9" ng-switch="filter.type()">
+					<span ng-switch-when="circle">
+						<span ng-style="{ 'color': filter.color() }">Circle filter {{filter.name()}}</span> 
+						(<strong>{{ somFilterCount( filter.id() ) }}</strong> samples)
 					</span>
 					<span ng-switch-when="range">
-						{{formatNumber(filter.filter[0])}}
+						{{formatNumber(filter.payload()[0])}}
 						<span class="spaced">&lt;</span>
-						<strong>{{filter.var}}</strong>
+						<strong>{{filter.variable()}}</strong>
 						<span class="spaced">&lt;</span>
-						{{formatNumber(filter.filter[1])}}
+						{{formatNumber(filter.payload()[1])}}
 					</span>
 					<span ng-switch-when="classed">
-						<strong>{{filter.var}}</strong>
+						<strong>{{filter.variable()}}</strong>
 						<span class="spaced">|</span>
-						{{filter.filter.name}}
+						{{filter.payload().name}}
 						<span class="spaced">|</span>
-						{{filter.filter.dataset}}
+						{{filter.payload().dataset}}
 					</span>
 					<span ng-switch-default>
 						(No information of filter)

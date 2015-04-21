@@ -264,7 +264,7 @@ function CircleFilter() {
     priv.hexagons = hexagons;
     priv.injector.get('DimensionService').get('vis.som').updateSOMFilter(filter.id(), priv.hexagons);
     priv.injector.get('WindowHandler').redrawVisible();
-    return _filter;
+    return filter;
   };
 
   filter.radius = function(radius) {

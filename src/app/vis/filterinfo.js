@@ -86,6 +86,7 @@ mod.controller('FilterInfoController', ['$scope', '$timeout', '$injector', 'Dime
     };
 
     $scope.reset = function() {
+      if( checkEdit() ) { return; }
       _.each($scope.filters, function(filter) {
         filter.remove();
       });
