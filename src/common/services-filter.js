@@ -96,14 +96,24 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       }
     };
 
-    service.resetFilters = function() {
+    service.resetFilters = function(config) {
       service.disabled(true);
-      _.each(_filters, function(filter) {
-        if(!_.isUndefined(filter.remove)) {
-          filter.remove();
+      var removed = _.chain(_filters)
+      .filter(function(f) {
+        if(config.spareSOM) {
+          return f.type() !== 'circle'; 
+        } else {
+          return true;
         }
+      })
+      .each(function(f) {
+        f.remove();
+      })
+      .value();
+
+      _.remove(_filters, function(d) { 
+        return _.includes(removed, d);
       });
-      _filters = [];
       service.disabled(false);
     };
 

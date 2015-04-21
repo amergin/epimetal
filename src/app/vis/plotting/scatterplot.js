@@ -301,11 +301,11 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
       // create canvas element
       var c = document.createElement('canvas');
-      c.setAttribute('id', dataset);
+      c.setAttribute('id', "ds" + dataset);
       $(element).append(c);
 
       // adjust canvas size
-      var canvas = d3.select(element[0]).select("#" + dataset) //'canvas')
+      var canvas = d3.select(element[0]).select("#" + "ds" + dataset)
       .attr("width", w + "px")
       .attr("height", h + "px")
       .style('z-index', zIndex);

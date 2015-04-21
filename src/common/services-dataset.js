@@ -605,7 +605,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
       function removeFilters() {
         var FilterService = $injector.get('FilterService');
-        FilterService.resetFilters();
+        FilterService.resetFilters({ spareSOM: true });
       }
 
       function emitEvent(dset) {

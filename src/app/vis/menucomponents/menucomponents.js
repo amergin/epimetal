@@ -46,7 +46,8 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
 
     $scope.createDerived = function(name) {
       try {
-        DatasetFactory.createDerived(name);
+        var modified = name.replace(/\s/g, '_').substring(0,15);
+        DatasetFactory.createDerived(modified);
       }
       catch(err) {
         NotifyService.addSticky('Error', err.message, 'error', { referenceId: 'datasetinfo' });
