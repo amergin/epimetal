@@ -15,6 +15,10 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
       return $scope.window.somSpecial;
     };
 
+    $scope.filterButton = function(x) {
+      $scope.window.showResetBtn = x;
+    };
+
     $scope.addStateFilters = function() {
       if(!$scope.window.filters) { return; }
       _.each($scope.window.filters, function(filter) {
@@ -278,11 +282,15 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
 
           function custom(filters, filter) {
             $timeout(function() {
-              $injector.get('FilterService').addClassedFilter({ 'type': 'classed', 'filter': filter,
-                'var': $scope.window.variables.x, 'id': $scope.window._winid,
-                'chart': $scope.chart });
-              $scope.window.handler.getService().redrawVisible();
-              $scope.window.showResetBtn = true;
+              var instance = new ClassedBarChartFilter()
+              .chart($scope.chart)
+              .variable($scope.window.variables.x)
+              .windowid($scope.window._winid)
+              .payload(filter);
+
+              $injector.get('FilterService').addFilter(instance);
+              $injector.get('WindowHandler').reRenderVisible({ omit: 'histogram', compute: true });
+              $scope.filterButton(true);
             });
           }
 
@@ -302,10 +310,12 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
 
           function custom(filters, filter) {
             $timeout(function() {
-              $injector.get('FilterService').removeClassedFilter({ id: $scope.window._winid, filter: filter });
-              $scope.window.handler.getService().redrawVisible();
+              $injector.get('FilterService').removeFilterByPayload(filter);
               var hideButton = $scope.chart.filters().length === 0;
-              if(hideButton) { $scope.window.showResetBtn = false; }
+              if(hideButton) {
+                $scope.filterButton(false);
+              }
+              $injector.get('WindowHandler').reRenderVisible({ omit: 'histogram', compute: true });
             });
           }
 
@@ -313,11 +323,8 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
           return defaultFn.apply(this, arguments);
         })
         .resetFilterHandler(function(filters) {
-          $timeout(function() {
-            _.each(filters, function(filter) {
-              $injector.get('FilterService').removeClassedFilter({ id: $scope.window._winid, filter: filter });
-            });
-            $scope.window.handler.getService().redrawVisible();
+          _.each(filters, function(filter) {
+            $injector.get('FilterService').removeFilterByPayload(filter);
           });
           return [];
         });

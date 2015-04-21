@@ -5,31 +5,29 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
 
     var DimensionService = $injector.get('DimensionService');
     var _activeDimensionService = DimensionService.getPrimary();
-    var _filters = {
-      'histogram': [],
-      'som': [ { type: 'som', circle: new CircleFilter('circle1', $injector).name('A') },
-       { type: 'som', circle: new CircleFilter('circle2', $injector).name('B') } ]
-    };
+    var _colors = d3.scale.category10();
+    var _filters = [
+    new CircleFilter().injector($injector).name('A').id('circle1').color(_colors('circle1')),
+    new CircleFilter().injector($injector).name('B').id('circle2').color(_colors('circle2'))
+    ];
     var _disabled = false;
 
     var _somDimensionInst = _activeDimensionService.getSOMDimension();
     var _somDimension = _somDimensionInst.get();
 
-    var _colors = d3.scale.category10();
     var _bmusLookup = {};
 
-    _.each( _filters.som, function(filt) {
-      filt.circle.color( _colors(filt.circle.id()) );
-    });
-
     var getCircleFilterInitial = function() {
-      var initial = _.map( _filters.som, function(filt) {
-        return { circle: filt.circle, count: 0 };
-      });
-      return initial;
+      return _.chain(_filters)
+      .filter(function(f) {
+        return f.type() == 'circle';
+      })
+      .map(function(filt) {
+        return { circle: filt, count: 0 };
+      })
+      .value();
     };
 
-    var _filterReturnHandle = [];
     var _circleFilterReturnHandle = getCircleFilterInitial();
 
     var service = {};
@@ -60,11 +58,15 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
     };
 
     service.getSOMFilters = function() {
-      return _.map( _filters.som, function(filt) { return filt.circle; }); //_filters.som;
+      return _.filter(_filters, function(filt) {
+        return filt.type() == 'circle';
+      });
     };
 
     service.getSOMFilter = function(id) {
-      return _.find( _filters.som, function(cf) { return cf.circle.id() == id; } ).circle;
+      return _.find(_filters, function(filt) {
+        return filt.type() == 'circle' && filt.id() == id;
+      });
     };
 
     service.getSOMFilterColors = function() {
@@ -75,73 +77,36 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       return _circleFilterReturnHandle;
     };
 
-    service.addClassedFilter = function(config) {
-      if(service.disabled()) { return; }
-      var type = 'histogram';
-      _filters[type].push(config);
-      updateReturnFilters();
+    service.addFilter = function(filter) {
+      _filters.push(filter);
     };
 
-    service.removeClassedFilter = function(filter, redraw) {
-      if(!redraw && service.disabled()) { return; }
-      var ind = Utils.indexOf( _filters['histogram'], function(f,i) { 
-        return _.isEqual( f.id, filter.id ) && _.isEqual(f.filter, filter.filter);
-      });
+    service.removeFilter = function(filter) {
+      var removed = _.chain(_filters)
+      .remove(function(inst) {
+        return inst.is(filter);
+      })
+      .first()
+      .value();
 
-      if( ind == -1 ) { return; }
-      else {
-        _filters['histogram'].splice(ind,1);
+      if(removed) {
+        removed.remove();
       }
+    };
 
-      if( filter.chart ) {
-        service.disabled(true);
-        var oldFilters = filter.chart.filters();
-        filter.chart.filter(null);
-        var filtInd = Utils.indexOf(oldFilters, function(f,i) { 
-          return _.isEqual(f, filter.filter);
-        });
-        if(filtInd != -1) {
-          oldFilters.splice(filtInd,1);
+    service.removeFilterByPayload = function(filter) {
+      var found;
+      _.some(_filters, function(instance) {
+        if(instance.isPayload(filter)) {
+          found = instance;
+          return true;
         }
-        _.each(oldFilters, function(filt) { 
-          filter.chart.filter(filt);
-        });
-        $timeout(function() {
-          service.disabled(false);
-        });
-      }
-
-      if( redraw ) {
-        $injector.get('WindowHandler').redrawVisible();
-      }
-      updateReturnFilters();
-    };
-
-
-    service.addHistogramFilter = function(config) {
-      if(service.disabled()) { return; }
-      var type = 'histogram';
-      _filters[type].push(config);
-      updateReturnFilters();
-    };
-
-    service.removeHistogramFilter = function(filter, redraw) {
-      if(service.disabled()) { return; }
-      var ind = Utils.indexOf( _filters['histogram'], function(f,i) { 
-        return _.isEqual( f.id, filter.id );
+        return false;
       });
-
-      if( ind == -1 ) { return; }
-      else {
-        _filters['histogram'].splice(ind,1);
+      if(found) {
+        // found.remove();
+        _.remove(_filters, found);
       }
-
-      if( filter.chart ) { filter.chart.filterAll(); }
-
-      if( redraw ) {
-        $injector.get('WindowHandler').redrawVisible();
-      }
-      updateReturnFilters();
     };
 
     var getUniqueHexagons = function(current, added) {
@@ -152,7 +117,19 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
     };
 
     service.getFilters = function() {
-      return _filterReturnHandle;
+      return _filters;
+    };
+
+    service.getActiveFilters = function() {
+      var state = $injector.get('TabService').activeState(),
+      isSom = _.startsWith(state.name, 'vis.som');
+      return _.filter(_filters, function(filt) {
+        if(isSom) {
+          return filt.type() == 'circle';
+        } else {
+          return filt.type() != 'circle';
+        }
+      });
     };
 
     var bmuStrId = function(bmu) {
@@ -161,7 +138,6 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
 
     service.inWhatCircles = function(bmu) {
       var lookup = _bmusLookup[bmuStrId(bmu)];
-      // console.log("inWhatCircles reports = ", JSON.stringify(lookup), "for BMU = ", JSON.stringify(bmu));
       return lookup ? lookup.circles : [];
     };
 
@@ -203,71 +179,236 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
         handle = getCircleFilterInitial();
       }
       angular.copy(handle, _circleFilterReturnHandle);
-      updateReturnFilters();
-    };
-
-    var updateReturnFilters = function() {
-        angular.copy( _.chain(_filters).values().flatten(true).value(), _filterReturnHandle );
     };
 
     return service;
   }
   ]);
 
-function CircleFilter(id, $injector) {
 
-  var _name,
-  _id = id,
-  _color,
-  _hexagons = [],
-  _injector = $injector,
-  _radius,
-  _position,
-  that = this,
-  _filter = {};
+function BaseFilter() {
+  var priv = this.privates = {
+  },
+  filter = this.filter = {};
 
-  _filter.name = function(name) {
-    if(!arguments.length) { return _name; }
-    _name = name;
+  filter.type = function() {
+    throw new Error("not implemented");
+  };
+
+  filter.state = function() {
+    throw new Error("not implemented");
+  };
+
+  filter.isPayload = function() {
+    throw new Error("not implemented");
+  };
+
+  filter.remove = function() {
+    throw new Error("not implemented");
+  };
+
+  filter.is = function(instance) {
+    throw new Error("not implemented");
+  };
+
+  return filter;
+}
+
+function CircleFilter() {
+
+  BaseFilter.call(this);
+
+  var priv = _.extend(this.privates, {
+    name: undefined,
+    id: undefined,
+    color: undefined,
+    hexagons: [],
+    injector: null,
+    radius: undefined,
+    position: undefined
+  }),
+  filter = this.filter;
+
+  filter.isPayload = function(x) {
+    return false;
+  };
+
+  filter.name = function(name) {
+    if(!arguments.length) { return priv.name; }
+    priv.name = name;
+    return filter;
+  };
+
+  filter.type = function() {
+    return 'circle';
+  };
+
+  filter.is = function(instance) {
+    return !_.isUndefined(instance.id) && instance.id() == filter.id();
+  };
+
+  filter.id = function(x) {
+    if(!arguments.length) { return priv.id; }
+    priv.id = x;
+    return filter;
+  };
+
+  filter.injector = function(x) {
+    if(!arguments.length) { return priv.injector; }
+    priv.injector = x;
+    return filter;
+  };
+
+  filter.hexagons = function(hexagons) {
+    if(!arguments.length) { return priv.hexagons; }
+    priv.hexagons = hexagons;
+    priv.injector.get('DimensionService').get('vis.som').updateSOMFilter(filter.id(), priv.hexagons);
+    priv.injector.get('WindowHandler').redrawVisible();
     return _filter;
   };
 
-  _filter.id = function() {
-    return _id;
+  filter.radius = function(radius) {
+    if(!arguments.length) { return priv.radius; }
+    priv.radius = radius;
+    return filter;
   };
 
-  _filter.hexagons = function(hexagons) {
-    if(!arguments.length) { return _hexagons; }
-    _hexagons = hexagons;
-    _injector.get('DimensionService').get('vis.som').updateSOMFilter( _filter.id(), _hexagons );
-    _injector.get('WindowHandler').redrawVisible();
-    return _filter;
-  };
-
-  _filter.radius = function(radius) {
-    if(!arguments.length) { return _radius; }
-    _radius = radius;
-    return _filter;
-  };
-
-  _filter.position = function(position) {
-    if(!arguments.length) { return _position; }
-    _position = _.pick(position, 'x', 'y');
-    return _filter;
+  filter.position = function(position) {
+    if(!arguments.length) { return priv.position; }
+    priv.position = _.pick(position, 'x', 'y');
+    return filter;
   };
 
   // is sample included in this circle?
-  _filter.contains = function(bmu) {
-    return _.any( _filter.hexagons(), function(hex) {
+  filter.contains = function(bmu) {
+    return _.any(filter.hexagons(), function(hex) {
       return (hex.i === bmu.y) && (hex.j === bmu.x);
     });
   };
 
-  _filter.color = function(color) {
-    if(!arguments.length) { return _color; }
-    _color = color;
-    return _filter;
+  filter.color = function(color) {
+    if(!arguments.length) { return priv.color; }
+    priv.color = color;
+    return filter;
   };
 
-  return _filter;
+  filter.remove = function() {
+    // do
+  };
+
+  return filter;
 }
+
+CircleFilter.prototype = _.create(BaseFilter.prototype, {
+  'constructor': BaseFilter
+});
+
+function BaseFigureFilter() {
+  BaseFilter.call(this);
+
+  var priv = _.extend(this.privates, {
+    variable: undefined,
+    chart: null,
+    windowid: undefined,
+    payload: undefined
+  }),
+  filter = this.filter;
+
+  filter.variable = function(x) {
+    if(!arguments.length) { return priv.variable; }
+    priv.variable = x;
+    return filter;
+  };
+
+  filter.chart = function(x) {
+    if(!arguments.length) { return priv.chart; }
+    priv.chart = x;
+    return filter;
+  };
+
+  filter.payload = function(x) {
+    if(!arguments.length) { return priv.payload; }
+    priv.payload = x;
+    return filter;
+  };
+
+  filter.isPayload = function(x) {
+    return priv.payload == x;
+  };
+
+  filter.windowid = function(x) {
+    if(!arguments.length) { return priv.windowid; }
+    priv.windowid = x;
+    return filter;
+  };
+
+  filter.is = function(instance) {
+    return !_.isUndefined(instance.chart) && filter.chart() == instance.chart();
+  };
+
+  return filter;
+}
+
+BaseFigureFilter.prototype = _.create(BaseFilter.prototype, {
+  'constructor': BaseFilter
+});
+
+function HistogramFilter() {
+  // call super
+  BaseFigureFilter.call(this);
+
+  var priv = this.privates,
+  filter = this.filter;
+
+  filter.type = function() {
+    return 'range';
+  };
+
+  filter.remove = function() {
+    priv.chart.filterAll();
+    priv.chart.redraw();
+    return filter;
+  };
+
+  return filter;
+}
+
+HistogramFilter.prototype = _.create(BaseFigureFilter.prototype, {
+  'constructor': BaseFigureFilter
+});
+
+function ClassedBarChartFilter() {
+  // call super
+  BaseFigureFilter.call(this);
+
+  var priv = this.privates,
+  filter = this.filter;
+
+  filter.type = function() {
+    return 'classed';
+  };
+
+  filter.remove = function() {
+    var filters = priv.chart.filters(),
+    removeIndex = _.indexOf(filters, priv.payload);
+
+    // 1. clear all current filters
+    priv.chart.filter(null);
+
+    // 2. remove the one
+    filters.splice(removeIndex, 1);
+
+    // 3. add filter one by one, but not the one to be deleted
+    _.each(filters, function(filt, ind) {
+      priv.chart.filter(filt);
+    });
+    priv.chart.redraw();
+    return filter;
+  };
+
+  return filter;
+}
+
+ClassedBarChartFilter.prototype = _.create(BaseFigureFilter.prototype, {
+  'constructor': BaseFigureFilter
+});

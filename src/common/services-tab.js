@@ -178,12 +178,8 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
     };
 
     // only get
-    _service.activeState = function(x) {
-      // TODO
+    _service.activeState = function() {
+      return $state.current;
     };
-
-
-
     return _service;
-
 }]);

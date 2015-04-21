@@ -17,8 +17,8 @@ mod.directive('filterInfo', ['$templateCache', '$compile', '$rootScope', '$injec
   }
 ]);
 
-mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService', '$rootScope', 'constants', 'FilterService', '$state', 'NotifyService',
-  function FilterInfoController($scope, $injector, DimensionService, $rootScope, constants, FilterService, $state, NotifyService) {
+mod.controller('FilterInfoController', ['$scope', '$timeout', '$injector', 'DimensionService', '$rootScope', 'constants', 'FilterService', '$state', 'NotifyService', 'TabService',
+  function FilterInfoController($scope, $timeout, $injector, DimensionService, $rootScope, constants, FilterService, $state, NotifyService, TabService) {
     var numFormat = d3.format('.2e');
     var dimensionService = DimensionService.getPrimary();
 
@@ -29,16 +29,10 @@ mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService
       }, true );
 
     $scope.getAmount = function() {
-      var re = /((?:\w+).(?:\w+))(?:.\w+)?/i;
-      var parent = _.last( re.exec( $state.current.name ) );
       return _.chain($scope.filters)
-      .reject( function(filter) { 
-        if( filter.type == 'som' && parent !== 'vis.som' ) {
-          return true;
-        }
-        return false; })
-      .size()
-      .value();
+      .map($scope.showFilter)
+      .countBy()
+      .value().true || 0;
     };
 
     $scope.formatNumber = function(num) {
@@ -46,19 +40,19 @@ mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService
     };
 
     $scope.filterOrder = function(filt) {
-      if(filt.type === 'som') {
-        return "som(" + filt.hexagons + ")";
-      } else if(filt.type === 'range') {
-        return "range" + filt.var;
-      }
+      // if(filt.type === 'som') {
+      //   return "som(" + filt.hexagons + ")";
+      // } else if(filt.type === 'range') {
+      //   return "range" + filt.var;
+      // }
     };
 
     $scope.showFilter = function(filter) {
-      if( filter.type == 'som' ) {
-        var re = /((?:\w+).(?:\w+))(?:.\w+)?/i;
-        var parent = _.last( re.exec( $state.current.name ) );
-        return parent == 'vis.som'; 
-      }
+      if(filter.type() == 'circle') {
+        var state = TabService.activeState().name;
+        var isSomState = _.startsWith(state, 'vis.som');
+        return isSomState;
+      } 
       return true;
     };
 
@@ -75,14 +69,15 @@ mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService
       return _.find( FilterService.getCircleFilterInfo(), function(cf) { return cf.circle.id() == circleId; } ).count;
     };
 
-    $scope.close = function(filter, redraw) {
+    $scope.close = function(filter) {
       if( checkEdit() ) { return; }
 
-      if(filter.type == 'range') {
-        FilterService.removeHistogramFilter(filter, redraw);
-      }
-      else if(filter.type == 'classed') {
-        FilterService.removeClassedFilter(filter, redraw);
+      FilterService.removeFilter(filter);
+      if(FilterService.getActiveFilters().length === 0) {
+        $timeout(function() {
+          $injector.get('WindowHandler').reRenderVisible({ compute: true, omit: 'histogram' });
+          $injector.get('WindowHandler').redrawVisible();
+        });
       }
     };
 
@@ -91,17 +86,14 @@ mod.controller('FilterInfoController', ['$scope', '$injector', 'DimensionService
     };
 
     $scope.reset = function() {
-      if( checkEdit() ) { return; }
-
-      _.each( angular.copy($scope.filters), function(f) {
-        if(f.type == 'classed') {
-          f.chart.filterAll();
-        } else {
-          $scope.close(f, false);
-        }
+      _.each($scope.filters, function(filter) {
+        filter.remove();
       });
-
-      $injector.get('WindowHandler').redrawVisible();
+      $scope.filters = [];
+      $timeout(function() {
+        $injector.get('WindowHandler').reRenderVisible({ compute: true, omit: 'histogram' });
+        $injector.get('WindowHandler').redrawVisible();
+      });
     };
   }
 ]);

@@ -29,7 +29,14 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       // dc.redrawAll(constants.groups.histogram);
     };
 
-    $scope.redraw = function() {
+    $scope.window.showResetBtn = false;
+    $scope.resetButton = function(x) {
+      $timeout(function() {
+        $scope.window.showResetBtn = x;
+      });
+    };
+
+    $scope.render = function() {
       // only redraw if the dashboard is visible
       if( $state.current.name === $scope.window.handler.getName() ) {
         $scope.computeExtent();
@@ -219,28 +226,88 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
         left: 40
       })
       .xAxisLabel(config.variableX)
-      .on("filtered", function(chart, filter) {
-        $timeout( function() {
-          var filterRemoved = _.isNull(filter) && _.isNull(chart.filter());
+      .addFilterHandler(function(filters, filter) {
+        function defaultFn(filters, filter) {
+          filters.push(filter);
+          return filters;
+        }
 
-          if( filterRemoved ) {
-            $scope.window.showResetBtn = false;
-            $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
-            // no idea why this is needed
-            $scope.histogram.redraw();
-          } else {
-            $scope.window.showResetBtn = true;
-              // remove filter (perhaps slided to another position)
-              $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
-              $scope.FilterService.addHistogramFilter( { 'type': 'range', 'filter': filter, 
-                'var': $scope.window.variables.x, 'id': $scope.window._winid,
-                'chart': $scope.histogram
-              });
-            }
-            $scope.window.handler.getService().reRenderVisible({ compute: true, omit: 'histogram' });
-
+        function custom(filters, filter) {
+          // adding a filter may be actually shifting it to another position
+          var current = _.find($injector.get('FilterService').getFilters(), function(filt) {
+            return filt.type() == 'range' && filt.chart() == $scope.histogram;
           });
+
+          if(current) {
+            // shifted
+            current.payload(filter);
+          } else {
+            // new
+            var filt = new HistogramFilter()
+            .chart($scope.histogram)
+            .variable($scope.window.variables.x)
+            .windowid($scope.window._winid)
+            .payload(filter);
+
+            $injector.get('FilterService').addFilter(filt);
+          }
+          $scope.resetButton(true);
+          $injector.get('WindowHandler').reRenderVisible({ compute: true, omit: 'histogram' });
+        }
+
+        custom.apply(this, arguments);
+        return defaultFn.apply(this, arguments);
       })
+      .removeFilterHandler(function(filters, filter) {
+        function defaultFn(filters, filter) {
+          for (var i = 0; i < filters.length; i++) {
+            if (filters[i] <= filter && filters[i] >= filter) {
+              filters.splice(i, 1);
+              break;
+            }
+          }
+          return filters;
+        }
+
+        function custom(filters, filter) {
+          $injector.get('FilterService').removeFilter(filt);
+          $injector.get('WindowHandler').reRenderVisible({ compute: true, omit: 'histogram' });
+          $scope.resetButton(false);
+        }
+
+        custom.apply(this, arguments);
+        return defaultFn.apply(this, arguments);
+      })
+      .resetFilterHandler(function(filters) {
+        _.each(filters, function(filter) {
+          $injector.get('FilterService').removeFilterByPayload(filter);
+        });
+        $injector.get('WindowHandler').reRenderVisible({ compute: true, omit: 'histogram' });
+        $scope.resetButton(false);
+        return [];
+      })
+      // .on("filtered", function(chart, filter) {
+      //   $timeout( function() {
+      //     var filterRemoved = _.isNull(filter) && _.isNull(chart.filter());
+
+      //     if( filterRemoved ) {
+      //       $scope.window.showResetBtn = false;
+      //       $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
+      //       // no idea why this is needed
+      //       $scope.histogram.redraw();
+      //     } else {
+      //       $scope.window.showResetBtn = true;
+      //         // remove filter (perhaps slided to another position)
+      //         $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
+      //         $scope.FilterService.addHistogramFilter( { 'type': 'range', 'filter': filter, 
+      //           'var': $scope.window.variables.x, 'id': $scope.window._winid,
+      //           'chart': $scope.histogram
+      //         });
+      //       }
+      //       $scope.window.handler.getService().reRenderVisible({ compute: true, omit: 'histogram' });
+
+      //     });
+      // })
       .renderlet( function(chart) {
         if( config.pooled ) {
           d3.selectAll( $(config.element).find('rect.bar:not(.deselected)') )
@@ -355,7 +422,7 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
           if( config.omit == 'histogram' ) { return; }
           $timeout( function() {
             if(config.compute) {
-              $scope.redraw();
+              $scope.render();
 
               if(!$scope.somSpecial) {
                 var oldFilters = $scope.histogram.filters();

@@ -38,8 +38,8 @@
 	          <td class="col-sm-3 text-center">
 	          		<i class="fa fa-lg fa-times-circle ctrl" 
 	          		ng-class="{ true: 'text-danger', false: 'text-muted' }[canEdit()]"
-	          		ng-show="filter.type != 'som'"
-	          		ng-click="close(filter, true)"></i>
+	          		ng-show="filter.type() != 'som'"
+	          		ng-click="close(filter)"></i>
 	          </td>
 	        </tr>
 	      </tbody>
