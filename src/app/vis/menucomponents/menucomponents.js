@@ -53,6 +53,10 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
       }
     };
 
+    $scope.removeDerived = function(set) {
+      DatasetFactory.removeDerived(set);
+    };
+
     $scope.toggle = function(set) {
       WindowHandler.spinAllVisible();
 

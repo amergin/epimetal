@@ -70,7 +70,7 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
 
     $scope.$parent.resetFilter = function() {
       $scope.chart.filterAll();
-      $scope.window.handler.redrawAll();
+      $scope.window.handler.reRenderVisible({ compute: true, omit: 'histogram' });
       $scope.window.showResetBtn = false;
     };
 

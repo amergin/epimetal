@@ -9,24 +9,41 @@ var visu = angular.module('plotter.vis.plotting.histogram',
 visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout',
   function HistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout) {
 
+    $scope.isSpecial = function() {
+      return $scope.window.somSpecial;
+    };
+
+    $scope.filterButton = function(x) {
+      $scope.window.showResetBtn = x;
+    };
+
     $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
+    // work-around, weird scope issue on filters ?!
+    $scope.FilterService = $injector.get('FilterService');
 
-    $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables);
-
-    $scope.dimension = $scope.dimensionInst.get();
-    $scope.groupInst = null;
-    $scope.totalGroupInst = null;
-
-    if( $scope.window.somSpecial ) {
+    function initSOMSpecial() {
       $scope.primary = $injector.get('DimensionService').getPrimary();
       $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables);
       $scope.totalDimension = $scope.totalDimensionInst.get();
     }
 
+    function initDefault() {
+      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables);
+      $scope.dimension = $scope.dimensionInst.get();
+      $scope.groupInst = null;
+      $scope.totalGroupInst = null;
+
+    }
+
+    if( $scope.isSpecial() ) {
+      initSOMSpecial();
+    } else {
+      initDefault();
+    }
+
     $scope.$parent.resetFilter = function() {
       $scope.histogram.filterAll();
       $scope.window.handler.redrawAll();
-      // dc.redrawAll(constants.groups.histogram);
     };
 
     $scope.window.showResetBtn = false;
@@ -37,17 +54,16 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
     };
 
     $scope.render = function() {
-      // only redraw if the dashboard is visible
+      // only render if the dashboard is visible
       if( $state.current.name === $scope.window.handler.getName() ) {
         $scope.computeExtent();
-        $scope.histogram.x(d3.scale.linear().domain($scope.extent).range([0, $scope.noBins]));
         $scope.histogram.render();
       }
     };
 
     // share information with the plot window
     $scope.$parent.headerText = ['Histogram of', $scope.window.variables.x, ''];
-    $scope.$parent.showResetBtn = false;
+    // $scope.$parent.showResetBtn = false;
 
     $scope.computeExtent = function() {
       // remove older ones
@@ -55,7 +71,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       if($scope.totalGroupInst) { $scope.totalGroupInst.decrement(); }
 
       var allValues;
-      if( $scope.window.somSpecial ) {
+      if( $scope.isSpecial() ) {
         allValues = $scope.totalDimension.group().all().filter( function(d) {
           return d.value > 0 && d.key != constants.nanValue;
         });
@@ -75,11 +91,8 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       $scope.groupInst = $scope.dimensionInst.group(function(d) {
         return Math.floor(d / $scope.binWidth) * $scope.binWidth;
       });
-      // $scope.group = $scope.dimension.group(function(d) {
-      //   return Math.floor(d / $scope.binWidth) * $scope.binWidth;
-      // });
 
-if( $scope.window.somSpecial ) {
+      if( $scope.isSpecial() ) {
         // circle
         $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables.x);
         $scope.reduced = $scope.groupInst.get();
@@ -105,6 +118,9 @@ if( $scope.window.somSpecial ) {
         }
       });
 
+      if($scope.histogram) {
+        $scope.histogram.x(d3.scale.linear().domain($scope.extent).range([0, $scope.noBins]));
+      }
       console.log("histogram extent is ", $scope.extent, "on windowHandler = ", $scope.window.handler.getName(), "variable = ", $scope.window.variables.x);
     };
 
@@ -113,7 +129,7 @@ if( $scope.window.somSpecial ) {
     // individual charts that are part of the composite chart
     $scope.barCharts = {};
 
-    if( $scope.window.somSpecial ) {
+    if( $scope.isSpecial() ) {
       var filters = $injector.get('FilterService').getSOMFilters();
       $scope.groupNames = _.map(filters, function(f) { return f.id(); } );
       $scope.colorScale = $injector.get('FilterService').getSOMFilterColors();
@@ -128,8 +144,7 @@ if( $scope.window.somSpecial ) {
     $scope.filterOnSet = function(group, name) {
       return {
         'all': function() {
-          // special
-          if( $scope.window.somSpecial && name != 'total' ) {
+          if( $scope.isSpecial() && name != 'total' ) {
             var ret = _.chain(group.all())
             .reject(function(grp) { return grp.key < constants.legalMinValue; })
             .map(function(grp) {
@@ -194,13 +209,9 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
         .attr("width", "100%")
         .attr("height", "100%");
           // don't redraw here, or it will form a feedback loop
-          // chart.redraw();
         };
 
-      // work-around, weird scope issue on filters ?!
-      $scope.FilterService = $injector.get('FilterService');
-
-      var dcGroup = $scope.somSpecial ? constants.groups.histogram.nonInteractive : constants.groups.histogram.interactive;
+        var dcGroup = $scope.isSpecial() ? constants.groups.histogram.nonInteractive : constants.groups.histogram.interactive;
 
       // 1. create composite chart
       $scope.histogram = dc.compositeChart(config.element[0], dcGroup)
@@ -286,28 +297,6 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
         $scope.resetButton(false);
         return [];
       })
-      // .on("filtered", function(chart, filter) {
-      //   $timeout( function() {
-      //     var filterRemoved = _.isNull(filter) && _.isNull(chart.filter());
-
-      //     if( filterRemoved ) {
-      //       $scope.window.showResetBtn = false;
-      //       $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
-      //       // no idea why this is needed
-      //       $scope.histogram.redraw();
-      //     } else {
-      //       $scope.window.showResetBtn = true;
-      //         // remove filter (perhaps slided to another position)
-      //         $scope.FilterService.removeHistogramFilter({ id: $scope.window._winid });
-      //         $scope.FilterService.addHistogramFilter( { 'type': 'range', 'filter': filter, 
-      //           'var': $scope.window.variables.x, 'id': $scope.window._winid,
-      //           'chart': $scope.histogram
-      //         });
-      //       }
-      //       $scope.window.handler.getService().reRenderVisible({ compute: true, omit: 'histogram' });
-
-      //     });
-      // })
       .renderlet( function(chart) {
         if( config.pooled ) {
           d3.selectAll( $(config.element).find('rect.bar:not(.deselected)') )
@@ -329,17 +318,15 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
         $scope.histogram.colors(config.colorScale);
       }
 
-
-
       // 2. for each of the additional stacks, create a child chart
       _.each(config.groupNames, function(name, ind) {
 
-        var chart = dc.barChart($scope.histogram) //, constants.groups.histogram)
-      .centerBar(true)
-      .barPadding(0.15)
-      .brushOn(true)
-      .dimension(config.dimension)
-      .group(config.filter(config.reduced, name), name)
+        var chart = dc.barChart($scope.histogram)
+        .centerBar(true)
+        .barPadding(0.15)
+        .brushOn(true)
+        .dimension(config.dimension)
+        .group(config.filter(config.reduced, name), name)
           .valueAccessor(function(d) { // is y direction
             return d.value.counts[name];
           });
@@ -348,14 +335,14 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
           charts.push(chart);
         });
 
-      if( $scope.window.somSpecial  ) {
+      if( $scope.isSpecial()  ) {
         var name = 'total';
-        var chart = dc.barChart($scope.histogram) //, constants.groups.histogram)
-          .centerBar(true)
-          .barPadding(0.15)
-          .brushOn(true)
-          .dimension($scope.totalDimension)
-          .group(config.filter($scope.totalReduced, name), name)
+        var chart = dc.barChart($scope.histogram)
+        .centerBar(true)
+        .barPadding(0.15)
+        .brushOn(true)
+        .dimension($scope.totalDimension)
+        .group(config.filter($scope.totalReduced, name), name)
           .valueAccessor(function(d) { // is y direction
             return d.value.counts[name];
           });
@@ -370,7 +357,7 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       $scope.histogram.compose(charts);
       $scope.histogram.render();
 
-      if( !$scope.window.somSpecial && !_.isUndefined( $scope.window.filters ) && $scope.window.filters.length > 0) {
+      if( !$scope.isSpecial() && !_.isUndefined( $scope.window.filters ) && $scope.window.filters.length > 0) {
         $timeout( function() {
           var filter = dc.filters.RangedFilter($scope.window.filters[0], $scope.window.filters[1]);
           $scope.histogram.filter(filter);
@@ -409,6 +396,46 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
 
       $scope.deregisters = [];
 
+      var derivedAddUnbind = $rootScope.$on('dataset:derived:add', function(eve, set) {
+        function addChart() {
+          var name = set.name(),
+          chart = dc.barChart($scope.histogram)
+          .centerBar(true)
+          .barPadding(0.15)
+          .brushOn(true)
+          .dimension($scope.dimension)
+          .group($scope.filterOnSet($scope.reduced, name), name)
+          .valueAccessor(function(d) { // is y direction
+            return d.value.counts[name];
+          }),
+          currentChildren = $scope.histogram.children();
+
+          $scope.barCharts[name] = chart;
+          currentChildren.push(chart);
+          $scope.histogram.compose(currentChildren);
+        }
+
+        $scope.computeExtent();
+        addChart();
+        $scope.histogram.render();
+      });
+
+      var derivedRemoveUnbind = $rootScope.$on('dataset:derived:remove', function(eve, set) {
+        function removeChart() {
+          var currentChildren = $scope.histogram.children(),
+          name = set.name(),
+          chart = $scope.barCharts[name];
+
+          _.remove(currentChildren, chart);
+
+          $scope.histogram.compose(currentChildren);
+        }
+
+        $scope.computeExtent();
+        removeChart();
+        $scope.histogram.render();
+      });
+
       var resizeUnbind = $rootScope.$on('gridster.resize', function(eve, $element) {
         // if( $element.is( $scope.$parent.element.parent() ) ) {
         //   $timeout( function() {
@@ -424,7 +451,7 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
             if(config.compute) {
               $scope.render();
 
-              if(!$scope.somSpecial) {
+              if(!$scope.isSpecial()) {
                 var oldFilters = $scope.histogram.filters();
                 $scope.histogram.filter(null);
                 _.each(oldFilters, function(filter) {
@@ -458,7 +485,7 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
         callback(retObj);
       });
 
-      $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind, gatherStateUnbind);
+      $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind, gatherStateUnbind, derivedAddUnbind, derivedRemoveUnbind);
 
       $scope.$on('$destroy', function() {
         console.log("destroying histogram for", $scope.window.variables.x);
@@ -467,7 +494,7 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
         });
 
         $scope.groupInst.decrement();
-        if($scope.window.somSpecial) { $scope.totalGroupInst.decrement(); }
+        if($scope.isSpecial()) { $scope.totalGroupInst.decrement(); }
         $scope.dimensionInst.decrement();
       });
 

@@ -78,10 +78,12 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
     };
 
     service.addFilter = function(filter) {
+      if(service.disabled()) { return; }
       _filters.push(filter);
     };
 
     service.removeFilter = function(filter) {
+      if(service.disabled()) { return; }
       var removed = _.chain(_filters)
       .remove(function(inst) {
         return inst.is(filter);
@@ -94,7 +96,19 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       }
     };
 
+    service.resetFilters = function() {
+      service.disabled(true);
+      _.each(_filters, function(filter) {
+        if(!_.isUndefined(filter.remove)) {
+          filter.remove();
+        }
+      });
+      _filters = [];
+      service.disabled(false);
+    };
+
     service.removeFilterByPayload = function(filter) {
+      if(service.disabled()) { return; }      
       var found;
       _.some(_filters, function(instance) {
         if(instance.isPayload(filter)) {

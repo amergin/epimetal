@@ -25,15 +25,19 @@
       <thead>
         <tr>
           <th class="col-sm-2">Selected</th>
-          <th class="col-sm-7">Name</th>
+          <th class="col-sm-5">Name</th>
           <th class="col-sm-3">Samples</th>
+          <th class="col-sm-2">Delete</th>          
         </tr>
       </thead>
       <tbody>
         <tr ng-repeat="set in derivedTypes = (datasets | filter:isDerived)" ng-style="{ 'background-color': set.color() }" ng-click="toggle(set)" class="ctrl">
           <td class="dataset-select col-sm-2"><input type="checkbox" ng-click="set(toggle)" ng-checked="set.active()"></td>
-          <td class="dataset-name col-sm-7">{{set.name()}}</td>
+          <td class="dataset-name col-sm-5">{{set.name()}}</td>
           <td class="dataset-size col-sm-2">{{set.size()}}</td>
+          <td class="dataset-size col-sm-2">
+              <i class="fa fa-lg fa-times-circle ctrl" ng-click="removeDerived(set)"></i>
+          </td>
         </tr>
         <tr ng-show="!derivedTypes.length">
           <td colspan="3">

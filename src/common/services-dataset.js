@@ -257,6 +257,11 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         return 'derived';
       };
 
+      dset.injector = function(x) {
+        priv.injector = x;
+        return dset;
+      };
+
       dset.variables = function(name) {
         return _.chain(priv.samplesByDataset[name])
         .sample(4)
@@ -339,6 +344,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         var copySample;
         _.each(samples, function(samp, id) {
           if(!priv.samplesByDataset[samp.dataset]) { priv.samplesByDataset[samp.dataset] = []; }
+          // shallow copy, otherwise this will mess up other datasets that have this sample
           copySample = angular.copy(samp);
           copySample.originalDataset = samp.dataset;
           copySample.dataset = priv.name;
@@ -527,7 +533,44 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       return defer.promise;
     };
 
+    service.removeDerived = function(set) {
+      function emitEvent(dset) {
+        $rootScope.$emit('dataset:derived:remove', dset);
+      }
+
+      var DimensionService = $injector.get('DimensionService');
+      if(set.type() !== 'derived') {
+        throw new Error('wrong set type');
+      }
+
+      emitEvent(set);
+
+      var dataRemoved = DimensionService.getPrimary().removeVariableData({
+        samples: set.samples()
+      });
+      delete that.sets[set.name()];
+      if(dataRemoved) {
+        DimensionService.getPrimary().rebuildInstance();
+      }
+
+    };
+
     service.createDerived = function(name) {
+      function deselectOthers() {
+        _.each(service.getSets(), function(set) {
+          set.active(false);
+        });
+      }
+
+      function removeFilters() {
+        var FilterService = $injector.get('FilterService');
+        FilterService.resetFilters();
+      }
+
+      function emitEvent(dset) {
+        $rootScope.$emit('dataset:derived:add', dset);
+      }
+
       if(!that.sets[name]) {
         var DimensionService = $injector.get('DimensionService'),
         primary = DimensionService.getPrimary(),
@@ -539,9 +582,16 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         .name(name)
         .size(samples.length)
         .color(that.colors(name))
-        .samples(samples);
+        .samples(samples)
+        .active(true);
 
+        deselectOthers();
         that.sets[name] = derived;
+        removeFilters();
+        service.updateDataset();
+
+
+        // add to dimension service
         dataWasAdded = primary.addVariableData({
           dataset: derived,
           samples: {
@@ -553,6 +603,8 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
           }
         });
         primary.rebuildInstance();
+
+        emitEvent(derived);
 
         return derived;
       } else {

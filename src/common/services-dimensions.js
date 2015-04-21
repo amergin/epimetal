@@ -558,6 +558,20 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
         // this.updateDatasetDimension();
       };
 
+      this.removeVariableData = function(config) {
+        var dataRemoved = false,
+        sampleKey;
+
+        _.each(config.samples, function(samp, id) {
+          sampleKey = _getSampleKey(samp.dataset, samp.sampleid);
+          if(!_.isUndefined(currSamples[sampleKey])) {
+            delete currSamples[sampleKey];
+            dataRemoved = true;
+          }
+        });
+        return dataRemoved;
+      };
+
       // receives new variable data. The function is called once for each dataset
       // receiving data, and therefore the additions have to operate on a dataset-basis
       this.addVariableData = function(config) {

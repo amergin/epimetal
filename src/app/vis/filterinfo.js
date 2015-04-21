@@ -86,11 +86,7 @@ mod.controller('FilterInfoController', ['$scope', '$timeout', '$injector', 'Dime
     };
 
     $scope.reset = function() {
-      if( checkEdit() ) { return; }
-      _.each($scope.filters, function(filter) {
-        filter.remove();
-      });
-      $scope.filters = [];
+      FilterService.resetFilters();
       $timeout(function() {
         $injector.get('WindowHandler').reRenderVisible({ compute: true, omit: 'histogram' });
         $injector.get('WindowHandler').redrawVisible();
