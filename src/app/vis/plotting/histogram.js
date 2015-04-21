@@ -417,7 +417,6 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
 
         $scope.computeExtent();
         addChart();
-        $scope.histogram.render();
       });
 
       var derivedRemoveUnbind = $rootScope.$on('dataset:derived:remove', function(eve, set) {
@@ -433,7 +432,6 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
 
         $scope.computeExtent();
         removeChart();
-        $scope.histogram.render();
       });
 
       var resizeUnbind = $rootScope.$on('gridster.resize', function(eve, $element) {

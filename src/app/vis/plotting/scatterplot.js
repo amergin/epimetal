@@ -10,15 +10,19 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
     $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
     $scope.dimensionInst = $scope.dimensionService.getXYDimension($scope.window.variables);
     $scope.dimension = $scope.dimensionInst.get();
-    $scope.groupInst = $scope.dimensionService.getReduceScatterplot($scope.dimensionInst.groupDefault());
-    $scope.group = $scope.groupInst.get();
+
+    $scope.initGroup = function() {
+      if($scope.groupInst) { $scope.groupInst.decrement(); }
+      $scope.groupInst = $scope.dimensionService.getReduceScatterplot($scope.dimensionInst.groupDefault());
+      $scope.group = $scope.groupInst.get();
+    };
+
+    $scope.initGroup();
 
     $scope.$parent.showResetBtn = false;
     $scope.$parent.headerText = ['Scatter plot of', $scope.window.variables.x + ", " + $scope.window.variables.y, ''];
 
     $scope._calcCanvasAttributes = function() {
-      // $scope.reduced = $scope.dimensionService.getReduceScatterplot($scope.dimension.group());
-
       $scope.sets = DatasetFactory.activeSets();
       // min&max for all active datasets
       $scope.xExtent = d3.extent($scope.group.top(Infinity), function(d) {
@@ -61,24 +65,39 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       };
     };
 
+    $scope.removeCanvas = function(stored) {
+      $(stored.canvas.canvas).remove();
+    };
+
     $scope.redrawAll = function() {
       console.log("redraw scatter plot");
       $scope._calcCanvasAttributes();
 
-      _.each($scope.sets, function(set, ind) {
-        // remove previous canvas, if any
-        if( !_.isUndefined( $scope.canvases[set.name()] ) ) {
-          $($scope.canvases[set.name()].canvas.canvas).remove();
-        }
-
-        // create a new one
-        $scope._createCanvas(set, ind);
+      _.each($scope.canvases, function(canvas, name) {
+        $scope.removeCanvas(canvas);
       });
 
       if( !_.isUndefined( $scope.canvases['axes'] ) ) {
         // delete old axes canvas, if any
-        $($scope.canvases['axes'].canvas.canvas).remove();
+        $scope.removeCanvas($scope.canvases['axes']);
       }
+
+      $scope.canvases = {};
+
+      _.each($scope.sets, function(set, ind) {
+        $scope._createCanvas(set, ++$scope.zIndexCount);
+      });
+
+
+      // _.each($scope.sets, function(set, ind) {
+      //   // remove previous canvas, if any
+      //   if( !_.isUndefined( $scope.canvases[set.name()] ) ) {
+      //     $scope.removeCanvas($scope.canvases[set.name()]);
+      //   }
+
+      //   // create a new one
+      //   $scope._createCanvas(set, ++$scope.zIndexCount);
+      // });
 
       // create the axes last and place them on top of other canvases
       var axesCanvas = $scope.createAxisCanvas(
@@ -369,6 +388,19 @@ visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
 
       $scope.deregisters = [];
 
+      var derivedAddUnbind = $rootScope.$on('dataset:derived:add', function(eve, set) {
+        $scope.initGroup();
+        // $scope._calcCanvasAttributes();
+        // // add canvas as 'layer'
+        // $scope._createCanvas(set, ++$scope.zIndexCount);
+        // $scope.redrawAll();
+      });
+
+      var derivedRemoveUnbind = $rootScope.$on('dataset:derived:remove', function(eve, set) {
+        $scope.removeCanvas($scope.canvases[set.name()]);
+        $scope.initGroup();
+      });
+
       var resizeUnbind = $rootScope.$on('gridster.resize', function(event, $element) {
         if( $element.is( $scope.$parent.element.parent() ) ) {
           $scope.width = $scope.$parent.element.width();
@@ -428,7 +460,7 @@ visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
         callback(retObj);
       });
 
-      $scope.deregisters.push(reRenderUnbind, redrawUnbind, resizeUnbind, gatherStateUnbind);
+      $scope.deregisters.push(reRenderUnbind, redrawUnbind, resizeUnbind, gatherStateUnbind, derivedAddUnbind, derivedRemoveUnbind);
 
       $scope.$on('$destroy', function() {
         _.each($scope.deregisters, function(unbindFn) {

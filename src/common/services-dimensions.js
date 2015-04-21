@@ -299,16 +299,15 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
       this.getReduceScatterplot = function (dimensionGroup) {
 
         var reduceAdd = function (p, v) {
+          if(_.isUndefined(p.counts[v.dataset])) {
+            p.counts[v.dataset] = 0;
+          }
           p.counts[v.dataset] = p.counts[v.dataset] + 1;
-          // p.dataset = v.dataset;
-          // p.sampleid = v.sampleid;
           return p;
         };
 
         var reduceRemove = function (p, v) {
           p.counts[v.dataset] = p.counts[v.dataset] - 1;
-          // p.dataset = v.dataset;
-          // p.sampleid = v.sampleid;
           return p;
         };
 

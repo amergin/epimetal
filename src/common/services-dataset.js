@@ -173,23 +173,35 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         return retObj;
       };
 
-      priv.getVariables = function(variables, config, defer, datasetName) {
-        var performPost = function(vars, config, defer, datasetName) {
+      priv.getVariables = function(variables, config, defer, datasetName, sampProcessFn) {
+        function defaultProcessFn(addSamples) {
+          _.each(addSamples, function(sample) {
+            if (_.isUndefined(priv.samples[sample.sampleid])) {
+              // previously unknown sample
+              priv.samples[sample.sampleid] = sample;
+            } else {
+              // already present, just extend to include the new variable data
+              _.extend(priv.samples[sample.sampleid].variables, sample.variables);
+            }
+          });
+        }
+
+        var performPost = function(vars, config, defer, datasetName, processFn) {
           $http.post(that.config.multipleVariablesURL, {
             variables: vars,
             dataset: datasetName
           }, { cache: true })
           .success(function(response) {
-            _.each(response.result.values, function(sample) {
-              if (_.isUndefined(priv.samples[sample.sampleid])) {
-                // previously unknown sample
-                priv.samples[sample.sampleid] = sample;
-              } else {
-                // already present, just extend to include the new variable data
-                _.extend(priv.samples[sample.sampleid].variables, sample.variables);
-              }
-            });
-
+            processFn(response.result.values);
+            // _.each(response.result.values, function(sample) {
+            //   if (_.isUndefined(priv.samples[sample.sampleid])) {
+            //     // previously unknown sample
+            //     priv.samples[sample.sampleid] = sample;
+            //   } else {
+            //     // already present, just extend to include the new variable data
+            //     _.extend(priv.samples[sample.sampleid].variables, sample.variables);
+            //   }
+            // });
             defer.resolve(priv.getResult(variables, vars, config, response.result.values));
           })
           .error(function(response, status, headers, config) {
@@ -197,7 +209,8 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
           });
         };
 
-        performPost(variables, config, defer, datasetName);
+        var processFn = sampProcessFn ? sampProcessFn : defaultProcessFn;
+        performPost(variables, config, defer, datasetName, processFn);
       };
 
       return dset;
@@ -251,7 +264,9 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       BaseDataset.call(this);
 
       var dset = this.dset,
-      priv = this.privates;
+      priv = _.extend(this.privates, {
+        samplesByDataset: {}
+      });
 
       dset.type = function() {
         return 'derived';
@@ -262,14 +277,14 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         return dset;
       };
 
-      dset.variables = function(name) {
-        return _.chain(priv.samplesByDataset[name])
-        .sample(4)
-        .map(function(d) { return _.keys(d.variables); })
-        .flatten()
-        .uniq()
-        .value();
-      };
+      // dset.variables = function(name) {
+      //   return _.chain(priv.samplesByDataset[name])
+      //   .sample(4)
+      //   .map(function(d) { return _.keys(d.variables); })
+      //   .flatten()
+      //   .uniq()
+      //   .value();
+      // };
 
       // get
       priv.getDatasets = function() {
@@ -291,14 +306,14 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
           if(empty) {
             // get all variables
-            priv.getVariables(variables, config, defer, dsetName);
+            priv.getVariables(variables, config, defer, dsetName, priv.processSamples);
           } 
           else if( _.isEmpty(newVariables) ) {
             // nothing to done, everything already fetched
             defer.resolve(priv.getResult(variables, newVariables, config));
           } else {
             // fetch new variables
-            priv.getVariables(newVariables, config, defer, dsetName);
+            priv.getVariables(newVariables, config, defer, dsetName, priv.processSamples);
           }
 
           promises.push(defer.promise);
@@ -319,9 +334,6 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
           _.each(resArray, function(setResult) {
             retObj.samples.added = retObj.samples.added.concat(setResult.samples.added);
-            // retObj.samples._ = all.merge.apply(this, setResult.samples.all
-            // retObj.samples.all.concat(setResult.samples.all);
-
             retObj.variables.added = retObj.variables.added.concat(setResult.variables.added);
           });
           var all = _.chain(resArray)
@@ -337,20 +349,49 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         return allDefer.promise;
       };
 
+      priv.processSamples = function(addSamples, initial) {
+        var copySample,
+        initialCall = !_.isUndefined(initial) ? initial : false;
+        _.each(addSamples, function(samp) {
+          // shallow copy, otherwise this will mess up other datasets that have this sample
+          if(initialCall) {
+            priv.samplesByDataset[samp.dataset] = {};
+          }
+          copySample = angular.copy(samp);
+          copySample.originalDataset = samp.dataset;
+          copySample.dataset = dset.name();
+
+          var key = priv.getKey(copySample);
+          if(initialCall) {
+            priv.samples[key] = copySample;
+            priv.samplesByDataset[copySample.originalDataset][key] = copySample;
+          } else {
+            // extending variables for ONLY existing samples
+            if(priv.samples[key]) {
+              _.extend(priv.samples[key].variables, copySample.variables);
+              priv.samplesByDataset[copySample.originalDataset][key] = copySample;
+            } else {
+              // outside scope of active samples for this set, do nothing
+            }
+          }
+        });
+      };
+
       // only set
       dset.samples = function(samples) {
         if(!arguments.length) { return priv.samples; }
         priv.samplesByDataset = {};
-        var copySample;
-        _.each(samples, function(samp, id) {
-          if(!priv.samplesByDataset[samp.dataset]) { priv.samplesByDataset[samp.dataset] = []; }
-          // shallow copy, otherwise this will mess up other datasets that have this sample
-          copySample = angular.copy(samp);
-          copySample.originalDataset = samp.dataset;
-          copySample.dataset = priv.name;
-          priv.samplesByDataset[copySample.originalDataset].push(copySample);
-          priv.samples[priv.getKey(copySample)] = copySample;
-        });
+        priv.processSamples(samples, true);
+        // var copySample;
+        // _.each(samples, function(samp, id) {
+        //   if(!priv.samplesByDataset[samp.dataset]) { priv.samplesByDataset[samp.dataset] = []; }
+        //   // shallow copy, otherwise this will mess up other datasets that have this sample
+        //   copySample = angular.copy(samp);
+        //   copySample.originalDataset = samp.dataset;
+        //   copySample.dataset = priv.name;
+        //   priv.samplesByDataset[copySample.originalDataset].push(copySample);
+        //   priv.samples[priv.getKey(copySample)] = copySample;
+        // });
         return dset;
       };
 
@@ -552,7 +593,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       if(dataRemoved) {
         DimensionService.getPrimary().rebuildInstance();
       }
-
+      $injector.get('WindowHandler').reRenderVisible({ compute: true });
     };
 
     service.createDerived = function(name) {
@@ -602,9 +643,11 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
             added: []
           }
         });
-        primary.rebuildInstance();
-
+        if(dataWasAdded) {
+          primary.rebuildInstance();
+        }
         emitEvent(derived);
+        $injector.get('WindowHandler').reRenderVisible({ compute: true });
 
         return derived;
       } else {
