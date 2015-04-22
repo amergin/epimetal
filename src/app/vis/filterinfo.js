@@ -40,11 +40,19 @@ mod.controller('FilterInfoController', ['$scope', '$timeout', '$injector', 'Dime
     };
 
     $scope.filterOrder = function(filt) {
-      // if(filt.type === 'som') {
-      //   return "som(" + filt.hexagons + ")";
-      // } else if(filt.type === 'range') {
-      //   return "range" + filt.var;
-      // }
+      switch(filt.type()) {
+        case 'circle':
+        return 'circle_' + filt.name();
+
+        case 'range':
+        return 'range_' + filt.variable();
+
+        case 'classed':
+        return 'classed_' + filt.variable();
+
+        default:
+        return 'xxx';
+      }
     };
 
     $scope.showFilter = function(filter) {
