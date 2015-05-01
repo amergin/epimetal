@@ -7,7 +7,8 @@ angular.module('plotter.vis.regression',
   'services.notify', 
   'services.dimensions', 
   'localytics.directives',
-  'services.urlhandler'
+  'services.urlhandler',
+  'ui.bootstrap.buttons'
   ]);
 
 mod.constant('REGRESSION_WIN_X_PX', 40);

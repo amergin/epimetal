@@ -510,7 +510,6 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
 
     // Fetches and permanently stores the fetched variable data.
-    // By default, the windowHandler 
     service.getVariableData = function(variables, windowHandler, config) {
       var defer = $q.defer(),
       dataWasAdded = false,

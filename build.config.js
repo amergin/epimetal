@@ -111,7 +111,7 @@ module.exports = {
       'vendor/spin.js/spin.js',
       'vendor/angular-spinner/angular-spinner.min.js',
       // customize this for release:
-      'vendor/angular-bootstrap/custom/ui-bootstrap-custom-tpls-0.12.0.js',
+      'vendor/angular-bootstrap/custom/ui-bootstrap-custom-tpls-0.12.1.js',
       'vendor/paralleljs/lib/parallel.js',
       'vendor/numericjs/lib/numeric.min.js',
       'vendor/angular-growl-2/build/angular-growl.js',

@@ -27,11 +27,14 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
     that.sampleDimension = undefined;
 
     var _colors = d3.scale.category10();
-
     var service = {};
 
     service.somReady = function(sampleCount) {
       return !that.inProgress;
+    };
+
+    service.empty = function() {
+      return _.isEmpty(that.som);
     };
 
     service.bmus = function(x) {

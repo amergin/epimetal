@@ -167,7 +167,8 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
         return currentName == 'vis.explore' ||
         currentName == 'vis.regression';
       } else if( _.startsWith(toName, 'vis.regression') ) {
-        return _.startsWith(currentName, 'vis.som');
+        return true;
+        //return _.startsWith(currentName, 'vis.som');
       } else if( _.startsWith(toName, 'vis.explore') ) {
         return _.startsWith(currentName, 'vis.som') ||
         currentName == 'vis.regression';

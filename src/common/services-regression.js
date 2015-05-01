@@ -16,12 +16,46 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       adjust: []
     };
 
-    var getData = function(variables, windowHandler) {
-      var getRaw = function(samples) {
-        return _.map(samples, function(s) {
-          return s.variables;
+    var getRaw = function(samples) {
+      return _.map(samples, function(s) {
+        return s.variables;
+      });
+    };
+
+    var getDatasetData = function(variables, windowHandler) {
+      function getFilteredByDataset(samples) {
+        var byDataset = _.chain(samples)
+        .groupBy(function(d) {
+          return d.dataset;
+        })
+        .value(),
+        results = [];
+
+        _.each(DatasetFactory.activeSets(), function(set) {
+          results.push({
+            'type': 'dataset',
+            'name': set.name(),
+            'samples': getRaw(byDataset[set.name()])
+          });
         });
-      };
+        return results;
+      }
+
+      var def = $q.defer();
+      DatasetFactory.getVariableData(variables, windowHandler)
+      .then(function() {
+        var sampleDimension = windowHandler.getDimensionService().getSampleDimension(),
+        samples = sampleDimension.get().top(Infinity),
+        filtered = getFilteredByDataset(samples);
+
+        def.resolve(filtered);
+      }, function errFn() {
+        def.reject();
+      });
+      return def.promise;
+    };
+
+    var getSOMData = function(variables, windowHandler) {
       var getSOMData = function(windowHandler) {
         var service = windowHandler.getService().getSecondary(),
         somService = service.getDimensionService(),
@@ -42,7 +76,8 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
           })
           .value();
           return {
-            id: circle.id(),
+            name: circle.id(),
+            type: 'som',
             samples: getRaw(circleSamples)
           };
         })
@@ -55,11 +90,10 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         DatasetFactory.getVariableData(variables, windowHandler)
         .then(function() {
           var sampleDimension = windowHandler.getService().getSecondary().getDimensionService().getSampleDimension();
-          //windowHandler.getDimensionService().getSampleDimension();
           var retObject = {
-            total: {
-              samples: getRaw(sampleDimension.get().top(Infinity))
-            }
+            name: 'total',
+            type: 'som',
+            samples: getRaw(sampleDimension.get().top(Infinity))
           };
           def.resolve(retObject);
         }, function errFn() {
@@ -74,11 +108,8 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         var somHandler = windowHandler.getService().get('vis.som');
         DatasetFactory.getVariableData(variables, somHandler)
         .then(function succFn(res) {
-          var sampleDimension = somHandler.getDimensionService().getSampleDimension();
-          var retObject = {
-            circles: getSOMData(somHandler)
-          };
-          def.resolve(retObject);
+          var ret = getSOMData(somHandler);
+          def.resolve(ret);
         }, function errFn(res) {
           def.reject();
         });
@@ -89,8 +120,8 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       promises = [fetchTotal(windowHandler), fetchCircles(windowHandler)];
 
       $q.all(promises).then(function succFn(res) {
-        var combined = _.merge.apply(this, res);
-        deferred.resolve(combined);
+        var flat = _.flatten(res);
+        deferred.resolve(flat);
       }, function errFn() {
         deferred.reject();
       });
@@ -98,19 +129,23 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       return deferred.promise;
     };
 
+    var getData = function(variables, windowHandler, source) {
+      var fn;
+      if(source == 'dataset') {
+        fn = getDatasetData;
+      } else {
+        fn = getSOMData;
+      }
+      return fn.apply(this, arguments);
+    };
+
     var getVariableData = function(data, variable) {
-      var obj = {
-        total: {
-          samples: _.pluck(data.total.samples, variable),
-        },
-        circles: _.map(data.circles, function(circle) {
-          return {
-            id: circle.id,
-            samples: _.pluck(circle.samples, variable)
-          };
-        })
-      };
-      return obj;
+      var res = _.map(data, function(d) {
+        var shallow = _.clone(d);
+        shallow.samples = _.pluck(d.samples, variable);
+        return shallow;
+      });
+      return res;
     };
 
     var getThreads = function(data, assocVars) {
@@ -149,13 +184,10 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
           return _.pluck(data, v);
         });
       };
-      var ret = {
-        total: [],
-        circles: {}
-      };
-      ret.total = pluckVariables(data.total.samples,variables);
-      _.each(data.circles, function(circle, ind) {
-        ret.circles[circle.id] = pluckVariables(circle.samples, variables);
+      var ret = _.map(data, function(d) {
+        var shallow = _.clone(d);
+        shallow.samples = pluckVariables(d.samples, variables);
+        return shallow;
       });
       return ret;
     };
@@ -251,7 +283,12 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         return normalized;
       };
 
-      var compute = function(assocData, nanIndices, targetData, adjustData) {
+      var compute = function(config) { //assocData, nanIndices, targetData, adjustData) {
+        var assocData = config.association,
+        nanIndices = config.nans,
+        targetData = config.target,
+        adjustData = config.adjust;
+
         var threadNaNs = getNaNIndices(assocData),
         allNaNIndices = _.union(threadNaNs, nanIndices),
         normalAssocData = getNormalizedData( stripNaNs(assocData, allNaNIndices) ),
@@ -303,18 +340,20 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
 
       // process total
       try {
-        var total = compute(thData.data.total.samples, global.env.nanIndices.total, 
-          global.env.targetData.total.samples.slice(0), global.env.adjustData.total);
+        _.each(thData.data, function(obj) {
+          var computation = compute({
+            association: obj.samples,
+            nans: _.find(global.env.nanIndices, function(d) { return d.name == obj.name; }).nans,
+            target: _.find(global.env.targetData, function(d) { return d.name == obj.name; }).samples,
+            adjustData: _.find(global.env.adjustData, function(d) { return d.name == obj.name; }).samples
+          }),
+          result = _.chain(obj)
+            .omit('samples')
+            .extend(computation)
+            .value();
 
-        retObj.payload.push(_.extend(total, { 'name': 'total', 'type': 'circle' }));
-
-        // process each circle
-        _.each(thData.data.circles, function(circle, ind) {
-          var circleObject = compute(circle.samples, global.env.nanIndices.circles[circle.id], 
-            global.env.targetData.circles[ind].samples.slice(0), global.env.adjustData.circles[circle.id]);
-          retObj.payload.push(_.extend(circleObject, { 'name': circle.id, 'type': 'circle' }));
+          retObj.payload.push(result);
         });
-        retObj['result'] = { success: true };
       } catch(errorObject) {
         console.log("Regression throws error: ", errorObject.message);
         retObj['result'] = getError('Something went wrong while computing the regression. Please check and adjust sample selections as needed.');
@@ -345,20 +384,28 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
     }
 
     var getAllNaNs = function(targetData, targetVar, adjustData, adjustVars) {
-      var obj = {
-        total: [],
-        circles: {
-        }
-      };
+      var ret = _.chain(_.zip(targetData, adjustData))
+      .map(function(d) {
+        var info = _.omit(d[0], 'samples');
+        info['nans'] = getNaNs(d[0].samples, targetVar, d[1].samples, adjustVars);
+        return info;
+      })
+      .value();
+      return ret;
+      // var obj = {
+      //   total: [],
+      //   circles: {
+      //   }
+      // };
 
-      // total
-      obj.total = getNaNs(targetData.total.samples, targetVar, adjustData.total, adjustVars);
+      // // total
+      // obj.total = getNaNs(targetData.total.samples, targetVar, adjustData.total, adjustVars);
 
-      // circles
-      _.each(targetData.circles, function(circle, ind) {
-        obj.circles[circle.id] = getNaNs( circle.samples, targetVar, adjustData.circles[circle.id], adjustVars);
-      });
-      return obj;
+      // // circles
+      // _.each(targetData.circles, function(circle, ind) {
+      //   obj.circles[circle.id] = getNaNs( circle.samples, targetVar, adjustData.circles[circle.id], adjustVars);
+      // });
+      // return obj;
     };
 
     service.inProgress = function() {
@@ -378,7 +425,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       _inProgress = true;
 
       var variables = _.chain(config.variables).values().flatten(true).unique().value();
-      getData(variables, windowHandler).then(function(data) {
+      getData(variables, windowHandler, config.source).then(function(data) {
 
         var targetVar = config.variables.target,
           assocVars = config.variables.association,

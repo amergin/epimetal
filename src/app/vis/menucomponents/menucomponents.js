@@ -388,12 +388,18 @@ vis.controller('ModalFormController', ['$scope', '$rootScope', 'DatasetFactory',
 
 
 // regression menu modal controller
-vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'PlotService', 'RegressionService',
-  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService, RegressionService) {
+vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFactory', '$injector', 'NotifyService', 'PlotService', 'RegressionService', 'SOMService',
+  function ($scope, $rootScope, DatasetFactory, $injector, NotifyService, PlotService, RegressionService, SOMService) {
     $scope.selection = {
       target: null,
       association: [],
       adjust: []
+    };
+
+    $scope.computationSource = 'dataset';
+
+    $scope.somButtonDisabled = function() {
+      return SOMService.empty();
     };
 
     $scope.selection = RegressionService.selectedVariables();
@@ -464,7 +470,8 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
       if(error) { return; }
 
       var config = {
-        variables: $scope.selection
+        variables: $scope.selection,
+        source: $scope.computationSource
       };
 
       RegressionService.selectedVariables($scope.selection);
