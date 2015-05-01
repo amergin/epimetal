@@ -1,6 +1,6 @@
 <div>
 	<form class="form-inline row">
-		<div class="form-group col-sm-3 col-lg-2">
+		<div class="form-group col-sm-3 col-md-3">
 			<select
 			chosen
 			class="form-control" id="regression-target" 
@@ -14,25 +14,27 @@
 				<option value=""></option>
 			</select>
 		</div>
-		<div class="form-group col-sm-2 col-lg-2 text-center">
+		<div class="form-group col-sm-2 col-md-2 text-center">
 			<button class="btn btn-primary" type="button" id="regression-association" ng-click="openAssociation()">
-			  Association variables <span class="badge">{{selection.association.length}}</span>
+			  Association  <span class="badge">{{selection.association.length}}</span>
 			  <i class="fa fa-caret-down"></i>
 			</button>
 		</div>
-		<div class="form-group col-sm-2 col-lg-2 text-center">
+		<div class="form-group col-sm-2 col-md-2 text-center">
 			<button class="btn btn-primary" type="button" id="regression-adjust" ng-click="openAdjust()">
-			  Adjust variables <span class="badge">{{selection.adjust.length}}</span>
+			  Adjust  <span class="badge">{{selection.adjust.length}}</span>
 			  <i class="fa fa-caret-down"></i>
 			</button>
 		</div>
-	    <div class="form-group btn-group col-sm-2 col-lg-2">
-	        <label class="btn btn-info" ng-model="computationSource" btn-radio="'dataset'">Datasets</label>
-	        <label class="btn btn-info" ng-model="computationSource" btn-radio="'som'" ng-disabled="somButtonDisabled()">SOM filters</label>
+	    <div class="form-group col-sm-3 col-md-3 text-center">
+	    	<div class="btn-group">
+		        <label class="btn btn-info" ng-model="computationSource" btn-radio="'dataset'">Datasets</label>
+		        <label class="btn btn-info" ng-model="computationSource" btn-radio="'som'" ng-disabled="somButtonDisabled()">SOM filters</label>
+	    	</div>
 	    </div>
 
 
-		<div class="col-sm-1 col-lg-1">
+		<div class="col-sm-1 col-md-2 text-center">
 			<button type="submit" class="btn btn-primary" ng-disabled="!canSubmit()" ng-click="submit()">Compute</button>
 		</div>
 	</form>
