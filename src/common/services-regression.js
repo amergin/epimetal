@@ -392,20 +392,6 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
       })
       .value();
       return ret;
-      // var obj = {
-      //   total: [],
-      //   circles: {
-      //   }
-      // };
-
-      // // total
-      // obj.total = getNaNs(targetData.total.samples, targetVar, adjustData.total, adjustVars);
-
-      // // circles
-      // _.each(targetData.circles, function(circle, ind) {
-      //   obj.circles[circle.id] = getNaNs( circle.samples, targetVar, adjustData.circles[circle.id], adjustVars);
-      // });
-      // return obj;
     };
 
     service.inProgress = function() {
@@ -421,7 +407,6 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
     service.compute = function(config, windowHandler) {
       TabService.lock(true);
       var deferred = $q.defer();
-      windowHandler.spinAll();
       _inProgress = true;
 
       var variables = _.chain(config.variables).values().flatten(true).unique().value();

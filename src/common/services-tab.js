@@ -28,18 +28,6 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
 
       changeDimensionService(toState.name);
 
-      // abstract root state -> somewhere, should be initial load
-      // if(fromState.name === '') {
-      //   // page load -> vis.som.*
-      //    if( _.startsWith(toState.name, 'vis.explore' ) ) {
-      //       // pass
-      //    } 
-
-      //    else {
-      //     $state.go('vis.explore');
-      //    }
-      // }
-
       // som -> somewhere
       if( _.startsWith(fromState.name, 'vis.som' ) ) {
 
@@ -63,13 +51,17 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
         }
         // explore -> regression
         else if( _.startsWith(toState.name, 'vis.regression') ) {
-          // do nothing
+          checkRegressionState(toState.name);
         }
       } 
       // regression -> somewhere
-      // else if( _.startsWith(fromState.name, 'vis.regression') ) {
-      //   // no actions
-      // }
+      else if( _.startsWith(fromState.name, 'vis.regression') ) {
+        // regression -> som
+        if( _.startsWith(toState.name, 'vis.som') ) {
+          // check differences and recompute & refresh if necessary
+          checkSOMState();
+        }
+      }
     });
 
     function checkDefaultPlanes() {

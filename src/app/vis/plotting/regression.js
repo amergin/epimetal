@@ -49,6 +49,7 @@ visu.directive('regressionPlot', ['constants', '$timeout', '$rootScope', '$injec
     function postLink($scope, ele, attrs, ctrl) {
       function updateChart() {
         var selectedVariables = RegressionService.selectedVariables();
+        $scope.$parent.startSpin();
         RegressionService.compute({ variables: selectedVariables, source: $scope.window.source }, $scope.window.handler)
         .then(function succFn(result) {
           $scope.window.computation = result;
@@ -56,6 +57,9 @@ visu.directive('regressionPlot', ['constants', '$timeout', '$rootScope', '$injec
         }, function errFn(result) {
           NotifyService.addTransient('Regression computation failed', 'Something went wrong while updating the regression chart.', 'error');
           $scope.window.handler.removeByType('regression-plot');
+        })
+        .finally(function() {
+          $scope.$parent.stopSpin();
         });
       }
 
