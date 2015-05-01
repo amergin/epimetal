@@ -3,7 +3,7 @@ function RegressionChart() {
 
   var _margins = {
       top: 0,
-      right: 0,
+      right: 5,
       bottom: 0,
       left: 0
     },
@@ -246,7 +246,7 @@ function RegressionChart() {
         _axis = d3.svg.axis()
         .scale(scale)
         .orient('bottom')
-        .ticks(5)
+        .ticks(6)
         .tickFormat(format);
       }
 
