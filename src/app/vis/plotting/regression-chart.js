@@ -496,6 +496,7 @@ function RegressionChart() {
   };
 
   _chart.estimatedHeight = function() {
+    sortData(); // ensure calculations are based on fresh data
     var noGroups = _groupedData.length;
     return getGroupY(noGroups-1).end + _axisHeight;
   };

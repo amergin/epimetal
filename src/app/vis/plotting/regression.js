@@ -12,11 +12,12 @@ visu.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionS
   function RegressionPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH, FilterService) {
     console.log("regression plot");
 
+    function windowSize(width, height) {
+      $scope.window.grid.size.x = Math.round(width/REGRESSION_WIN_X_PX) + 1;
+      $scope.window.grid.size.y = Math.round(height/REGRESSION_WIN_Y_PX) + 1;
+    }
+
     $scope.drawChart = function($scope, data, variables) {
-      function windowSize(width, height) {
-        $scope.window.grid.size.x = Math.round(width/REGRESSION_WIN_X_PX) + 1;
-        $scope.window.grid.size.y = Math.round(height/REGRESSION_WIN_Y_PX) + 1;
-      }
       var width = REGRESSION_WIDTH,
       height;
 
@@ -36,8 +37,13 @@ visu.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionS
 
     $scope.updateChart = function($scope, data) {
       $scope.chart
-      .data(data)
-      .render();
+      .data(data);
+
+      var height = $scope.chart.estimatedHeight(),
+      width = REGRESSION_WIDTH;
+
+      windowSize(width, height);
+      $scope.chart.render();
     };
 
 
