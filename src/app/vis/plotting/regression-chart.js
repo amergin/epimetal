@@ -330,12 +330,12 @@ function RegressionChart() {
         return "translate(" + x + "," + 0 + ")";
       })
       .each(function(d, i, j) {
-        var el = this,
-        colorFn = d.type === 'circle' ? _circleColors : _datasetColors;
+        var el = this;
         d.charts = [];
 
         _.each(d.payload, function(pay, index) {
-          var boxChart = new HorizontalBoxPlot()
+          var colorFn = pay.type === 'som' ? _circleColors : _datasetColors,
+          boxChart = new HorizontalBoxPlot()
           .element(el)
           .width(chartMeasurements.width)
           .height(_boxPlotHeight)

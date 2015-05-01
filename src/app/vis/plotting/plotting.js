@@ -261,11 +261,12 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
       NotifyService.addTransient('Regression analysis started', 'Regression analysis computation started.', 'info');
       RegressionService.compute(config, windowHandler).then( function succFn(result) {
         NotifyService.addTransient('Regression analysis completed', 'Regression computation ready.', 'success');
-        var config = {
+        var winObj = {
           computation: result,
-          type: 'regression-plot'
+          type: 'regression-plot',
+          source: config.source
         };
-        windowHandler.add(config);
+        windowHandler.add(winObj);
         defer.resolve();        
       }, function errFn(result) {
         var message = result.result[0].result.reason;

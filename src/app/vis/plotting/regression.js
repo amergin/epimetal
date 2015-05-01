@@ -8,8 +8,8 @@ var visu = angular.module('plotter.vis.plotting.regression',
 
 visu.constant('REGRESSION_WIDTH', 450);
 
-visu.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'REGRESSION_WIN_X_PX', 'REGRESSION_WIN_Y_PX', 'REGRESSION_WIDTH',
-  function RegressionPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH) {
+visu.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'REGRESSION_WIN_X_PX', 'REGRESSION_WIN_Y_PX', 'REGRESSION_WIDTH', 'FilterService',
+  function RegressionPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH, FilterService) {
     console.log("regression plot");
 
     $scope.drawChart = function($scope, data, variables) {
@@ -17,9 +17,7 @@ visu.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionS
         $scope.window.grid.size.x = Math.round(width/REGRESSION_WIN_X_PX) + 1;
         $scope.window.grid.size.y = Math.round(height/REGRESSION_WIN_Y_PX) + 1;
       }
-      var circleColors = d3.scale.category10(),
-      datasetColors = d3.scale.category10(),
-      width = REGRESSION_WIDTH,
+      var width = REGRESSION_WIDTH,
       height;
 
       $scope.chart = new RegressionChart()
@@ -27,8 +25,8 @@ visu.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionS
       .width(width)
       .data(data)
       .variables(variables)
-      .circleColors(circleColors)
-      .datasetColors(datasetColors);
+      .circleColors(FilterService.getSOMFilterColors())
+      .datasetColors(DatasetFactory.getColorScale());
 
       height = $scope.chart.estimatedHeight();
       windowSize(width, height);
@@ -51,7 +49,7 @@ visu.directive('regressionPlot', ['constants', '$timeout', '$rootScope', '$injec
     function postLink($scope, ele, attrs, ctrl) {
       function updateChart() {
         var selectedVariables = RegressionService.selectedVariables();
-        RegressionService.compute({ variables: selectedVariables }, $scope.window.handler)
+        RegressionService.compute({ variables: selectedVariables, source: $scope.window.source }, $scope.window.handler)
         .then(function succFn(result) {
           $scope.window.computation = result;
           $scope.updateChart($scope, $scope.window.computation.result);
