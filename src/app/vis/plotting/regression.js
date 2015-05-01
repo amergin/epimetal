@@ -5,21 +5,35 @@ var visu = angular.module('plotter.vis.plotting.regression',
   'services.window',
   'services.notify'
   ]);
-visu.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout',
-  function RegressionPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout) {
+
+visu.constant('REGRESSION_WIDTH', 450);
+
+visu.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'REGRESSION_WIN_X_PX', 'REGRESSION_WIN_Y_PX', 'REGRESSION_WIDTH',
+  function RegressionPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH) {
     console.log("regression plot");
 
     $scope.drawChart = function($scope, data, variables) {
-      $scope.chart = new RegressionChart( $scope.$parent.element[0] )
+      function windowSize(width, height) {
+        $scope.window.grid.size.x = Math.round(width/REGRESSION_WIN_X_PX) + 1;
+        $scope.window.grid.size.y = Math.round(height/REGRESSION_WIN_Y_PX) + 1;
+      }
+      var circleColors = d3.scale.category10(),
+      datasetColors = d3.scale.category10(),
+      width = REGRESSION_WIDTH,
+      height;
+
+      $scope.chart = new RegressionChart()
+      .element( $scope.$parent.element[0] )
+      .width(width)
       .data(data)
       .variables(variables)
-      .totalColor('#2ca02c')
-      .circleColors({
-          'circle1': '#1f77b4',
-          'circle2': '#ff7f0e'
-      })
-      .columns(2)
-      .render();
+      .circleColors(circleColors)
+      .datasetColors(datasetColors);
+
+      height = $scope.chart.estimatedHeight();
+      windowSize(width, height);
+
+      $scope.chart.render();
     };
 
     $scope.updateChart = function($scope, data) {
@@ -88,6 +102,7 @@ visu.directive('regressionPlot', ['constants', '$timeout', '$rootScope', '$injec
         _.each($scope.deregisters, function(unbindFn) {
           unbindFn();
         });
+        $scope.chart.remove();
       });
 
       ele.on('$destroy', function() {

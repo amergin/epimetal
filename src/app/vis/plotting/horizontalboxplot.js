@@ -1,8 +1,8 @@
-function HorizontalBoxPlot(element, width, height) {
+function HorizontalBoxPlot() {
   var _chart = {},
-      _element = element,
-      _width = width,
-      _height = height,
+      _element,
+      _width,
+      _height,
       _margins = {
         top: 0, 
         right: 5, 
@@ -15,8 +15,8 @@ function HorizontalBoxPlot(element, width, height) {
       _pvalue = null,
       _color,
       _variable,
-
       _svg,
+      _transform,
       _bodyG,
       _xScale,
       _tooltipFormat = d3.format(".3f"),
@@ -35,18 +35,28 @@ function HorizontalBoxPlot(element, width, height) {
 
   _chart.render = function() {
     if(!_svg) {
-      _svg = d3.select(element)
+      _svg = d3.select(_element)
       .append('svg')
       .attr('height', _height + _margins.top + _margins.bottom)
-      .attr('width', _width + _margins.left + _margins.right);
+      .attr('width', _width + _margins.left + _margins.right)
+      .attr('x', function(d) {
+        return _transform.x + _margins.left;
+      })
+      .attr('y', function(d) {
+        return _transform.y + _margins.top;
+      });
     }
 
     // body enter
-    _bodyG = _svg.selectAll('g.body')
+    _bodyG =_svg.selectAll('g.body')
     .data([{quartiles: _quartiles, pvalue: _pvalue}])
     .enter()
     .append('g')
-    .attr("transform", "translate(" + _margins.left + "," + _margins.top + ")")
+    // .attr("transform", function(d) {
+    //   var x  = _margins.left + _transform.x,
+    //   y = _margins.top + _transform.y;
+    //   return "translate(" + x + "," + y + ")";
+    // })
     .attr('class', 'body boxplot')
     .call(_tooltip)
     .on("mouseover", function(d) {
@@ -67,10 +77,12 @@ function HorizontalBoxPlot(element, width, height) {
     wholeBox();
     medianCircle();
     // medianLine();
+
+    return _chart;
   };
 
   function setXScale() {
-    _xScale = d3.scale.linear().domain(_domain).range([0,width]);
+    _xScale = d3.scale.linear().domain(_domain).range([0,_width]);
   }
 
   function wholeBox() {
@@ -156,6 +168,39 @@ function HorizontalBoxPlot(element, width, height) {
     return _xScale;
   };
 
+  _chart.element = function(x) {
+      if (!arguments.length) {
+          return _element;
+      }
+      _element = x;
+      return _chart;
+  };
+
+  _chart.width = function(x) {
+      if (!arguments.length) {
+          return _width;
+      }
+      _width = x;
+      return _chart;
+  };
+
+  _chart.height = function(x) {
+      if (!arguments.length) {
+          return _height;
+      }
+      _height = x;
+      return _chart;
+  };
+
+  _chart.transform = function(x) {
+      if (!arguments.length) {
+          return _transform;
+      }
+      _transform = x;
+      return _chart;
+  };
+
+
   _chart.domain = function(x) {
       if (!arguments.length) {
           return _domain;
@@ -206,9 +251,9 @@ function HorizontalBoxPlot(element, width, height) {
   };
 
   _chart.remove = function() {
-    // not supported yet:
-    // _tooltip.remove();
-    _svg.remove();
+    _tooltip.destroy();
+    _bodyG.remove();
+    // _svg.remove();
     return _chart;
   };
 

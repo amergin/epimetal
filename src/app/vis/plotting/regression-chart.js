@@ -1,218 +1,300 @@
-function RegressionChart(element, width, height) {
+function RegressionChart() {
   var _chart = {};
 
   var _margins = {
-      top: 20,
-      right: 20,
-      bottom: 90,
-      left: 20
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0
     },
-    _splitThreshold = 15,
-    _noColumns = 3,
-    _element = element,
-    _width = width || 700,
-    _height = height || 300,
-    _columns,
+    _element,
+    // _callback,
+    _width,
+    _axis,
+    _data,
+    _groupedData,
+    _groupSpacing = 30,
+    _groupStartYOffset = 30,
+    _svg,
     _bodyG,
-    _splitData = [],
-    _rootRow,
+    _axisHeight = 40,
     _domain = [],
     _domainAdjust = 0.10,
     _zeroPoint = 0,
     _variables,
     _variablesLookup,
-    // how many col-sm's in are reserved
-    _variableColWidth = 4,
-    _boxPlotColWidth = 12 - _variableColWidth,
+    _boxLabelPercentage = 0.4,
     _groupsLookup,
-    _columnAxes = [],
-
     _boxPlotHeight = 15,
-    _boxPlotWidth = 300,
+    _boxPlotPadding = 4,
     _boxPlotMargins = {
         top: 0, 
-        right: 15, 
+        right: 0, 
         bottom: 0, 
-        left: 15
+        left: 0
     },
     _circleColors,
-    _totalColor;
+    _datasetColors;
 
   _chart.render = function() {
-    function addRoot() {
-      _rootRow = d3.select(element)
-      .append('div')
-      .attr('class', 'row');      
-    }
-
-    function resetColumns() {
-      _columns
-      .each(function(d) {
-        // reset axes
-        _columnAxes = [];
-
-        // remove axes
-        d3.select(this)
-        .selectAll('box-axis')
-        .remove();
-
-        d3.select(this)
-        .selectAll('div.var-group')
-        .each(function(vg) {
-          d3.select(this)
-          .selectAll('div.box-row')
-          .each(function(br) {
-            // remove all charts to avoid redundant objects
-            br.charts.total.remove();
-            delete br.charts.total;
-            _.each(br.charts.circles, function(circle, key) {
-              circle.remove();
-              delete br.charts.circles[key];
-            });
-          });
-        })
-        .remove(); // remove var-group
-      })
-      .remove(); // remove column
-    }
-
-    function createColumns() {
-      _columns = _rootRow.selectAll('div.box-col')
-      .data(_splitData);
+    function root() {
+      // update
+      _svg = d3.select(_element)
+      .selectAll('svg.regression')
+      .data([null])
+      .attr('height', _chart.estimatedHeight() + _margins.top + _margins.bottom)
+      .attr('width', _width + _margins.left + _margins.right);
 
       // enter
-      _columns
+      _svg
       .enter()
-      .append('div')
-      .attr('class', 'col-sm-' + (12/_noColumns) + ' box-col');
+      .append('svg')
+      .attr('class', 'regression')
+      .attr('height', _chart.estimatedHeight() + _margins.top + _margins.bottom)
+      .attr('width', _width + _margins.left + _margins.right);
+
+      // exit
+      _svg.exit().remove();
+
+
     }
 
-    splitData();
-    console.log("split data", _splitData);
+    function bodyG() {
+      // update
+      _bodyG = _svg.selectAll('g.body')
+      .data([null])
+      .attr("transform", "translate(" + _margins.left + "," + _margins.top + ")")
+      .attr('class', 'body');
+
+      // enter
+      _bodyG
+      .enter()
+      .append('g')
+      .attr("transform", "translate(" + _margins.left + "," + _margins.top + ")")
+      .attr('class', 'body');
+
+      // exit
+      _bodyG.exit().remove();
+    }
+
+    function resetRows() {
+      function removeAxis() {
+        d3.select(_element)
+        .selectAll('g.axis')
+        .remove();
+      }
+
+      function removeGroups() {
+        d3.select(_element)
+        .selectAll('g.var-group')
+        .remove();
+      }
+
+      function removeZeroline() {
+        d3.select(_element)
+        .selectAll('g.zeroline')
+        .remove();
+      }
+
+      function removeCharts() {
+        d3.select(_element)
+        .selectAll('g.box-row')
+        .each(function(d, elInd) {
+          d.charts.forEach(function(chart) {
+            chart.remove();
+          });
+        })
+        .remove();
+      }
+
+      removeCharts();
+      removeGroups();
+      removeZeroline();
+      removeAxis();
+    }
+
+    // function doCallback() {
+    //   var height = d3.select(_element).select('svg').attr('height');
+    //   _callback(height);
+    // }
+
+    sortData();
     computeDomain();
-    if (!_rootRow) {
-      _rootRow = d3.select(element)
-      .append('div')
-      .attr('class', 'row');
-
-      createColumns();
-    } else {
-      // redraw = remove columns and populate them again
-      resetColumns();
-      createColumns();
+    root();
+    bodyG();
+    if(_svg) {
+      resetRows();
     }
-
-    // update
-    _rootRow
-    .selectAll('div.box-col')
-    .attr('class', 'col-sm-' + (12/_noColumns) + ' box-col');
 
     boxRows();
+    // if(_callback) { doCallback(); }
     return _chart;
   };
 
-  function setAxis() {
-    var format = d3.format(",.2f");
-    _columns.each(function(d, colInd) {
-      if(!_columnAxes[colInd]) {
-        var axis = d3.svg.axis()
-        .scale( d[0].values[0].charts.total.scale() )
-        .orient('bottom')
-        .ticks(7)
-        .tickFormat(format);
-        _columnAxes.push(axis);
+  function zeroLine() {
+    function xOffset() {
+      var scale = getScale(),
+      scaleOffset = scale(0),
+      boxPadding = _boxPlotMargins.left,
+      chartOffset = getChartMeasurements().xOffset;
+      return chartOffset + scaleOffset + boxPadding - 1;
+    }
+    var g = _bodyG.selectAll('g.zeroline')
+    .data([null])
+    .enter()
+    .append('g')
+    .attr('class', 'zeroline');
+
+    g.selectAll('line')
+    .data(function(d) { return [d]; })
+    .enter()
+    .append('line')
+    .attr('x1', xOffset)
+    .attr('x2', xOffset)
+    .attr('y1', getGroupY(0).firstLabel)
+    .attr('y2', function(d) {
+      var noGroups = _groupedData.length;
+      return getGroupY(noGroups-1).end;
+    });
+  }
+
+  function getGroupY(groupInd) {
+    function getSum() {
+      var sum = 0;
+      for(var i = groupInd-1; i >= 0; --i) {
+        sum += getGroupHeight(i);
+        sum += _groupSpacing;
       }
-    });
+      return sum;
+    }
+    var start,
+    firstLabel,
+    end,
+    labelConst = _groupStartYOffset;
+
+    if(groupInd === 0) {
+      start = 0;
+      firstLabel = labelConst/2;
+      end = start + labelConst + getGroupHeight(groupInd);
+    } else {
+      start = getSum();
+      firstLabel = start + labelConst/2;
+      end = start + labelConst + getGroupHeight(groupInd);
+    }
+    return {
+      start: start,
+      firstLabel: firstLabel,
+      end: end
+    };
   }
 
-  function getColWidth(num) {
-    return 'col-sm-' + num;
+  function getDrawWidth() {
+    return _width - _margins.left - _margins.right;
   }
 
-  function getColOffset(num) {
-    return 'col-sm-offset-' + num;
+  function getGroupHeight(groupInd) {
+    return _groupedData[groupInd].values.length * getBoxRowHeight(groupInd);
   }
 
-  function zeroLines() {
-    // enter
-    _columns
-    .style('background', 'linear-gradient(90deg, #888, #888, #888)')
-    .style('background-repeat', 'no-repeat')
-    .style('background-size', '1px 100%')
-    .style('background-position', function(d) {
-      var scale = d[0].values[0].charts.total.scale(),
-      offsetLeft = this.childNodes[this.childNodes.length-1].offsetLeft, // right column starts at this pixel count, no margin included
-      bootMargin = 15, // bootstrap margin
-      boxPlotMargin = _boxPlotMargins.left,
-      scaleOffset = Math.floor(scale(0)),
-      position = Number(offsetLeft + bootMargin + boxPlotMargin + scaleOffset).toString();
-      return position + "px -40px";
-    });
+  function getScale() {
+    return _groupedData[0].values[0].charts[0].scale();
+  }
+
+  function getChartMeasurements() {
+    var rawWidth = _width - _margins.left - _margins.right,
+    boxLabelXOffset = Math.floor(_boxLabelPercentage* rawWidth),
+    boxWidth = rawWidth - boxLabelXOffset;
+    return {
+      xOffset: boxLabelXOffset,
+      width: boxWidth
+    };
+  }
+
+  function getChartOffset(ind) {
+    var val = (_boxPlotPadding * ind) + (_boxPlotHeight * ind);
+    return val;
+  }
+
+  function getBoxRowHeight(groupInd) {
+    var amount = _groupedData[groupInd].values[0].payload.length,
+    boxHeights = amount * _boxPlotHeight,
+    paddings  = _boxPlotPadding * (amount-1);
+    return  boxHeights + paddings;
+  }
+
+  function getBoxRowY(groupInd, elInd) {
+    var start =  elInd * getBoxRowHeight(groupInd) + _groupStartYOffset,
+    end = start + getBoxRowHeight(groupInd),
+    middle = Math.floor((end - start)/2);
+
+    return {
+      start: start,
+      middle: middle,
+      end: end
+    };
   }
 
   function boxRows() {
-    function columnAxis() {
-      // create row: enter
-      var rows = _columns.selectAll('div.box-axis')
-      .data([null]) // only on column
-      .enter()
-      .append('div')
-      .attr('class', function(d) {
-        var base = 'box-row box-axis ';
-        return base + getColOffset(_variableColWidth) + " " + getColWidth(_boxPlotColWidth);
-      });
+    function axis() {
+      function getAxisYOffset() {
+        return _chart.estimatedHeight() - _axisHeight;
+      }
+
+      function setAxis() {
+        var format = d3.format(",.2f"),
+        scale = getScale();
+        _axis = d3.svg.axis()
+        .scale(scale)
+        .orient('bottom')
+        .ticks(5)
+        .tickFormat(format);
+      }
+
+      var chartMeasurements = getChartMeasurements();
 
       setAxis();
 
-      var axisSvg = rows.selectAll('svg.box-axis')
-      .data([null])
-      .enter()
-      .append('svg')
-      .attr('class', 'box-axis boxplot')
-      .attr('width', _boxPlotWidth + _boxPlotMargins.left + _boxPlotMargins.right)
-      .attr('height', 40);
-
-      var axisBody = axisSvg.selectAll('g.axis-body')
-      .data([null])
+      // create row: enter
+      var axisEl = _bodyG.selectAll('g.box-axis')
+      .data([_groupedData])
       .enter()
       .append('g')
-      .attr("transform", "translate(" + _boxPlotMargins.left + "," + _boxPlotMargins.top + ")")
-      .attr('class', 'x axis');
+      .attr('transform', function(d) {
+        var x = chartMeasurements.xOffset + _boxPlotMargins.left - 1,
+        y = getAxisYOffset();
+        return 'translate(' + x + "," + y + ")";
+      })
+      .attr('class', 'box-row box-axis')
+      .attr('width', chartMeasurements.width + _boxPlotMargins.right + _boxPlotMargins.left)
+      .attr('height', _axisHeight)
+      .attr('class', 'x axis')
+      .call(_axis);
 
-      // apply axis for each column
-      axisBody.each(function(d, sth, colInd) {
-        d3.select(this).call(_columnAxes[colInd]);
-      });
     }
 
     function varGroups() {
-      var variableGroups = _columns.selectAll('div.var-group')
-      .data(function(d, i) { 
-        return d;
-      });
+      var variableGroups = _bodyG
+      .selectAll('g.var-group')
+      .data(_groupedData);
 
       variableGroups
       .enter()
-      .append('div')
+      .append('g')
       .attr('class', 'var-group')
+      .attr('transform', function(d, groupInd) {
+        var y = getGroupY(groupInd);
+        return "translate(" + 0 + "," + y.start + ")";
+      })
       .style('opacity', 0)
       .transition()
       .delay(500)
       .style('opacity', 1);
 
-      // exit
-      // variableGroups
-      // .exit()
-      // .transition()
-      // .delay(5000)
-      // .style('opacity', 0)
-      // .remove();
-
       return variableGroups;
     }
 
     function varGroupLabels(variableGroups) {
-      var groupLabels = variableGroups.selectAll('div.group-label')
+      var groupLabels = variableGroups.selectAll('g.group-label')
       .data(function(d) {
         return [_groupsLookup[+d.key]];
       });
@@ -220,8 +302,13 @@ function RegressionChart(element, width, height) {
       // enter
       groupLabels
       .enter()
-      .append('div')
+      .append('text')
       .attr('class', 'group-label')
+      .attr('x', 0)
+      .attr('y', function(d, elInd, groupInd) {
+        var y = getGroupY(groupInd);
+        return y.firstLabel - y.start;
+      })
       .text(function(d) { return d.name; });
 
       // exit
@@ -232,83 +319,104 @@ function RegressionChart(element, width, height) {
       return groupLabels;
     }
 
+    function boxChart(boxRow) {
+      var chartMeasurements = getChartMeasurements();
+
+      boxRow
+      .append('g')
+      .attr('class', 'chart-box')
+      .attr('transform', function(d, elInd, groupInd) {
+        var x = chartMeasurements.xOffset;
+        return "translate(" + x + "," + 0 + ")";
+      })
+      .each(function(d, i, j) {
+        var el = this,
+        colorFn = d.type === 'circle' ? _circleColors : _datasetColors;
+        d.charts = [];
+
+        _.each(d.payload, function(pay, index) {
+          var boxChart = new HorizontalBoxPlot()
+          .element(el)
+          .width(chartMeasurements.width)
+          .height(_boxPlotHeight)
+          .transform({ 'x': 0, 'y': getChartOffset(index) })
+          .domain(_domain)
+          .margins(_boxPlotMargins)
+          .variable(d.variable)
+          .color(colorFn(pay.name))
+          .quartiles([ pay.ci[0], pay.betas[1], pay.ci[1] ])
+          .pvalue(pay.pvalue)
+          .render();
+
+          d.charts.push(boxChart);
+        });
+
+      });
+    }
+
+    function boxLabel(boxRow) {
+      boxRow
+      .append('text')
+      .attr('class', 'box-label')
+      .attr('x', 15)
+      .attr('transform', function(d, elInd, groupInd) {
+        var offset = getBoxRowY(groupInd, elInd);
+        return "translate(0," + offset.middle + ")";
+      })
+      .text(function(d) { return d.variable; });
+    }
+
+    function rows() {
+      // create boxrow for each: enter
+      var boxRow = variableGroups.selectAll('g.box-row')
+      .data(function(d,i) { 
+        return d.values;
+      })
+      .enter()
+      .append('g')
+      .attr('class', 'box-row')
+      .attr('class', function(d,i) {
+        var baseClass = d3.select(this).attr('class');
+        return (i % 2 === 0) ?  baseClass + ' even' : baseClass + ' odd';
+      })
+      .attr('transform', function(d, elInd, groupInd) {
+        var offset = getBoxRowY(groupInd, elInd);
+        return "translate(0," + offset.start + ")";
+      });
+      return boxRow;
+    }
+
+    function bgRects(boxRow) {
+      var info = getChartMeasurements();
+      boxRow
+      // .selectAll('rect.bg')
+      // .data(function(d,i) { 
+      //   return d;
+      // })
+      // .enter()
+      .append('rect')
+      .attr('class', 'bg')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', getDrawWidth())
+      .attr('height', function(d, elInd, groupInd) {
+        return getBoxRowHeight(groupInd);
+      });
+
+    }
+
     var variableGroups = varGroups();
+    var groupLabelYOffset = 40;
     var groupLabels = varGroupLabels(variableGroups);
 
-
-    // create boxrow for each: enter
-    var boxRow = variableGroups.selectAll('div.box-row')
-    .data(function(d,i) { 
-      return d.values;
-    })
-    .enter()
-    .append('div')
-    .attr('class', 'box-row clearfix')
-    .attr('class', function(d,i) {
-      var baseClass = d3.select(this).attr('class');
-      return (i % 2 === 0) ?  baseClass + ' even' : baseClass + ' odd';
-    });
-
-    boxRow
-    .append('div')
-    .attr('class', 'box-label ' + getColWidth(_variableColWidth))
-    .text(function(d) { return d.variable; });
-
-    boxRow
-    .append('div')
-    .attr('class', 'box ' + getColWidth(_boxPlotColWidth))
-    .each(function(d, i, j) {
-      // total box plot
-      var el = this,
-      totalBox = new HorizontalBoxPlot(el, _boxPlotWidth, _boxPlotHeight )
-      .domain(_domain)
-      .margins(_boxPlotMargins)
-      .variable(d.variable)
-      .color(_totalColor)
-      .quartiles([ d.total.ci[0], d.total.betas[1], d.total.ci[1] ])
-      .pvalue(d.total.pvalue);
-      totalBox.render();
-
-      d.charts = {
-        total: totalBox,
-        circles: {}
-      };
-
-      // circle box plots
-      _.each(d.circles, function(circle, id) {
-        var circleBox = new HorizontalBoxPlot(el, _boxPlotWidth, _boxPlotHeight )
-        .domain(_domain)
-        .variable(d.variable)
-        .margins(_boxPlotMargins)
-        .color(_circleColors[id])
-        .quartiles([ circle.ci[0], circle.betas[1], circle.ci[1] ])
-        .pvalue(circle.pvalue);
-        d.charts.circles[id] = circleBox;
-        circleBox.render();
-      });
-    });
-
-    // update
-    // variableGroups.selectAll('div.box-row')
-    // .data(function(d,i) { return d; })
-    // .each(function(d, rowInd, colInd) {
-    //   console.log("update called");
-    //   d.charts.total
-    //   .quartiles([d.total.ci[0], d.total.betas[1], d.total.ci[1]])
-    //   .pvalue(d.total.pvalue)
-    //   .render();
-
-    //   _.each(d.charts.circles, function(chart, id) {
-    //     chart
-    //     .quartiles([d.circles[id].ci[0], d.circles[id].betas[1], d.circles[id].ci[1] ])
-    //     .pvalue(d.circles[id].pvalue)
-    //     .render();
-    //   });
-    // });
+    var boxRow = rows();
+    bgRects(boxRow);
+    boxLabel(boxRow);
+    boxChart(boxRow);
 
     // last row is axis on each column
-    columnAxis();
-    zeroLines();
+    axis();
+    zeroLine();
   }
 
   _chart.onClick = function(fn) {
@@ -317,9 +425,15 @@ function RegressionChart(element, width, height) {
     return _chart;
   };
 
-  _chart.columns = function(d) {
-    if(!arguments.length) { return _noColumns; }
-    _noColumns = d;
+  _chart.element = function(x) {
+    if(!arguments.length) { return _element; }
+    _element = x;
+    return _chart;
+  };
+
+  _chart.width = function(x) {
+    if(!arguments.length) { return _width; }
+    _width = x;
     return _chart;
   };
 
@@ -329,22 +443,47 @@ function RegressionChart(element, width, height) {
     return _chart;
   };
 
+  _chart.remove = function(d) {
+    function remSVG() {
+      _svg.remove();
+    }
+
+    function remCharts() {
+      _data.forEach(function(d) {
+        d.charts.forEach(function(chart) {
+          chart.remove();
+        });
+      });
+    }
+
+    remCharts();
+    remSVG();
+  };
+
   _chart.variables = function(x) {
     if(!arguments.length) { return _variables; }
     _variables = x;
     _variablesLookup = _.chain(_variables).map(function(d) { return [d.name, d]; }).object().value();
     _groupsLookup = _.chain(_variables).map(function(d) { return [d.group.order, d.group]; }).object().value();
+
+    sortData();
     return _chart;
   };
 
-  _chart.totalColor = function(x) {
-    if(!arguments.length) { return _totalColor; }
-    _totalColor = x;
+  _chart.callback = function(fn) {
+    if(!arguments.length) { return _callback; }
+    _callback = fn;
+    return _chart;
+  };
+
+  _chart.datasetColors = function(x) {
+    if(!arguments.length) { return _datasetColors; }
+    _datasetColors = x;
     return _chart;
   };
 
   _chart.circleColors = function(x) {
-    if(!arguments.length) { return _circleColor; }
+    if(!arguments.length) { return _circleColors; }
     _circleColors = x;
     return _chart;
   };
@@ -353,8 +492,12 @@ function RegressionChart(element, width, height) {
   _chart.data = function(data) {
     if(!arguments.length) { return _data; }
     _data = data;
-    console.log("Data changed: ", _data);
     return _chart;
+  };
+
+  _chart.estimatedHeight = function() {
+    var noGroups = _groupedData.length;
+    return getGroupY(noGroups-1).end + _axisHeight;
   };
 
   function computeDomain() {
@@ -373,12 +516,12 @@ function RegressionChart(element, width, height) {
     }
 
     var ciValues = _.chain(_data)
-    .map(function(d) { 
-      return [_.chain(d.circles).values().map(function(c) { return c.ci; }).value(), 
-      d.total.ci
-      ]; 
+    .map(function(d) {
+      return d.payload;
     })
-    .flatten(true)
+    .flatten()
+    .map(function(d) { return d.ci; })
+    .flatten()
     .value(),
     extent = d3.extent(ciValues),
     lowerValue = getLowerValue(extent[0]),
@@ -396,14 +539,15 @@ function RegressionChart(element, width, height) {
     return 0;
   }
 
-  function splitData() {
+  function sortData() {
     var groupedData = d3.nest().key(function(d) { 
       return _variablesLookup[d.variable].group.order;
     })
     .sortKeys(d3.ascending)
     .sortValues(sortValues)
     .entries(_data);
-    _splitData = subarrays(groupedData, _noColumns);
+
+    _groupedData = groupedData;
   }
 
   // utilities

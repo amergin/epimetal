@@ -1,6 +1,8 @@
-<div class="row full-height">
-	<div ng-repeat="window in windows | orderBy:'type'" class="full-height">
-		<span us-spinner="{radius:30, width:8, length: 16}" spinner-key="{{window._winid}}" class="ng-scope"></span>
-		<div replace-and-compile re-name="window.type" re-window="window"></div>
-	</div>
+<div gridster="gridOptions">
+    <ul>
+        <li gridster-item="itemMapper" ng-repeat="window in windows">
+        	<div window-header></div>
+			<div replace-and-compile re-name="window.type" re-window="window" class="text-center"></div>
+        </li>
+    </ul>
 </div>

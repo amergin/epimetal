@@ -1,9 +1,3 @@
-.regression-plot {
-	width: 80%;
-	margin-left: 10%;
-	margin-top: 20px;
-}
-
 .boxplot {
 	font-size: 10px;
 }
@@ -55,50 +49,6 @@ g.highlight > .label {
 	shape-rendering: crispEdges;
 }
 
-/* outlier table */
-.outliers-wrapper-wrapper {
-	text-align: center;
-}
-
-.outliers-wrapper {
-	display: inline-block;
-}
-.outliers-title {
-	font-weight: bold;
-	text-align: center;
-	margin-bottom: 5px;
-	font-size: 16px;
-}
-
-.outliers-table {
-    border-collapse:  separate;
-    border-spacing: 1px;
-    font-size: 12px;
-}
-.outliers-table th, .outliers-table td {
-    padding: 5px;
-}
-.outliers-table th {
-    background-color: #2b506e;
-    color: #eee;
-}
-.outliers-table tr:nth-child(even) {
-    background-color: #91b6d4 ;
-}
-.outliers-table tr:nth-child(odd) {
-    background-color: #dae7f1 ;
-}
-.outliers-table td {
-	text-align: center;
-	cursor: default;
-}
-
-.outliers-table tr.highlight,
-.outliers-table tr:hover {
-	background-color: #FFFF66;
-}
-
-
 .d3-tip {
   line-height: 1;
   font-weight: bold;
@@ -108,14 +58,24 @@ g.highlight > .label {
   border-radius: 2px;
 }
 
+.zeroline line {
+	stroke-width: 1px;
+	stroke: grey;
+}
+
+g.even > rect {
+	background-color: lightgrey;
+	opacity: 0.05;
+}
+
+g.odd > rect {
+	opacity: 0;
+}
+
 .group-label {
 	font-weight: bold;
 }
 
-.box-label {
-	line-height: 60px;
-}
-
-.box-row.odd {
-	background-color: rgba(224, 224, 224, 0.5);
+.regression-plot {
+	text-align: center;
 }

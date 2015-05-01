@@ -469,12 +469,7 @@ vis.controller('RegressionMenuController', ['$scope', '$rootScope', 'DatasetFact
 
       RegressionService.selectedVariables($scope.selection);
 
-      // only draw on first window, on subsequent, force redraw
-      if( $scope.handler.get().length > 0 ) {
-        $scope.handler.redrawAll();
-      } else {
-        PlotService.drawRegression(config, $scope.handler);
-      }
+      PlotService.drawRegression(config, $scope.handler);
     };
 
     $scope.openAssociation = function() {
