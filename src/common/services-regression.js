@@ -297,20 +297,22 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
 
       var retObj = {
         result: { 'success': true },
-        total: null,
-        circles: {},
+        payload: [],
         variable: thData.variable
       };
 
       // process total
       try {
-        retObj['total'] = compute(thData.data.total.samples, global.env.nanIndices.total, 
+        var total = compute(thData.data.total.samples, global.env.nanIndices.total, 
           global.env.targetData.total.samples.slice(0), global.env.adjustData.total);
+
+        retObj.payload.push(_.extend(total, { 'name': 'total', 'type': 'circle' }));
 
         // process each circle
         _.each(thData.data.circles, function(circle, ind) {
-          retObj.circles[circle.id] = compute(circle.samples, global.env.nanIndices.circles[circle.id], 
+          var circleObject = compute(circle.samples, global.env.nanIndices.circles[circle.id], 
             global.env.targetData.circles[ind].samples.slice(0), global.env.adjustData.circles[circle.id]);
+          retObj.payload.push(_.extend(circleObject, { 'name': circle.id, 'type': 'circle' }));
         });
         retObj['result'] = { success: true };
       } catch(errorObject) {
