@@ -814,6 +814,12 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
       };
     };
 
+    $scope.toggleVariable = function(variable) {
+      var notDefined = _.isUndefined(variable) || _.isNull(variable);
+      if(notDefined) { variable.selected = true; }
+      else { variable.selected = !variable.selected; }
+    };
+
     $scope.updateSelection = function(variable) {
       // find index
       var variables = $scope.payload;

@@ -49,8 +49,8 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr ng-repeat="variable in filtered = (variables | filter:filter.input) | orderBy: sortType:sortReverse | limitTo: pageSize track by variable.name">
-					<td><input type="checkbox" ng-model="variable.selected" ng-change="updateSelection(variable)"></td>
+				<tr ng-repeat="variable in filtered = (variables | filter:filter.input) | orderBy: sortType:sortReverse | limitTo: pageSize track by variable.name" ng-click="toggleVariable(variable); updateSelection(variable, $event)">
+					<td><input type="checkbox" ng-change="updateSelection(variable, $event)" ng-model="variable.selected" noclick></td>
 					<td>{{variable.name}}</td>
 					<td>{{variable.desc}}</td>
 					<td>{{variable.group.name}}</td>
@@ -88,7 +88,7 @@
 							<input type="checkbox" name="var-f-{{$index}}" id="var-f-{{$index}}" ng-model="item.selected" ng-change="checkboxToggled(item)">
 							{{item.name}}
 						</label>
-						<i class="fa fa-info-circle pull-right" ng-click="selectInfo(item)"></i>
+						<i class="fa fa-info-circle pull-right text-muted" ng-click="selectInfo(item)"></i>
 					</div>
 				</div>
 
@@ -111,7 +111,7 @@
 							<input type="checkbox" name="var-s-{{$index}}" id="var-s-{{$index}}" ng-model="item.selected" ng-change="checkboxToggled(item)">
 							{{item.name}}
 						</label>
-						<i class="fa fa-info-circle pull-right" ng-click="selectInfo(item)"></i>
+						<i class="fa fa-info-circle pull-right text-muted" ng-click="selectInfo(item)"></i>
 					</div>
 				</div>
 

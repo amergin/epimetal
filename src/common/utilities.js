@@ -15,6 +15,17 @@ module.directive('selectOnClick', function() {
   };
 });
 
+module.directive('noclick', [function() {
+    return {
+      restrict: 'A',
+      link: function link(scope, element, attrs) {
+        element.bind('click', function(e) {
+            e.stopPropagation();
+        });
+      }
+    };
+}]);
+
 // for introducing a custom directive in a nested directive situation
 module.directive('replaceAndCompile', ['$compile', '$timeout', function($compile, $timeout) {
   return {
