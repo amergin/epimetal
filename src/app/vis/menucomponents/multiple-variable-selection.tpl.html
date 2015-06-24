@@ -133,7 +133,7 @@
 						<div class="list-group-item ctrl am-fade" ng-repeat="variable in selected.second | orderBy:'name_order' track by $index" ng-click="selectInfo(variable)">
 							<div class="checkbox">
 								<label for="var{{$index}}">
-									<input type="checkbox" name="var{{$index}}" id="var{{$index}}" ng-model="variable.selected">
+									<input type="checkbox" name="var{{$index}}" id="var{{$index}}" ng-model="variable.selected" ng-change="checkboxToggled(variable)">
 									{{variable.name}}
 								</label>
 							</div>
