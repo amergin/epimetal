@@ -7,27 +7,6 @@
 		<em>({{$chip.desc}})</em>
 	</md-chip-template>
  </md-chips>
-<!--    <h4>Search for a variable / Currently selected variables</h4>
-	<md-chips layout="row" layout-fill flex="100" class="md-primary" ng-model="payload" md-autocomplete-snap="" md-require-match="true" md-on-append="addVariable($chip)">
-      <md-autocomplete md-selected-item="selectedVariable" md-search-text="searchText" md-items="variable in querySearch(searchText)" md-item-text="variable.name" placeholder="Type to search for a variable">
-      	<md-item-template>
-	        <span md-highlight-text="searchText">{{variable.name}} : {{variable.desc}} : {{variable.unit}}</span>
-      	</md-item-template>
-		<md-not-found>
-		    No matches found.
-		</md-not-found>
-      </md-autocomplete>
-      <md-chip-template>
-        <span>
-          <strong>{{$chip.name}}</strong>
-          <em>({{$chip.desc}})</em>
-        </span>
-      </md-chip-template>
-        <button md-chip-remove class="md-chip-remove ng-scope">
-            <md-icon md-svg-icon="md-close"></md-icon>
-        </button>
-	</md-chips> -->
-
  </md-card-content>
 </md-card>
 
@@ -89,108 +68,71 @@
 		</div>		
 	</div>
 
-
 	<div ng-switch-when="false" class="container-fluid am-fade">
 		<div class="row">
 			<div class="list-group col-md-3">
-				<a class="list-group-item ctrl" ng-repeat="group in nested | orderBy:getGroupName track by $index" ng-click="selectGroup(group, 'first')" ng-class="{ 'active': isSelected(group, 'first') }">
+				<div class="list-group-item ctrl am-fade" ng-repeat="group in nested | orderBy:orderGroup track by $index" ng-click="selectGroup(group, 'first')" ng-class="{ 'active': isSelected(group, 'first') }">
 					{{getGroupName(group)}}
-				</a>
-			</div>
-
-			<div class="list-group col-md-3">
-				<div ng-switch="getType(selected.first)">
-					<a class="list-group-item ctrl am-fade" ng-switch-when="continues" ng-repeat="group in selected.first | orderBy:getGroupName track by $index" ng-click="selectGroup(group, 'second')" ng-class="{ 'active': isSelected(group, 'second') }">
-						{{getGroupName(group)}}
-					</a>
-					<div ng-switch-when="terminates">
-						<div class="list-group-item ctrl am-fade" ng-repeat="variable in selected.first | orderBy:'name_order' track by $index" ng-click="selectInfo(variable)">
-							<div class="checkbox">
-								<label for="var{{$index}}">
-									<input type="checkbox" name="var{{$index}}" id="var{{$index}}" ng-model="variable.selected" ng-change="checkboxToggled(variable)">
-									{{variable.name}}
-								</label>
-							</div>
-						</div>
-						<div ng-switch="majoritySelected(selected.first)">
-							<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="true" ng-click="deselectAll(selected.first)">
-								<strong>Deselect all</strong>
-							</div>
-							<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="false" ng-click="selectAll(selected.first)">
-								<strong>Select all</strong>
-							</div>
-						</div>
-					</div>
+					<span class="badge pull-right">{{groupSelectedCount(group)}}</span>
 				</div>
 			</div>
 
 			<div class="list-group col-md-3">
-				<div ng-switch="getType(selected.second)">
-					<a class="list-group-item ctrl am-fade" ng-switch-when="continues" ng-repeat="group in selected.second | orderBy:getGroupName track by $index">
-						{{getGroupName(group)}}
-					</a>
-					<div ng-switch-when="terminates">
-						<div class="list-group-item ctrl am-fade" ng-repeat="variable in selected.second | orderBy:'name_order' track by $index" ng-click="selectInfo(variable)">
-							<div class="checkbox">
-								<label for="var{{$index}}">
-									<input type="checkbox" name="var{{$index}}" id="var{{$index}}" ng-model="variable.selected" ng-change="checkboxToggled(variable)">
-									{{variable.name}}
-								</label>
-							</div>
-						</div>
-						<div ng-switch="majoritySelected(selected.second)">
-							<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="true" ng-click="deselectAll(selected.second)">
-								<strong>Deselect all</strong>
-							</div>
-							<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="false" ng-click="selectAll(selected.second)">
-								<strong>Select all</strong>
-							</div>
-						</div>
+				<div class="list-group-item ctrl am-fade" ng-repeat="item in selected.first | orderBy:orderGroup track by $index" ng-click="selectGroup(item, 'second')" ng-class="{ 'active': isSelected(item, 'second') }" ng-switch="getType(item)">
+					<div ng-switch-when="continues">
+						{{getGroupName(item)}}
+						<span class="badge pull-right">{{groupSelectedCount(item)}}</span>
+					</div>
+					<div ng-switch-when="terminates" class="checkbox">
+						<label for="var-f-{{$index}}">
+							<input type="checkbox" name="var-f-{{$index}}" id="var-f-{{$index}}" ng-model="item.selected" ng-change="checkboxToggled(item)">
+							{{item.name}}
+						</label>
+						<i class="fa fa-info-circle pull-right" ng-click="selectInfo(item)"></i>
+					</div>
+				</div>
+
+				<div ng-switch="majoritySelected(selected.first)" ng-show="selectedHasVariables(selected.first)">
+					<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="true" ng-click="deselectAll(selected.first)">
+						<strong>Deselect all</strong>
+					</div>
+					<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="false" ng-click="selectAll(selected.first)">
+						<strong>Select all</strong>
+					</div>
+				</div>
+			</div>
+			<div class="list-group col-md-3">
+				<div class="list-group-item ctrl am-fade" ng-repeat="item in selected.second | orderBy:orderGroup track by $index" ng-switch="getType(item)">
+					<div ng-switch-when="continues">
+						{{getGroupName(item)}}
+					</div>
+					<div ng-switch-when="terminates" class="checkbox">
+						<label for="var-s-{{$index}}">
+							<input type="checkbox" name="var-s-{{$index}}" id="var-s-{{$index}}" ng-model="item.selected" ng-change="checkboxToggled(item)">
+							{{item.name}}
+						</label>
+						<i class="fa fa-info-circle pull-right" ng-click="selectInfo(item)"></i>
+					</div>
+				</div>
+
+				<div ng-switch="majoritySelected(selected.second)" ng-show="selectedHasVariables(selected.second)">
+					<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="true" ng-click="deselectAll(selected.second)">
+						<strong>Deselect all</strong>
+					</div>
+					<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="false" ng-click="selectAll(selected.second)">
+						<strong>Select all</strong>
 					</div>
 				</div>
 			</div>
 
 			<div class="list-group col-md-3 am-fade" ng-show="selected.third">
-				<div class="list-group-item">
+				<div class="list-group-item well well-small">
 					<h3>{{selected.third.desc}}</h3>
-					<p>{{selected.third.unit}}</p>
 					<em>{{selected.third.name}}</em>
+					<p>{{selected.third.unit}}</p>
 				</div>
 			</div>
 		</div>
+
+	</div>
 </div>
-
-
-<!-- <md-content layout="row" layout-fill layout-align="start start">
-	<md-card flex="40">
-		<md-card-content>
-		<md-list>
-	      <md-subheader class="md-no-sticky">Variable groups</md-subheader>
-	      <md-list-item class="md-2-line" ng-repeat="varArray in groups" ng-click="openGroup(varArray)" ng-class="{true: 'selected', false: ''}[selected.group == varArray]">
-	        <div class="md-list-item-text">
-	          <h3>{{ varArray[0].group.name }}</h3>
-	        </div>
-	        <md-divider ng-if="!$last"></md-divider>
-	      </md-list-item>
-		</md-list>
-		</md-card-content>
-	</md-card>
-
-	<md-card flex="50">
-		<md-card-content>
-		<md-list>
-	      <md-subheader class="md-no-sticky">Variables</md-subheader>
-	      <md-list-item class="md-2-line" ng-repeat="variable in selectedGroup track by $index">
-	        <div class="md-list-item-text">
-	          <h3>{{ variable.desc }}</h3>
-	          <h4>{{ variable.name }}</h3>
-	          <p>({{ variable.unit }})</p>
-	          <md-checkbox class="md-secondary" ng-model="variable.selected" ng-change="updateSelection(variable)"></md-checkbox>
-	        </div>
-	        <md-divider ng-if="!$last"></md-divider>
-	    	</md-list-item>
-		</md-list>
-		</md-card-content>
-	</md-card>
-
-</md-content> -->

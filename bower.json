@@ -35,7 +35,7 @@
     "angular-growl-2": "~0.7.3",
     "statistics-distributions-js": "svn+http://statistics-distributions-js.googlecode.com/svn/",
     "hor-boxplot": "https://gist.github.com/11198007.git",
-    "lodash": "~3.5.0",
+    "lodash": "~3.9.3",
     "ngprogress": "~1.0.7",
     "zeroclipboard": "~2.2.0",
     "ng-clip": "~0.2.6",

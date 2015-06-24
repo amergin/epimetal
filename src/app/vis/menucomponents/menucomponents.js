@@ -840,11 +840,11 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
       return !_.isUndefined(input) && !_.isNull(input) && input.length > 0;
     };
 
-    $scope.getGroupName = function(array) {
-      var first = _.first(array),
-      topGroup = first.group.topgroup;
-      return topGroup ? topGroup : first.group.name;
-    };
+    // $scope.getGroupName = function(array) {
+    //   var first = _.first(array),
+    //   topGroup = first.group.topgroup;
+    //   return topGroup ? topGroup : first.group.name;
+    // };
 
 
     function groupVariables(variables, useTop) {
@@ -870,29 +870,35 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
 
     // For group navigation
     function getNestedNavigation(variables) {
-      var topGrouped = _.chain(variables)
+      // do top-level grouping
+      var topLevelGrp = _.chain(variables)
       .groupBy(function(v) {
-        return _.isNull(v.group.topgroup) ? v.group.name : "_" + v.group.topgroup;
+        return _.isNull(v.group.topgroup) ? v.group.name : v.group.topgroup;
       })
       .value();
 
-      var nested = _.map(topGrouped, function(val, key) {
-        var hasTopGroup = !_.isNull(val[0].group.topgroup);
-        if(hasTopGroup) {
-          var raw2 = _.chain(val)
-          .groupBy(function(v) {
-            return v.group.name;
-          })
-          .value();
-          return raw2;
-        }
-        else {
-          var obj = {};
-          obj[key] = val;
-          return obj;
-        }
-      });
-      return nested;
+      // do second-level grouping
+      var second = 
+      _.chain(topLevelGrp)
+      .map(function(grp, topName) {
+        var grouped = _.groupBy(grp, function(sg) {
+          return topName == sg.group.name ? null : sg.group.name;
+        });
+
+        var subGrouping = _.map(grouped, function(array, subName) {
+          // no further navigation, extract to array
+          if(subName == 'null') {
+            return array;
+          } else {
+            return _.zipObject([[subName, array]]);
+          }
+        });
+        return [topName, _.flatten(subGrouping)];
+      })
+      .map(function(array) { return _.zipObject([array]); })
+      .value();
+
+      return second;
     }
 
     $scope.checkboxToggled = function(variable) {
@@ -909,28 +915,37 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
     };
 
     $scope.majoritySelected = function(selection) {
-      var counts = _.countBy(selection, function(v) { return v.selected; }),
-      total = selection.length;
-      return counts.true / total > 0.5;
+      var noVars = 0,
+      counts = _.countBy(selection, function(v) { 
+        var type = $scope.getType(v);
+        if(type == 'terminates') {
+          ++noVars;
+          return v.selected || false;
+        }
+        return false;
+      });
+      return (counts.true || 0) / noVars > 0.5;
     };
 
     $scope.selectAll = function(selection) {
       var ind;
-      _.each(selection, function(vari) {
-        vari.selected = true;
+      _.each(selection, function(item) {
+        if($scope.getType(item) == 'continues') { return; }
+        item.selected = true;
         // check it's not already added
-        ind = _.indexOf($scope.payload, vari);
+        ind = _.indexOf($scope.payload, item);
         if(ind < 0) {
-          $scope.payload.push(vari);
+          $scope.payload.push(item);
         }
       });
     };
 
     $scope.deselectAll = function(selection) {
       var ind;
-      _.each(selection, function(vari) {
-        vari.selected = false;
-        ind = _.indexOf($scope.payload, vari);
+      _.each(selection, function(item) {
+        if($scope.getType(item) == 'continues') { return; }
+        item.selected = false;
+        ind = _.indexOf($scope.payload, item);
         if(ind > -1) {
           $scope.payload.splice(ind, 1);
         }
@@ -998,32 +1013,65 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
     }
 
     $scope.selectGroup = function(group, level) {
-      var keys = getKeys(group);
+      if( $scope.getType(group) == 'terminates' ) { return; }
       $scope.selected[level] = getGroupSelection(group, level);
       clearNextSelections(level);
+    };
+
+    $scope.selectedHasVariables = function(selection) {
+      var counts = _.countBy(selection, function(i) { return $scope.getType(i); });
+      return counts.terminates > 0;
     };
 
     $scope.selectInfo = function(variable) {
       $scope.selected['third'] = variable;
     };
 
+    $scope.groupSelectedCount = function(group) {
+      var flatVariables = _.chain(group)
+      .map(function(v,k) { return v; })
+      .flatten()
+      .map(function(obj, ind, array) {
+        var type = $scope.getType(obj);
+        return type == 'continues' ? _.chain(obj).values().first().value() : obj;
+      })
+      .flatten()
+      .value();
+
+      return _.countBy(flatVariables, function(v) {
+        return v.selected || false;
+      })['true'];
+    };
+
     $scope.isChecked = function(variable) {
       return !_.isUndefined(variable.selected) && variable.selected === true;
     };
 
-    $scope.getGroupName = function(group) {
-      var keys = getKeys(group);
-      if(keys.length > 1) {
-        // get top group name
-        var topName = _.chain(group)
+    $scope.getGroupName = function(group, level) {
+      if(level == 'first') {
+        var variable = _.chain(group)
         .sample()
         .first()
-        .value()
-        .group.topgroup;
-        return topName;
+        .value();
+        return variable.group.topgroup;
       } else {
-        return _.first(keys);
+        return _.chain(group)
+        .keys()
+        .first()
+        .value();
       }
+      // var keys = getKeys(group);
+      // if(keys.length > 1) {
+      //   // get top group name
+      //   var topName = _.chain(group)
+      //   .sample()
+      //   .first()
+      //   .value()
+      //   .group.topgroup;
+      //   return topName;
+      // } else {
+      //   return _.first(keys);
+      // }
     };
 
     $scope.isSelected = function(group, level) {
@@ -1031,12 +1079,29 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
       return _.isEqual($scope.selected[level], selected);
     };
 
-    $scope.getType = function(selection) {
-      var first = _.first(selection);
-      if( _.has(first, 'name_order') ) {
+    // $scope.getType = function(selection) {
+    //   var first = _.first(selection);
+    //   if( _.has(first, 'name_order') ) {
+    //     return 'terminates';
+    //   } else {
+    //     return 'continues';
+    //   }
+    // };
+
+    $scope.getType = function(group) {
+      if( _.has(group, 'name_order') ) {
         return 'terminates';
       } else {
         return 'continues';
+      }
+    };
+
+    $scope.orderGroup = function(group) {
+      var type = $scope.getType(group);
+      if(type == 'terminates') {
+        return '1_' + group.name;
+      } else if(type == 'continues') {         
+        return '0_' + $scope.getGroupName(group);
       }
     };
 
