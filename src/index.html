@@ -19,36 +19,45 @@
   <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
   <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
 
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
   <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
   <script type="text/javascript" src="<%= file %>"></script><% }); %>
+  <script src="//cdn.jsdelivr.net/angular-material-icons/0.4.0/angular-material-icons.min.js"></script> 
 </head>
 
-<body>
-  <span us-spinner="{radius:30, width:8, length: 16}" spinner-key="main"></span>
-  <div growl class="" limit-messages="5"></div>
-  <!-- <div class="alert-area"></div> -->
-  <div ui-layout="{ flow : 'row', dividerSize: 1 }" style="overflow-y: hidden;">
-    <div ui-layout-container size="100px">
-      <div ui-view="header"></div>      
-    </div>
-    <div ui-layout-container id="main-content" class="horizontal-scrollbar" style="overflow-x: auto;" min-size="850px">
-      <div class="container-fluid" ui-view="content"></div>
-    </div>
-<!--     <div ui-layout-container size="30px" style="z-index:2; overflow: hidden; background-color: lightgray;">
-      <footer>
-        <p>Copyright Jussi Ekholm & <a href="http://computationalmedicine.fi/" target="_blank">Computational Medicine Research Group</a> 2013-2014, and the copyrights of the respective libraries used in developing this application.</p>
-        <pre>
-          $state = {{$state.current.name}}
-          $stateParams = {{$stateParams}}
-        </pre>
-        <pre class="col-sm-12">
-          Active variables: {{activeVariables}}
-          Used variables: {{usedVariables}}
-        </pre>
-      </footer>
-    </div> -->
+<body layout>
+    <div layout ui-view="sidenav"></div>
+    <div flex layout="column" class="relative" role="main">
+      <md-toolbar>
+        <div class="md-toolbar-tools">
+          <md-button class="md-icon-button" aria-label="Open Menu" ng-show="!sideMenuVisible('left')" ng-click="toggleSideMenu()">
+            <i class="fa fa-bars"></i>
+          </md-button>
+          <h2>
+            <span>Plotter</span>
+          </h2>
+          <span flex></span>
+          <md-button class="md-raised" aria-label="Link this view">Link this view</md-button>
+          <md-button class="md-icon-button" aria-label="More">
+            <i class="fa fa-ellipsis-v"></i>
+          </md-button>
+        </div>
+      </md-toolbar>
+      <div ui-view="header"></div>
 
+      <!-- layout layout-fill -->
+      <md-content md-scroll-y md-scroll-x flex layout="column" layout-fill style="">
+<!--         <div style="background-color: tomato;" flex layout layout-fill>
+          <div id="content-wrap" style="background-color: yellow;" layout="column" layout-fill flex>
+            <section flex id="upper" style="background-color: blue;" class="resizable-section">upper</section>
+            <section flex id="lower" style="background-color: green;" class="resizable-section" resizable r-directions="['top']" r-flex="true">lower</section>
+          </div>
+        </div> -->
 
-  </div>
+        <div ui-view="content" style="" flex layout layout-fill>
+        </div>
+      </md-content>
+    </div>
 </body>
 </html>

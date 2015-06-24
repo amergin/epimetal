@@ -82,7 +82,7 @@ def headers():
 				'name': header.name,
 				'name_order': no,
 				'desc': header.desc,
-				'group': { 'name': header.group.name, 'order': header.group.order },
+				'group': { 'name': header.group.name, 'topgroup': header.group.topgroup or None, 'order': header.group.order },
 				'classed': header.classed or False
 			}
 

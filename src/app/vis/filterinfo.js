@@ -5,14 +5,15 @@ mod.directive('filterInfo', ['$templateCache', '$compile', '$rootScope', '$injec
     return {
       restrict: 'C',
       scope: false,
-      replace: true,
+      replace: false,
       priority: 7000,
       controller: 'FilterInfoController',
-      template: function(tElem, tAttrs) {
-        var button = $templateCache.get('vis/filterinfo.btn.tpl.html');
-        var btnEl = angular.element(button);
-        return btnEl[0].outerHTML;
-      }
+      templateUrl: 'vis/filterinfo.tpl.html'
+      // template: function(tElem, tAttrs) {
+      //   var button = $templateCache.get('vis/filterinfo.btn.tpl.html');
+      //   var btnEl = angular.element(button);
+      //   return btnEl[0].outerHTML;
+      // }
     };
   }
 ]);

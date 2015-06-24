@@ -1,0 +1,56 @@
+<md-content flex="90">
+
+
+  <accordion close-others="true">
+    <accordion-group heading="Target variable" is-open="false" is-disabled="false">
+
+	   <md-card flex="45">
+	   	<md-card-content>
+	   		<h3>Select target variable</h3>
+			<md-autocomplete 
+			  md-selected-item="selections.target.payload"
+			  md-search-text="selections.target.searchText"
+			  md-item-text="variable.name"
+			  md-items="variable in querySearch(selections.target.searchText)"
+			  md-min-length="1"
+			  placeholder="Select the target variable"
+			  md-menu-class="autocomplete-custom-template"
+			  md-floating-label="Target variable">
+			<md-item-template>
+			  <span class="item-title">
+			    <span> {{variable.name}} </span>
+			  </span>
+			  <span class="item-metadata">
+			    <span class="item-metastat">
+			    	<em>{{variable.desc}}</em>
+			    </span>
+			    <span class="item-metastat">
+			    	<p>({{variable.unit}})</p>
+			    </span>
+			  </span>
+			</md-item-template>
+			</md-autocomplete>
+		    </md-card-content>
+		</md-card>
+
+    </accordion-group>
+    <accordion-group heading="Adjust variables" is-open="false" is-disabled="false">
+    	<h3>Select adjust variable(s)</h3>
+    	<div class="multiple-variable-selection" re-selection="adjust"></div>
+    </accordion-group>
+    <accordion-group heading="Association variables" is-open="false" is-disabled="false">
+    	<h3>Select association variable(s)</h3>
+    	<div class="multiple-variable-selection" re-selection="association"></div>
+    </accordion-group>
+
+  </accordion>
+
+
+
+
+
+
+
+
+
+</md-content>

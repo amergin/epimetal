@@ -1,0 +1,68 @@
+<md-card flex="100">
+ <md-card-content>
+   <h4>Select the X and Y variables</h4>
+   <md-content layout="row" layout-align="space-around center">
+
+	   <md-card flex="45">
+	   	<md-card-content>
+			<md-autocomplete 
+			  md-selected-item="payloadX"
+			  md-search-text="searchTextX"
+			  md-item-text="variable.name"
+			  md-items="variable in querySearch(searchTextX)"
+			  md-min-length="1"
+			  placeholder="Select the X coordinate variable"
+			  md-menu-class="autocomplete-custom-template"
+			  md-floating-label="X Variable"
+			  >
+			<md-item-template>
+			  <span class="item-title">
+			    <span> {{variable.name}} </span>
+			  </span>
+			  <span class="item-metadata">
+			    <span class="item-metastat">
+			    	<em>{{variable.desc}}</em>
+			    </span>
+			    <span class="item-metastat">
+			    	<p>({{variable.unit}})</p>
+			    </span>
+			  </span>
+			</md-item-template>
+			</md-autocomplete>
+
+		    </md-card-content>
+		   </md-card>
+
+	   <md-card flex="45">
+	   	<md-card-content>
+			<md-autocomplete 
+			  md-selected-item="payloadY"
+			  md-search-text="searchTextY"
+			  md-item-text="variable.name"
+			  md-items="variable in querySearch(searchTextY)"
+			  md-min-length="1"
+			  placeholder="Select the Y coordinate variable"
+			  md-menu-class="autocomplete-custom-template"
+			  md-floating-label="Y Variable"
+			  >
+			<md-item-template>
+			  <span class="item-title">
+			    <span> {{variable.name}} </span>
+			  </span>
+			  <span class="item-metadata">
+			    <span class="item-metastat">
+			    	<em>{{variable.desc}}</em>
+			    </span>
+			    <span class="item-metastat">
+			    	<p>({{variable.unit}})</p>
+			    </span>
+			  </span>
+			</md-item-template>
+			</md-autocomplete>
+
+		    </md-card-content>
+		   </md-card>
+	</md-content>
+
+ </md-card-content>
+</md-card>

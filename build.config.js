@@ -111,7 +111,8 @@ module.exports = {
       'vendor/spin.js/spin.js',
       'vendor/angular-spinner/angular-spinner.min.js',
       // customize this for release:
-      'vendor/angular-bootstrap/custom/ui-bootstrap-custom-tpls-0.12.1.js',
+      // 'vendor/angular-bootstrap/custom/ui-bootstrap-custom-tpls-0.12.1.js',
+      'vendor/angular-bootstrap/custom2/ui-bootstrap-custom-tpls-0.13.0.js',
       'vendor/paralleljs/lib/parallel.js',
       'vendor/numericjs/lib/numeric.min.js',
       'vendor/angular-growl-2/build/angular-growl.js',
@@ -121,8 +122,11 @@ module.exports = {
       'vendor/ngprogress/build/ngProgress.js',
       'vendor/spark-md5/spark-md5.js',
       'vendor/ng-clip/dest/ng-clip.min.js',
-      'vendor/zeroclipboard/dist/ZeroClipboard.js'
-      // 'vendor/mathjs/dist/math.js'
+      'vendor/zeroclipboard/dist/ZeroClipboard.js',
+      // material x2
+      'vendor/angular-material/angular-material.js',
+      'vendor/angular-aria/angular-aria.js',
+      'vendor/angular-resizable/angular-resizable.min.js'
     ],
     css: [
       'vendor/dcjs/dc.css',
@@ -130,8 +134,9 @@ module.exports = {
       'vendor/bootstrap-additions/dist/bootstrap-additions.min.css',
       'vendor/angular-ui-layout/src/ui-layout.css',
       'vendor/angular-growl-2/build/angular-growl.min.css',
-      'vendor/ngprogress/ngProgress.css'
-      //'vendor/chosen/chosen.min.css'
+      'vendor/ngprogress/ngProgress.css',
+      'vendor/angular-material/angular-material.css',
+      'vendor/angular-resizable/angular-resizable.min.css'
     ],
     assets: [
       'vendor/font-awesome/fonts/*',

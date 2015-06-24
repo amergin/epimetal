@@ -8,7 +8,8 @@ var App = angular.module('plotter', [
   'plotter.compatibility',
   'ngSanitize', 
   'ngAnimate',
-  'angularSpinner'
+  'angularSpinner',
+  'ngMaterial'
   ]);
 
 App.constant('constants', {
@@ -95,8 +96,8 @@ App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStatePr
 }
 ]);
 
-App.controller('AppCtrl', ['$scope', '$location', '$templateCache', 'CompatibilityService', 'NotifyService', 'usSpinnerService',
-  function AppCtrl($scope, $location, $templateCache, CompatibilityService, NotifyService, usSpinnerService) {
+App.controller('AppCtrl', ['$scope', '$location', '$templateCache', 'CompatibilityService', 'NotifyService', 'usSpinnerService', '$mdSidenav',
+  function AppCtrl($scope, $location, $templateCache, CompatibilityService, NotifyService, usSpinnerService, $mdSidenav) {
 
     $scope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
       if (toState.resolve) {
@@ -115,6 +116,11 @@ App.controller('AppCtrl', ['$scope', '$location', '$templateCache', 'Compatibili
       }
     });
 
-    $scope.loading = { spinner: true };
+    $scope.loading = { spinner: true };    
+
+    $scope.toggleSideMenu = function() {
+      $mdSidenav('left').toggle();
+    };
+
   }
   ]);

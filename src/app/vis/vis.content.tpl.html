@@ -1,3 +1,3 @@
-<div ui-view="explore" ng-show="$state.includes('vis.explore')" class="am-fade" id="explore-content"></div>
-<div ui-view="som" ng-show="$state.includes('vis.som')" class="am-fade" id="som-content"></div>
+<div ui-view="explore" md-scroll-y ng-show="$state.includes('vis.explore')" class="am-fade" id="explore-content" flex></div>
+<div ui-view="som" ng-show="$state.includes('vis.som')" class="am-fade" id="som-content" layout="column" layout-fill flex></div>
 <div ui-view="regression" ng-show="$state.includes('vis.regression')" class="am-fade" id="regression-content"></div>

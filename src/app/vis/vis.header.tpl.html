@@ -1,18 +1,18 @@
-<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+<md-tabs md-stretch-tabs md-selected="headerTabInd">
+  <md-tab ng-repeat="tab in tabs" >
+    <md-tab-label>
+      <span ui-sref="{{ 'vis.' + tab.name }}({ state: undefined })">{{tab.title}}</span>
+    </md-tab-label>
+  </md-tab>
+</md-tabs>
+
+<!-- <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container-fluid">
-    <!-- Brand and toggle get grouped for better mobile display -->
+    
     <div class="navbar-header">
-<!--       <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-    -->
     <a href ui-sref="vis.explore" class="navbar-brand">Plotter</a>
   </div>
 
-  <!-- Collect the nav links, forms, and other content for toggling -->
   <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
     <ul class="nav navbar-nav">
      <li ng-repeat="tab in tabs" ng-class="{active:$state.includes('vis.' + tab.name)}">
@@ -32,8 +32,8 @@
         </a>
     </li>
   </ul>
-</div><!-- /.navbar-collapse -->
-</div><!-- /.container-fluid -->
+</div>
+</div>
 
 
 <div id="header-submenu" ui-view="submenu" class="am-fade-and-slide-top">
@@ -42,5 +42,4 @@
     <div ui-view="submenu-regression" ng-show="$state.includes('vis.regression')"></div>
 </div>
 </nav>
-
-
+ -->

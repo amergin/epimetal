@@ -10,6 +10,7 @@ import re
 import csv
 
 LINE_SEPARATOR = "\t"
+TOPGROUP_SEPARATOR = ":"
 
 # Utilities, not part of the class
 def _getEscapedVar(var):
@@ -51,8 +52,13 @@ class DataLoader( object ):
 					return sortedGroups.limit(1)[0].order + 1
 
 			def _getGroup(name):
-				#return HeaderGroup.objects(name=name).update_one(upsert=True, set__name=name, set__order=_getNewGroupOrder())
-				return HeaderGroup.objects.get_or_create(name=name, defaults={ 'name': name, 'order': _getNewGroupOrder() })
+				topGroup = None
+				groupName = name
+				if TOPGROUP_SEPARATOR in name:
+					split = name.split(TOPGROUP_SEPARATOR)
+					topGroup = split[0]
+					groupName = split[1]
+				return HeaderGroup.objects.get_or_create(name=groupName, defaults={ 'name': groupName, 'topgroup': topGroup, 'order': _getNewGroupOrder() })
 
 			def _getSample(name):
 				return HeaderSample.objects(name=name)

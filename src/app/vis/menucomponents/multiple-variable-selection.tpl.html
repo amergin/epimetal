@@ -1,0 +1,196 @@
+<md-card flex="100">
+ <md-card-content>
+ <md-chips ng-model="payload">
+	<input type="text" id="query" ng-model="filter.input" placeholder="Type to search for a variable"/>
+	<md-chip-template>
+		<strong>{{$chip.name}}</strong>
+		<em>({{$chip.desc}})</em>
+	</md-chip-template>
+ </md-chips>
+<!--    <h4>Search for a variable / Currently selected variables</h4>
+	<md-chips layout="row" layout-fill flex="100" class="md-primary" ng-model="payload" md-autocomplete-snap="" md-require-match="true" md-on-append="addVariable($chip)">
+      <md-autocomplete md-selected-item="selectedVariable" md-search-text="searchText" md-items="variable in querySearch(searchText)" md-item-text="variable.name" placeholder="Type to search for a variable">
+      	<md-item-template>
+	        <span md-highlight-text="searchText">{{variable.name}} : {{variable.desc}} : {{variable.unit}}</span>
+      	</md-item-template>
+		<md-not-found>
+		    No matches found.
+		</md-not-found>
+      </md-autocomplete>
+      <md-chip-template>
+        <span>
+          <strong>{{$chip.name}}</strong>
+          <em>({{$chip.desc}})</em>
+        </span>
+      </md-chip-template>
+        <button md-chip-remove class="md-chip-remove ng-scope">
+            <md-icon md-svg-icon="md-close"></md-icon>
+        </button>
+	</md-chips> -->
+
+ </md-card-content>
+</md-card>
+
+<div ng-switch="inputIsDefined(filter.input)">
+	<div ng-switch-when="true" class="am-fade">
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>
+						Select
+					</th>
+					<th>
+						<a ng-click="setSortType('name'); toggleSortReverse()">
+							Variable Name
+							<span ng-show="sortTypeIs('name') && !sortReverse" class="fa fa-caret-down"></span>
+							<span ng-show="sortTypeIs('name') && sortReverse" class="fa fa-caret-up"></span>
+						</a>
+					</th>
+					<th>
+						<a ng-click="setSortType('desc'); toggleSortReverse()">
+							Description
+							<span ng-show="sortTypeIs('desc') && !sortReverse" class="fa fa-caret-down"></span>
+							<span ng-show="sortTypeIs('desc') && sortReverse" class="fa fa-caret-up"></span>
+						</a>
+					</th>
+					<th>
+						<a ng-click="setSortType('group.order'); toggleSortReverse()">
+							Group
+							<span ng-show="sortTypeIs('group.order') && !sortReverse" class="fa fa-caret-down"></span>
+							<span ng-show="sortTypeIs('group.order') && sortReverse" class="fa fa-caret-up"></span>
+						</a>
+					</th>
+					<th>
+						<a ng-click="setSortType('unit'); toggleSortReverse()">
+							Unit
+							<span ng-show="sortTypeIs('unit') && !sortReverse" class="fa fa-caret-down"></span>
+							<span ng-show="sortTypeIs('unit') && sortReverse" class="fa fa-caret-up"></span>
+						</a>
+					</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="variable in filtered = (variables | filter:filter.input) | orderBy: sortType:sortReverse | limitTo: pageSize track by variable.name">
+					<td><input type="checkbox" ng-model="variable.selected" ng-change="updateSelection(variable)"></td>
+					<td>{{variable.name}}</td>
+					<td>{{variable.desc}}</td>
+					<td>{{variable.group.name}}</td>
+					<td>{{variable.unit}}</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<div ng-show="filtered.length == 0">
+			<p class="text-info">Result set is empty. Filter the results by typing to the above field.</p>
+		</div>
+
+		<div ng-show="filtered.length > pageSize">
+			<p class="text-info">Showing first {{pageSize}} results of {{filtered.length}} variables</p>
+		</div>		
+	</div>
+
+
+	<div ng-switch-when="false" class="container-fluid am-fade">
+		<div class="row">
+			<div class="list-group col-md-3">
+				<a class="list-group-item ctrl" ng-repeat="group in nested | orderBy:getGroupName track by $index" ng-click="selectGroup(group, 'first')" ng-class="{ 'active': isSelected(group, 'first') }">
+					{{getGroupName(group)}}
+				</a>
+			</div>
+
+			<div class="list-group col-md-3">
+				<div ng-switch="getType(selected.first)">
+					<a class="list-group-item ctrl am-fade" ng-switch-when="continues" ng-repeat="group in selected.first | orderBy:getGroupName track by $index" ng-click="selectGroup(group, 'second')" ng-class="{ 'active': isSelected(group, 'second') }">
+						{{getGroupName(group)}}
+					</a>
+					<div ng-switch-when="terminates">
+						<div class="list-group-item ctrl am-fade" ng-repeat="variable in selected.first | orderBy:'name_order' track by $index" ng-click="selectInfo(variable)">
+							<div class="checkbox">
+								<label for="var{{$index}}">
+									<input type="checkbox" name="var{{$index}}" id="var{{$index}}" ng-model="variable.selected" ng-change="checkboxToggled(variable)">
+									{{variable.name}}
+								</label>
+							</div>
+						</div>
+						<div ng-switch="majoritySelected(selected.first)">
+							<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="true" ng-click="deselectAll(selected.first)">
+								<strong>Deselect all</strong>
+							</div>
+							<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="false" ng-click="selectAll(selected.first)">
+								<strong>Select all</strong>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="list-group col-md-3">
+				<div ng-switch="getType(selected.second)">
+					<a class="list-group-item ctrl am-fade" ng-switch-when="continues" ng-repeat="group in selected.second | orderBy:getGroupName track by $index">
+						{{getGroupName(group)}}
+					</a>
+					<div ng-switch-when="terminates">
+						<div class="list-group-item ctrl am-fade" ng-repeat="variable in selected.second | orderBy:'name_order' track by $index" ng-click="selectInfo(variable)">
+							<div class="checkbox">
+								<label for="var{{$index}}">
+									<input type="checkbox" name="var{{$index}}" id="var{{$index}}" ng-model="variable.selected">
+									{{variable.name}}
+								</label>
+							</div>
+						</div>
+						<div ng-switch="majoritySelected(selected.second)">
+							<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="true" ng-click="deselectAll(selected.second)">
+								<strong>Deselect all</strong>
+							</div>
+							<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="false" ng-click="selectAll(selected.second)">
+								<strong>Select all</strong>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="list-group col-md-3 am-fade" ng-show="selected.third">
+				<div class="list-group-item">
+					<h3>{{selected.third.desc}}</h3>
+					<p>{{selected.third.unit}}</p>
+					<em>{{selected.third.name}}</em>
+				</div>
+			</div>
+		</div>
+</div>
+
+
+<!-- <md-content layout="row" layout-fill layout-align="start start">
+	<md-card flex="40">
+		<md-card-content>
+		<md-list>
+	      <md-subheader class="md-no-sticky">Variable groups</md-subheader>
+	      <md-list-item class="md-2-line" ng-repeat="varArray in groups" ng-click="openGroup(varArray)" ng-class="{true: 'selected', false: ''}[selected.group == varArray]">
+	        <div class="md-list-item-text">
+	          <h3>{{ varArray[0].group.name }}</h3>
+	        </div>
+	        <md-divider ng-if="!$last"></md-divider>
+	      </md-list-item>
+		</md-list>
+		</md-card-content>
+	</md-card>
+
+	<md-card flex="50">
+		<md-card-content>
+		<md-list>
+	      <md-subheader class="md-no-sticky">Variables</md-subheader>
+	      <md-list-item class="md-2-line" ng-repeat="variable in selectedGroup track by $index">
+	        <div class="md-list-item-text">
+	          <h3>{{ variable.desc }}</h3>
+	          <h4>{{ variable.name }}</h3>
+	          <p>({{ variable.unit }})</p>
+	          <md-checkbox class="md-secondary" ng-model="variable.selected" ng-change="updateSelection(variable)"></md-checkbox>
+	        </div>
+	        <md-divider ng-if="!$last"></md-divider>
+	    	</md-list-item>
+		</md-list>
+		</md-card-content>
+	</md-card>
+
+</md-content> -->

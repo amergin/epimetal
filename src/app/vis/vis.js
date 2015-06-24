@@ -19,9 +19,10 @@
   'services.som',
   'services.tab',
   'services.notify',
-  'ui.layout',
+  // 'ui.layout',
   'ngProgress',
-  'progressBarInterceptor'
+  'progressBarInterceptor',
+  'angularResizable'
   ] );
 
  vis.config(['$stateProvider', '$urlRouterProvider', 'ngProgressProvider', function ($stateProvider, $urlRouterProvider, ngProgressProvider) {
@@ -88,6 +89,10 @@
       'header@': {
         templateUrl: 'vis/vis.header.tpl.html',
         controller: 'HeaderCtrl'
+      },
+      'sidenav@': {
+        templateUrl: 'vis/vis.sidenav.tpl.html',
+        controller: 'SidenavCtrl'
       }
     }
   };
@@ -110,11 +115,11 @@
       'explore@vis': {
         controller: 'ExploreController',
         templateUrl: 'vis/explore/explore.tpl.html'
-      },
-      'submenu-explore@vis': {
-        controller: 'ExploreMenuCtrl',
-        templateUrl: 'vis/explore/explore.submenu.tpl.html'
       }
+      // 'submenu-explore@vis': {
+      //   controller: 'ExploreMenuCtrl',
+      //   templateUrl: 'vis/explore/explore.submenu.tpl.html'
+      // }
     },
     deepStateRedirect: true,
     sticky: true
@@ -225,10 +230,10 @@
     reloadOnSearch: false,
     data: { pageTitle: 'Regression analysis | Visualization' },
     views: {
-      'submenu-regression@vis': {
-        templateUrl: 'vis/regression/regression.submenu.tpl.html',
-        controller: 'RegressionSubmenuController'
-      },
+      // 'submenu-regression@vis': {
+      //   templateUrl: 'vis/regression/regression.submenu.tpl.html',
+      //   controller: 'RegressionSubmenuController'
+      // },
       'regression@vis': {
         templateUrl: 'vis/regression/regression.tpl.html',
         controller: 'RegressionController'
@@ -259,15 +264,27 @@
 }]);
 
 
- vis.controller( 'HeaderCtrl', ['$scope', '$stateParams', '$injector', '$state',
-  function ($scope, $stateParams, $injector, $state) {
+ vis.controller( 'HeaderCtrl', ['$scope', '$stateParams', '$injector', '$state', 'TabService',
+  function ($scope, $stateParams, $injector, $state, TabService) {
 
     $scope.tabs = [
     { 'title': 'Explore and filter', 'name': 'explore' },
     { 'title': 'Self-organizing maps', 'name': 'som' },
     { 'title': 'Regression analysis & associations', 'name': 'regression' }
     ];
-    $scope.tabs.activeTab = 0;
+
+    function getTabInd() {
+      var state = TabService.activeState();
+      if(state.name == 'vis.explore') {
+        return 0;
+      } else if( _.startsWith(state.name, 'vis.som') ) {
+        return 1;
+      } else if( state.name == 'vis.regression' ) {
+        return 2;
+      }
+    }
+
+    $scope.headerTabInd = getTabInd();
 
     // quickfix: http://stackoverflow.com/questions/22054391/angular-ui-router-how-do-i-get-parent-view-to-be-active-when-navigating-to-ne
     $scope.$state = $state;
@@ -276,9 +293,171 @@
 
   }]);
 
+  vis.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$mdSidenav', '$injector', '$mdMedia',
+    function ($scope, TabService, $rootScope, NotifyService, $mdSidenav, $injector, $mdMedia) {
 
- vis.controller( 'VisCtrl', ['$scope', 'DimensionService', 'DatasetFactory', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets', '$q', 'SOMService', 'TabService', 'NotifyService',
-  function VisController( $scope, DimensionService, DatasetFactory, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets, $q, SOMService, TabService, NotifyService) {
+      $scope.openGraphModal = function(ev) {
+        var diagScope = $rootScope.$new(true);
+
+        diagScope.config = {
+          title: 'Create a new graph',
+          template: 'vis/menucomponents/new.graph.tpl.html',
+          actions: {
+            submit: 'Create a graph',
+            cancel: 'Cancel and close'
+          }
+        };
+
+        var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
+          controller: 'ModalCtrl'
+        }, ev);
+
+        promise.then(function(config) {
+
+          $mdSidenav('left').toggle();
+          var PlotService = $injector.get('PlotService'),
+          WindowHandler = $injector.get('WindowHandler');
+          var winHandler = WindowHandler.getVisible()[0];
+
+          function postHistogram(array) {
+            _.each(array, function(variable) {
+              PlotService.drawHistogram({
+                variables: {
+                  x: variable.name
+                }, 
+                pooled: false,
+                somSpecial: false
+              }, winHandler);
+            });
+          }
+
+          function postHeatmap(array) {
+            function processVariables(array) {
+              return _.chain(array)
+              .map(function(v) {
+                return v.name;
+              }).value();
+            }
+
+            PlotService.drawHeatmap({
+              variables: {
+                x: processVariables(array)
+              }
+            }, winHandler);
+          }
+
+          function postScatterplot(selection) {
+            PlotService.drawScatter({
+              variables: {
+                x: selection.x.name,
+                y: selection.y.name
+              }, 
+              pooled: false
+            }, winHandler);
+          }
+
+          switch(config.type) {
+            case 'histogram':
+              postHistogram(config.selection);
+              break;
+
+            case 'scatterplot':
+              postScatterplot(config.selection);
+              break;
+
+            case 'heatmap':
+              postHeatmap(config.selection);
+              break;
+          }
+
+        });
+    };
+
+    $rootScope.sideMenuVisible = function(id) {
+      return $mdSidenav(id).isOpen();
+    };
+
+    function isWide() {
+      return $mdMedia('min-width: 1280px');
+    }
+
+    $scope.$watch(function() {
+      return isWide();
+    }, function(isWide) {
+      $scope.isLocked = isWide;
+    });
+
+    $scope.isClosed = false;
+    $scope.isLocked = isWide();
+
+    $scope.close = function(id) {
+      $scope.isLocked = !$scope.isLocked;
+      $mdSidenav(id).close();
+    };
+
+    $scope.openRegressionModal = function(ev) {
+      var diagScope = $rootScope.$new(true);
+
+      diagScope.config = {
+        title: 'Create a regression view',
+        template: 'vis/menucomponents/new.regression.tpl.html',
+        actions: {
+          submit: 'Compute regression',
+          cancel: 'Cancel and close'
+        }        
+      };
+
+      var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
+        controller: 'ModalCtrl'
+      }, ev);
+
+      promise.then(function(config) {
+
+      });      
+    };
+
+
+      $scope.getMenuButtonType = function() {
+        var state = TabService.activeState();
+        if(state.name === 'vis.regression') {
+          return 'regression';
+        } else {
+          return 'default';
+        }
+      };     
+    }
+  ]);
+
+
+ vis.controller( 'ModalCtrl', ['$scope', '$mdDialog', 'DatasetFactory',
+  function ($scope, $mdDialog, DatasetFactory) {
+
+    $scope.canSubmit = {
+      initial: function() {
+        return _.isNull($scope.canSubmit.inherited) ? false : $scope.canSubmit.inherited();
+      },
+      inherited: null
+    };
+
+    $scope.submit = {
+      initial: function() {
+        $mdDialog.hide($scope.submit.inherited());
+      },
+      inherited: null
+    };
+
+    $scope.cancel = {
+      initial: function() {
+        $mdDialog.cancel( !$scope.cancel.inherited ? {} : $scope.cancel.inherited() );
+      },
+      inherited: null
+    };
+
+  }]); 
+
+
+ vis.controller( 'VisCtrl', ['$scope', 'DimensionService', 'DatasetFactory', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets', '$q', 'SOMService', 'TabService', 'NotifyService', '$mdDialog', '$mdSidenav',
+  function VisController( $scope, DimensionService, DatasetFactory, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets, $q, SOMService, TabService, NotifyService, $mdDialog, $mdSidenav) {
     console.log("viscontroller");
 
     var $rootScope = $injector.get('$rootScope');

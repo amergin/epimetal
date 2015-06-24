@@ -16,6 +16,7 @@ class Sample(DynamicDocument):
 	}
 
 class HeaderGroup(Document):
+	topgroup = StringField(unique=False, required=False)
 	name = StringField(unique=True)
 	order = IntField(required=True, unique=True)
 

@@ -47,7 +47,7 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
         // explore -> som.*
         if( _.startsWith(toState.name, 'vis.som') ) {
           // check differences and recompute & refresh if necessary
-          checkSOMState();
+          // checkSOMState();
         }
         // explore -> regression
         else if( _.startsWith(toState.name, 'vis.regression') ) {
@@ -59,7 +59,7 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
         // regression -> som
         if( _.startsWith(toState.name, 'vis.som') ) {
           // check differences and recompute & refresh if necessary
-          checkSOMState();
+          // checkSOMState();
         }
       }
     });

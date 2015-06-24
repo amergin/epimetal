@@ -575,3 +575,512 @@ vis.directive('linkCreator', function () {
     }
   };
 });
+
+
+vis.controller('NewGraphMenuCtrl', ['$scope', 'DatasetFactory',
+  function NewGraphMenuCtrl($scope, DatasetFactory) {
+
+    $scope.tab = {
+      ind: 0
+    };
+
+    function getSelection() {
+      if($scope.tab.ind === 0) {
+        return $scope.histogram.selection;
+      }
+      else if($scope.tab.ind === 1) {
+        return $scope.scatterplot;
+      } else if($scope.tab.ind === 2) {
+        return $scope.heatmap.selection;
+      }      
+    }
+
+    $scope.histogram = {
+      selection: []
+    };
+    $scope.scatterplot = {
+      x: null,
+      y: null
+    };
+    $scope.heatmap = {
+      selection: []
+    };
+
+    // controllers of the menu dialog:
+    $scope.canSubmit = function() {
+      var selection = getSelection();
+      if($scope.tab.ind === 0) {
+        return selection.length > 0;
+      }
+      else if($scope.tab.ind === 1) {
+        return !_.isUndefined(selection.x) &&
+        !_.isNull(selection.x) &&
+        !_.isUndefined(selection.y) &&
+        !_.isNull(selection.y);
+      } else if($scope.tab.ind === 2) {
+        return selection.length > 0;
+      }
+    };
+
+    $scope.submit = function() {
+      function getType() {
+        return $scope.tabs[$scope.tab.ind].label.toLowerCase();
+      }
+      return {
+        type: getType(),
+        selection: getSelection()
+      };
+    };
+
+    $scope.cancel = function() {
+    };
+
+    $scope.tabs = [
+      {
+        label: 'Histogram'
+      },
+      {
+        label: 'Scatterplot'
+      },
+      {
+        label: 'Heatmap'
+      }
+    ];
+  }
+]);
+
+vis.directive('newGraphMenu', function () {
+  return {
+    restrict: 'C',
+    scope: {
+      canSubmit: "=reCanSubmit",
+      submit: "=reSubmit",
+      cancel: "=reCancel"
+    },
+    replace: true,
+    controller: 'NewGraphMenuCtrl',
+    templateUrl: 'vis/menucomponents/new.graphmenu.tpl.html',
+    link: function (scope, elm, attrs) {
+    }
+  };
+});
+
+vis.directive('graphTabScatterplot', function () {
+  return {
+    restrict: 'C',
+    replace: false,
+    scope: {
+      payloadX: "=reSelectionX",
+      payloadY: "=reSelectionY"
+    },
+    require: '^?newGraphMenu',
+    controller: 'GraphTabScatterplotCtrl',
+    templateUrl: 'vis/menucomponents/tab.scatterplot.tpl.html',
+    link: function (scope, elm, attrs) {
+    }
+  };
+});
+
+vis.controller('GraphTabScatterplotCtrl', ['$scope', 'DatasetFactory',
+  function GraphTabScatterplotCtrl($scope, DatasetFactory) {
+
+    $scope.payloadX = null;
+    $scope.searchTextX = null;
+    $scope.payloadY = null;
+    $scope.searchTextY = null;
+
+    $scope.querySearch = function(query) {
+      var results = query ? $scope.variables.filter($scope.createFilterFor(query)) : [];
+      return results;
+    };
+
+    $scope.createFilterFor = function(query) {
+      var lowercaseQuery = angular.lowercase(query);
+
+      return function filterFn(variable) {
+        return (variable.name.toLowerCase().indexOf(lowercaseQuery) === 0) ||
+        (variable.desc.toLowerCase().indexOf(lowercaseQuery) === 0);
+      };
+    };
+
+    DatasetFactory.getVariables().then(function(res) {
+      $scope.variables = angular.copy(res);
+    });
+
+  }
+]);
+
+
+vis.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory',
+  function RegressionMenuCtrl($scope, DatasetFactory) {
+
+    $scope.adjust = {
+      selection: []
+    };
+
+    $scope.association = {
+      selection: []
+    };
+
+    $scope.target = null;
+
+    // controllers of the menu dialog:
+    $scope.canSubmit = function() {
+      return false;
+    };
+
+    $scope.submit = function() {
+      return {
+        type: 'regression',
+        selection: $scope.selections
+      };
+    };
+
+    $scope.cancel = function() {
+    };
+
+
+  }
+]);
+
+vis.directive('newRegressionMenu', function () {
+  return {
+    restrict: 'C',
+    replace: false,
+    scope: {
+      canSubmit: "=reCanSubmit",
+      submit: "=reSubmit",
+      cancel: "=reCancel"
+    },
+    controller: 'RegressionMenuCtrl',
+    templateUrl: 'vis/menucomponents/regression.modal.tpl.html',
+    link: function (scope, elm, attrs) {
+    }
+  };
+});
+
+
+// custom
+vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
+  function MultipleVariableSelectionCtrl($scope, DatasetFactory) {
+
+    // the results go here
+    $scope.payload = [];
+
+    $scope.searchText = null;
+
+    $scope.selectedVariable = null;
+
+    $scope.selectedGroup = null;
+
+    $scope.openGroup = function(selection) {
+      $scope.selectedGroup = selection;
+    };
+
+    $scope.querySearch = function(query) {
+      var results = query ? $scope.variables.filter($scope.createFilterFor(query)) : [];
+      return results;
+    };
+
+    $scope.addVariable = function(variable) {
+      variable.selected = true;
+      return variable;
+    };
+
+    $scope.falsyAdd = function(variable) {
+      // nothing
+    };
+
+    $scope.removeVariable = function(variable) {
+      variable.selected = false;
+    };
+
+    $scope.$watchCollection(function() {
+      return $scope.payload;
+    }, function(newArray, oldArray) {
+      if(newArray.length < oldArray.length) {
+        // removed one
+        var removed = _.difference(oldArray, newArray);
+        removed[0].selected = false;
+      }
+    });
+
+    $scope.createFilterFor = function(query) {
+      var lowercaseQuery = angular.lowercase(query);
+
+      return function filterFn(variable) {
+        return (variable.name.toLowerCase().indexOf(lowercaseQuery) === 0) ||
+        (variable.desc.toLowerCase().indexOf(lowercaseQuery) === 0);
+      };
+    };
+
+    $scope.updateSelection = function(variable) {
+      // find index
+      var variables = $scope.payload;
+      var ind = _.findIndex(variables, function(v) {
+        return v == variable;
+      });
+
+      if(ind < 0) {
+        if(variable.selected) {
+          // not previously on the list
+          variables.push(variable);
+        }
+      } else {
+        // is on the list
+        if(variable.selected) {
+          // do nothing
+        } else {
+          variables.splice(ind,1);
+        }
+      }
+    };
+
+    $scope.inputIsDefined = function(input) {
+      return !_.isUndefined(input) && !_.isNull(input) && input.length > 0;
+    };
+
+    $scope.getGroupName = function(array) {
+      var first = _.first(array),
+      topGroup = first.group.topgroup;
+      return topGroup ? topGroup : first.group.name;
+    };
+
+
+    function groupVariables(variables, useTop) {
+      return _.chain(variables)
+      .groupBy(function(v) {
+        if(useTop) {
+          return _.isNull(v.group.topgroup) ? v.group.name : "_" + v.group.topgroup;
+        } else {
+          return v.group.name;
+        }
+      })
+      .values()
+      .sortBy(function(g) { return g[0].group.order; } )
+      .value();      
+    }
+
+    DatasetFactory.getVariables().then(function(res) {
+      $scope.variables = angular.copy(res);
+      $scope.nested = getNestedNavigation($scope.variables);
+      // $scope.groups.first = groupVariables($scope.variables, true);
+    });
+
+
+    // For group navigation
+    function getNestedNavigation(variables) {
+      var topGrouped = _.chain(variables)
+      .groupBy(function(v) {
+        return _.isNull(v.group.topgroup) ? v.group.name : "_" + v.group.topgroup;
+      })
+      .value();
+
+      var nested = _.map(topGrouped, function(val, key) {
+        var hasTopGroup = !_.isNull(val[0].group.topgroup);
+        if(hasTopGroup) {
+          var raw2 = _.chain(val)
+          .groupBy(function(v) {
+            return v.group.name;
+          })
+          .value();
+          return raw2;
+        }
+        else {
+          var obj = {};
+          obj[key] = val;
+          return obj;
+        }
+      });
+      return nested;
+    }
+
+    $scope.checkboxToggled = function(variable) {
+      if(variable.selected) {
+        $scope.payload.push(variable);
+      } else {
+        var ind = _.indexOf($scope.payload, variable);
+        if(ind < 0) {
+          // not present
+        } else {
+          $scope.payload.splice(ind, 1);
+        }
+      }
+    };
+
+    $scope.majoritySelected = function(selection) {
+      var counts = _.countBy(selection, function(v) { return v.selected; }),
+      total = selection.length;
+      return counts.true / total > 0.5;
+    };
+
+    $scope.selectAll = function(selection) {
+      var ind;
+      _.each(selection, function(vari) {
+        vari.selected = true;
+        // check it's not already added
+        ind = _.indexOf($scope.payload, vari);
+        if(ind < 0) {
+          $scope.payload.push(vari);
+        }
+      });
+    };
+
+    $scope.deselectAll = function(selection) {
+      var ind;
+      _.each(selection, function(vari) {
+        vari.selected = false;
+        ind = _.indexOf($scope.payload, vari);
+        if(ind > -1) {
+          $scope.payload.splice(ind, 1);
+        }
+      });
+    };
+
+    $scope.selected = {
+      first: null,
+      second: null,
+      third: null,
+      all: {
+        first: false,
+        second: false
+      }
+    };
+
+    function getKeys(group) {
+      return _.chain(group)
+      .keys()
+      .value();
+    }
+
+    $scope.getValue = function(group) {
+      return _.chain(group)
+      .values()
+      .first()
+      .value();
+    };
+
+    function getNextLevel(level) {
+      if(level == 'first') { return 'second'; }
+      if(level == 'second') { return 'third'; }
+      return null;      
+    }
+
+    function getPreviousLevel(level) {
+      if(level == 'second') { return 'first'; }
+      if(level == 'third') { return 'second'; }
+      return null;
+    }
+
+    function clearNextSelections(level) {
+      var iLevel;
+      function flush(level) {
+        $scope.selected[level] = null;
+      }
+
+      iLevel = level;
+      do {
+        iLevel = getNextLevel(iLevel);
+        flush(iLevel);
+      } while( !_.isNull(iLevel) );
+    }
+
+    function getGroupSelection(group, level) {
+      var keys = getKeys(group), ret;
+      if(keys.length > 1) {
+        // navigation goes on
+        ret = _.map(group, function(v,k) { var obj = {}; obj[k] = v; return obj; });
+      } else {
+        // end of navigation
+        ret = _.chain(group).values().first().value();
+      }
+      return ret;
+    }
+
+    $scope.selectGroup = function(group, level) {
+      var keys = getKeys(group);
+      $scope.selected[level] = getGroupSelection(group, level);
+      clearNextSelections(level);
+    };
+
+    $scope.selectInfo = function(variable) {
+      $scope.selected['third'] = variable;
+    };
+
+    $scope.isChecked = function(variable) {
+      return !_.isUndefined(variable.selected) && variable.selected === true;
+    };
+
+    $scope.getGroupName = function(group) {
+      var keys = getKeys(group);
+      if(keys.length > 1) {
+        // get top group name
+        var topName = _.chain(group)
+        .sample()
+        .first()
+        .value()
+        .group.topgroup;
+        return topName;
+      } else {
+        return _.first(keys);
+      }
+    };
+
+    $scope.isSelected = function(group, level) {
+      var selected = getGroupSelection(group, level);
+      return _.isEqual($scope.selected[level], selected);
+    };
+
+    $scope.getType = function(selection) {
+      var first = _.first(selection);
+      if( _.has(first, 'name_order') ) {
+        return 'terminates';
+      } else {
+        return 'continues';
+      }
+    };
+
+
+    // For table section
+    $scope.filter = {
+      input: null
+    };
+    $scope.pageSize = 40;
+    $scope.sortReverse = false;
+    $scope.sortType = 'name';
+
+    $scope.loadMore = function(number) {
+      $scope.pageSize += number;
+    };
+
+    $scope.sortType = 'name';
+
+    $scope.setSortType = function(type) {
+      $scope.sortType = type;
+    };
+
+    $scope.sortTypeIs = function(type) {
+      return $scope.sortType == type;
+    };
+
+    $scope.toggleSortReverse = function() {
+      $scope.sortReverse = !$scope.sortReverse;
+    };
+
+  }
+]);
+
+vis.directive('multipleVariableSelection', function () {
+  return {
+    restrict: 'C',
+    replace: false,
+    scope: {
+      'payload': "=reSelection"
+    },
+    controller: 'MultipleVariableSelectionCtrl',
+    templateUrl: 'vis/menucomponents/multiple-variable-selection.tpl.html',
+    link: function (scope, elm, attrs) {
+    }
+  };
+});
+
