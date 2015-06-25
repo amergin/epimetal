@@ -599,8 +599,8 @@ vis.controller('NewGraphMenuCtrl', ['$scope', 'DatasetFactory',
       selection: []
     };
     $scope.scatterplot = {
-      x: null,
-      y: null
+      x: [],
+      y: []
     };
     $scope.heatmap = {
       selection: []
@@ -767,6 +767,12 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
     // the results go here
     $scope.payload = [];
 
+    $scope.payloadX = [];
+    $scope.payloadY = [];
+
+
+    //$scope.mode is from directive init
+
     $scope.searchText = null;
 
     $scope.selectedVariable = null;
@@ -820,38 +826,75 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
       else { variable.selected = !variable.selected; }
     };
 
-    $scope.updateSelection = function(variable) {
-      // find index
-      var variables = $scope.payload;
-      var ind = _.findIndex(variables, function(v) {
-        return v == variable;
+    function deselectAllVariables(skip) {
+      _.each($scope.variables, function(v) {
+        if(v !== skip) {
+          v.selected = false;
+        }
       });
+    }
 
-      if(ind < 0) {
-        if(variable.selected) {
-          // not previously on the list
-          variables.push(variable);
-        }
-      } else {
-        // is on the list
-        if(variable.selected) {
-          // do nothing
+    $scope.updateSelection = function(variable) {
+      function multi() {
+        // find index
+        var variables = $scope.payload;
+        var ind = _.findIndex(variables, function(v) {
+          return v == variable;
+        });
+
+        if(ind < 0) {
+          if(variable.selected) {
+            // not previously on the list
+            variables.push(variable);
+          }
         } else {
-          variables.splice(ind,1);
+          // is on the list
+          if(variable.selected) {
+            // do nothing
+          } else {
+            variables.splice(ind,1);
+          }
         }
+      }
+
+      function scatterplot() {
+        if(variable.selected) {          
+          deselectAllVariables(variable);
+          setScatterplotPayload([variable]);
+        } else {
+          setScatterplotPayload([]);
+        }
+      }
+
+      if($scope.mode == 'multi') { multi(); }
+      else if($scope.mode == 'scatterplot') { scatterplot(); }
+    };
+
+    $scope.getInputField = function()  {
+      if($scope.mode == 'scatterplot') {
+        if($scope.focus.x) {
+          return $scope.filter.x;
+        } else {
+          return $scope.filter.y;
+        }
+
+      } else if($scope.mode == 'multi') {
+        return $scope.filter.input;
       }
     };
 
-    $scope.inputIsDefined = function(input) {
-      return !_.isUndefined(input) && !_.isNull(input) && input.length > 0;
+    $scope.tableFilter = function(variable, ind, array) {
+      function lower(str) {
+        return _.isString(str) ? str.toLowerCase() : str;
+      }
+      var input = $scope.getInputField();
+      return _.contains(lower(variable.name), lower(input)) || _.contains(lower(variable.desc), lower(input)) || _.contains(lower(variable.group.name), lower(input));
     };
 
-    // $scope.getGroupName = function(array) {
-    //   var first = _.first(array),
-    //   topGroup = first.group.topgroup;
-    //   return topGroup ? topGroup : first.group.name;
-    // };
-
+    $scope.inputIsDefined = function() {
+      var input = $scope.getInputField();
+      return !_.isUndefined(input) && !_.isNull(input) && input.length > 0;
+    };
 
     function groupVariables(variables, useTop) {
       return _.chain(variables)
@@ -872,6 +915,11 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
       $scope.nested = getNestedNavigation($scope.variables);
       // $scope.groups.first = groupVariables($scope.variables, true);
     });
+
+    function setScatterplotPayload(value) {
+      if($scope.focus.x) { $scope.payloadX = value; }
+      else { $scope.payloadY = value; }
+    }
 
 
     // For group navigation
@@ -908,16 +956,30 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
     }
 
     $scope.checkboxToggled = function(variable) {
-      if(variable.selected) {
-        $scope.payload.push(variable);
-      } else {
-        var ind = _.indexOf($scope.payload, variable);
-        if(ind < 0) {
-          // not present
+      function multi() {
+        if(variable.selected) {
+          $scope.payload.push(variable);
         } else {
-          $scope.payload.splice(ind, 1);
+          var ind = _.indexOf($scope.payload, variable);
+          if(ind < 0) {
+            // not present
+          } else {
+            $scope.payload.splice(ind, 1);
+          }
         }
       }
+
+      function scatterplot() {
+        deselectAllVariables(variable);
+        if(variable.selected) {
+          setScatterplotPayload([variable]);
+        } else {
+          setScatterplotPayload([]);
+        }
+      }
+
+      if($scope.mode == 'multi') { multi(); }
+      else if($scope.mode == 'scatterplot') { scatterplot(); }
     };
 
     $scope.majoritySelected = function(selection) {
@@ -931,6 +993,10 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
         return false;
       });
       return (counts.true || 0) / noVars > 0.5;
+    };
+
+    $scope.getMode = function() {
+      return $scope.mode;
     };
 
     $scope.selectAll = function(selection) {
@@ -1066,33 +1132,12 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
         .first()
         .value();
       }
-      // var keys = getKeys(group);
-      // if(keys.length > 1) {
-      //   // get top group name
-      //   var topName = _.chain(group)
-      //   .sample()
-      //   .first()
-      //   .value()
-      //   .group.topgroup;
-      //   return topName;
-      // } else {
-      //   return _.first(keys);
-      // }
     };
 
     $scope.isSelected = function(group, level) {
       var selected = getGroupSelection(group, level);
       return _.isEqual($scope.selected[level], selected);
     };
-
-    // $scope.getType = function(selection) {
-    //   var first = _.first(selection);
-    //   if( _.has(first, 'name_order') ) {
-    //     return 'terminates';
-    //   } else {
-    //     return 'continues';
-    //   }
-    // };
 
     $scope.getType = function(group) {
       if( _.has(group, 'name_order') ) {
@@ -1111,10 +1156,27 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
       }
     };
 
+    $scope.setFocus = function(field) {
+      deselectAllVariables();
+      var cpart = (field == 'x') ? 'y' : 'x';
+      $scope.focus[field] = true;
+      $scope.focus[cpart] = false;
+    };
+
+    $scope.unfocus = function(field) {
+      $scope.focus[field] = false;
+    };
+
+    $scope.focus = {
+      x: true,
+      y: false
+    };
 
     // For table section
     $scope.filter = {
-      input: null
+      input: null,
+      x: null,
+      y: null
     };
     $scope.pageSize = 40;
     $scope.sortReverse = false;
@@ -1146,7 +1208,10 @@ vis.directive('multipleVariableSelection', function () {
     restrict: 'C',
     replace: false,
     scope: {
-      'payload': "=reSelection"
+      'payload': "=?reSelection",
+      'payloadX': "=?reSelectionX",
+      'payloadY': "=?reSelectionY",
+      'mode': "=reMode" // either 'scatterplot' or 'multi'
     },
     controller: 'MultipleVariableSelectionCtrl',
     templateUrl: 'vis/menucomponents/multiple-variable-selection.tpl.html',

@@ -349,8 +349,8 @@
           function postScatterplot(selection) {
             PlotService.drawScatter({
               variables: {
-                x: selection.x.name,
-                y: selection.y.name
+                x: _.first(selection.x).name,
+                y: _.first(selection.y).name
               }, 
               pooled: false
             }, winHandler);

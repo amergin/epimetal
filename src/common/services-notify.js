@@ -10,7 +10,7 @@ var serv = angular.module('services.notify', [
 serv.config(['growlProvider', function(growlProvider) {
     growlProvider.onlyUniqueMessages(false);
     growlProvider.globalTimeToLive(6000);
-    growlProvider.globalPosition('top-left');
+    growlProvider.globalPosition('bottom-right');
 }]);
 
 serv.factory('NotifyService', ['$injector', '$timeout', 'growl',

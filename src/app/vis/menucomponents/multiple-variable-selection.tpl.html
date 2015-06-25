@@ -1,16 +1,38 @@
-<md-card flex="100">
- <md-card-content>
- <md-chips ng-model="payload">
-	<input type="text" id="query" ng-model="filter.input" placeholder="Type to search for a variable"/>
-	<md-chip-template>
-		<strong>{{$chip.name}}</strong>
-		<em>({{$chip.desc}})</em>
-	</md-chip-template>
- </md-chips>
- </md-card-content>
+<md-card flex="100" ng-switch="mode">
+
+	 <md-card-content ng-switch-when="multi">
+	 <md-chips ng-model="payload">
+		<input type="text" id="query" ng-model="filter.input" placeholder="Type to search for a variable"/>
+		<md-chip-template>
+			<strong>{{$chip.name}}</strong>
+			<em>({{$chip.desc}})</em>
+		</md-chip-template>
+	 </md-chips>
+	 </md-card-content>
+
+	 <div ng-switch-when="scatterplot" layout>
+	   <md-card flex="45">
+		<md-chips ng-model="payloadX">
+			<input type="text" id="query-x" ng-model="filter.x" ng-focus="setFocus('x')" placeholder="Variable X - Type to search for a variable" autofocus/>
+			<md-chip-template>
+				<strong>{{$chip.name}}</strong>
+				<em>({{$chip.desc}})</em>
+			</md-chip-template>
+		 </md-chips>
+	   </md-card>
+	   <md-card flex="45">
+		<md-chips ng-model="payloadY">
+			<input type="text" id="query-y" ng-model="filter.y" ng-focus="setFocus('y')" placeholder="Variable Y - Type to search for a variable"/>
+			<md-chip-template>
+				<strong>{{$chip.name}}</strong>
+				<em>({{$chip.desc}})</em>
+			</md-chip-template>
+		 </md-chips>
+	   </md-card>
+     </div>
 </md-card>
 
-<div ng-switch="inputIsDefined(filter.input)">
+<div ng-switch="inputIsDefined()">
 	<div ng-switch-when="true" class="am-fade">
 		<table class="table table-striped">
 			<thead>
@@ -49,7 +71,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr ng-repeat="variable in filtered = (variables | filter:filter.input) | orderBy: sortType:sortReverse | limitTo: pageSize track by variable.name" ng-click="toggleVariable(variable); updateSelection(variable, $event)">
+				<tr ng-repeat="variable in filtered = (variables | filter:tableFilter) | orderBy: sortType:sortReverse | limitTo: pageSize track by variable.name" ng-click="toggleVariable(variable); updateSelection(variable, $event)">
 					<td><input type="checkbox" ng-change="updateSelection(variable, $event)" ng-model="variable.selected" noclick></td>
 					<td>{{variable.name}}</td>
 					<td>{{variable.desc}}</td>
@@ -92,7 +114,7 @@
 					</div>
 				</div>
 
-				<div ng-switch="majoritySelected(selected.first)" ng-show="selectedHasVariables(selected.first)">
+				<div ng-switch="majoritySelected(selected.first)" ng-show="selectedHasVariables(selected.first) && getMode() !== 'scatterplot'">
 					<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="true" ng-click="deselectAll(selected.first)">
 						<strong>Deselect all</strong>
 					</div>
@@ -115,7 +137,7 @@
 					</div>
 				</div>
 
-				<div ng-switch="majoritySelected(selected.second)" ng-show="selectedHasVariables(selected.second)">
+				<div ng-switch="majoritySelected(selected.second)" ng-show="selectedHasVariables(selected.second) && getMode() !== 'scatterplot'">
 					<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="true" ng-click="deselectAll(selected.second)">
 						<strong>Deselect all</strong>
 					</div>
