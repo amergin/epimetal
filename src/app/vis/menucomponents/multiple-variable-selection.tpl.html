@@ -71,7 +71,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr ng-repeat="variable in filtered = (variables | filter:tableFilter) | orderBy: sortType:sortReverse | limitTo: pageSize track by variable.name" ng-click="toggleVariable(variable); updateSelection(variable, $event)">
+				<tr ng-repeat="variable in filtered = (variables | filter:tableFilter) | orderBy:sortType:sortReverse | limitTo: pageSize track by variable.name" ng-click="toggleVariable(variable); updateSelection(variable, $event)">
 					<td><input type="checkbox" ng-change="updateSelection(variable, $event)" ng-model="variable.selected" noclick></td>
 					<td>{{variable.name}}</td>
 					<td>{{variable.desc}}</td>
@@ -92,6 +92,7 @@
 
 	<div ng-switch-when="false" class="container-fluid am-fade">
 		<div class="row">
+			<!-- First column -->
 			<div class="list-group col-md-3">
 				<div class="list-group-item ctrl am-fade" ng-repeat="group in nested | orderBy:orderGroup track by $index" ng-click="selectGroup(group, 'first')" ng-class="{ 'active': isSelected(group, 'first') }">
 					{{getGroupName(group)}}
@@ -99,6 +100,7 @@
 				</div>
 			</div>
 
+			<!-- Second column -->
 			<div class="list-group col-md-3">
 				<div class="list-group-item ctrl am-fade" ng-repeat="item in selected.first | orderBy:orderGroup track by $index" ng-click="selectGroup(item, 'second')" ng-class="{ 'active': isSelected(item, 'second') }" ng-switch="getType(item)">
 					<div ng-switch-when="continues">
@@ -107,7 +109,7 @@
 					</div>
 					<div ng-switch-when="terminates" class="checkbox">
 						<label for="var-f-{{$index}}">
-							<input type="checkbox" name="var-f-{{$index}}" id="var-f-{{$index}}" ng-model="item.selected" ng-change="checkboxToggled(item)">
+							<input type="checkbox" name="var-f-{{$index}}" id="var-f-{{$index}}" ng-model="item.selected" ng-change="updateSelection(item)" noclick>
 							{{item.name}}
 						</label>
 						<i class="fa fa-info-circle pull-right text-muted" ng-click="selectInfo(item)"></i>
@@ -123,6 +125,8 @@
 					</div>
 				</div>
 			</div>
+
+			<!-- Third column -->			
 			<div class="list-group col-md-3">
 				<div class="list-group-item ctrl am-fade" ng-repeat="item in selected.second | orderBy:orderGroup track by $index" ng-switch="getType(item)">
 					<div ng-switch-when="continues">
@@ -130,7 +134,7 @@
 					</div>
 					<div ng-switch-when="terminates" class="checkbox">
 						<label for="var-s-{{$index}}">
-							<input type="checkbox" name="var-s-{{$index}}" id="var-s-{{$index}}" ng-model="item.selected" ng-change="checkboxToggled(item)">
+							<input type="checkbox" name="var-s-{{$index}}" id="var-s-{{$index}}" ng-model="item.selected" ng-change="updateSelection(item)">
 							{{item.name}}
 						</label>
 						<i class="fa fa-info-circle pull-right text-muted" ng-click="selectInfo(item)"></i>
@@ -147,6 +151,7 @@
 				</div>
 			</div>
 
+			<!-- Fourth column, shows only info about selected variable -->			
 			<div class="list-group col-md-3 am-fade" ng-show="selected.third">
 				<div class="list-group-item well well-small">
 					<h3>{{selected.third.desc}}</h3>

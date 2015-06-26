@@ -613,10 +613,8 @@ vis.controller('NewGraphMenuCtrl', ['$scope', 'DatasetFactory',
         return selection.length > 0;
       }
       else if($scope.tab.ind === 1) {
-        return !_.isUndefined(selection.x) &&
-        !_.isNull(selection.x) &&
-        !_.isUndefined(selection.y) &&
-        !_.isNull(selection.y);
+        return _.size(selection.x) > 0 &&
+        _.size(selection.y) > 0;
       } else if($scope.tab.ind === 2) {
         return selection.length > 0;
       }
@@ -770,69 +768,27 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
     $scope.payloadX = [];
     $scope.payloadY = [];
 
+    function payloadRemoveListener(newArray, oldArray) {
+      if(oldArray.length > newArray.length) {
+        // something removed
+        var diff = _.difference(oldArray, newArray)[0];
+        diff.selected = false;
+        $scope.updateSelection(diff);
+      }
+    }
+
+    $scope.$watchCollection('payload', payloadRemoveListener);
+    $scope.$watchCollection('payloadX', payloadRemoveListener);
+    $scope.$watchCollection('payloadY', payloadRemoveListener);
+
 
     //$scope.mode is from directive init
-
-    $scope.searchText = null;
-
-    $scope.selectedVariable = null;
-
-    $scope.selectedGroup = null;
-
-    $scope.openGroup = function(selection) {
-      $scope.selectedGroup = selection;
-    };
-
-    $scope.querySearch = function(query) {
-      var results = query ? $scope.variables.filter($scope.createFilterFor(query)) : [];
-      return results;
-    };
-
-    $scope.addVariable = function(variable) {
-      variable.selected = true;
-      return variable;
-    };
-
-    $scope.falsyAdd = function(variable) {
-      // nothing
-    };
-
-    $scope.removeVariable = function(variable) {
-      variable.selected = false;
-    };
-
-    $scope.$watchCollection(function() {
-      return $scope.payload;
-    }, function(newArray, oldArray) {
-      if(newArray.length < oldArray.length) {
-        // removed one
-        var removed = _.difference(oldArray, newArray);
-        removed[0].selected = false;
-      }
-    });
-
-    $scope.createFilterFor = function(query) {
-      var lowercaseQuery = angular.lowercase(query);
-
-      return function filterFn(variable) {
-        return (variable.name.toLowerCase().indexOf(lowercaseQuery) === 0) ||
-        (variable.desc.toLowerCase().indexOf(lowercaseQuery) === 0);
-      };
-    };
 
     $scope.toggleVariable = function(variable) {
       var notDefined = _.isUndefined(variable) || _.isNull(variable);
       if(notDefined) { variable.selected = true; }
       else { variable.selected = !variable.selected; }
     };
-
-    function deselectAllVariables(skip) {
-      _.each($scope.variables, function(v) {
-        if(v !== skip) {
-          v.selected = false;
-        }
-      });
-    }
 
     $scope.updateSelection = function(variable) {
       function multi() {
@@ -858,12 +814,16 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
       }
 
       function scatterplot() {
-        if(variable.selected) {          
-          deselectAllVariables(variable);
+        if(variable.selected) {
           setScatterplotPayload([variable]);
+          var activeInd = getSelectedScatterInd();
+          if(!_.isNull(activeInd)) { $scope.variables[activeInd].selected = false; }
+          var index = _.indexOf($scope.variables, variable);
+          setSelectedScatterInd(index);
         } else {
           setScatterplotPayload([]);
-        }
+          setSelectedScatterInd(null);
+        }        
       }
 
       if($scope.mode == 'multi') { multi(); }
@@ -896,24 +856,9 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
       return !_.isUndefined(input) && !_.isNull(input) && input.length > 0;
     };
 
-    function groupVariables(variables, useTop) {
-      return _.chain(variables)
-      .groupBy(function(v) {
-        if(useTop) {
-          return _.isNull(v.group.topgroup) ? v.group.name : "_" + v.group.topgroup;
-        } else {
-          return v.group.name;
-        }
-      })
-      .values()
-      .sortBy(function(g) { return g[0].group.order; } )
-      .value();      
-    }
-
     DatasetFactory.getVariables().then(function(res) {
       $scope.variables = angular.copy(res);
       $scope.nested = getNestedNavigation($scope.variables);
-      // $scope.groups.first = groupVariables($scope.variables, true);
     });
 
     function setScatterplotPayload(value) {
@@ -954,33 +899,6 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
 
       return second;
     }
-
-    $scope.checkboxToggled = function(variable) {
-      function multi() {
-        if(variable.selected) {
-          $scope.payload.push(variable);
-        } else {
-          var ind = _.indexOf($scope.payload, variable);
-          if(ind < 0) {
-            // not present
-          } else {
-            $scope.payload.splice(ind, 1);
-          }
-        }
-      }
-
-      function scatterplot() {
-        deselectAllVariables(variable);
-        if(variable.selected) {
-          setScatterplotPayload([variable]);
-        } else {
-          setScatterplotPayload([]);
-        }
-      }
-
-      if($scope.mode == 'multi') { multi(); }
-      else if($scope.mode == 'scatterplot') { scatterplot(); }
-    };
 
     $scope.majoritySelected = function(selection) {
       var noVars = 0,
@@ -1156,20 +1074,45 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
       }
     };
 
+    function getSelectedScatterInd() {
+      var active = $scope.focus.x ? 'x': 'y';
+      return $scope.selectedScatterInd[active];
+    }
+
+    function setSelectedScatterInd(ind) {
+      var active = $scope.focus.x ? 'x': 'y';
+      $scope.selectedScatterInd[active] = ind;
+    }
+
+    function setActiveScatter(active, cpart) {
+      var activeInd = $scope.selectedScatterInd[active],
+      passiveInd = $scope.selectedScatterInd[cpart];
+      if(!_.isNull(activeInd)) {
+        $scope.variables[activeInd].selected = true;
+      }
+
+      if(!_.isNull(passiveInd)) {
+        $scope.variables[passiveInd].selected = false;
+      }
+
+    }
+
     $scope.setFocus = function(field) {
-      deselectAllVariables();
       var cpart = (field == 'x') ? 'y' : 'x';
+      setActiveScatter(field, cpart);
+
       $scope.focus[field] = true;
       $scope.focus[cpart] = false;
-    };
-
-    $scope.unfocus = function(field) {
-      $scope.focus[field] = false;
     };
 
     $scope.focus = {
       x: true,
       y: false
+    };
+
+    $scope.selectedScatterInd = {
+      x: null,
+      y: null
     };
 
     // For table section
@@ -1180,12 +1123,6 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
     };
     $scope.pageSize = 40;
     $scope.sortReverse = false;
-    $scope.sortType = 'name';
-
-    $scope.loadMore = function(number) {
-      $scope.pageSize += number;
-    };
-
     $scope.sortType = 'name';
 
     $scope.setSortType = function(type) {
