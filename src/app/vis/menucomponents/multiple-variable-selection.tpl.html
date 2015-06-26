@@ -11,7 +11,7 @@
 	 </md-card-content>
 
 	 <div ng-switch-when="scatterplot" layout>
-	   <md-card flex="45">
+	   <md-card flex="50">
 		<md-chips ng-model="payloadX">
 			<input type="text" id="query-x" ng-model="filter.x" ng-focus="setFocus('x')" placeholder="Variable X - Type to search for a variable" autofocus/>
 			<md-chip-template>
@@ -20,7 +20,7 @@
 			</md-chip-template>
 		 </md-chips>
 	   </md-card>
-	   <md-card flex="45">
+	   <md-card flex="50">
 		<md-chips ng-model="payloadY">
 			<input type="text" id="query-y" ng-model="filter.y" ng-focus="setFocus('y')" placeholder="Variable Y - Type to search for a variable"/>
 			<md-chip-template>
@@ -102,17 +102,17 @@
 
 			<!-- Second column -->
 			<div class="list-group col-md-3">
-				<div class="list-group-item ctrl am-fade" ng-repeat="item in selected.first | orderBy:orderGroup track by $index" ng-click="selectGroup(item, 'second')" ng-class="{ 'active': isSelected(item, 'second') }" ng-switch="getType(item)">
-					<div ng-switch-when="continues">
+				<div class="list-group-item am-fade" ng-repeat="item in selected.first | orderBy:orderGroup track by $index" ng-click="selectGroup(item, 'second')" ng-class="{ 'active': isSelected(item, 'second') }" ng-switch="getType(item)">
+					<div ng-switch-when="continues" class="ctrl">
 						{{getGroupName(item)}}
 						<span class="badge pull-right">{{groupSelectedCount(item)}}</span>
 					</div>
 					<div ng-switch-when="terminates" class="checkbox">
-						<label for="var-f-{{$index}}">
-							<input type="checkbox" name="var-f-{{$index}}" id="var-f-{{$index}}" ng-model="item.selected" ng-change="updateSelection(item)" noclick>
+						<label>
+							<input type="checkbox" ng-model="item.selected" ng-change="updateSelection(item)" noclick>
 							{{item.name}}
 						</label>
-						<i class="fa fa-info-circle pull-right text-muted" ng-click="selectInfo(item)"></i>
+						<i class="fa fa-info-circle ctrl pull-right text-muted" ng-click="selectInfo(item)"></i>
 					</div>
 				</div>
 
@@ -128,16 +128,13 @@
 
 			<!-- Third column -->			
 			<div class="list-group col-md-3">
-				<div class="list-group-item ctrl am-fade" ng-repeat="item in selected.second | orderBy:orderGroup track by $index" ng-switch="getType(item)">
-					<div ng-switch-when="continues">
-						{{getGroupName(item)}}
-					</div>
-					<div ng-switch-when="terminates" class="checkbox">
-						<label for="var-s-{{$index}}">
-							<input type="checkbox" name="var-s-{{$index}}" id="var-s-{{$index}}" ng-model="item.selected" ng-change="updateSelection(item)">
+				<div class="list-group-item am-fade" ng-repeat="item in selected.second | orderBy:orderGroup track by $index">
+					<div class="checkbox">
+						<label>
+							<input type="checkbox" ng-model="item.selected" ng-change="updateSelection(item)">
 							{{item.name}}
 						</label>
-						<i class="fa fa-info-circle pull-right text-muted" ng-click="selectInfo(item)"></i>
+						<i class="fa fa-info-circle ctrl pull-right text-muted" ng-click="selectInfo(item)"></i>
 					</div>
 				</div>
 
