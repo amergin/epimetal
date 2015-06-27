@@ -709,34 +709,155 @@ vis.controller('GraphTabScatterplotCtrl', ['$scope', 'DatasetFactory',
 ]);
 
 
-vis.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory',
-  function RegressionMenuCtrl($scope, DatasetFactory) {
+vis.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService',
+  function RegressionMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService) {
 
-    $scope.adjust = {
-      selection: []
+    $scope.selection = {
+      adjust: {
+        payload: []
+      },
+      association: {
+        payload: []
+      },
+      target: {
+        text: null,
+        payload: []
+      }
     };
 
-    $scope.association = {
-      selection: []
+    DatasetFactory.getVariables().then(function(res) {
+      $scope.variables = angular.copy(res);
+    });
+
+    // for target
+    $scope.querySearch = function(query) {
+      var results = query ? $scope.variables.filter($scope.createFilterFor(query)) : [];
+      return results;
     };
 
-    $scope.target = null;
+    // for target
+    $scope.createFilterFor = function(query) {
+      var lowercaseQuery = angular.lowercase(query);
 
-    // controllers of the menu dialog:
-    $scope.canSubmit = function() {
-      return false;
+      return function filterFn(variable) {
+        return (variable.name.toLowerCase().indexOf(lowercaseQuery) === 0) ||
+        (variable.desc.toLowerCase().indexOf(lowercaseQuery) === 0);
+      };
+    };
+
+    $scope.targetSelected = function() {
+      return _.size($scope.selection.target.payload) > 0;
+    };
+
+    function typeSelected(type) {
+      return $scope.selection[type].payload.length > 0;
+    }
+
+    function getEquality() {
+      var equalityLodash = _.runInContext();
+      equalityLodash.mixin({
+      'indexOf': function (array, item) {
+        var result = -1;
+        _.some(array, function (value, index) {
+          if (_.isEqual(value, item)) {
+            result = index;
+            return true;
+          }
+        });
+        return result;
+      } });
+      return equalityLodash;        
+    }
+
+    function _copy(src) {
+      return angular.copy(src);
+    }
+
+    var lodash = getEquality();
+
+    $scope.accordionOpen = {
+      'target': true,
+      'adjust': false,
+      'association': false
+    };
+
+    var assocAndAdjustOverlapping = function() {
+      return lodash.intersection(_copy($scope.selection.association.payload), _copy($scope.selection.adjust.payload)).length > 0;
+      // return _.intersection( $scope.selection.association.payload, $scope.selection.adjust.payload ).length > 0;
+    };
+
+    var assocIncludesTargetVar = function() {
+      return lodash.contains(_copy($scope.selection.association.payload), _copy($scope.selection.target.payload));
+      // return _.contains( $scope.selection.association.payload, $scope.selection.target.payload );
+    };
+
+    var adjustIncludesTarget = function() {
+      return lodash.contains(_copy($scope.selection.adjust.payload, _copy($scope.selection.target.payload)));
+    };
+
+    $scope.canEdit = function() {
+      return DatasetFactory.activeSets().length > 0;
+    };
+
+    $scope.getAmount = function(type) {
+      return $scope.selection[type].payload.length;
+    };
+
+    $scope.canSubmit = function () {
+      return $scope.canEdit() && 
+      $scope.targetSelected() &&
+      typeSelected('adjust') &&
+      typeSelected('association');
     };
 
     $scope.submit = function() {
+      var error = false;
+      if( assocAndAdjustOverlapping() ) {
+        NotifyService.addSticky('Incorrect variable combination', 
+          'Association variables and adjust variables overlap. Please modify the selection.', 'error',  { referenceId: 'regressioninfo' });
+        error = true;
+      }
+      if( assocIncludesTargetVar() ) {
+        NotifyService.addSticky('Incorrect variable combination', 
+          'The target variable is included in the association variables. Please modify the selection.', 'error', { referenceId: 'regressioninfo' });
+        error = true;
+      }
+      if( adjustIncludesTarget() ) {
+        NotifyService.addSticky('Incorrect variable combination', 
+          'The target variable is included in the adjust variables. Please modify the selection.', 'error', { referenceId: 'regressioninfo' });
+        error = true;
+      }
+      if(RegressionService.inProgress()) {
+        NotifyService.addSticky('Regression already being computed', 
+          'Please wait until the previous computation has been completed.', 'error', { referenceId: 'regressioninfo' });
+      }
+      if(error) {
+        return false;
+      }
+
       return {
         type: 'regression',
-        selection: $scope.selections
+        selection: {
+          target: $scope.selection.target.payload,
+          adjust: $scope.selection.adjust.payload,
+          association: $scope.selection.association.payload
+        },
+        source: $scope.dataSource
       };
     };
 
     $scope.cancel = function() {
     };
 
+    $scope.somButtonDisabled = function() {
+      return SOMService.empty();
+    };
+
+    $scope.dataSource = 'dataset';
+
+    $scope.setDataSource = function(s) { 
+      $scope.dataSource = s;
+    };
 
   }
 ]);

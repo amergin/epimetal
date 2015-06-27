@@ -50,39 +50,6 @@ module.directive('replaceAndCompile', ['$compile', '$timeout', function($compile
   };
 }]);
 
-
-module.directive('loadTemplateWithoutScope', function() {
-  return {
-      restrict: 'AE',
-      templateUrl: function(ele, attrs) {
-          return attrs.templatePath;
-      }
-  };
-});
-
-// for introducing a custom directive in a nested directive situation
-module.directive('replaceAndCompileNormal', ['$compile', '$timeout', function($compile, $timeout) {
-  return {
-    scope: { 
-      name: '=reName',
-      data: '=reData'
-    },
-    restrict: 'A',
-    priority: 200,
-    link: {
-      post: function(scope, element, attrs) {
-        $timeout( function() {
-          var el = angular.element('<div/>')
-          .addClass(scope.name);
-          element.parent().append(el);
-          $compile(el)(scope);
-          element.remove();
-        });
-      }
-    }
-  };
-}]);
-
 // disables angular-animate on elements. See
 //http://stackoverflow.com/questions/21249441/disable-nganimate-form-some-elements
 module.directive('disableAnimate', ['$animate', function($animate) {

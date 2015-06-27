@@ -1,19 +1,21 @@
 <md-content flex="90">
-
-
   <accordion close-others="true">
-    <accordion-group heading="Target variable" is-open="false" is-disabled="false">
+    <accordion-group is-open="accordionOpen.target" is-disabled="false">
+	   <accordion-heading>
+		   Target variable
+		   <span class="badge pull-right" ng-show="targetSelected()">selected</span>
+	   </accordion-heading>
 
 	   <md-card flex="45">
 	   	<md-card-content>
-	   		<h3>Select target variable</h3>
+	   		<p class="md-title">Select a target variable</p>
 			<md-autocomplete 
-			  md-selected-item="selections.target.payload"
-			  md-search-text="selections.target.searchText"
+			  md-selected-item="selection.target.payload"
+			  md-search-text="selection.target.text"
 			  md-item-text="variable.name"
-			  md-items="variable in querySearch(selections.target.searchText)"
+			  md-items="variable in querySearch(selection.target.text)"
 			  md-min-length="1"
-			  placeholder="Select the target variable"
+			  placeholder="Select a target variable"
 			  md-menu-class="autocomplete-custom-template"
 			  md-floating-label="Target variable">
 			<md-item-template>
@@ -34,23 +36,35 @@
 		</md-card>
 
     </accordion-group>
-    <accordion-group heading="Adjust variables" is-open="false" is-disabled="false">
-    	<h3>Select adjust variable(s)</h3>
-    	<div class="multiple-variable-selection" re-selection="adjust"></div>
+    <accordion-group is-open="accordionOpen.association" is-disabled="false">
+	    <accordion-heading>
+	    	Association variables
+	    	<span class="badge pull-right label-default" ng-show="getAmount('association') > 0">{{getAmount('association')}} variables</span>
+		</accordion-heading>
+		<p class="md-title">Select association variable(s)</p>
+    	<div class="multiple-variable-selection" re-selection="selection.association.payload" re-mode="'multi'"></div>
     </accordion-group>
-    <accordion-group heading="Association variables" is-open="false" is-disabled="false">
-    	<h3>Select association variable(s)</h3>
-    	<div class="multiple-variable-selection" re-selection="association"></div>
+    <accordion-group is-open="accordionOpen.adjust" is-disabled="false">
+	    <accordion-heading>
+	    	Adjust variables
+	    	<span class="badge pull-right" ng-show="getAmount('adjust') > 0">{{getAmount('adjust')}} variables</span>
+		</accordion-heading>
+		<p class="md-title">Select adjust variable(s)</p>
+    	<div class="multiple-variable-selection" re-selection="selection.adjust.payload" re-mode="'multi'"></div>
     </accordion-group>
 
   </accordion>
 
+  <div flex>
+	<div class="form-group">
+		<label class="col-md-3 control-label">Source of data</label>
+		<div class="btn-group" role="group" aria-label="Source of data">
+		  <button type="button" class="btn btn-primary" ng-click="setDataSource('dataset')" ng-class="{ 'active': dataSource == 'dataset' }">Dataset</button>
+		  <button type="button" class="btn btn-primary" ng-disabled="somButtonDisabled()" ng-click="setDataSource('som')" ng-class="{ 'active': dataSource == 'som' }">Self-organizing map filters</button>
+		</div>
 
+	</div>
+  </div>
 
-
-
-
-
-
-
+  <div growl inline="true" limit-messages="4" reference="regressioninfo" class="am-fade container-fluid"></div>
 </md-content>

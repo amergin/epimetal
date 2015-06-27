@@ -293,8 +293,8 @@
 
   }]);
 
-  vis.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$mdSidenav', '$injector', '$mdMedia',
-    function ($scope, TabService, $rootScope, NotifyService, $mdSidenav, $injector, $mdMedia) {
+  vis.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$mdSidenav', '$injector', '$mdMedia', 'WindowHandler', 'PlotService',
+    function ($scope, TabService, $rootScope, NotifyService, $mdSidenav, $injector, $mdMedia, WindowHandler, PlotService) {
 
       $scope.openGraphModal = function(ev) {
         var diagScope = $rootScope.$new(true);
@@ -315,8 +315,6 @@
         promise.then(function(config) {
 
           $mdSidenav('left').toggle();
-          var PlotService = $injector.get('PlotService'),
-          WindowHandler = $injector.get('WindowHandler');
           var winHandler = WindowHandler.getVisible()[0];
 
           function postHistogram(array) {
@@ -411,20 +409,42 @@
         controller: 'ModalCtrl'
       }, ev);
 
-      promise.then(function(config) {
+      promise.then(function(result) {
+        function pickVariables(value) {
+          if( _.isArray(value) ) {
+            return _.map(value, function(d) { return d.name; });
+          } else {
+            return value.name;
+          }
+        }
 
+        function getVariablesFormatted(selection) {
+          return _.chain(selection)
+          .map(function(v,k) {
+            return [k, pickVariables(v)];
+          })
+          .zipObject()
+          .value();
+        }
+
+        var winHandler = WindowHandler.getVisible()[0],
+        config = {
+          variables: getVariablesFormatted(result.selection),
+          source: result.source
+        };
+
+        PlotService.drawRegression(config, winHandler);
       });      
     };
 
-
-      $scope.getMenuButtonType = function() {
-        var state = TabService.activeState();
-        if(state.name === 'vis.regression') {
-          return 'regression';
-        } else {
-          return 'default';
-        }
-      };     
+    $scope.getMenuButtonType = function() {
+      var state = TabService.activeState();
+      if(state.name === 'vis.regression') {
+        return 'regression';
+      } else {
+        return 'default';
+      }
+    };     
     }
   ]);
 
@@ -434,14 +454,18 @@
 
     $scope.canSubmit = {
       initial: function() {
-        return _.isNull($scope.canSubmit.inherited) ? false : $scope.canSubmit.inherited();
+        return _.isNull($scope.canSubmit.inherited) ? true : $scope.canSubmit.inherited();
       },
       inherited: null
     };
 
     $scope.submit = {
       initial: function() {
-        $mdDialog.hide($scope.submit.inherited());
+        var retval = $scope.submit.inherited();
+        if(retval === false) { return; }
+        else {
+          $mdDialog.hide(retval);
+        }
       },
       inherited: null
     };
