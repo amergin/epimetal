@@ -56,8 +56,8 @@ class DataLoader( object ):
 				groupName = name
 				if TOPGROUP_SEPARATOR in name:
 					split = name.split(TOPGROUP_SEPARATOR)
-					topGroup = split[0]
-					groupName = split[1]
+					topGroup = split[0].strip()
+					groupName = split[1].strip()
 				return HeaderGroup.objects.get_or_create(name=groupName, defaults={ 'name': groupName, 'topgroup': topGroup, 'order': _getNewGroupOrder() })
 
 			def _getSample(name):
