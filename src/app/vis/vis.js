@@ -293,8 +293,8 @@
 
   }]);
 
-  vis.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$mdSidenav', '$injector', '$mdMedia', 'WindowHandler', 'PlotService',
-    function ($scope, TabService, $rootScope, NotifyService, $mdSidenav, $injector, $mdMedia, WindowHandler, PlotService) {
+  vis.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$mdSidenav', '$injector', '$mdMedia', 'WindowHandler', 'PlotService', 'RegressionService',
+    function ($scope, TabService, $rootScope, NotifyService, $mdSidenav, $injector, $mdMedia, WindowHandler, PlotService, RegressionService) {
 
       $scope.openGraphModal = function(ev) {
         var diagScope = $rootScope.$new(true);
@@ -433,6 +433,7 @@
           source: result.source
         };
 
+        RegressionService.selectedVariables(config.variables);
         PlotService.drawRegression(config, winHandler);
       });      
     };
