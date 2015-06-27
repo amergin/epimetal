@@ -832,6 +832,7 @@ vis.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionSer
           'Please wait until the previous computation has been completed.', 'error', { referenceId: 'regressioninfo' });
       }
       if(error) {
+        $scope.closeAccordion();
         return false;
       }
 
@@ -857,6 +858,12 @@ vis.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionSer
 
     $scope.setDataSource = function(s) { 
       $scope.dataSource = s;
+    };
+
+    $scope.closeAccordion = function() {
+      _.each($scope.accordionOpen, function(val, key) {
+        $scope.accordionOpen[key] = false;
+      });
     };
 
   }
