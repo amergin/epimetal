@@ -511,27 +511,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
     // Fetches and permanently stores the fetched variable data.
     service.getVariableData = function(variables, windowHandler, config) {
-      var defer = $q.defer(),
-      dataWasAdded = false,
-      configDefined = !_.isUndefined(config),
-      result = {
-        dataWasAdded: undefined,
-        samples: {}
-      };
-
-      var DimensionService = $injector.get('DimensionService');
-
-      var setPromises = [],
-      addData = true,
-      getRawData = configDefined && config.getRawData;        
-      if(configDefined && config.addToDimensionService === false) {
-        addData = false;
-      }
-
-      if (_.isEmpty(variables)) {
-        // do nothing
-        defer.resolve();
-      } else {
+      function allDatasets() {
         // check every set
         _.each(service.activeSets(), function(set) {
           setPromises.push(set.getVariables(variables, config));
@@ -567,7 +547,51 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
           defer.resolve(result);
         }, function errFn(res) {
           defer.reject(res);
+        });        
+      }
+
+      function oneDataset(dataset) {
+        dataset.getVariables(variables, config)
+        .then(function succFn(result) {
+          var dataAdded = windowHandler.getDimensionService().addVariableData(result);
+          // if (dataAdded && addData) {
+          //   windowHandler.getDimensionService().rebuildInstance();
+          // }
+          defer.resolve(result);
+        }, function errFn(result) {
+          defer.reject(result);
         });
+      }
+
+
+
+      var defer = $q.defer(),
+      dataWasAdded = false,
+      configDefined = !_.isUndefined(config),
+      result = {
+        dataWasAdded: undefined,
+        samples: {}
+      };
+
+      var DimensionService = $injector.get('DimensionService');
+
+      var setPromises = [],
+      addData = true,
+      getRawData = configDefined && config.getRawData,
+      singleDataset = configDefined && config.singleDataset && !_.isUndefined(config.dataset);
+      if(configDefined && config.addToDimensionService === false) {
+        addData = false;
+      }
+
+      if (_.isEmpty(variables)) {
+        // do nothing
+        defer.resolve();
+      } else {
+        if(singleDataset) {
+          oneDataset(config.dataset);
+        } else {
+          allDatasets();
+        }
       }
 
       return defer.promise;
@@ -595,7 +619,7 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
       $injector.get('WindowHandler').reRenderVisible({ compute: true });
     };
 
-    service.createDerived = function(name) {
+    service.createDerived = function(config) { //name) {
       function deselectOthers() {
         _.each(service.getSets(), function(set) {
           set.active(false);
@@ -604,18 +628,45 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
 
       function removeFilters() {
         var FilterService = $injector.get('FilterService');
-        FilterService.resetFilters({ spareSOM: true });
+        FilterService.resetFilters({ spareSOM: true, force: false });
       }
 
       function emitEvent(dset) {
         $rootScope.$emit('dataset:derived:add', dset);
       }
 
-      if(!that.sets[name]) {
+      function getSamples(circles) {
+        function anyCircleHas(sample) {
+          return _.any(circles, function(filter) {
+            return filter.contains(sample.bmus);
+          });
+        }
         var DimensionService = $injector.get('DimensionService'),
+        primary, secondary, sampleDimension, samples,
+        hasCircles = !_.isUndefined(circles) && _.size(circles) > 0;
+        if(hasCircles) {
+          secondary = DimensionService.getSecondary();
+          sampleDimension = secondary.getSampleDimension();
+          samples = _.filter(sampleDimension.get().top(Infinity), function(sample) {
+            return anyCircleHas(sample);
+          });
+        } else {
+          primary = DimensionService.getPrimary();
+          sampleDimension = primary.getSampleDimension();
+          samples = sampleDimension.get().top(Infinity);
+        }
+        return samples;
+      }
+
+      var name = config.name,
+      circles = config.circles || undefined;
+
+      if(that.sets[name]) {
+        throw new Error('Dataset name exists');
+      } else {
+        var samples = getSamples(circles),
+        DimensionService = $injector.get('DimensionService'),
         primary = DimensionService.getPrimary(),
-        sampleDimension = primary.getSampleDimension(),
-        samples = sampleDimension.get().top(Infinity),
         dataWasAdded;
 
         var derived = new DerivedDataset()
@@ -625,10 +676,21 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         .samples(samples)
         .active(true);
 
-        deselectOthers();
-        that.sets[name] = derived;
-        removeFilters();
-        service.updateDataset();
+        if(circles) {
+          deselectOthers();
+          that.sets[name] = derived;
+          service.updateDataset();
+        } else {
+          deselectOthers();
+          that.sets[name] = derived;
+          removeFilters();
+          service.updateDataset();
+        }
+
+        // deselectOthers();
+        // that.sets[name] = derived;
+        // removeFilters();
+        // service.updateDataset();
 
 
         // add to dimension service
@@ -645,12 +707,11 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         if(dataWasAdded) {
           primary.rebuildInstance();
         }
+
         emitEvent(derived);
         $injector.get('WindowHandler').reRenderVisible({ compute: true });
 
         return derived;
-      } else {
-        throw new Error('Dataset name exists');
       }
     };
 
@@ -671,7 +732,8 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
     };
 
     service.updateDataset = function(set) {
-      that.dimensionService.updateDatasetDimension();
+      $injector.get('DimensionService').getPrimary().updateDatasetDimension();
+      // that.dimensionService.updateDatasetDimension();
     };
 
     service.activeSets = function() {

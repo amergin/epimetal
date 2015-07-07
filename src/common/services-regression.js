@@ -105,7 +105,7 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
 
       function fetchCircles(windowHandler) {
         var def = $q.defer();
-        var somHandler = windowHandler.getService().get('vis.som');
+        var somHandler = windowHandler.getService().get('vis.som.plane');
         DatasetFactory.getVariableData(variables, somHandler)
         .then(function succFn(res) {
           var ret = getSOMData(somHandler);

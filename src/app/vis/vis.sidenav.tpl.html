@@ -1,24 +1,28 @@
-<md-sidenav class="md-sidenav-left md-whiteframe-z2 md-scroll-y" md-is-locked-open="isLocked" md-closed="isClosed" md-component-id="left">
-  <md-toolbar class="md-hue-2">
-    <div layout="column" class="md-toolbar-tools inset" layout-align="center center">
-      <md-checkbox ng-model="isLocked" aria-label="Lock locked">Lock side menu</md-checkbox>
+<div class="container-fluid">
+    <div class="row text-center">
+      <button class="btn btn-secondary" ng-click="toggleSidenav()">Hide this menu</button>
     </div>
-  </md-toolbar>
-  <md-content layout="column" layout-align="space-around center">
-    <div ng-switch="getMenuButtonType()" flex>
+    <hr/>
+    <div ng-switch="getMenuButtonType()" class="text-center">
       <div ng-switch-default>
-        <md-button class="md-raised md-primary" ng-click="openGraphModal($event)">Create a new graph</md-button>
+        <button class="btn btn-primary" ng-disabled="!canOpen()" ng-click="openGraphModal($event)">Create a new graph</button>
+      </div>
+      <div ng-switch-when="som">
+        <div class="row text-center">
+          <button class="btn btn-primary"ng-disabled="!canOpen()" ng-click="openSOMModal($event)">Create a new graph</button>
+        </div>
+        <div class="row text-center">
+          <button class="btn btn-secondary" ng-disabled="!canOpen()" ng-click="openSOMInputModal($event)">Select input variables</button>
+        </div>
       </div>
       <div ng-switch-when="regression">
-        <md-button class="md-raised md-primary" ng-click="openRegressionModal($event)">Create a new regression view</md-button>
+        <button class="btn btn-primary" ng-disabled="!canOpen()" ng-click="openRegressionModal($event)">Create a new regression view</button>
       </div>
-    </div>
-  </md-content>
-  <md-divider></md-divider>
-
-  <div class="dataset-form" flex></div>
-
-  <div class="filter-info"></div>
-
-  <div class="sample-info text-center"></div>
-</md-sidenav>
+    </div>  
+    <hr/>
+    <div class="dataset-form"></div>
+    <div class="filter-info"></div>
+    <div class="circle-filter-control"></div>
+    <div growl inline="true" limit-messages="1" reference="filterinfo" class="am-fade container-fluid"></div>
+    <div class="sample-info"></div>
+</div>

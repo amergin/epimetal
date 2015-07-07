@@ -4,36 +4,51 @@ mod.directive('filterInfo', ['$templateCache', '$compile', '$rootScope', '$injec
   function($templateCache, $compile, $rootScope, $injector, FilterService) {
     return {
       restrict: 'C',
-      scope: false,
+      scope: {},
       replace: false,
-      priority: 7000,
+      // priority: 7000,
       controller: 'FilterInfoController',
       templateUrl: 'vis/filterinfo.tpl.html'
-      // template: function(tElem, tAttrs) {
-      //   var button = $templateCache.get('vis/filterinfo.btn.tpl.html');
-      //   var btnEl = angular.element(button);
-      //   return btnEl[0].outerHTML;
-      // }
     };
   }
 ]);
 
-mod.controller('FilterInfoController', ['$scope', '$timeout', '$injector', 'DimensionService', '$rootScope', 'constants', 'FilterService', '$state', 'NotifyService', 'TabService',
-  function FilterInfoController($scope, $timeout, $injector, DimensionService, $rootScope, constants, FilterService, $state, NotifyService, TabService) {
+mod.controller('FilterInfoController', ['$scope', '$timeout', '$injector', 'DimensionService', '$rootScope', 'constants', 'FilterService', '$state', 'NotifyService', 'TabService', 'DatasetFactory', 'SOMService',
+  function FilterInfoController($scope, $timeout, $injector, DimensionService, $rootScope, constants, FilterService, $state, NotifyService, TabService, DatasetFactory, SOMService) {
     var numFormat = d3.format('.2e');
     var dimensionService = DimensionService.getPrimary();
 
-    $scope.filters = [];
-    $scope.$watch( function() { return FilterService.getFilters(); },
-      function(val) { 
-        angular.copy(val, $scope.filters); 
-      }, true );
+    $scope.filters = FilterService.getFilters();
 
-    $scope.getAmount = function() {
-      return _.chain($scope.filters)
-      .map($scope.showFilter)
-      .countBy()
-      .value().true || 0;
+    $scope.somCheckbox = {
+      // id: true/false
+    };
+
+    var initSOMCheckbox = _.once(function() {
+      _.each(FilterService.getSOMFilters(), function(filt) {
+        $scope.somCheckbox[filt.id()] = false;
+      });
+    });
+
+    initSOMCheckbox();
+
+    $scope.somCheckboxToggle = function(filter) {
+      console.log(filter);
+    };
+
+    $scope.canSubmitDerived = function() {
+      function som() {
+        var hasFilters = _.any($scope.somCheckbox, function(val, key) { return val; });
+        return hasFilters && $scope.derivedInput;
+      }
+      function explore() {
+        return $scope.derivedInput;
+      }
+
+      var stateName = $state.current.name;
+      if(stateName == 'vis.som') { return som(); }
+      else if(stateName == 'vis.explore') { return explore(); }
+
     };
 
     $scope.formatNumber = function(num) {
@@ -57,50 +72,102 @@ mod.controller('FilterInfoController', ['$scope', '$timeout', '$injector', 'Dime
     };
 
     $scope.showFilter = function(filter) {
-      if(filter.type() == 'circle') {
-        var state = TabService.activeState().name;
-        var isSomState = _.startsWith(state, 'vis.som');
-        return isSomState;
-      } 
+      function isCircle() {
+        return filter.type() == 'circle';
+      }
+      function isNormal() {
+        return filter.type() == 'range' || filter.type() == 'classed';
+      }
+      var stateName = $state.current.name;
+      if(stateName == 'vis.som') {
+        return isCircle();
+      } else if(stateName == 'vis.explore') {
+        return isNormal();
+      }
+    };
+
+    var editable = function() {
+      if( SOMService.inProgress() ) {
+        NotifyService.addSticky('Warning', 'Filters can only be edited on Explore tab.', 'warn', 
+          { referenceId: 'filterinfo' });
+        return false;
+      }
       return true;
     };
 
-    var checkEdit = function() {
-      if( !$scope.canEdit() ) {
-        NotifyService.addSticky('Warning', 'Filters can only be edited on Explore tab.', 'warn', 
-          { referenceId: 'filterinfo' });
-        return true;
-      }
-      return false;
-    };
-
-    $scope.somFilterCount = function(circleId) {
-      return _.find( FilterService.getCircleFilterInfo(), function(cf) { return cf.circle.id() == circleId; } ).count;
-    };
-
     $scope.close = function(filter) {
-      if( checkEdit() ) { return; }
-
+      if( !editable() ) { return; }
       FilterService.removeFilter(filter);
-      if(FilterService.getActiveFilters().length === 0) {
-        $timeout(function() {
-          $injector.get('WindowHandler').reRenderVisible({ compute: true, omit: 'histogram' });
-          $injector.get('WindowHandler').redrawVisible();
-        });
-      }
-    };
-
-    $scope.canEdit = function() {
-      return FilterService.canEdit();
+      $injector.get('WindowHandler').redrawVisible();
     };
 
     $scope.reset = function() {
-      if( checkEdit() ) { return; }
-      FilterService.resetFilters({ spareSOM: true });
+      if( !editable() ) { return; }
+      FilterService.resetFilters({ spareSOM: true, force: true });
       $timeout(function() {
         $injector.get('WindowHandler').reRenderVisible({ compute: true, omit: 'histogram' });
         $injector.get('WindowHandler').redrawVisible();
       });
     };
+
+    $scope.createDerived = function(name) {
+      function getSelectedCircles() {
+        return _.chain($scope.somCheckbox)
+        .pick(function(val, key, obj) { return val; })
+        .keys()
+        .map(function(circleId) { 
+          return FilterService.getSOMFilter(circleId); 
+        })
+        .value();
+      }
+
+      var stateName = $state.current.name,
+      // spaces to underscores, truncate
+      modified = name.replace(/\s/g, '_').substring(0,15),
+      circles;
+
+      if(stateName == 'vis.som') {
+        circles = getSelectedCircles();
+      } else {
+        // nothing
+      }
+
+      try {
+        DatasetFactory.createDerived({
+          name: modified,
+          circles: circles || undefined
+        });
+
+        TabService.check();
+      }
+      catch(err) {
+        NotifyService.addSticky('Error', err.message, 'error', { referenceId: 'datasetinfo' });
+      }
+    };
+
+    $scope.removeDerived = function(set) {
+      DatasetFactory.removeDerived(set);
+    };
+
+    $scope.isVisible = function() {
+      var stateName = $state.current.name;
+      if(stateName == 'vis.som') {
+        return FilterService.getFilters().length > 0;
+      } else if(stateName == 'vis.explore') {
+        return _.chain(FilterService.getFilters())
+        .filter(function(d) { return d.type() !== 'circle'; })
+        .size()
+        .value() > 0;
+      }
+    };
+
+    $scope.showReset = function() {
+      var stateName = $state.current.name;
+      if(stateName == 'vis.som') {
+        return false;
+      }
+      return true;
+    };    
+
   }
 ]);

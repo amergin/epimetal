@@ -2,43 +2,52 @@ var visu = angular.module('plotter.vis.plotting.som', ['services.dimensions', 's
 visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'FilterService',
   function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, FilterService) {
 
-    $scope.resetFilter = function() {
-      removeFilters();
-    };
+    // $scope.resetFilter = function() {
+    //   removeFilters();
+    // };
 
-    function removeFilters() {
-      var filters = angular.copy($scope.ownFilters);
-      _.each( filters, function(f,i) {
-        $scope.removeFilter(f, false);
-      });
-      _callRedraw();
-    }    
+    // function removeFilters() {
+    //   var filters = angular.copy($scope.ownFilters);
+    //   _.each( filters, function(f,i) {
+    //     $scope.removeFilter(f, false);
+    //   });
+    //   _callRedraw();
+    // }    
 
     $scope.redraw = function() {
       // remove previous
       $scope.element.empty();
 
       $scope.drawSOMPlane(
-        $scope.window.plane, 
+        $scope.window.extra().plane, 
         $scope.element, 
         $scope.width, 
         $scope.height);
     };
 
+    $scope.$watch(function() {
+      return $scope.window.extra().plane;
+    }, function(newVal, oldVal) {
+      if( !_.isEqual(newVal, oldVal) ) {
+        initHeader();
+      }
+    });
 
-    var pvalFormat = d3.format('.2e');
-    $scope.$parent.headerText = ['Self-organizing map of', $scope.window.plane.variable, "(P = " + pvalFormat($scope.window.plane.pvalue) + ")"];
+    function initHeader() {
+      var pvalFormat = d3.format('.2e');
+      $scope.window.headerText(['Self-organizing map of', $scope.window.extra().plane.variable, "(P = " + pvalFormat($scope.window.extra().plane.pvalue) + ")"]);
+    }
 
-    $scope.window.showResetBtn = false;
+    initHeader();
 
-    $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
+    $scope.window.resetButton(false);
+
+    $scope.dimensionService = $scope.window.handler().getDimensionService();
     $scope.dimension = $scope.dimensionService.getSOMDimension();
-
 
     $scope.updateFilter = function(hexagons, circleId) {
       FilterService.getSOMFilter(circleId).hexagons(hexagons);
       FilterService.updateCircleFilters();
-      // FilterService.updateSOMFilter({ 'som_id': $scope.window.som_id, 'hexagons': hexagons, 'circle': circleId });
     };
 
     $scope.drawSOMPlane = function(plane, element, width, height) {
@@ -137,6 +146,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
       //Start drawing the hexagons
       svg.append("g")
+      .attr('class', 'hexagon-container')
       .selectAll(".hexagon")
       .data(hexbin(points))
       .enter().append("path")
@@ -158,6 +168,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
       // .on("mouseout", mout);
 
       svg.append("g")
+      .attr('class', 'label-container')
       .selectAll(".label")
       .data(plane.labels)
       .enter()
@@ -204,16 +215,16 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         };
 
         var resolveAreaCells = function(circle, event) {
-          var highlightHexagon = function(hexagon) {
-            // // find the one node
-            svg.selectAll('.hexagon').filter( function(d,i) { 
-              return d.i == hexagon.j && d.j == hexagon.i;
-            }).classed('selected', true);
-          };
+          // var highlightHexagon = function(hexagon) {
+          //   // // find the one node
+          //   svg.selectAll('.hexagon').filter( function(d,i) { 
+          //     return d.i == hexagon.j && d.j == hexagon.i;
+          //   }).classed('selected', true);
+          // };
 
-          var removeHighlights = function() {
-            svg.selectAll('.hexagon.selected').classed('selected', false);
-          };
+          // var removeHighlights = function() {
+          //   svg.selectAll('.hexagon.selected').classed('selected', false);
+          // };
 
           var hexagonInsideCircle = function(hexpoint, circle) {
             var threshold = 3,
@@ -242,7 +253,10 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
             }
           });
 
-          $scope.updateFilter(hexagons, circleId);
+          $timeout(function() {
+            $scope.updateFilter(hexagons, circleId);
+          });
+
         };
 
         var resolveArea = _.debounce( resolveAreaCells, 400 );
@@ -261,7 +275,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           circleText.attr('y', function(t) { t.y = y; return t.y; });
           circle.position(d);
 
-          $rootScope.$emit('som:circleFilter:move', null, $scope.window._winid, d);
+          $rootScope.$emit('som:circleFilter:move', null, $scope.window.id(), d);
         };
 
         var innerCircleDrag = d3.behavior.drag()
@@ -272,7 +286,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         });
 
         $rootScope.$on('som:circleFilter:move', function(eve, circleId, winId, d) {
-          if( winId === $scope.window._winid ) { return; }
+          if( winId === $scope.window.id() ) { return; }
 
           svg.selectAll('circle').filter( function(a) {
             return a.id == d.id;
@@ -286,7 +300,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         });
 
         $rootScope.$on('som:circleFilter:resize', function(eve, circleId, winId, d) {
-          if( winId === $scope.window._winid ) { return; }          
+          if( winId === $scope.window.id() ) { return; }          
 
           svg.selectAll('circle').filter( function(a) {
             return a.id == d.id;
@@ -296,6 +310,8 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
 
 
         var circleAnchor = svg.append('g')
+        .attr('class', function(d) { return 'circle-container'; })
+        .attr('id', function(d) { return circle.id(); })
         .data([{ x: origin.x, y: origin.y, r: circle.radius() || _circleConfig.radius.normal, id: circleId }]);
 
         var innerCircle = circleAnchor.append('circle')
@@ -336,7 +352,7 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
           circle.radius(newRadius);
 
           resolveArea(d, d3.event);
-          $rootScope.$emit('som:circleFilter:resize', null, $scope.window._winid, d);              
+          $rootScope.$emit('som:circleFilter:resize', null, $scope.window.id(), d);              
         });
 
         var outerCircle = circleAnchor.append('circle')
@@ -356,56 +372,101 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         circle.position(innerCircle.data()[0]);
         circle.radius(innerCircle.data()[0].r);
 
-      }; // addcircle
+      }; 
+      // addcircle
+
+      function removeCircle(filter) {
+        var selector = '.circle-container#' + filter.id(),
+        circle = d3.select($scope.element[0]).select(selector);
+
+        circle.remove();
+      }
+
+      // var origins = [{ y: circleY(1), x: circleX(1) }, { y: circleY(5), x: circleX(7) }];
+      // _.each( FilterService.getSOMFilters(), function(filt, ind) {
+      //   addCircle( filt, filt.position() || origins[ind] );
+      // });
+
+      $scope.$watch(function() {
+        return FilterService.getSOMFilters();
+      }, function(newArray, oldArray) {
+        if(newArray.length > oldArray.length) {
+          var filter = _.last(newArray);
+          addCircle(filter, filter.position() || { x: circleX(filter.origin().x), y: circleY(filter.origin().y) });
+        } else if( newArray.length < oldArray.length ) {
+          _.chain(oldArray)
+          .select(function(item) {
+            return !_.findWhere(newArray, item);
+          })
+          .each(function(rem) {
+            removeCircle(rem);
+          })
+          .value();
+        }
+      }, true);
+      
+      // var origins = [{ y: circleY(1), x: circleX(1) }, { y: circleY(5), x: circleX(7) }];
+      _.each( FilterService.getSOMFilters(), function(filt, ind) {
+        addCircle( filt, filt.position() || filt.position() || { x: circleX(filt.origin().x), y: circleY(filt.origin().y) } );
+      });
 
       // add two filter circles
-      var origins = [{ y: circleY(1), x: circleX(1) }, { y: circleY(5), x: circleX(7) }];
-      _.each( FilterService.getSOMFilters(), function(filt, ind) {
-        addCircle( filt, filt.position() || origins[ind] );
-      });
+      // var origins = [{ y: circleY(1), x: circleX(1) }, { y: circleY(5), x: circleX(7) }];
+      // _.each( FilterService.getSOMFilters(), function(filt, ind) {
+      //   addCircle( filt, filt.position() || origins[ind] );
+      // });
 
     };
   }]);
 
 
 
-visu.directive('somplane', [ '$rootScope', 'SOMService', 'NotifyService',
+visu.directive('plSomplane', [ '$rootScope', 'SOMService', 'NotifyService',
 
   function($rootScope, SOMService, NotifyService) {
 
     var linkFn = function($scope, ele, iAttrs) {
 
-      $scope.$parent.element = ele;
+      function initDropdown() {
+        $scope.window.addDropdown({
+          type: "export:svg",
+          element: $scope.element
+        });
+
+        $scope.window.addDropdown({
+          type: "export:png",
+          element: $scope.element
+        });
+
+      }
+
+      // $scope.$parent.element = ele;
       $scope.element = ele;
+
+      initDropdown();
 
       $scope.width = ele.parent().width(); //455;
       $scope.height = ele.parent().height(); //360;
 
-
       $scope.deregisters = [];
 
       var somUpdatedUnbind = $rootScope.$on('dataset:SOMUpdated', function(event, som) {
-        $scope.$parent.startSpin();
+        $scope.window.spin(true);
 
-        SOMService.getPlane($scope.window.plane.variable, $scope.$parent.window.handler).then( 
+        SOMService.getPlane($scope.window.extra().plane.variable, $scope.window.handler()).then( 
           function succFn(res) {
-          angular.extend($scope.window, res); // overrides old values, places new plane info/ids/...
+            _.extend($scope.window.extra(), res);
+          // angular.extend($scope.window, res); // overrides old values, places new plane info/ids/...
           $scope.redraw();
         }, function errFn(res) {
           NotifyService.addTransient('Plane computation failed', res, 'danger');
         })
         .finally( function() {
-          $scope.$parent.stopSpin();
+          $scope.window.spin(false);
         });
       });
 
       var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
-        var retObj = _.chain($scope.window)
-        .pick(['type', 'grid', 'variables', 'handler', 'plane'])
-        .clone()
-        .value();
-
-        callback(retObj);
       });
 
       $scope.deregisters.push(somUpdatedUnbind, gatherStateUnbind);
@@ -421,7 +482,7 @@ visu.directive('somplane', [ '$rootScope', 'SOMService', 'NotifyService',
       });
 
       $scope.drawSOMPlane(
-        $scope.window.plane, 
+        $scope.window.extra().plane, 
         $scope.element,
         $scope.width, 
         $scope.height);
@@ -429,7 +490,7 @@ visu.directive('somplane', [ '$rootScope', 'SOMService', 'NotifyService',
     };
 
     return {
-      scope: false,
+      // scope: false,
       // scope: {},
       restrict: 'C',
       require: '^?window',

@@ -1,22 +1,27 @@
-<md-content>
-	<md-tabs md-dynamic-height md-border-bottom md-selected="tab.ind">
-		<md-tab label="Histogram">
-			<md-tab-body class="md-padding">
-				<h1 class="md-display-1">Histogram</h1>
-				<div class="multiple-variable-selection" re-selection="histogram.selection" re-mode="'multi'"></div>
-			</md-tab-body>
-		</md-tab>
-		<md-tab label="Scatterplot">
-			<md-tab-body class="md-padding">
-				<h1 class="md-display-1">Scatterplot</h1>
-				<div class="multiple-variable-selection" re-selection-x="scatterplot.x"  re-selection-y="scatterplot.y" re-mode="'scatterplot'"></div>
-			</md-tab-body>
-		</md-tab>
-		<md-tab label="Heatmap">
-			<md-tab-body class="md-padding">
-				<h1 class="md-display-1">Heatmap</h1>
-				<div class="multiple-variable-selection" re-selection="heatmap.selection" re-mode="'multi'"></div>
-			</md-tab-body>
-		</md-tab>
-	</md-tabs>
-</md-content>
+<div>
+	<tabset>
+		<tab select="selectTab(0)">
+			<tab-heading>Histogram</tab-heading>
+			<h1>Histogram</h1>
+			<div class="multiple-variable-selection" re-selection="histogram.selection" re-mode="'multi'"></div>		
+		</tab>
+		<tab select="selectTab(1)">
+			<tab-heading>Scatterplot</tab-heading>
+			<h1>Scatterplot</h1>
+			<div class="multiple-variable-selection" re-selection-x="scatterplot.x"  re-selection-y="scatterplot.y" re-mode="'scatterplot'"></div>
+		</tab>
+		<tab select="selectTab(2)">
+			<tab-heading>Heatmap</tab-heading>
+			<h1>Heatmap</h1>
+			<div class="multiple-variable-selection" re-selection="heatmap.selection" re-mode="'multi'"></div>
+			<hr/>
+			<div class="row col-sm-12 form-group">
+				<label class="col-md-3 control-label">Plotting method</label>
+				<div class="btn-group" role="group" aria-label="Source of data">
+				  <button type="button" class="btn btn-primary" ng-click="separateHeatmaps(true)" ng-class="{ 'active': separateHeatmaps() }">Separate heat maps for each dataset</button>
+				  <button type="button" class="btn btn-primary" ng-click="separateHeatmaps(false)" ng-class="{ 'active': !separateHeatmaps() }">One combined heat map</button>
+				</div>
+			</div>
+		</tab>
+	</tabset>
+</div>

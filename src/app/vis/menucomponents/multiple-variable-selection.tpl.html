@@ -1,67 +1,118 @@
-<md-card flex="100" ng-switch="mode">
+<div class="container-fluid" ng-switch="mode">
+	<div class="row">
+		<div ng-switch-when="multi">
+			<div class="col-sm-12 panel panel-default">
+				<div class="panel-body">
+					 <md-card-content>
+					 <md-chips ng-model="payload">
+						<input type="text" id="query" ng-model="filter.input" placeholder="Type to search for a variable"/>
+						<md-chip-template>
+							<strong>{{$chip.name}}</strong>
+							<em>({{$chip.desc}})</em>
+						</md-chip-template>
+					 </md-chips>
+					 </md-card-content>
+				</div>
+			</div>
+		</div>
 
-	 <md-card-content ng-switch-when="multi">
-	 <md-chips ng-model="payload">
-		<input type="text" id="query" ng-model="filter.input" placeholder="Type to search for a variable"/>
-		<md-chip-template>
-			<strong>{{$chip.name}}</strong>
-			<em>({{$chip.desc}})</em>
-		</md-chip-template>
-	 </md-chips>
-	 </md-card-content>
+		 <div ng-switch-when="scatterplot">
+		 	<div class="col-sm-5 panel panel-default">
+		 		<div class="panel-body">
+					<md-chips ng-model="payloadX">
+						<input type="text" id="query-x" ng-model="filter.x" ng-focus="setFocus('x')" placeholder="Variable X - Type to search for a variable" autofocus/>
+						<md-chip-template>
+							<strong>{{$chip.name}}</strong>
+							<em>({{$chip.desc}})</em>
+						</md-chip-template>
+					 </md-chips>
+		 		</div>
+			</div>
+			<div class="col-sm-offset-1 col-sm-5 panel panel-default">
+				<div class="panel-body">
+					<md-chips ng-model="payloadY">
+						<input type="text" id="query-y" ng-model="filter.y" ng-focus="setFocus('y')" placeholder="Variable Y - Type to search for a variable"/>
+						<md-chip-template>
+							<strong>{{$chip.name}}</strong>
+							<em>({{$chip.desc}})</em>
+						</md-chip-template>
+					 </md-chips>
+				</div>
+			</div>
+	     </div>
 
-	 <div ng-switch-when="scatterplot" layout>
-	   <md-card flex="50">
-		<md-chips ng-model="payloadX">
-			<input type="text" id="query-x" ng-model="filter.x" ng-focus="setFocus('x')" placeholder="Variable X - Type to search for a variable" autofocus/>
-			<md-chip-template>
-				<strong>{{$chip.name}}</strong>
-				<em>({{$chip.desc}})</em>
-			</md-chip-template>
-		 </md-chips>
-	   </md-card>
-	   <md-card flex="50">
-		<md-chips ng-model="payloadY">
-			<input type="text" id="query-y" ng-model="filter.y" ng-focus="setFocus('y')" placeholder="Variable Y - Type to search for a variable"/>
-			<md-chip-template>
-				<strong>{{$chip.name}}</strong>
-				<em>({{$chip.desc}})</em>
-			</md-chip-template>
-		 </md-chips>
-	   </md-card>
-     </div>
-</md-card>
+		 <div ng-switch-when="regression">
+		 	<div class="col-sm-12 panel panel-default">
+		 		<div class="panel-heading">Target variable</div>
+		 		<div class="panel-body">
+					<md-chips ng-model="payloadTarget">
+						<input type="text" id="query-target" ng-model="filter.target" ng-focus="setFocus('target')" placeholder="Type to search for a variable" autofocus/>
+						<md-chip-template>
+							<strong>{{$chip.name}}</strong>
+							<em>({{$chip.desc}})</em>
+						</md-chip-template>
+					 </md-chips>
+		 		</div>
+		 	</div>
+		 	<div class="col-sm-12 panel panel-default">
+		 		<div class="panel-heading">Association variables</div>
+		 		<div class="panel-body">
+					 <md-chips ng-model="payloadAssociation">
+						<input type="text" id="query-association" ng-model="filter.association" ng-focus="setFocus('association')" placeholder="Type to search for a variable"/>
+						<md-chip-template>
+							<strong>{{$chip.name}}</strong>
+							<em>({{$chip.desc}})</em>
+						</md-chip-template>
+					 </md-chips>
+		 		</div>
+		 	</div>
+		 	<div class="col-sm-12 panel panel-default">
+		 		<div class="panel-heading">Adjust variables</div>
+		 		<div class="panel-body">
+					 <md-chips ng-model="payloadAdjust">
+						<input type="text" id="query-adjust" ng-model="filter.adjust" ng-focus="setFocus('adjust')" placeholder="Type to search for a variable"/>
+						<md-chip-template>
+							<strong>{{$chip.name}}</strong>
+							<em>({{$chip.desc}})</em>
+						</md-chip-template>
+					 </md-chips>
+		 		</div>
+		 	</div>
+	     </div>
+	</div>
+</div>
+
 
 <div ng-switch="inputIsDefined()">
 	<div ng-switch-when="true" class="am-fade">
 		<table class="table table-striped">
 			<thead>
 				<tr>
-					<th>
-						Select
+					<th class="ctrl">
+						<a ng-click="toggleGroup(filtered)">Select</a>
 					</th>
-					<th>
+					<th class="ctrl">
 						<a ng-click="setSortType('name'); toggleSortReverse()">
 							Variable Name
 							<span ng-show="sortTypeIs('name') && !sortReverse" class="fa fa-caret-down"></span>
 							<span ng-show="sortTypeIs('name') && sortReverse" class="fa fa-caret-up"></span>
 						</a>
 					</th>
-					<th>
+					<th class="ctrl">
 						<a ng-click="setSortType('desc'); toggleSortReverse()">
 							Description
 							<span ng-show="sortTypeIs('desc') && !sortReverse" class="fa fa-caret-down"></span>
 							<span ng-show="sortTypeIs('desc') && sortReverse" class="fa fa-caret-up"></span>
 						</a>
 					</th>
-					<th>
+					<th class="ctrl">
 						<a ng-click="setSortType('group.order'); toggleSortReverse()">
 							Group
 							<span ng-show="sortTypeIs('group.order') && !sortReverse" class="fa fa-caret-down"></span>
 							<span ng-show="sortTypeIs('group.order') && sortReverse" class="fa fa-caret-up"></span>
 						</a>
 					</th>
-					<th>
+					<th class="ctrl">
 						<a ng-click="setSortType('unit'); toggleSortReverse()">
 							Unit
 							<span ng-show="sortTypeIs('unit') && !sortReverse" class="fa fa-caret-down"></span>
@@ -90,18 +141,16 @@
 		</div>		
 	</div>
 
-	<div ng-switch-when="false" class="container-fluid am-fade">
-		<div class="row">
-			<!-- First column -->
-			<div class="list-group col-md-3">
+	<div ng-switch-when="false">
+		<div class="pl-container pl-nav-list pl-flex-row">
+			<div class="list-group pl-nav-column">
 				<div class="list-group-item ctrl am-fade" ng-repeat="group in nested | orderBy:orderGroup track by $index" ng-click="selectGroup(group, 'first')" ng-class="{ 'active': isSelected(group, 'first') }">
 					{{getGroupName(group)}}
 					<span class="badge pull-right">{{groupSelectedCount(group)}}</span>
-				</div>
+				</div>			
 			</div>
 
-			<!-- Second column -->
-			<div class="list-group col-md-3">
+			<div class="list-group pl-nav-column">
 				<div class="list-group-item am-fade" ng-repeat="item in selected.first | orderBy:orderGroup track by $index" ng-click="selectGroup(item, 'second')" ng-class="{ 'active': isSelected(item, 'second') }" ng-switch="getType(item)">
 					<div ng-switch-when="continues" class="ctrl">
 						{{getGroupName(item)}}
@@ -116,7 +165,7 @@
 					</div>
 				</div>
 
-				<div ng-switch="majoritySelected(selected.first)" ng-show="selectedHasVariables(selected.first) && getMode() !== 'scatterplot'">
+				<div ng-switch="majoritySelected(selected.first)" ng-show="canSelectMultiple() && selectedHasVariables(selected.first)">
 					<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="true" ng-click="deselectAll(selected.first)">
 						<strong>Deselect all</strong>
 					</div>
@@ -126,8 +175,7 @@
 				</div>
 			</div>
 
-			<!-- Third column -->			
-			<div class="list-group col-md-3">
+			<div class="list-group pl-nav-column">
 				<div class="list-group-item am-fade" ng-repeat="item in selected.second | orderBy:orderGroup track by $index">
 					<div class="checkbox">
 						<label>
@@ -138,7 +186,7 @@
 					</div>
 				</div>
 
-				<div ng-switch="majoritySelected(selected.second)" ng-show="selectedHasVariables(selected.second) && getMode() !== 'scatterplot'">
+				<div ng-switch="majoritySelected(selected.second)" ng-show="canSelectMultiple() && selectedHasVariables(selected.second)">
 					<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="true" ng-click="deselectAll(selected.second)">
 						<strong>Deselect all</strong>
 					</div>
@@ -148,15 +196,15 @@
 				</div>
 			</div>
 
-			<!-- Fourth column, shows only info about selected variable -->			
-			<div class="list-group col-md-3 am-fade" ng-show="selected.third">
+			<div class="list-group pl-nav-column am-fade" ng-show="selected.third">
 				<div class="list-group-item well well-small">
 					<h3>{{selected.third.desc}}</h3>
 					<em>{{selected.third.name}}</em>
 					<p>{{selected.third.unit}}</p>
 				</div>
 			</div>
-		</div>
+
+	</div>
 
 	</div>
 </div>

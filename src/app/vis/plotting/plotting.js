@@ -17,8 +17,8 @@ var visu = angular.module('plotter.vis.plotting',
   ]);
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'NotifyService', 'SOMService', '$q', 'RegressionService', 'TabService',
-  function($injector, DimensionService, DatasetFactory, NotifyService, SOMService, $q, RegressionService, TabService) {
+visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'NotifyService', 'SOMService', '$q', 'RegressionService', 'TabService', 'EXPLORE_DEFAULT_SIZE_X', 'EXPLORE_DEFAULT_SIZE_Y',
+  function($injector, DimensionService, DatasetFactory, NotifyService, SOMService, $q, RegressionService, TabService, EXPLORE_DEFAULT_SIZE_X, EXPLORE_DEFAULT_SIZE_Y) {
 
     var that = this;
 
@@ -61,10 +61,15 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
 
     this.drawScatter = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
-        var type = 'scatterplot';
-        config.size = 'normal';
-        config.type = 'scatterplot';
-        windowHandler.add(config);
+        // var type = 'scatterplot';
+        // config.size = 'normal';
+        // config.type = 'scatterplot';
+        var gridWindow = windowHandler.add();
+
+        gridWindow
+        .figure('pl-scatterplot')
+        .variables(config.variables)
+        .pooled(config.pooled || false);
       };
 
       var defer = $q.defer();
@@ -90,29 +95,22 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
 
     this.drawHistogram = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
-        config.type = 'histogram';
-        config.somSpecial = config.somSpecial || false;
-        if(config.somSpecial) {
-          config.size = {
-            width: 400,
-            height: 300,
-            aspectRatio: 'preserve'
-          };
-          config.filterEnabled = false;
-        }
-        else {
-          config.size = {
-            width: 450,
-            height: 375,
-            aspectRatio: 'stretch'
-          };
-          config.filterEnabled = true;
-        }
+        var type;
+
         if( DatasetFactory.isClassVariable(config.variables.x) ) {
-          config.type = 'classed-bar-chart';
+          type = 'classed-bar-chart';
+        } else {
+          type = 'histogram';
         }
 
-        windowHandler.add(config);
+        var gridWindow = windowHandler.add(),
+        canFilter = _.isUndefined(config.filterEnabled) ? true : config.filterEnabled;
+
+        gridWindow
+        .figure('pl-' + type)
+        .variables(config.variables)
+        .pooled(config.pooled)
+        .extra({ somSpecial: config.somSpecial, filterEnabled: canFilter });
       };
 
       var defer = $q.defer();
@@ -149,13 +147,89 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
       return defer.promise;
     };
 
-    this.drawHeatmap = function(config, windowHandler) {
-      var draw = function() {
-        var type = 'heatmap';
-        config.size = config.variables.x.length > 10 ? 'double' : 'normal';
-        config.type = type;
-        windowHandler.add(config);
+    function getScale(size) {
+      var scale;
+      if( _.inRange(size, 0, 15) ) {
+        scale = 1;
+      } else if( _.inRange(size, 15, 50) ) {
+        scale = 1.25;
+      } else if( _.inRange(size, 50, 75) ) {
+        scale = 1.50;
+      } else {
+        scale = 1.75;
+      }
+      return {
+        x: Math.ceil(EXPLORE_DEFAULT_SIZE_X * scale),
+        y: Math.ceil(EXPLORE_DEFAULT_SIZE_Y * scale)
       };
+    }
+
+    this.drawHeatmap = function(config, windowHandler) {
+      var draw = function(cfg, windowHandler) {
+        var gridWindow = windowHandler.add();
+
+        gridWindow
+        .figure('pl-heatmap')
+        .variables(cfg.variables)
+        .size(getScale(cfg.variables.x.length))
+        .pooled(false)
+        .extra({ separate: cfg.separate, dataset: cfg.dataset });
+
+      };
+
+      function dispError() {
+          var title = 'Variable ' + variable + ' could not be loaded\n',
+          message = 'Please check the selected combination is valid for the selected datasets.',
+          level = 'error';
+          NotifyService.addTransient(title, message, level);
+      }
+
+      function separateMaps() {
+        // fetch each set separately and draw individual maps
+        var promises = [],
+        configs = [],
+        copyConfig;
+        _.each(DatasetFactory.activeSets(), function(set) {
+          copyConfig = angular.copy(config);
+          copyConfig.dataset = set;
+          configs.push(copyConfig);
+          var promise = DatasetFactory.getVariableData(config.variables.x, windowHandler, 
+          { getRawData: true, singleDataset: true, dataset: set });
+          promises.push(promise);
+        });
+
+        $q.all(promises).then(function succFn() {
+          // do after looping all
+          windowHandler.getDimensionService().rebuildInstance();
+
+          _.each(configs, function(d) {
+            draw(d, windowHandler);
+          });
+          defer.resolve();
+        }, function errFn() {
+          dispError();
+          defer.reject();
+        })
+        .finally(function() {
+          TabService.lock(false);
+        });        
+      }
+
+      function combinedMap() {
+        var plottingDataPromise = DatasetFactory.getVariableData(config.variables.x, windowHandler);
+        plottingDataPromise.then(function successFn(res) {
+            draw(config, windowHandler);
+            defer.resolve();
+          },
+          function errorFn(variable) {
+            dispError();
+            defer.reject();
+          })
+        .finally(function() {
+          // release tab change lock
+          TabService.lock(false);
+        });        
+      }
 
       var defer = $q.defer();
 
@@ -165,39 +239,32 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
       NotifyService.addTransient(title, message, level);
       // don't allow tab change when fetching
       TabService.lock(true);
-      var plottingDataPromise = DatasetFactory.getVariableData(config.variables.x, windowHandler);
-      plottingDataPromise.then(function successFn(res) {
-          // draw the figure
-          // NotifyService.closeModal();
-          draw(config, windowHandler);
-          defer.resolve();
-        },
-        function errorFn(variable) {
-          // NotifyService.closeModal();
-
-          var title = 'Variable ' + variable + ' could not be loaded\n',
-          message = 'Please check the selected combination is valid for the selected datasets.',
-          level = 'error';
-          NotifyService.addTransient(title, message, level);
-          defer.reject();
-        })
-      .finally(function() {
-        // release tab change lock
-        TabService.lock(false);
-      });
+      if(config.separate === true) {
+        separateMaps();
+      } else if(config.separate === false) {
+        combinedMap();
+      }
       return defer.promise;
     };
 
     this.drawProfileHistogram = function(config, windowHandler) {
       var draw = function() {
-        var type = 'profile-histogram';
-        config.type = type;
-        config.size = {
-          width: 1400,
-          height: 400,
-          aspectRatio: 'preserve'
-        };
-        windowHandler.add(config);
+        var gridWindow = windowHandler.add();
+        gridWindow.figure('pl-profile-histogram')
+        .size({ x: 10, y: 3 })
+        .variables(config.variables)
+        .extra({ name: config.name });
+
+        // var type = 'profile-histogram';
+        // var cfg = angular.copy(config);
+        // cfg.type = type;
+        // cfg.size = {
+        //   width: 1400,
+        //   height: 400,
+        //   aspectRatio: 'preserve'
+        // };
+        // setSize(cfg, 10, 3);
+        // windowHandler.add(cfg);
       };
 
       var defer = $q.defer();
@@ -232,9 +299,14 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
 
     this.drawSOM = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
-        config.size = 'normal';
-        config.type = 'somplane';
-        windowHandler.add(config);
+        // config.size = 'normal';
+        // config.type = 'somplane';
+        var gridWindow = windowHandler.add();
+
+        gridWindow
+        .figure('pl-somplane')
+        .variables(config.variables)
+        .extra({ plane: config.plane });
       };
 
       var defer = $q.defer();
@@ -261,12 +333,17 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
       NotifyService.addTransient('Regression analysis started', 'Regression analysis computation started.', 'info');
       RegressionService.compute(config, windowHandler).then( function succFn(result) {
         NotifyService.addTransient('Regression analysis completed', 'Regression computation ready.', 'success');
-        var winObj = {
-          computation: result,
-          type: 'regression-plot',
-          source: config.source
-        };
-        windowHandler.add(winObj);
+        var gridWindow = windowHandler.add();
+        gridWindow
+        .figure('pl-regression')
+        .variables(config.variables)
+        .extra({ computation: result, source: config.source });
+        // var winObj = {
+        //   computation: result,
+        //   type: 'regression-plot',
+        //   source: config.source
+        // };
+        // windowHandler.add(winObj);
         defer.resolve();        
       }, function errFn(result) {
         var message = result.result[0].result.reason;

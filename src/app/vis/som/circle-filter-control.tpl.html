@@ -1,0 +1,24 @@
+<div class="panel panel-default am-fade text-center" ng-show="isVisible()">
+  <div class="panel-heading">
+    <h3 class="panel-title">Manage circle filters</h3>
+  </div>
+  <table class="table table-striped table-condensed">
+<!--   	<thead>
+  	</thead> -->
+  	<tbody>
+  		<tr ng-repeat="circle in circles track by circle.id()">
+  			<td ng-style="{ 'color': circle.color() }"><strong>Circle filter {{circle.name()}}</strong></td>
+  			<td>
+  				<i class="fa fa-lg fa-times-circle ctrl text-danger" ng-click="remove(circle)"></i>
+  			</td>
+  		</tr>
+  	</tbody>
+  	<tfoot>
+  	</tfoot>
+  </table>
+  <div class="form-group">
+    <input ng-model="circleName" type="text" class="form-control" id="pl-cir-name" placeholder="Create a new circle with name" maxlength="{{cirleMaxLength}}">
+  </div>
+  <button type="submit" class="btn btn-primary" ng-disabled="!circleName" ng-click="createCircle(circleName)">Create circle</button>
+
+</div>

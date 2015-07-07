@@ -126,7 +126,8 @@ module.exports = {
       // material x2
       'vendor/angular-material/angular-material.js',
       'vendor/angular-aria/angular-aria.js',
-      'vendor/angular-resizable/angular-resizable.min.js'
+      'vendor/angular-resizable/angular-resizable.min.js',
+      'vendor/ng-pageslide/dist/angular-pageslide-directive.min.js'
     ],
     css: [
       'vendor/dcjs/dc.css',

@@ -22,7 +22,9 @@
   // 'ui.layout',
   'ngProgress',
   'progressBarInterceptor',
-  'angularResizable'
+  'angularResizable',
+  'pageslide-directive',
+  'plotter.vis.menucomponents.sidenav'
   ] );
 
  vis.config(['$stateProvider', '$urlRouterProvider', 'ngProgressProvider', function ($stateProvider, $urlRouterProvider, ngProgressProvider) {
@@ -52,27 +54,23 @@
         return CompatibilityService.browserCompatibility();
       }],
       dimensionServices: ['DimensionService', 'DatasetFactory', 'SOMService', 'WindowHandler', function(DimensionService, DatasetFactory, SOMService, WindowHandler) {
-        console.log("!!Dimensions resolve called");
-        var primary = DimensionService.create('vis.explore', true);
-        DatasetFactory.setDimensionService(primary);
-        var som = DimensionService.create('vis.som');
-        SOMService.setDimensionService(som);
+        var primaryDim = DimensionService.create('vis.explore', true);
+        DatasetFactory.setDimensionService(primaryDim);
+        var somDim = DimensionService.create('vis.som');
+        SOMService.setDimensionService(somDim);
         var regression = DimensionService.create('vis.regression');
 
         var exploreHandler = WindowHandler.create('vis.explore');
         exploreHandler.setDimensionService( DimensionService.get('vis.explore') );
 
-        var somBottomHandler = WindowHandler.create('vis.som');
-        somBottomHandler.setDimensionService( DimensionService.get('vis.som') );
+        var somBottomHandler = WindowHandler.create('vis.som.plane');
+        somBottomHandler.setDimensionService( somDim );
 
-        var somDistributionsHandler = WindowHandler.create('vis.som.distributions');
-        somDistributionsHandler.setDimensionService( DimensionService.get('vis.som') );
-
-        var somProfilesHandler = WindowHandler.create('vis.som.profiles');
-        somProfilesHandler.setDimensionService( DimensionService.get('vis.som') );
+        var somContentHandler = WindowHandler.create('vis.som.content');
+        somContentHandler.setDimensionService( somDim );
 
         var regressionHandler = WindowHandler.create('vis.regression');
-        regressionHandler.setDimensionService( DimensionService.getPrimary() );
+        regressionHandler.setDimensionService( primaryDim );
 
       }],
       loadState: ['UrlHandler', '$stateParams', '$state', 'variables', 'datasets', 'compatibility', 'dimensionServices', 
@@ -116,10 +114,6 @@
         controller: 'ExploreController',
         templateUrl: 'vis/explore/explore.tpl.html'
       }
-      // 'submenu-explore@vis': {
-      //   controller: 'ExploreMenuCtrl',
-      //   templateUrl: 'vis/explore/explore.submenu.tpl.html'
-      // }
     },
     deepStateRedirect: true,
     sticky: true
@@ -138,90 +132,104 @@
         // var handler = WindowHandler.create('vis.som');
         // handler.setDimensionService( DimensionService.get('vis.som') );
         // return handler;
-        return WindowHandler.get('vis.som');
+        return WindowHandler.get('vis.som.plane');
+      }],
+
+      contentWindowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
+        return WindowHandler.get('vis.som.content');
       }]
     },
     views: {
-      'submenu-som@vis': {
-        templateUrl: 'vis/som/som.submenu.tpl.html'
-      },
       'som@vis': {
-        templateUrl: 'vis/som/som.tpl.html'
-        // controller: 'ExploreMenuCtrl'
+        templateUrl: 'vis/som/vis.som.content.tpl.html',
+        controller: 'SOMContentCtrl'
       },
-      'som-bottom-menu@vis.som': {
-        controller: 'SOMBottomMenuController',
-        templateUrl: 'vis/som/som.bottom.menu.tpl.html'
-      },
-      'som-bottom-content@vis.som': {
-        controller: 'SOMBottomContentController',
-        templateUrl: 'vis/som/som.bottom.content.tpl.html'
+
+      'bottom@': {
+        templateUrl: 'vis/som/vis.som.bottom.tpl.html',
+        controller: 'SOMBottomContentCtrl'
       }
+      // 'submenu-som@vis': {
+      //   templateUrl: 'vis/som/som.submenu.tpl.html'
+      // },
+      // 'som@vis': {
+      //   templateUrl: 'vis/som/som.tpl.html'
+      //   // controller: 'ExploreMenuCtrl'
+      // },
+
+      // 'som-bottom-menu@vis.som': {
+      //   controller: 'SOMBottomMenuController',
+      //   templateUrl: 'vis/som/som.bottom.menu.tpl.html'
+      // },
+      // 'som-bottom-content@vis.som': {
+      //   controller: 'SOMBottomContentController',
+      //   templateUrl: 'vis/som/som.bottom.content.tpl.html'
+      // }
     },
-    deepStateRedirect: {
-      default: { state: 'vis.som.profiles', params: {} },
-      params: ['state']
-    },
-    // deepStateRedirect: true,
+    // deepStateRedirect: {
+    //   default: { state: 'vis.som.profiles', params: {} },
+    //   params: ['state']
+    // },
+    deepStateRedirect: true,
     sticky: true
   };
   // abstract-like state, route elsewhere
   // $urlRouterProvider.when('/vis/som', '/vis/som/distributions');
 
-  var somDistributions = {
-    name: 'vis.som.distributions',
-    url: '/distributions',
-    // parent: 'vis.som',
-    reloadOnSearch: false,
-    data: { pageTitle: 'Compare distributions | Self-organizing maps | Visualization' },
-    resolve: {
-      windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
-        // var handler = WindowHandler.create('vis.som.distributions');
-        // handler.setDimensionService( DimensionService.get('vis.som') );
-        // return handler;
-        return WindowHandler.get('vis.som.distributions');
-      }]
-    },
-    views: {
-      'submenu-distributions@vis.som': {
-        controller: 'SOMMenuController',
-        templateUrl: 'vis/som/distributions/som.submenu.tpl.html'
-      },
-      'top-distributions@vis.som': {
-        controller: 'SOMDistributionsController',
-        templateUrl: 'vis/som/distributions/som.top.tpl.html'
-      }
-    },
-    deepStateRedirect: true,
-    sticky: true
-  };
+  // var somDistributions = {
+  //   name: 'vis.som.distributions',
+  //   url: '/distributions',
+  //   // parent: 'vis.som',
+  //   reloadOnSearch: false,
+  //   data: { pageTitle: 'Compare distributions | Self-organizing maps | Visualization' },
+  //   resolve: {
+  //     windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
+  //       // var handler = WindowHandler.create('vis.som.distributions');
+  //       // handler.setDimensionService( DimensionService.get('vis.som') );
+  //       // return handler;
+  //       return WindowHandler.get('vis.som.distributions');
+  //     }]
+  //   },
+  //   views: {
+  //     'submenu-distributions@vis.som': {
+  //       controller: 'SOMMenuController',
+  //       templateUrl: 'vis/som/distributions/som.submenu.tpl.html'
+  //     },
+  //     'top-distributions@vis.som': {
+  //       controller: 'SOMDistributionsController',
+  //       templateUrl: 'vis/som/distributions/som.top.tpl.html'
+  //     }
+  //   },
+  //   deepStateRedirect: true,
+  //   sticky: true
+  // };
 
-  var somProfiles = {
-    name: 'vis.som.profiles',
-    url: '/profiles',
-    // parent: 'vis.som',
-    data: { pageTitle: 'Compare profiles | Self-organizing maps | Visualization' },
-    resolve: {
-      windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
-        // var handler = WindowHandler.create('vis.som.profiles');
-        // handler.setDimensionService( DimensionService.get('vis.som') );
-        // return handler;
-        return WindowHandler.get('vis.som.profiles');
-      }]
-    },
-    views: {
-      'submenu-profiles@vis.som': {
-        controller: 'SOMProfilesMenuController',
-        templateUrl: 'vis/som/profiles/som.submenu.tpl.html'
-      },
-      'top-profiles@vis.som': {
-        controller: 'SOMProfilesController',
-        templateUrl: 'vis/som/profiles/som.top.tpl.html'
-      }
-    },
-    deepStateRedirect: true,
-    sticky: true
-  };   
+  // var somProfiles = {
+  //   name: 'vis.som.profiles',
+  //   url: '/profiles',
+  //   // parent: 'vis.som',
+  //   data: { pageTitle: 'Compare profiles | Self-organizing maps | Visualization' },
+  //   resolve: {
+  //     windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
+  //       // var handler = WindowHandler.create('vis.som.profiles');
+  //       // handler.setDimensionService( DimensionService.get('vis.som') );
+  //       // return handler;
+  //       return WindowHandler.get('vis.som.profiles');
+  //     }]
+  //   },
+  //   views: {
+  //     'submenu-profiles@vis.som': {
+  //       controller: 'SOMProfilesMenuController',
+  //       templateUrl: 'vis/som/profiles/som.submenu.tpl.html'
+  //     },
+  //     'top-profiles@vis.som': {
+  //       controller: 'SOMProfilesController',
+  //       templateUrl: 'vis/som/profiles/som.top.tpl.html'
+  //     }
+  //   },
+  //   deepStateRedirect: true,
+  //   sticky: true
+  // };   
 
   var regression = {
     name: 'vis.regression',
@@ -255,8 +263,6 @@
   $stateProvider.state(vis);
   $stateProvider.state(explore);
   $stateProvider.state(som);
-  $stateProvider.state(somDistributions);
-  $stateProvider.state(somProfiles);
   $stateProvider.state(regression);
 
   // progress bar settings
@@ -264,8 +270,8 @@
 }]);
 
 
- vis.controller( 'HeaderCtrl', ['$scope', '$stateParams', '$injector', '$state', 'TabService',
-  function ($scope, $stateParams, $injector, $state, TabService) {
+ vis.controller( 'HeaderCtrl', ['$scope', '$stateParams', '$injector', '$state', 'TabService', 'plSidenav',
+  function ($scope, $stateParams, $injector, $state, TabService, plSidenav) {
 
     $scope.tabs = [
     { 'title': 'Explore and filter', 'name': 'explore' },
@@ -291,10 +297,23 @@
 
     console.log("header ctrl");
 
+    $scope.toggleSidenav = function() {
+      plSidenav.toggle();
+    };
+
+    $scope.sideNavOpen = function() {
+      return plSidenav.isOpen();
+    };
+
   }]);
 
-  vis.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$mdSidenav', '$injector', '$mdMedia', 'WindowHandler', 'PlotService', 'RegressionService',
-    function ($scope, TabService, $rootScope, NotifyService, $mdSidenav, $injector, $mdMedia, WindowHandler, PlotService, RegressionService) {
+  vis.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$mdSidenav', '$injector', '$mdMedia', 'WindowHandler', 'PlotService', 'RegressionService', 'plSidenav', 'SOMService',
+    function ($scope, TabService, $rootScope, NotifyService, $mdSidenav, $injector, $mdMedia, WindowHandler, PlotService, RegressionService, plSidenav, SOMService) {
+
+      $scope.toggleSidenav = function() {
+        plSidenav.toggle();
+      };
+
 
       $scope.openGraphModal = function(ev) {
         var diagScope = $rootScope.$new(true);
@@ -313,8 +332,6 @@
         }, ev);
 
         promise.then(function(config) {
-
-          $mdSidenav('left').toggle();
           var winHandler = WindowHandler.getVisible()[0];
 
           function postHistogram(array) {
@@ -340,7 +357,8 @@
             PlotService.drawHeatmap({
               variables: {
                 x: processVariables(array)
-              }
+              }, 
+              separate: config.config.separate
             }, winHandler);
           }
 
@@ -371,26 +389,62 @@
         });
     };
 
-    $rootScope.sideMenuVisible = function(id) {
-      return $mdSidenav(id).isOpen();
+    $scope.openSOMModal = function(ev) {
+      var diagScope = $rootScope.$new(true);
+      $scope.selection = null;
+
+      diagScope.config = {
+        title: 'Add SOM figures',
+        template: 'vis/menucomponents/som.modal.tpl.html',
+        actions: {
+          submit: 'Create',
+          cancel: 'Cancel and close'
+        }
+      };
+
+      var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
+        controller: 'ModalCtrl'
+      }, ev);
+
+      promise.then(function succFn(variables) {
+
+      }, function errFn() {
+
+      });
+
     };
 
-    function isWide() {
-      return $mdMedia('min-width: 1280px');
-    }
+    $scope.canOpen = function() {
+      return !TabService.lock();
+    };
 
-    $scope.$watch(function() {
-      return isWide();
-    }, function(isWide) {
-      $scope.isLocked = isWide;
-    });
+    $scope.canOpenSOM = function() {
+      return !SOMService.inProgress();
+    };
 
-    $scope.isClosed = false;
-    $scope.isLocked = isWide();
+    $scope.openSOMInputModal = function(ev) {
 
-    $scope.close = function(id) {
-      $scope.isLocked = !$scope.isLocked;
-      $mdSidenav(id).close();
+      var diagScope = $rootScope.$new(true);
+
+      $scope.selection = null;
+
+      diagScope.config = {
+        title: 'Select Self-organizing Map input variables',
+        template: 'vis/menucomponents/som.input.tpl.html',
+        actions: {
+          submit: 'Update input variables',
+          cancel: 'Cancel and close'
+        }
+      };
+
+      var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
+        controller: 'ModalCtrl'
+      }, ev);
+
+      promise.then(function succFn(result) {
+      }, function errFn() {
+      });
+
     };
 
     $scope.openRegressionModal = function(ev) {
@@ -442,16 +496,19 @@
       var state = TabService.activeState();
       if(state.name === 'vis.regression') {
         return 'regression';
-      } else {
+      } else if(state.name === 'vis.som') {
+        return 'som';
+      }
+      else {
         return 'default';
       }
     };     
-    }
+  }
   ]);
 
 
- vis.controller( 'ModalCtrl', ['$scope', '$mdDialog', 'DatasetFactory',
-  function ($scope, $mdDialog, DatasetFactory) {
+ vis.controller( 'ModalCtrl', ['$scope', '$modal', 'DatasetFactory',
+  function ($scope, $modal, DatasetFactory) {
 
     $scope.canSubmit = {
       initial: function() {
@@ -465,7 +522,7 @@
         var retval = $scope.submit.inherited();
         if(retval === false) { return; }
         else {
-          $mdDialog.hide(retval);
+          $scope.$close(retval);
         }
       },
       inherited: null
@@ -473,7 +530,7 @@
 
     $scope.cancel = {
       initial: function() {
-        $mdDialog.cancel( !$scope.cancel.inherited ? {} : $scope.cancel.inherited() );
+        $scope.$dismiss( !$scope.cancel.inherited ? {} : $scope.cancel.inherited() );
       },
       inherited: null
     };
@@ -481,8 +538,8 @@
   }]); 
 
 
- vis.controller( 'VisCtrl', ['$scope', 'DimensionService', 'DatasetFactory', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets', '$q', 'SOMService', 'TabService', 'NotifyService', '$mdDialog', '$mdSidenav',
-  function VisController( $scope, DimensionService, DatasetFactory, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets, $q, SOMService, TabService, NotifyService, $mdDialog, $mdSidenav) {
+ vis.controller( 'VisCtrl', ['$scope', 'DimensionService', 'DatasetFactory', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets', '$q', 'SOMService', 'TabService', 'NotifyService', 'plSidenav', '$state',
+  function VisController( $scope, DimensionService, DatasetFactory, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets, $q, SOMService, TabService, NotifyService, plSidenav, $state) {
     console.log("viscontroller");
 
     var $rootScope = $injector.get('$rootScope');
@@ -512,5 +569,13 @@
     // for debugging
     // $scope.usedVariables = $scope.dimensionService.getUsedVariables();
     $scope.activeVariables = $scope.dimensionService.getDimensions();
+
+    $rootScope.sideMenuVisible = function() {
+      return plSidenav.isOpen();
+    };
+
+    $rootScope.showBottomContainer = function() {
+      return _.startsWith($state.current.name, 'vis.som');
+    };
 
   }]);

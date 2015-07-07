@@ -6,31 +6,54 @@ var visu = angular.module('plotter.vis.plotting.histogram',
   'services.som',
   'services.window'
   ]);
-visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout',
-  function HistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout) {
+
+visu.constant('HISTOGRAM_WIDTH', 450);
+visu.constant('HISTOGRAM_HEIGHT', 375);
+visu.constant('HISTOGRAM_POOLING_COLOR', '#000000');
+visu.constant('HISTOGRAM_SOM_TOTAL_COLOR', '#00b300');
+
+visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR',
+  function HistogramPlotController($scope, $rootScope, DatasetFactory, constants, $state, $injector, $timeout, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR) {
 
     $scope.isSpecial = function() {
-      return $scope.window.somSpecial;
+      return $scope.window.extra().somSpecial || false;
     };
 
-    $scope.filterButton = function(x) {
-      $scope.window.showResetBtn = x;
-    };
+    $scope.$watch(function() {
+      return $scope.window.pooled();
+    }, function(newVal, oldVal) {
+      if( newVal !== oldVal) {
+        if(newVal) {
+          $scope.histogram.colors(null);
+          $scope.histogram.linearColors([HISTOGRAM_POOLING_COLOR]);
+        } else {
+          $scope.histogram.colors($scope.colorScale);
+        }
 
-    $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
+        $scope.histogram.render();
+      }
+    });
+
+    // $scope.filterButton = function(x) {
+    //   $scope.window.showResetBtn = x;
+    // };
+
+    $scope.dimensionService = $scope.window.handler().getDimensionService();
+
+    // $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
     // work-around, weird scope issue on filters ?!
     $scope.FilterService = $injector.get('FilterService');
 
     function initSOMSpecial() {
       $scope.primary = $injector.get('DimensionService').getPrimary();
-      $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables);
+      $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables());
       $scope.totalDimension = $scope.totalDimensionInst.get();
-      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables);
+      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables());
       $scope.dimension = $scope.dimensionInst.get();
     }
 
     function initDefault() {
-      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables);
+      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables());
       $scope.dimension = $scope.dimensionInst.get();
       $scope.groupInst = null;
       $scope.totalGroupInst = null;
@@ -43,29 +66,40 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       initDefault();
     }
 
-    $scope.$parent.resetFilter = function() {
+    $scope.window.resetFn(function() {
       $scope.histogram.filterAll();
-      $scope.window.handler.redrawAll();
-    };
+      $scope.window.handler().redrawAll();
+    });
 
-    $scope.window.showResetBtn = false;
+    // $scope.$parent.resetFilter = function() {
+    //   $scope.histogram.filterAll();
+    //   $scope.window.handler.redrawAll();
+    // };
+
+    // $scope.window.showResetBtn = false;
+    // $scope.resetButton = function(x) {
+    //   $timeout(function() {
+    //     $scope.window.showResetBtn = x;
+    //   });
+    // };
+
     $scope.resetButton = function(x) {
       $timeout(function() {
-        $scope.window.showResetBtn = x;
+        $scope.window.resetButton(x);
       });
     };
 
     $scope.render = function() {
       // only render if the dashboard is visible
-      if( $state.current.name === $scope.window.handler.getName() ) {
+      if( $state.current.name === $scope.window.handler().getName() ) {
         $scope.computeExtent();
         $scope.histogram.render();
       }
     };
 
     // share information with the plot window
-    $scope.$parent.headerText = ['Histogram of', $scope.window.variables.x, ''];
-    // $scope.$parent.showResetBtn = false;
+    $scope.window.headerText(['Histogram of', $scope.window.variables().x]);
+    // $scope.$parent.headerText = ['Histogram of', $scope.window.variables.x, ''];
 
     $scope.computeExtent = function() {
       // remove older ones
@@ -96,18 +130,18 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
 
       if( $scope.isSpecial() ) {
         // circle
-        $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables.x);
+        $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables().x);
         $scope.reduced = $scope.groupInst.get();
 
         $scope.totalGroupInst = $scope.totalDimensionInst.group(function(d) {
           return Math.floor(d / $scope.binWidth) * $scope.binWidth;
         });
         // total
-        $scope.primary.getReducedGroupHisto($scope.totalGroupInst, $scope.window.variables.x);
+        $scope.primary.getReducedGroupHisto($scope.totalGroupInst, $scope.window.variables().x);
         $scope.totalReduced = $scope.totalGroupInst.get();
       }
       else {
-        $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables.x);
+        $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables().x);
         $scope.reduced = $scope.groupInst.get();
       }
 
@@ -123,7 +157,7 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
       if($scope.histogram) {
         $scope.histogram.x(d3.scale.linear().domain($scope.extent).range([0, $scope.noBins]));
       }
-      console.log("histogram extent is ", $scope.extent, "on windowHandler = ", $scope.window.handler.getName(), "variable = ", $scope.window.variables.x);
+      console.log("histogram extent is ", $scope.extent, "on windowHandler = ", $scope.window.handler().getName(), "variable = ", $scope.window.variables());
     };
 
     $scope.computeExtent();
@@ -189,37 +223,38 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DimensionSe
   }
   ]);
 
-visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
+visu.directive('plHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR', 'HISTOGRAM_SOM_TOTAL_COLOR',
 
-  function(constants, $timeout, $rootScope, $injector) {
+  function(constants, $timeout, $rootScope, $injector, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, HISTOGRAM_SOM_TOTAL_COLOR) {
 
     var createSVG = function($scope, config) {
       // check css window rules before touching these
       var _width = 470;
       var _height = 345;
       var _xBarWidth = 50;
-      var _poolingColor = '#000000';
 
       // collect charts here
       var charts = [];
 
       var resizeSVG = function(chart) {
-        var ratio = config.size.aspectRatio === 'stretch' ? 'none' : 'xMinYMin';
+        // var ratio = config.size.aspectRatio === 'stretch' ? 'none' : 'xMinYMin';
         chart.select("svg")
-        .attr("viewBox", "0 0 " + [config.size.width, config.size.height].join(" ") )
-        .attr("preserveAspectRatio", ratio)
+        .attr("viewBox", "0 0 " + [HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT].join(" "))
+        // .attr("viewBox", "0 0 " + [config.size.width, config.size.height].join(" ") )
+        // .attr("preserveAspectRatio", ratio)
+        .attr("preserveAspectRatio", "none")
         .attr("width", "100%")
         .attr("height", "100%");
           // don't redraw here, or it will form a feedback loop
-        };
+      };
 
         var dcGroup = $scope.isSpecial() ? constants.groups.histogram.nonInteractive : constants.groups.histogram.interactive;
 
       // 1. create composite chart
       $scope.histogram = dc.compositeChart(config.element[0], dcGroup)
       .dimension(config.dimension)
-      .width(config.size.width)
-      .height(config.size.height)
+      .width(HISTOGRAM_WIDTH)
+      .height(HISTOGRAM_HEIGHT)
       .shareColors(true)
       .elasticY(true)
       .elasticX(false)
@@ -258,14 +293,14 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
             // new
             var filt = new HistogramFilter()
             .chart($scope.histogram)
-            .variable($scope.window.variables.x)
-            .windowid($scope.window._winid)
+            .variable($scope.window.variables().x)
+            .windowid($scope.window.id())
             .payload(filter);
 
             $injector.get('FilterService').addFilter(filt);
           }
           $scope.resetButton(true);
-          $injector.get('WindowHandler').reRenderVisible({ compute: true, omit: 'histogram' });
+          $injector.get('WindowHandler').reRenderVisible({ compute: true, action: 'filter:add', omit: 'histogram' });
         }
 
         custom.apply(this, arguments);
@@ -284,7 +319,7 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
 
         function custom(filters, filter) {
           $injector.get('FilterService').removeFilter(filt);
-          $injector.get('WindowHandler').reRenderVisible({ compute: true, omit: 'histogram' });
+          $injector.get('WindowHandler').reRenderVisible({ compute: true, action: 'filter:remove', omit: 'histogram' });
           $scope.resetButton(false);
         }
 
@@ -295,15 +330,15 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
         _.each(filters, function(filter) {
           $injector.get('FilterService').removeFilterByPayload(filter);
         });
-        $injector.get('WindowHandler').reRenderVisible({ compute: true, omit: 'histogram' });
+        $injector.get('WindowHandler').reRenderVisible({ compute: true, action: 'filter:reset', omit: 'histogram' });
         $scope.resetButton(false);
         return [];
       })
       .renderlet( function(chart) {
-        if( config.pooled ) {
+        if( $scope.window.pooled() ) {
           d3.selectAll( $(config.element).find('rect.bar:not(.deselected)') )
           .attr("class", 'bar pooled')
-          .attr("fill", _poolingColor);
+          .attr("fill", HISTOGRAM_POOLING_COLOR);
         }
       })
       .on("postRender", resizeSVG)
@@ -314,8 +349,8 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       .xAxis().ticks(7).tickFormat(constants.tickFormat);
 
       // set colors
-      if (config.pooled) {
-        $scope.histogram.linearColors([_poolingColor]);
+      if ( $scope.window.pooled() ) {
+        $scope.histogram.linearColors([HISTOGRAM_POOLING_COLOR]);
       } else {
         $scope.histogram.colors(config.colorScale);
       }
@@ -342,6 +377,7 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
         var chart = dc.barChart($scope.histogram)
         .centerBar(true)
         .barPadding(0.15)
+        .linearColors([HISTOGRAM_SOM_TOTAL_COLOR])
         .brushOn(true)
         .dimension($scope.totalDimension)
         .group(config.filter($scope.totalReduced, name), name)
@@ -372,24 +408,41 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
 
     function postLink($scope, ele, attrs, ctrl) {
 
-      $scope.$parent.element = ele;
+      function initDropdown() {
+        $scope.window.addDropdown({
+          type: "export:svg",
+          element: $scope.element
+        });
+
+        $scope.window.addDropdown({
+          type: "export:png",
+          element: $scope.element
+        });
+
+        $scope.window.addDropdown({
+          type: "pooling",
+          window: $scope.window
+        });
+      }
+
+      $scope.element = ele;
+
+      initDropdown();
 
       var config = {
         dimension: $scope.dimension,
         element: ele,
-        variableX: $scope.window.variables.x,
+        variableX: $scope.window.variables().x,
         noBins: $scope.noBins,
-        size: $scope.window.size,
+        // size: $scope.window.size,
         extent: $scope.extent,
         binWidth: $scope.binWidth,
         groups: $scope.groups,
         reduced: $scope.reduced,
         groupNames: $scope.groupNames,
-        // datasetNames: $scope.datasetNames,
         colorScale: $scope.colorScale,
-        pooled: $scope.window.pooled || false,
         filter: $scope.filterOnSet,
-        filterEnabled: $scope.window.filterEnabled
+        filterEnabled: $scope.window.extra().filterEnabled
       };
 
       $timeout( function() {
@@ -397,6 +450,48 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       });
 
       $scope.deregisters = [];
+
+      var somFilterAddedUnbind = $rootScope.$on('som:circle:add', function(event, filter) {
+        function addChart() {
+          var name = filter.id(),
+          chart = dc.barChart($scope.histogram)
+          .centerBar(true)
+          .barPadding(0.15)
+          .brushOn(true)
+          .dimension($scope.dimension)
+          .group($scope.filterOnSet($scope.reduced, name), name)
+          .valueAccessor(function(d) { // is y direction
+            return d.value.counts[name];
+          }),
+          currentChildren = $scope.histogram.children();
+
+          $scope.barCharts[name] = chart;
+          currentChildren.push(chart);
+          $scope.histogram.compose(currentChildren);
+        }
+
+        if(!$scope.isSpecial()) { return; }
+
+        $scope.computeExtent();
+        addChart();
+        $scope.histogram.render();
+      });
+
+      var somFilterRemovedUnbind = $rootScope.$on('som:circle:remove', function(event, filter) {
+        function removeChart() {
+          var currentChildren = $scope.histogram.children(),
+          name = filter.id(),
+          chart = $scope.barCharts[name];
+
+          _.remove(currentChildren, chart);
+          $scope.histogram.compose(currentChildren);
+        }
+        if(!$scope.isSpecial()) { return; }
+
+        $scope.computeExtent();
+        removeChart();
+        $scope.histogram.render();
+      });
 
       var derivedAddUnbind = $rootScope.$on('dataset:derived:add', function(eve, set) {
         function addChart() {
@@ -417,8 +512,14 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
           $scope.histogram.compose(currentChildren);
         }
 
-        $scope.computeExtent();
-        addChart();
+        if( $scope.isSpecial() ) { 
+          // $scope.computeExtent();
+          // $scope.histogram.render();
+        } else {
+          $scope.computeExtent();
+          addChart();
+          $scope.histogram.render();
+        }
       });
 
       var derivedRemoveUnbind = $rootScope.$on('dataset:derived:remove', function(eve, set) {
@@ -428,12 +529,17 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
           chart = $scope.barCharts[name];
 
           _.remove(currentChildren, chart);
-
           $scope.histogram.compose(currentChildren);
         }
 
-        $scope.computeExtent();
-        removeChart();
+        if( $scope.isSpecial() ) { 
+          // $scope.computeExtent();
+          // $scope.histogram.render();
+        } else {
+          $scope.computeExtent();
+          removeChart();
+          $scope.histogram.render();
+        }
       });
 
       var resizeUnbind = $rootScope.$on('gridster.resize', function(eve, $element) {
@@ -445,18 +551,18 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       });
 
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
-        if( winHandler == $scope.window.handler ) {
+        if( winHandler == $scope.window.handler() ) {
           if( config.omit == 'histogram' ) { return; }
           $timeout( function() {
             if(config.compute) {
               $scope.render();
 
               if(!$scope.isSpecial()) {
-                var oldFilters = $scope.histogram.filters();
-                $scope.histogram.filter(null);
-                _.each(oldFilters, function(filter) {
-                  $scope.histogram.filter(filter);
-                });
+                // var oldFilters = $scope.histogram.filters();
+                // $scope.histogram.filter(null);
+                // _.each(oldFilters, function(filter) {
+                //   $scope.histogram.filter(filter);
+                // });
                 $scope.histogram.redraw();
               }
             }
@@ -468,7 +574,7 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       });
 
       var redrawUnbind = $rootScope.$on('window-handler.redraw', function(event, winHandler) {
-        if( winHandler == $scope.window.handler ) {
+        if( winHandler == $scope.window.handler() ) {
           $timeout( function() {
             $scope.histogram.redraw();
           });
@@ -476,16 +582,9 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
       });
 
       var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
-        var retObj = _.chain($scope.window)
-        .pick(['type', 'grid', 'somSpecial', 'pooled', 'variables', 'handler'])
-        .clone()
-        .extend({ filters: $scope.histogram.filters()[0] || [] })
-        .value();
-
-        callback(retObj);
       });
 
-      $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind, gatherStateUnbind, derivedAddUnbind, derivedRemoveUnbind);
+      $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind, gatherStateUnbind, derivedAddUnbind, derivedRemoveUnbind, somFilterRemovedUnbind, somFilterAddedUnbind);
 
       $scope.$on('$destroy', function() {
         console.log("destroying histogram for", $scope.window.variables.x);
@@ -505,7 +604,9 @@ visu.directive('histogram', ['constants', '$timeout', '$rootScope', '$injector',
     }
 
     return {
-      scope: false,
+      // scope: {
+      //   'window': "=reWindow"
+      // },
       restrict: 'C',
       controller: 'HistogramPlotController',
       link: {

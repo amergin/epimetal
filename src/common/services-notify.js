@@ -85,22 +85,23 @@ serv.factory('NotifyService', ['$injector', '$timeout', 'growl',
       //   return deferred.promise;
       // },
 
-      addClosableModal: function (templateUrl, scope, config, eve) {
-
-        var $mdDialog = $injector.get('$mdDialog');
+      addClosableModal: function(templateUrl, scope, config) {
+        var $modal = $injector.get('$modal');
         var $q = $injector.get('$q');
         var deferred = $q.defer();
 
         var applyConfig = {
           scope: scope,
+          backdrop: true, //'static',
+          keyboard: false,
           templateUrl: templateUrl,
-          parent: angular.element(document.body),
-          targetEvent: eve
+          windowClass: 'modal-wide'
         };
         angular.extend(applyConfig, config);
 
-        _modalInstanceRef = $mdDialog.show(applyConfig)
-        .then(function(res) {
+        _modalInstanceRef = $modal.open(applyConfig);
+
+        _modalInstanceRef.result.then(function(res) {
           deferred.resolve(res);
         }, function(res) {
           deferred.reject(res);
@@ -108,6 +109,32 @@ serv.factory('NotifyService', ['$injector', '$timeout', 'growl',
 
         return deferred.promise;
       },
+
+
+      // angular-material:
+      // addClosableModal: function (templateUrl, scope, config, eve) {
+
+      //   var $mdDialog = $injector.get('$mdDialog');
+      //   var $q = $injector.get('$q');
+      //   var deferred = $q.defer();
+
+      //   var applyConfig = {
+      //     scope: scope,
+      //     templateUrl: templateUrl,
+      //     parent: angular.element(document.body),
+      //     targetEvent: eve
+      //   };
+      //   angular.extend(applyConfig, config);
+
+      //   _modalInstanceRef = $mdDialog.show(applyConfig)
+      //   .then(function(res) {
+      //     deferred.resolve(res);
+      //   }, function(res) {
+      //     deferred.reject(res);
+      //   });
+
+      //   return deferred.promise;
+      // },
 
 
       addSpinnerModal: function (message, callback) {

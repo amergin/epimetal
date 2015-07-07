@@ -28,39 +28,11 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
 
       changeDimensionService(toState.name);
 
-      // som -> somewhere
-      if( _.startsWith(fromState.name, 'vis.som' ) ) {
-
-        // som -> regression
-        if( _.startsWith(toState.name, 'vis.regression') ) {
-          // update regression view
-          checkRegressionState(toState.name);
-        } 
-        // som -> explore
-        // else if( _.startsWith(toState.name, 'vis.explore') ) {
-        //   // do nothing
-        // }
-      } 
-      // explore -> somewhere
-      else if( _.startsWith(fromState.name, 'vis.explore') ) {
-
-        // explore -> som.*
-        if( _.startsWith(toState.name, 'vis.som') ) {
-          // check differences and recompute & refresh if necessary
-          // checkSOMState();
-        }
-        // explore -> regression
-        else if( _.startsWith(toState.name, 'vis.regression') ) {
-          checkRegressionState(toState.name);
-        }
-      } 
-      // regression -> somewhere
-      else if( _.startsWith(fromState.name, 'vis.regression') ) {
-        // regression -> som
-        if( _.startsWith(toState.name, 'vis.som') ) {
-          // check differences and recompute & refresh if necessary
-          // checkSOMState();
-        }
+      if(toState.name == 'vis.som') {
+        checkSOMState();
+      }
+      else if(toState.name == 'vis.regression') {
+        checkRegressionState();
       }
     });
 
@@ -68,7 +40,7 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
       var SOMService = $injector.get('SOMService'),
       PlotService = $injector.get('PlotService'),
       defaultPlanes = SOMService.defaultPlanes(),
-      planeHandler = WindowHandler.get('vis.som');
+      planeHandler = WindowHandler.get('vis.som.plane');
 
       if( planeHandler.get().length === 0 ) {
         // no planes
@@ -78,7 +50,17 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
       }
     }
 
-    function checkRegressionState(toName) {
+    _service.check = function(cfg) {
+      var stateName = $state.current.name;
+
+      if(stateName == 'vis.som') {
+        checkSOMState(cfg);
+      } else if(stateName == 'vis.regression') {
+        checkRegressionState(cfg);
+      }
+    };
+
+    function checkRegressionState(cfg) {
       function sameSamples() {
         var RegressionService = $injector.get('RegressionService'),
         DimensionService = $injector.get('DimensionService'),
@@ -94,16 +76,17 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
         return primaryIsSame && secondaryIsSame;
       }
       if(!sameSamples()) {
-        WindowHandler.get(toName).redrawAll();
+        WindowHandler.get('vis.regression').redrawAll();
       }
     }
 
-    function checkSOMState() {
+    function checkSOMState(cfg) {
       function startSOMComputation() {
         var SOMService = $injector.get('SOMService'),
-        somBottomHandler = WindowHandler.get('vis.som');
+        somPlaneHandler = WindowHandler.get('vis.som.plane');
 
-        SOMService.getSOM(somBottomHandler).then( function succFn() {
+        WindowHandler.spinAllVisible();
+        SOMService.getSOM(somPlaneHandler).then( function succFn() {
           checkDefaultPlanes();
           $timeout(function() {
             WindowHandler.reRenderVisible({ compute: true });
@@ -114,33 +97,52 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
           // stop plane spins
           _.each( WindowHandler.getVisible(), function(handler) {
             _.each(handler.get(), function(win) {
-              if( win.type == 'somplane' ) {
-                handler.stopSpin(win._winid);
+              if(win.object.figure() == 'pl-somplane') {
+                win.object.spin(false);
               }
+              // if( win.type == 'somplane' ) {
+              //   handler.stopSpin(win._winid);
+              // }
             });
           });              
         })
         .finally(function() {
-          _.each(WindowHandler.getVisible(), function(handler) {
-            _.each(handler.get(), function(win) {
-              if( win.type != 'somplane' ) {
-                handler.stopSpin(win._winid);
-              }
-            });
-          });
+          WindowHandler.stopAllSpins();
+          // _.each(WindowHandler.getVisible(), function(handler) {
+          //   _.each(handler.get(), function(win) {
+          //     if(win.object.figure() !== 'pl-somplane') {
+          //       win.spin(false);
+          //     }
+          //     // if( win.type != 'somplane' ) {
+          //     //   handler.stopSpin(win._winid);
+          //     // }
+          //   });
+          // });
         });        
       }
-      var primary  = DimensionService.getPrimary(),
-      current = DimensionService.get('vis.som');
 
-      if( !DimensionService.equal( primary, current ) ) {
+      function restart() {
         console.log("dimension instances not equal, need to restart");
         WindowHandler.spinAllVisible();
         DimensionService.restart( current, primary ).then(function succFn(res) {
           startSOMComputation();
         });
-      }      
+      }
 
+
+      var primary  = DimensionService.getPrimary(),
+      current = DimensionService.get('vis.som'),
+      forced = !_.isUndefined(cfg) && _.isEqual(cfg.force, true),
+      notForced = !_.isUndefined(cfg) && _.isEqual(cfg.force, false);
+
+      if(forced) {
+        restart();
+      } else if(notForced) {
+        return;
+      } else if( !DimensionService.equal( primary, current ) ) {
+        // when tab change triggered
+        restart();
+      }
     }
 
     _service.lock = function(x) {

@@ -13,8 +13,12 @@ visu.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionS
     console.log("regression plot");
 
     function windowSize(width, height) {
-      $scope.window.grid.size.x = Math.round(width/REGRESSION_WIN_X_PX) + 1;
-      $scope.window.grid.size.y = Math.round(height/REGRESSION_WIN_Y_PX) + 1;
+      $scope.window.size({
+        x: Math.round(width/REGRESSION_WIN_X_PX) + 1,
+        y: Math.round(height/REGRESSION_WIN_Y_PX) + 1
+      });
+      // $scope.window.grid.size.x = Math.round(width/REGRESSION_WIN_X_PX) + 1;
+      // $scope.window.grid.size.y = Math.round(height/REGRESSION_WIN_Y_PX) + 1;
     }
 
     $scope.drawChart = function($scope, data, variables) {
@@ -22,7 +26,7 @@ visu.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionS
       height;
 
       $scope.chart = new RegressionChart()
-      .element( $scope.$parent.element[0] )
+      .element( $scope.element[0] )
       .width(width)
       .data(data)
       .variables(variables)
@@ -49,37 +53,40 @@ visu.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionS
 
 }]);
 
-visu.directive('regressionPlot', ['constants', '$timeout', '$rootScope', '$injector', 'DatasetFactory', 'RegressionService', 'NotifyService',
+visu.directive('plRegression', ['constants', '$timeout', '$rootScope', '$injector', 'DatasetFactory', 'RegressionService', 'NotifyService',
   function(constants, $timeout, $rootScope, $injector, DatasetFactory, RegressionService, NotifyService) {
 
     function postLink($scope, ele, attrs, ctrl) {
       function updateChart() {
         var selectedVariables = RegressionService.selectedVariables();
-        $scope.$parent.startSpin();
-        RegressionService.compute({ variables: selectedVariables, source: $scope.window.source }, $scope.window.handler)
+        $scope.window.spin(true);
+        // $scope.$parent.startSpin();
+        RegressionService.compute({ variables: selectedVariables, source: $scope.window.extra().source }, $scope.window.handler())
         .then(function succFn(result) {
-          $scope.window.computation = result;
-          $scope.updateChart($scope, $scope.window.computation.result);
+          $scope.window.extra()['computation'] = result;
+          $scope.updateChart($scope, $scope.window.extra().computation.result);
         }, function errFn(result) {
           NotifyService.addTransient('Regression computation failed', 'Something went wrong while updating the regression chart.', 'error');
-          $scope.window.handler.removeByType('regression-plot');
+          $scope.window.handler.removeByType('pl-regression');
         })
         .finally(function() {
-          $scope.$parent.stopSpin();
+          $scope.window.spin(false);
         });
       }
 
-      $scope.$parent.element = ele;
+      $scope.element = ele;
+
+      // $scope.$parent.element = ele;
 
       DatasetFactory.getVariables().then(function(variables) {
-        $scope.drawChart($scope, $scope.window.computation.result, variables);
+        $scope.drawChart($scope, $scope.window.extra().computation.result, variables);
       });
 
 
       $scope.deregisters = [];
 
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
-        if( winHandler == $scope.window.handler ) {
+        if( winHandler == $scope.window.handler() ) {
           // if( config.omit == 'histogram' ) { return; }
           $timeout( function() {
             updateChart();
@@ -88,7 +95,7 @@ visu.directive('regressionPlot', ['constants', '$timeout', '$rootScope', '$injec
       });
 
       var redrawUnbind =  $rootScope.$on('window-handler.redraw', function(event, winHandler) {
-        if( winHandler == $scope.window.handler ) {
+        if( winHandler == $scope.window.handler() ) {
           $timeout( function() {
             updateChart();
           });
@@ -96,12 +103,12 @@ visu.directive('regressionPlot', ['constants', '$timeout', '$rootScope', '$injec
       });
 
       var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
-        var retObj = _.chain($scope.window)
-        .pick(['type', 'grid', 'handler', 'computation'])
-        .clone()
-        .value();
+        // var retObj = _.chain($scope.window)
+        // .pick(['type', 'grid', 'handler', 'computation'])
+        // .clone()
+        // .value();
 
-        callback(retObj);
+        // callback(retObj);
       });
 
       $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind);
@@ -120,7 +127,7 @@ visu.directive('regressionPlot', ['constants', '$timeout', '$rootScope', '$injec
     }
 
     return {
-      scope: false,
+      // scope: false,
       restrict: 'C',
       controller: 'RegressionPlotController',
       link: {

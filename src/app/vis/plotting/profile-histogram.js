@@ -6,10 +6,21 @@ var visu = angular.module('plotter.vis.plotting.profile-histogram',
   'services.som',
   'services.window'
   ]);
+
+visu.constant('PROFILE_HISTOGRAM_SIZE', {
+  height: 400,
+  width: 1400,
+  aspectRatio: 'preserve'
+});
+
 visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'FilterService',
   function ProfileHistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, FilterService) {
 
-    $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
+    $scope.window.headerText(['Profile histogram for ', $scope.window.extra().name]);
+
+    // $scope.$parent.headerText = ['Profile histogram for ', $scope.window.name];
+
+    $scope.dimensionService = $scope.window.handler().getDimensionService();
     $scope.colorScale = FilterService.getSOMFilterColors();
 
     $scope.dimensionInst = $scope.dimensionService.getVariableBMUDimension();
@@ -21,7 +32,7 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
     $scope.totalReduced = {};
     $scope.totalReducedInst = {};
 
-    _.each( $scope.window.variables.x, function(variable) {
+    _.each( $scope.window.variables().x, function(variable) {
 
       var groupInst = $scope.dimensionInst.group( function(d) {
         return {
@@ -112,8 +123,8 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
   }
   ]);
 
-visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$injector',
-  function(constants, $timeout, $rootScope, $injector) {
+visu.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'PROFILE_HISTOGRAM_SIZE',
+  function(constants, $timeout, $rootScope, $injector, PROFILE_HISTOGRAM_SIZE) {
 
     var PlotService = $injector.get('PlotService');
 
@@ -127,7 +138,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
         "<strong>Sample count</strong>: " + "<span class='tooltip-val'>" + d.custom.n + "</span>"
         ].join("<br>");
       };
-      $scope.histogram = new GroupedBarChart($scope.$parent.element[0], config.size.width, config.size.height)
+      $scope.histogram = new GroupedBarChart($scope.element[0], config.size.width, config.size.height)
       .yLabel('')
       .colors(config.colors)
       .data(config.data)
@@ -143,9 +154,9 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
           somSpecial: true
         };
         // remove the old histogram window, if any
-        $scope.window.handler.removeByType('histogram');
+        // $scope.window.handler.removeByType('histogram');
         // draw a new one
-        PlotService.drawHistogram( config, $scope.window.handler );
+        PlotService.drawHistogram( config, $scope.window.handler() );
 
       })
       .yAxisDisabled(true)
@@ -161,11 +172,26 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
 
     function postLink($scope, ele, attrs, ctrl) {
 
-      $scope.$parent.element = ele;
+      function initDropdown() {
+        $scope.window.addDropdown({
+          type: "export:svg",
+          element: $scope.element
+        });
+
+        $scope.window.addDropdown({
+          type: "export:png",
+          element: $scope.element
+        });
+      }
+
+      // $scope.$parent.element = ele;
+      $scope.element = ele;
+
+      initDropdown();
 
       var config = {
         data: $scope.formGroups($scope.groups),
-        size: $scope.window.size,
+        size: PROFILE_HISTOGRAM_SIZE, //$scope.window.size,
         colors: $scope.colorScale
       };
 
@@ -173,7 +199,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
       $scope.deregisters = [];
 
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
-        if( winHandler == $scope.window.handler ) {
+        if( winHandler == $scope.window.handler() ) {
           if( config.omit == 'histogram' ) { return; }
           $timeout( function() {
             updateChart($scope, { data: $scope.formGroups($scope.groups) });
@@ -182,7 +208,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
       });
 
       var redrawUnbind =  $rootScope.$on('window-handler.redraw', function(event, winHandler) {
-        if( winHandler == $scope.window.handler ) {
+        if( winHandler == $scope.window.handler() ) {
           $timeout( function() {
             updateChart($scope, { data: $scope.formGroups($scope.groups) });
           });
@@ -190,12 +216,12 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
       });
 
       var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
-        var retObj = _.chain($scope.window)
-        .pick(['type', 'grid', 'variables', 'handler', 'plane'])
-        .clone()
-        .value();
+        // var retObj = _.chain($scope.window)
+        // .pick(['type', 'grid', 'variables', 'handler', 'plane'])
+        // .clone()
+        // .value();
 
-        callback(retObj);
+        // callback(retObj);
       });
 
       $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind);
@@ -221,7 +247,7 @@ visu.directive('profileHistogram', ['constants', '$timeout', '$rootScope', '$inj
     }
 
     return {
-      scope: false,
+      // scope: false,
       restrict: 'C',
       controller: 'ProfileHistogramPlotController',
       link: {

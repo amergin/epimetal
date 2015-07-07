@@ -25,16 +25,25 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
       var _name = name || '';
 
       this.getHash = function() {
-        var re = /((?:\w+).(?:\w+))(?:.\w+)?/i;
-        var current = $state.current.name;
-        var parent = _.last( re.exec(current) );
+        // var re = /((?:\w+).(?:\w+))(?:.\w+)?/i;
+        // var current = $state.current.name;
+        // var parent = _.last( re.exec(current) );
 
-        if( $injector.get('DimensionService').getPrimary().getName() == that.getName() ) {
+        var isPrimary = $injector.get('DimensionService').getPrimary().getName() == that.getName(),
+        isSecondary = $injector.get('DimensionService').getSecondary() == that;
+
+        if(isPrimary) {
           return crossfilterInst.size() > 0 ? that.getSampleDimension().get().groupAll().value() : 0;
-        }
-        else {
+        } else if(isSecondary) {
           return crossfilterInst.size();
         }
+
+        // if( $injector.get('DimensionService').getPrimary().getName() == that.getName() ) {
+        //   return crossfilterInst.size() > 0 ? that.getSampleDimension().get().groupAll().value() : 0;
+        // }
+        // else {
+        //   return crossfilterInst.size();
+        // }
       };
 
       this.getName = function() {

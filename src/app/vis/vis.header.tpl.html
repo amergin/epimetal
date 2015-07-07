@@ -1,18 +1,10 @@
-<md-tabs md-stretch-tabs md-selected="headerTabInd">
-  <md-tab ng-repeat="tab in tabs" >
-    <md-tab-label>
-      <span ui-sref="{{ 'vis.' + tab.name }}({ state: undefined })">{{tab.title}}</span>
-    </md-tab-label>
-  </md-tab>
-</md-tabs>
-
-<!-- <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
-  <div class="container-fluid">
-    
-    <div class="navbar-header">
+<nav class="navbar navbar-default" role="navigation">
+  <button class="btn btn-default pull-left inline" ng-click="toggleSidenav()" ng-show="!sideNavOpen()">
+    <i class="fa fa-bars" title="Show menu"></i> 
+  </button>
+  <div class="navbar-header">
     <a href ui-sref="vis.explore" class="navbar-brand">Plotter</a>
   </div>
-
   <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
     <ul class="nav navbar-nav">
      <li ng-repeat="tab in tabs" ng-class="{active:$state.includes('vis.' + tab.name)}">
@@ -20,26 +12,7 @@
     </li>
   </ul>
   <ul class="nav navbar-nav navbar-right navbar-vertical-align">
-    <li>
-      <div class="sample-info"></div>
-    </li>
-    <li>
-      <div class="filter-info"></div>
-    </li>
-    <li>
-        <a href data-trigger="click" data-placement="bottom-right" data-content="cont" data-template="vis/menucomponents/new.linkcreator.tpl.html" data-animation="am-fade" title="Copy a link to this view" bs-popover data-auto-close="1">
-          <i class="fa fa-link"></i> Link this view  <i class="fa fa-caret-down"></i>
-        </a>
-    </li>
   </ul>
 </div>
-</div>
 
-
-<div id="header-submenu" ui-view="submenu" class="am-fade-and-slide-top">
-    <div ui-view="submenu-explore" ng-show="$state.includes('vis.explore')"></div>
-    <div ui-view="submenu-som" ng-show="$state.includes('vis.som')"></div>
-    <div ui-view="submenu-regression" ng-show="$state.includes('vis.regression')"></div>
-</div>
 </nav>
- -->

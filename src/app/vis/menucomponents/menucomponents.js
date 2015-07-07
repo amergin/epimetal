@@ -27,8 +27,8 @@ vis.directive('datasetForm', function () {
 });
 
 // dataset table controller
-vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService', 'constants', '$location', 'UrlHandler', 'WindowHandler',
-  function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService, constants, $location, UrlHandler, WindowHandler) {
+vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService', 'constants', '$location', 'UrlHandler', 'WindowHandler', 'FilterService', 'TabService',
+  function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService, constants, $location, UrlHandler, WindowHandler, FilterService, TabService) {
 
     $scope.$watch(function() {
       return DatasetFactory.getSets();
@@ -36,26 +36,20 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
       $scope.datasets = _.values(sets);
     }, true);
 
-    $scope.isDatabase = function(set) {
-      return set.type() == 'database';
+    // $scope.isDatabase = function(set) {
+    //   return set.type() == 'database';
+    // };
+
+    $scope.removeDerived = function(set) {
+      DatasetFactory.removeDerived(set);
     };
 
     $scope.isDerived = function(set) {
       return set.type() == 'derived';
     };
 
-    $scope.createDerived = function(name) {
-      try {
-        var modified = name.replace(/\s/g, '_').substring(0,15);
-        DatasetFactory.createDerived(modified);
-      }
-      catch(err) {
-        NotifyService.addSticky('Error', err.message, 'error', { referenceId: 'datasetinfo' });
-      }
-    };
-
-    $scope.removeDerived = function(set) {
-      DatasetFactory.removeDerived(set);
+    $scope.canToggle = function() {
+      return !TabService.lock();
     };
 
     $scope.toggle = function(set) {
@@ -67,8 +61,10 @@ vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactor
         if( res === 'enabled' || res === 'disabled' ) {
           DatasetFactory.updateDataset(set);
 
+          TabService.check({ force: true, origin: 'dataset' });
+
           // important!
-          WindowHandler.reRenderVisible({ compute: true, dset: set, action: res });
+          WindowHandler.reRenderVisible({ compute: true, dset: set, action: ("dataset:" + res) });
         }
         else if( res === 'empty' ) {
           DatasetFactory.updateDataset(set);
@@ -584,6 +580,12 @@ vis.controller('NewGraphMenuCtrl', ['$scope', 'DatasetFactory',
       ind: 0
     };
 
+    $scope.exportConfig = {
+      heatmap: {
+        separate: true
+      }
+    };
+
     function getSelection() {
       if($scope.tab.ind === 0) {
         return $scope.histogram.selection;
@@ -594,6 +596,10 @@ vis.controller('NewGraphMenuCtrl', ['$scope', 'DatasetFactory',
         return $scope.heatmap.selection;
       }      
     }
+
+    $scope.selectTab = function(ind) {
+      $scope.tab.ind = ind;
+    };
 
     $scope.histogram = {
       selection: []
@@ -624,10 +630,19 @@ vis.controller('NewGraphMenuCtrl', ['$scope', 'DatasetFactory',
       function getType() {
         return $scope.tabs[$scope.tab.ind].label.toLowerCase();
       }
+      var type = getType();
       return {
         type: getType(),
-        selection: getSelection()
+        selection: getSelection(),
+        config: $scope.exportConfig[type]
       };
+    };
+
+    $scope.heatmapsSeparate = true;
+
+    $scope.separateHeatmaps = function(val) {
+      if(!arguments.length) { return $scope.exportConfig.heatmap.separate; }
+      $scope.exportConfig.heatmap.separate = val;
     };
 
     $scope.cancel = function() {
@@ -644,6 +659,7 @@ vis.controller('NewGraphMenuCtrl', ['$scope', 'DatasetFactory',
         label: 'Heatmap'
       }
     ];
+
   }
 ]);
 
@@ -713,16 +729,9 @@ vis.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionSer
   function RegressionMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService) {
 
     $scope.selection = {
-      adjust: {
-        payload: []
-      },
-      association: {
-        payload: []
-      },
-      target: {
-        text: null,
-        payload: []
-      }
+      adjust: [],
+      association: [],
+      target: []
     };
 
     DatasetFactory.getVariables().then(function(res) {
@@ -746,11 +755,11 @@ vis.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionSer
     };
 
     $scope.targetSelected = function() {
-      return _.size($scope.selection.target.payload) > 0;
+      return !_.isNull($scope.selection.target);
     };
 
     function typeSelected(type) {
-      return $scope.selection[type].payload.length > 0;
+      return $scope.selection[type].length > 0;
     }
 
     function getEquality() {
@@ -782,17 +791,15 @@ vis.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionSer
     };
 
     var assocAndAdjustOverlapping = function() {
-      return lodash.intersection(_copy($scope.selection.association.payload), _copy($scope.selection.adjust.payload)).length > 0;
-      // return _.intersection( $scope.selection.association.payload, $scope.selection.adjust.payload ).length > 0;
+      return lodash.intersection(_copy($scope.selection.association), _copy($scope.selection.adjust)).length > 0;
     };
 
     var assocIncludesTargetVar = function() {
-      return lodash.contains(_copy($scope.selection.association.payload), _copy($scope.selection.target.payload));
-      // return _.contains( $scope.selection.association.payload, $scope.selection.target.payload );
+      return lodash.intersection(_copy($scope.selection.association), _copy($scope.selection.target)).length > 0;
     };
 
     var adjustIncludesTarget = function() {
-      return lodash.contains(_copy($scope.selection.adjust.payload, _copy($scope.selection.target.payload)));
+      return lodash.intersection(_copy($scope.selection.adjust), _copy($scope.selection.target)).length > 0;
     };
 
     $scope.canEdit = function() {
@@ -806,7 +813,6 @@ vis.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionSer
     $scope.canSubmit = function () {
       return $scope.canEdit() && 
       $scope.targetSelected() &&
-      typeSelected('adjust') &&
       typeSelected('association');
     };
 
@@ -839,9 +845,9 @@ vis.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionSer
       return {
         type: 'regression',
         selection: {
-          target: $scope.selection.target.payload,
-          adjust: $scope.selection.adjust.payload,
-          association: $scope.selection.association.payload
+          target: $scope.selection.target,
+          adjust: $scope.selection.adjust,
+          association: $scope.selection.association
         },
         source: $scope.dataSource
       };
@@ -886,29 +892,204 @@ vis.directive('newRegressionMenu', function () {
 });
 
 
+vis.controller('SOMInputMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService',
+  function SOMInputMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService) {
+
+    $scope.selection = [];
+
+    function setVariables() {
+      DatasetFactory.getVariables().then(function(variables) {
+        var somVariables = SOMService.getVariables();
+        $scope.selection = _.map(somVariables, function(somv) {
+          return _.find(variables, function(v) { return v.name == somv; });
+        });
+      });
+    }
+
+    setVariables();
+
+    $scope.canSubmit = function() {
+      return $scope.selection.length >= 3;
+    };
+
+    $scope.submit = function() {
+      function justNames(variables) {
+        return _.map($scope.selection, function(v) {
+          return v.name;
+        });
+      }
+
+      var names = justNames($scope.selection);
+
+      SOMService.setVariables(names);
+      return names;
+    };
+
+  }
+]);
+
+
+vis.directive('somInputMenu', function () {
+  return {
+    restrict: 'C',
+    replace: false,
+    scope: {
+      canSubmit: "=reCanSubmit",
+      submit: "=reSubmit",
+      cancel: "=reCancel"
+    },
+    controller: 'SOMInputMenuCtrl',
+    templateUrl: 'vis/menucomponents/som.input.menu.tpl.html',
+    link: function (scope, elm, attrs) {
+    }
+  };
+});
+
+
+vis.controller('SOMModalMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService', 'WindowHandler', 'PlotService',
+  function SOMModalMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService, WindowHandler, PlotService) {
+
+    $scope.selection = {
+      planes: [],
+      profiles: angular.copy(DatasetFactory.getProfiles()),
+      distributions: []
+    };
+
+
+    $scope.selectedTab = 'planes';
+
+    $scope.selectTab = function(tab) {
+      $scope.selectedTab = tab;
+    };
+
+    $scope.activeTabIs = function(tab) {
+      return $scope.selectedTab == tab;
+    };
+
+    $scope.canSubmit = function() {
+      var equality = {
+        'profiles': function() {
+          return _.any($scope.selection.profiles, function(prof) { return prof.selected; });
+        },
+        'distributions': function() {
+          return $scope.selection.distributions.length >= 1;
+        },
+        'planes': function() {
+          return $scope.selection.planes.length >= 1;
+        }
+      };
+
+      return (equality[$scope.selectedTab])();
+    };
+
+    $scope.submit = function() {
+      function justNames(variables) {
+        return _.map(variables, function(v) {
+          return v.name;
+        });
+      }
+      var contentHandler = WindowHandler.get('vis.som.content'),
+      planeHandler = WindowHandler.get('vis.som.plane');
+      lookup = {
+        'planes': {
+          getData: function() {
+            return justNames($scope.selection.planes);
+          },
+          action: function(variables) {
+            _.each(variables, function(variable) {
+                PlotService.drawSOM({ variables: { x: variable } }, planeHandler);
+            });
+          } 
+        },
+
+        'distributions': {
+          getData: function() {
+            return justNames($scope.selection.distributions);
+          },
+          action: function(variables) {
+            _.each(variables, function(variable) {
+              PlotService.drawHistogram({ variables: { x: variable }, somSpecial: true, filterEnabled: false }, contentHandler);
+            });
+          }
+        },
+
+        'profiles': {
+          getData: function() {
+            var selected = _.filter($scope.selection.profiles, function(prof) {
+              return prof.selected;
+            });
+            return selected;
+          },
+          action: function(profiles) {
+            _.each(profiles, function(prof) {
+              PlotService.drawProfileHistogram({ name: prof.name, variables: { x: justNames(prof.variables) } }, contentHandler);
+            });
+          }
+        }
+      };
+
+      var data = lookup[$scope.selectedTab].getData();
+      lookup[$scope.selectedTab].action(data);
+      return data;
+    };
+
+  }
+]);
+
+
+vis.directive('somModalMenu', function () {
+  return {
+    restrict: 'C',
+    replace: false,
+    scope: {
+      canSubmit: "=reCanSubmit",
+      submit: "=reSubmit",
+      cancel: "=reCancel"
+    },
+    controller: 'SOMModalMenuCtrl',
+    templateUrl: 'vis/menucomponents/som.modal.menu.tpl.html',
+    link: function (scope, elm, attrs) {
+    }
+  };
+});
+
+
+
+
 // custom
 vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
   function MultipleVariableSelectionCtrl($scope, DatasetFactory) {
 
     // the results go here
-    $scope.payload = [];
+    // $scope.payload = [];
 
-    $scope.payloadX = [];
-    $scope.payloadY = [];
+    // $scope.payloadX = [];
+    // $scope.payloadY = [];
+
+    // // regression
+    // $scope.payloadTarget = [];
+    // $scope.payloadAdjust = [];
+    // $scope.payloadAssociation = [];
 
     function payloadRemoveListener(newArray, oldArray) {
       if(oldArray.length > newArray.length) {
         // something removed
         var diff = _.difference(oldArray, newArray)[0];
         diff.selected = false;
-        $scope.updateSelection(diff);
+        $scope.updateSelection(diff, true);
       }
     }
 
-    $scope.$watchCollection('payload', payloadRemoveListener);
-    $scope.$watchCollection('payloadX', payloadRemoveListener);
-    $scope.$watchCollection('payloadY', payloadRemoveListener);
-
+    if($scope.mode == 'multi') {
+      $scope.$watchCollection('payload', payloadRemoveListener);
+    } else if($scope.mode == 'scatterplot') {
+      $scope.$watchCollection('payloadX', payloadRemoveListener);
+      $scope.$watchCollection('payloadY', payloadRemoveListener);      
+    } else if($scope.mode == 'regression') {
+      $scope.$watchCollection('payloadTarget', payloadRemoveListener);
+      $scope.$watchCollection('payloadAdjust', payloadRemoveListener);
+      $scope.$watchCollection('payloadAssociation', payloadRemoveListener);
+    }
 
     //$scope.mode is from directive init
 
@@ -918,25 +1099,35 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
       else { variable.selected = !variable.selected; }
     };
 
-    $scope.updateSelection = function(variable) {
-      function multi() {
+    $scope.updateSelection = function(variable, force) {
+      function multi(variables, indCollection) {
         // find index
-        var variables = $scope.payload;
         var ind = _.findIndex(variables, function(v) {
           return v == variable;
-        });
+        }), indInVars;
 
         if(ind < 0) {
           if(variable.selected) {
             // not previously on the list
+            if(indCollection) {
+              indInVars = _.indexOf($scope.variables, variable);
+              indCollection.push(indInVars);
+            }
             variables.push(variable);
+          } else {
+            // already been removed, remove index
+            indInVars = _.indexOf($scope.variables, variable);
+            _.remove(indCollection, function(n) { return n == indInVars; });
           }
         } else {
           // is on the list
           if(variable.selected) {
             // do nothing
-          } else {
-            variables.splice(ind,1);
+          }
+          else {
+            indInVars = _.indexOf($scope.variables, variable);
+            _.remove(indCollection, function(n) { return n == indInVars; });
+            variables.splice(ind, 1);
           }
         }
       }
@@ -954,8 +1145,41 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
         }        
       }
 
-      if($scope.mode == 'multi') { multi(); }
+      function regression() {
+        function target() {
+          function setPayload(val) {
+            $scope.payloadTarget = val;
+          }
+          function setInd(ind) {
+            $scope.selectedRegressionInd.target = ind;
+          }
+          function getInd() {
+            return $scope.selectedRegressionInd.target;
+          }
+          if(variable.selected) {
+            setPayload([variable]);
+            var activeInd = getInd();
+            if(!_.isNull(activeInd)) { $scope.variables[activeInd].selected = false; }
+            var currInd = _.indexOf($scope.variables, variable);
+            setInd(currInd);
+          } else {
+            setPayload([]);
+            setInd(null);
+          }
+        }
+        if($scope.focus.adjust) {
+          multi($scope.payloadAdjust, $scope.selectedRegressionInd.adjust);
+        } else if($scope.focus.association) {
+          multi($scope.payloadAssociation, $scope.selectedRegressionInd.association);
+        }
+        else {
+          target();
+        }
+      }
+
+      if($scope.mode == 'multi') { multi($scope.payload); }
       else if($scope.mode == 'scatterplot') { scatterplot(); }
+      else if($scope.mode == 'regression') { regression(); }
     };
 
     $scope.getInputField = function()  {
@@ -968,15 +1192,57 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
 
       } else if($scope.mode == 'multi') {
         return $scope.filter.input;
+      } 
+      else if($scope.mode == 'regression') {
+        if($scope.focus.target) { 
+          return $scope.filter.target;
+        } else if($scope.focus.adjust) {
+          return $scope.filter.adjust;
+        } else if($scope.focus.association) {
+          return $scope.filter.association;
+        }
       }
     };
+
+    function getPayloadField() {
+      if($scope.mode == 'scatterplot') {
+        if($scope.focus.x) {
+          return $scope.payloadX;
+        } else {
+          return $scope.payloadY;
+        }
+
+      } else if($scope.mode == 'multi') {
+        return $scope.payload;
+      } 
+      else if($scope.mode == 'regression') {
+        if($scope.focus.target) { 
+          return $scope.payloadTarget;
+        } else if($scope.focus.adjust) {
+          return $scope.payloadAdjust;
+        } else if($scope.focus.association) {
+          return $scope.payloadAssociation;
+        }
+      }
+    }
+
+    function updateVariableSelections(indices, value) {
+      if(!indices) { return; }
+      _.each(indices, function(ind) {
+        var variable = $scope.variables[ind];
+        variable.selected = value;
+      });
+    }
+
 
     $scope.tableFilter = function(variable, ind, array) {
       function lower(str) {
         return _.isString(str) ? str.toLowerCase() : str;
       }
       var input = $scope.getInputField();
-      return _.contains(lower(variable.name), lower(input)) || _.contains(lower(variable.desc), lower(input)) || _.contains(lower(variable.group.name), lower(input));
+      return _.contains(lower(variable.name), lower(input)) || 
+      _.contains(lower(variable.desc), lower(input)) ||
+      _.contains(lower(variable.group.name), lower(input));
     };
 
     $scope.inputIsDefined = function() {
@@ -984,8 +1250,23 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
       return !_.isUndefined(input) && !_.isNull(input) && input.length > 0;
     };
 
+    function getPrepopulate(variables) {
+      var copy = angular.copy(variables),
+      hasPayload = !_.isUndefined($scope.payload);
+      if(hasPayload && $scope.payload.length > 0) {
+        var objs = [];
+        _.each($scope.payload, function(p) {
+          var found = _.find(copy, p);
+          found.selected = true;
+          objs.push(found);
+        });
+        $scope.payload = objs;
+      }
+      return copy;
+    }
+
     DatasetFactory.getVariables().then(function(res) {
-      $scope.variables = angular.copy(res);
+      $scope.variables = getPrepopulate(res);
       $scope.nested = getNestedNavigation($scope.variables);
     });
 
@@ -1028,6 +1309,15 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
       return second;
     }
 
+    $scope.toggleGroup = function(group) {
+      var majoritySelected = $scope.majoritySelected(group);
+      if(majoritySelected) {
+        $scope.deselectAll(group);
+      } else {
+        $scope.selectAll(group);
+      }
+    };
+
     $scope.majoritySelected = function(selection) {
       var noVars = 0,
       counts = _.countBy(selection, function(v) { 
@@ -1041,32 +1331,27 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
       return (counts.true || 0) / noVars > 0.5;
     };
 
-    $scope.getMode = function() {
-      return $scope.mode;
+    $scope.canSelectMultiple = function() {
+      if($scope.mode == 'scatterplot') { return false; }
+      if($scope.mode == 'regression') {
+        if($scope.focus.target) { return false; }
+      }
+      return true;
     };
 
     $scope.selectAll = function(selection) {
-      var ind;
       _.each(selection, function(item) {
         if($scope.getType(item) == 'continues') { return; }
         item.selected = true;
-        // check it's not already added
-        ind = _.indexOf($scope.payload, item);
-        if(ind < 0) {
-          $scope.payload.push(item);
-        }
+        $scope.updateSelection(item);
       });
     };
 
     $scope.deselectAll = function(selection) {
-      var ind;
       _.each(selection, function(item) {
         if($scope.getType(item) == 'continues') { return; }
         item.selected = false;
-        ind = _.indexOf($scope.payload, item);
-        if(ind > -1) {
-          $scope.payload.splice(ind, 1);
-        }
+        $scope.updateSelection(item);
       });
     };
 
@@ -1226,16 +1511,53 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
     }
 
     $scope.setFocus = function(field) {
-      var cpart = (field == 'x') ? 'y' : 'x';
-      setActiveScatter(field, cpart);
+      function scatterplot() {
+        var cpart = (field == 'x') ? 'y' : 'x';
+        setActiveScatter(field, cpart);
 
-      $scope.focus[field] = true;
-      $scope.focus[cpart] = false;
+        $scope.focus[field] = true;
+        $scope.focus[cpart] = false;
+      }
+
+      function regression() {
+        function setFalse(array) {
+          _.each(array, function(val) {
+            $scope.focus[val] = false;
+          });
+        }
+        function getTarget() {
+          return !_.isNull($scope.selectedRegressionInd.target) ? [$scope.selectedRegressionInd.target] : [];
+        }
+        $scope.focus[field] = true;
+        var previous, current, falsys;
+        if(field == 'target') {
+          previous = _.union($scope.selectedRegressionInd.adjust, $scope.selectedRegressionInd.association);
+          current = getTarget();
+          falsys = ['adjust', 'association'];
+        } else if(field == 'adjust') {
+          previous = _.union($scope.selectedRegressionInd.association, getTarget());
+          current = $scope.selectedRegressionInd.adjust;
+          falsys = ['target', 'association'];
+        } else if(field == 'association') {
+          previous = _.union($scope.selectedRegressionInd.adjust, getTarget());
+          current = $scope.selectedRegressionInd.association;
+          falsys = ['target', 'adjust'];
+        }
+        setFalse(falsys);
+        updateVariableSelections(previous, false);
+        updateVariableSelections(current, true);
+      }
+
+      if($scope.mode == 'regression') { regression(); }
+      else if($scope.mode == 'scatterplot') { scatterplot(); }
     };
 
     $scope.focus = {
       x: true,
-      y: false
+      y: false,
+      target: true,
+      association: false,
+      adjust: false
     };
 
     $scope.selectedScatterInd = {
@@ -1243,11 +1565,20 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
       y: null
     };
 
+    $scope.selectedRegressionInd = {
+      target: null,
+      adjust: [],
+      association: []
+    };
+
     // For table section
     $scope.filter = {
       input: null,
       x: null,
-      y: null
+      y: null,
+      target: null,
+      adjust: null,
+      association: null
     };
     $scope.pageSize = 40;
     $scope.sortReverse = false;
@@ -1276,7 +1607,10 @@ vis.directive('multipleVariableSelection', function () {
       'payload': "=?reSelection",
       'payloadX': "=?reSelectionX",
       'payloadY': "=?reSelectionY",
-      'mode': "=reMode" // either 'scatterplot' or 'multi'
+      'payloadTarget': "=?reSelectionTarget",
+      'payloadAssociation': "=?reSelectionAssociation",
+      'payloadAdjust': "=?reSelectionAdjust",
+      'mode': "=reMode" // either 'scatterplot' or 'multi' or 'regression'
     },
     controller: 'MultipleVariableSelectionCtrl',
     templateUrl: 'vis/menucomponents/multiple-variable-selection.tpl.html',

@@ -1,14 +1,17 @@
 var mod = angular.module('services.filter', ['services.dimensions', 'services.window']);
 
-mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout', '$state', 'WindowHandler',
-  function ($injector, constants, $rootScope, $timeout, usSpinnerService, $state, WindowHandler) {
+
+
+mod.constant('SOM_MAX_FILTERS', 4);
+mod.factory('FilterService', ['$injector', '$rootScope', 'WindowHandler', 'SOM_MAX_FILTERS',
+  function ($injector, $rootScope, WindowHandler, SOM_MAX_FILTERS) {
 
     var DimensionService = $injector.get('DimensionService');
     var _activeDimensionService = DimensionService.getPrimary();
     var _colors = d3.scale.category10();
     var _filters = [
-    new CircleFilter().injector($injector).name('A').id('circle1').color(_colors('circle1')),
-    new CircleFilter().injector($injector).name('B').id('circle2').color(_colors('circle2'))
+    // new CircleFilter().injector($injector).name('A').id('circle1').color(_colors('circle1')),
+    // new CircleFilter().injector($injector).name('B').id('circle2').color(_colors('circle2'))
     ];
     var _disabled = false;
 
@@ -17,20 +20,63 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
 
     var _bmusLookup = {};
 
-    var getCircleFilterInitial = function() {
-      return _.chain(_filters)
+    function initCircleFilters() {
+      service.createCircleFilter('A');
+      service.createCircleFilter('B');
+    }
+
+    function getCircleCounts(array) {     
+      return _.chain(array)
       .filter(function(f) {
         return f.type() == 'circle';
       })
       .map(function(filt) {
-        return { circle: filt, count: 0 };
+        return _.defaults(filt, { circle: filt, count: 0 });
       })
       .value();
-    };
-
-    var _circleFilterReturnHandle = getCircleFilterInitial();
+    }
 
     var service = {};
+    var _circleFilters = [];
+
+    function updateCircleFilterHandler() {
+      var circles = _.filter(_filters, function(filt) {
+        return filt.type() == 'circle';
+      });
+      _circleFilters = angular.copy(circles);
+    }
+
+    service.removeCircleFilter = function(filter) {
+      _.remove(_filters, function(filt) {
+        return filt.is(filter);
+      });
+      // filter.remove();
+      updateCircleFilterHandler();
+      service.updateCircleFilters();
+      $rootScope.$emit('som:circle:remove', filter);
+    };
+
+    service.createCircleFilter = function(name) {
+      var nameTaken = _.any(_filters, function(filt) { 
+        return filt.type() == 'circle' && filt.name() == name; 
+      });
+      if(nameTaken) {
+        throw new Error('The supplied circle name is already in use');
+      }
+      if( service.getSOMFilters().length > SOM_MAX_FILTERS ) {
+        throw new Error('Maximum amount of circle filters reached.');
+      }
+
+      var id = _.uniqueId('circle');
+      var circle = new CircleFilter($injector)
+      .name(name)
+      .id(id)
+      .color(_colors(id));
+      _filters.push(circle);
+      updateCircleFilterHandler();
+      $rootScope.$emit('som:circle:add', circle);
+      return circle;
+    };
 
     service.disabled = function(x) {
       if(!arguments.length) { return _disabled; }
@@ -49,18 +95,12 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       service.updateCircleFilters();
     };
 
-    service.canEdit = function() {
-      return _activeDimensionService == DimensionService.getPrimary();
-    };
-
     service.getInfo = function() {
       return DimensionService.getPrimary().getSampleInfo();
     };
 
     service.getSOMFilters = function() {
-      return _.filter(_filters, function(filt) {
-        return filt.type() == 'circle';
-      });
+      return _circleFilters;
     };
 
     service.getSOMFilter = function(id) {
@@ -71,10 +111,6 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
 
     service.getSOMFilterColors = function() {
       return _colors;
-    };
-
-    service.getCircleFilterInfo = function() {
-      return _circleFilterReturnHandle;
     };
 
     service.addFilter = function(filter) {
@@ -93,6 +129,8 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
 
       if(removed) {
         removed.remove();
+        var TabService = $injector.get('TabService');
+        TabService.check({ force: true, origin: 'filter' });
       }
     };
 
@@ -114,6 +152,9 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       _.remove(_filters, function(d) { 
         return _.includes(removed, d);
       });
+
+      var TabService = $injector.get('TabService');
+      TabService.check({ force: config.force || false, origin: 'filter' });
       service.disabled(false);
     };
 
@@ -130,6 +171,8 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       if(found) {
         // found.remove();
         _.remove(_filters, found);
+        var TabService = $injector.get('TabService');
+        TabService.check({ force: true, origin: 'filter' });
       }
     };
 
@@ -142,6 +185,12 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
 
     service.getFilters = function() {
       return _filters;
+    };
+
+    service.getFiltersByType = function(type) {
+      return _.filter(_filters, function(filter) {
+        return filter.type() == type;
+      });
     };
 
     service.getActiveFilters = function() {
@@ -179,7 +228,7 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
       };
 
       var resolveAmounts = function() {
-        var handle = [];
+        // var handle = [];
         var groupedBMUs = _somDimension.group();
         // var groupedBMUs = _activeDimensionService.getSOMDimension().group();
         var counts = {};
@@ -192,18 +241,16 @@ mod.factory('FilterService', ['$injector', 'constants', '$rootScope', '$timeout'
         });
 
         _.each( service.getSOMFilters(), function(circle) {
-          handle.push({ circle: circle, count: counts[circle.id()] || 0 });
+          circle.count( counts[circle.id()] || 0 );
         });
 
-        return handle;
+        // return handle;
       };
 
-      var handle = resolveAmounts(handle);
-      if( _.isEmpty(handle) ) {
-        handle = getCircleFilterInitial();
-      }
-      angular.copy(handle, _circleFilterReturnHandle);
+      resolveAmounts();
     };
+
+    initCircleFilters();
 
     return service;
   }
@@ -238,7 +285,7 @@ function BaseFilter() {
   return filter;
 }
 
-function CircleFilter() {
+function CircleFilter($injector) {
 
   BaseFilter.call(this);
 
@@ -249,9 +296,20 @@ function CircleFilter() {
     hexagons: [],
     injector: null,
     radius: undefined,
-    position: undefined
+    count: 0,
+    position: undefined,
+    origin: { x: 0, y: 0 }
   }),
   filter = this.filter;
+  priv.injector = $injector;
+
+  function initOrigin() {
+    var SOM_PLANE_SIZE = priv.injector.get('SOM_PLANE_SIZE');
+    priv.origin.x = _.random(1, SOM_PLANE_SIZE.x - 1);
+    priv.origin.y = _.random(1, SOM_PLANE_SIZE.y - 1);
+  }
+
+  initOrigin();
 
   filter.isPayload = function(x) {
     return false;
@@ -277,11 +335,17 @@ function CircleFilter() {
     return filter;
   };
 
-  filter.injector = function(x) {
-    if(!arguments.length) { return priv.injector; }
-    priv.injector = x;
+  filter.origin = function(x) {
+    if(!arguments.length) { return priv.origin; }
+    priv.origin = x;
     return filter;
   };
+
+  // filter.injector = function(x) {
+  //   if(!arguments.length) { return priv.injector; }
+  //   priv.injector = x;
+  //   return filter;
+  // };
 
   filter.hexagons = function(hexagons) {
     if(!arguments.length) { return priv.hexagons; }
@@ -296,6 +360,12 @@ function CircleFilter() {
     priv.radius = radius;
     return filter;
   };
+
+  filter.count = function(x) {
+    if(!arguments.length) { return priv.count; }
+    priv.count = x;
+    return filter;
+  };  
 
   filter.position = function(position) {
     if(!arguments.length) { return priv.position; }
@@ -315,6 +385,8 @@ function CircleFilter() {
     priv.color = color;
     return filter;
   };
+
+
 
   filter.remove = function() {
     // do

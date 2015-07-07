@@ -1,6 +1,7 @@
 var mod = angular.module('services.som', ['services.dataset', 'services.dimensions', 'services.notify', 'services.tab']);
 
-mod.constant('PLANE_SIZE', { x: 9, y: 7 });
+mod.constant('SOM_PLANE_SIZE', { x: 9, y: 7 });
+mod.constant('SOM_MIN_SAMPLE_COUNT', 10);
 mod.constant('SOM_DEFAULT_PLANES', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc']);
 mod.constant('SOM_DEFAULT_TESTVARS', 
   ['XXL-VLDL-L', 'XL-VLDL-L', 'L-VLDL-L', 'M-VLDL-L', 
@@ -10,8 +11,8 @@ mod.constant('SOM_DEFAULT_TESTVARS',
     'HDL-C', 'LDL-C', 'Glc', 'Cit', 'Phe', 'Gp', 'Tyr', 
     'FAw3toFA', 'FAw6toFA', 'SFAtoFA']);
 
-mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', 'NotifyService', '$q', 'DatasetFactory', 'TabService', 'PLANE_SIZE', 'SOM_DEFAULT_PLANES', 'SOM_DEFAULT_TESTVARS',
-  function ($injector, $timeout, constants, $rootScope, NotifyService, $q, DatasetFactory, TabService, PLANE_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS) {
+mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', 'NotifyService', '$q', 'DatasetFactory', 'TabService', 'SOM_PLANE_SIZE', 'SOM_DEFAULT_PLANES', 'SOM_DEFAULT_TESTVARS', 'SOM_MIN_SAMPLE_COUNT',
+  function ($injector, $timeout, constants, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_PLANE_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT) {
 
     var that = this;
 
@@ -29,8 +30,8 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
     var _colors = d3.scale.category10();
     var service = {};
 
-    service.somReady = function(sampleCount) {
-      return !that.inProgress;
+    service.inProgress = function() {
+      return that.inProgress;
     };
 
     service.empty = function() {
@@ -47,9 +48,9 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
       return SOM_DEFAULT_PLANES;
     };
 
-    service.planeSize = function() {
-      return PLANE_SIZE;
-    };
+    // service.planeSize = function() {
+    //   return SOM_PLANE_SIZE;
+    // };
 
     service.setDimensionService = function(dimensionService) {
       that.dimensionService = dimensionService;
@@ -61,15 +62,22 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
       return that.dimensionService;
     };
 
-    service.updateVariables = function(variables, windowHandler) {
-      var currEmpty = _.isUndefined(that.somSelection.variables) || that.somSelection.variables.length === 0,
-      sameVariables = _.difference(variables, that.somSelection.variables).length === 0;
+    service.setVariables = function(variables) {
+      function sameVars() {
+        var inter = _.intersection(variables, that.somSelection.variables),
+        diff = _.difference(variables, inter),
+        isSubset = variables.length === inter.length;
+        return diff.length === 0 && !isSubset;
+      }
+      var currEmpty = _.isUndefined(that.somSelection.variables) || that.somSelection.variables.length === 0;
+      // sameVariables = _.difference(that.somSelection.variables, variables).length === 0 && ( _.intersection(
 
-      if( sameVariables && !currEmpty ) {
+      if( currEmpty || sameVars() ) {
         return;
       }
       that.somSelection['variables'] = variables;
       // recompute
+      var windowHandler = $injector.get('WindowHandler').get('vis.som.plane');
       service.getSOM(windowHandler);
     };
 
@@ -89,10 +97,10 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
         if( sampleCount === 0 ) {
           // no samples
           return false;
-        } else if( sampleCount <= 10 ) {
-          NotifyService.addSticky('Error', 'Please select at least 10 samples.', 'error');
+        } else if( sampleCount < SOM_MIN_SAMPLE_COUNT) {
+          NotifyService.addSticky('Error', 'Please select at least ' + SOM_MIN_SAMPLE_COUNT + ' samples.', 'error');
           return false;
-        } else if( !service.somReady() ) {
+        } else if( service.inProgress() ) {
           return false;
         }
         return true;
@@ -148,7 +156,7 @@ mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', '
         var skipNaNs = false;
         var data = getData(skipNaNs);
         that.trainSamples = data.samples;
-        that.som = SOM.create(PLANE_SIZE.y, PLANE_SIZE.x, data.samples, data.columns);
+        that.som = SOM.create(SOM_PLANE_SIZE.y, SOM_PLANE_SIZE.x, data.samples, data.columns);
 
         var parallel = new Parallel(that.som, {
           evalPath: 'assets/threads/eval.js'

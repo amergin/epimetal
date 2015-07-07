@@ -1,8 +1,6 @@
 <div gridster="gridOptions">
     <ul>
-        <li gridster-item="itemMapper" ng-repeat="window in windows">
-        	<div window-header></div>
-			<div replace-and-compile re-name="window.type" re-window="window"></div>
+        <li gridster-item="itemMapper" ng-repeat="window in windows track by window.object.id()" pl-grid-window pl-window="window">
         </li>
     </ul>
 </div>

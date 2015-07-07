@@ -5,34 +5,84 @@ var visu = angular.module('plotter.vis.plotting.heatmap',
   'services.correlation',
   'services.tab'
   ]);
-visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService', 'TabService',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService, TabService) {
+
+visu.constant('HEATMAP_WIDTH', 420);
+visu.constant('HEATMAP_HEIGHT', 350);
+visu.constant('HEATMAP_MARGINS', { 
+  top: 0,
+  right: 0,
+  bottom: 60,
+  left: 80
+});
+
+visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService', 'TabService', 'HEATMAP_HEIGHT', 'HEATMAP_WIDTH', 'HEATMAP_MARGINS',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService, TabService, HEATMAP_HEIGHT, HEATMAP_WIDTH, HEATMAP_MARGINS) {
 
     $scope.resetFilter = function() {
       $scope.heatmap.filterAll();
       dc.redrawAll(constants.groups.heatmap);
     };
 
-    $scope.$parent.headerText = ['Correlation heatmap of', $scope.window.variables.x.length + " variables", ''];
-    $scope.$parent.showResetBtn = false;
+    function initHeader() {
+      var text;
+
+      if($scope.window.extra().separate === true) {
+        text = ['Correlation heatmap of', $scope.window.variables().x.length + " variables", "(" + $scope.window.extra().dataset.name() + ")"];
+      } else {
+        text = ['Correlation heatmap of', $scope.window.variables().x.length + " variables"];
+      }
+      $scope.window.headerText(text);
+    }
+
+    initHeader();
+
+    $scope.window.resetButton(false);
 
     $scope.format = d3.format('.2g');
     $scope.filtered = true; // p-value limiting
+    $scope.limitDisp = null;
 
-    $scope.width = 420;
-    $scope.height = 350;
-    $scope.margins = {
-      top: 0,
-      right: 0,
-      bottom: 60,
-      left: 80
+    $scope.window.extra().filtered = true;
+
+    $scope.$watch(function() {
+      return $scope.window.extra().filtered;
+    }, function(newVal, oldVal) {
+      if( newVal != oldVal ) {
+        $scope.filtered = newVal;
+        $scope.updateHeader();
+        $scope.heatmap.render();
+      }
+    });
+
+    $scope.updateHeader = function() {
+      var header = $scope.window.headerText(),
+      contains = _.contains(header[header.length-1], 'p < ');
+      if(contains) {
+        header.splice(-1);
+      }
+      if($scope.filtered) {
+        header.push('p < ' + $scope.limitDisp);
+      } else {
+        //nothing
+      }
+      $scope.window.headerText(header);
     };
+
+    $scope.colorScale = new CustomScale()
+                            .lower(-1)
+                            .middle(0)
+                            .upper(1)
+                            .threshold(0.25);
 
     $scope.variablesLookup = {};
 
     $scope.drawHeatmap = function(element, dimension, group, margins, width, height) {
 
-      var _drawLegend = function(element, scale, height) {
+      var _drawLegend = function(element, height) {
+        var colorScale = d3.scale.linear()
+        .domain([-1, 0, 1])
+        .range(['blue', 'white', 'red']);
+
         var width = 60;
         var svg = d3.select(element)
         .append('svg')
@@ -46,7 +96,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         .style('padding-right', '10px');
         var g = svg.append("g").attr("transform", "translate(10,10)").classed("colorbar", true);
         var cb = colorBar()
-        .color(scale)
+        .color(colorScale)
         .size(height - 40)
         .lineWidth(width - 30)
         .precision(4);
@@ -55,10 +105,6 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       };
 
       $scope.heatmap = dc.heatMap(element[0], constants.groups.heatmap);
-
-      var colorScale = d3.scale.linear()
-      .domain([-1, 0, 1])
-      .range(['blue', 'white', 'red']);
 
       function labelOrdering(a, b) {
         var grpA = $scope.variablesLookup[a].group.order,
@@ -107,15 +153,14 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         "P-value:   " + 
         ( _(d.key.pvalue).isNaN() || _(d.key.pvalue).isUndefined() ? "(not available)" : $scope.format(d.key.pvalue) );
       })
-      .colorAccessor(function(d) {
+      .colorCalculator(function(d) {
         if($scope.filtered) {
           if( !_.isUndefined(d.key.pvalue) && d.key.pvalue > $scope.limit ) {
-            return 0;
+            return d3.rgb('white');
           }
         }
-        return d.value;
+        return $scope.colorScale.color(d.key);
       })
-      .colors(colorScale)
       .renderlet(function(chart) {
           // rotate labels
           chart.selectAll('g.cols > text')
@@ -145,18 +190,15 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
                 x: cell.key.x,
                 y: cell.key.y
               }
-            }, $scope.window.handler );
+            }, $scope.window.handler() );
           });
         });
 
         $scope.heatmap.render();
-        $scope.legend = _drawLegend($scope.colorbarAnchor, colorScale, height);
+        $scope.legend = _drawLegend($scope.colorbarAnchor, height);
 
       };
 
-      $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
-      $scope.sampDimensionInst = $scope.dimensionService.getSampleDimension();
-      $scope.sampDimension = $scope.sampDimensionInst.get();
       $scope.crossfilter = crossfilter([]);
       $scope.coordDim = $scope.crossfilter.dimension(function(d) {
         return _.extend(d, { 'valueOf': function() { return d.x + "|" + d.y; } });
@@ -166,19 +208,26 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       });
 
       $scope.computeVariables = function(callback) {
-        var variables = $scope.window.variables.x;
-        $scope.$parent.startSpin();
+        var variables = $scope.window.variables().x;
+        $scope.window.spin(true);
 
         // lock tab switching
         TabService.lock(true);
         // get coordinates in a separate worker
-        CorrelationService.compute({ variables: variables }, $scope.$parent.window.handler)
+        CorrelationService.compute( { 
+          variables: variables, 
+          separate: $scope.window.extra().separate, 
+          dataset: $scope.window.extra().dataset 
+        }, $scope.window.handler() )
         .then(function succFn(coordinates) {
+          $scope.colorScale.coordinates(coordinates);
 
           // compute Bonferroni correction
           var bonferroni = 0.5 * variables.length * (variables.length - 1);
           $scope.limit = 0.05 / bonferroni;
           $scope.limitDisp = $scope.format($scope.limit);
+          $scope.window.modifyDropdown('correlation', 'limit', $scope.limitDisp, $scope.limitDisp);
+          $scope.updateHeader();
 
           // create a tiny crossfilt. instance for heatmap. so tiny that it's outside of dimension
           // service reach.
@@ -188,50 +237,15 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         }).finally(function() {
           // unlock tabs
           TabService.lock(false);
-          $scope.$parent.stopSpin();
+          $scope.window.spin(false);
         });
 
       };
 
-      function addLimit() {
-        $scope.$parent.settingsDropdown.push({
-          'text': '<i class="fa fa-sliders"></i> Show correlations with p > <b>' + $scope.limitDisp + '</b>',
-          'type': 'correlations',
-          'click': function() {
-            var entry = _.last($scope.$parent.settingsDropdown).text;
-            $scope.filtered = !$scope.filtered;
-            if($scope.filtered) { 
-              $scope.$parent.headerText[2] = '(p < ' + $scope.limitDisp + ')';
-              _.last($scope.$parent.settingsDropdown).text = entry.replace(/Hide/, 'Show');
-            } else {
-              $scope.$parent.headerText[2] = '';
-              _.last($scope.$parent.settingsDropdown).text = entry.replace(/Show/, 'Hide');
-            }
-            $scope.heatmap.render();
-          }
-        });
-      }
-
-      _.once(function() {
-        addLimit();
-      });
-
-      $scope.$watch('limitDisp', function(value) {
-        if(!value) { return; }
-        var index = Utils.indexOf($scope.$parent.settingsDropdown, function(drop) {
-          return drop.type == 'correlations';
-        });
-
-        if(index != -1) {
-          $scope.$parent.settingsDropdown.splice(index, 1);
-        }
-        addLimit();
-      });
-
-    $scope.filter = function() {
-      $scope.filtered = !$scope.filtered;
-      $scope.heatmap.render();
-    };
+    // $scope.filter = function() {
+    //   $scope.filtered = !$scope.filtered;
+    //   $scope.heatmap.render();
+    // };
 
     var callback = function() {
       // update the chart and redraw
@@ -249,13 +263,67 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
 
 
 
-visu.directive('heatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFactory',
-
-  function($compile, $rootScope, $timeout, DatasetFactory) {
+visu.directive('plHeatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFactory', 'HEATMAP_HEIGHT', 'HEATMAP_WIDTH', 'HEATMAP_MARGINS',
+  function($compile, $rootScope, $timeout, DatasetFactory, HEATMAP_HEIGHT, HEATMAP_WIDTH, HEATMAP_MARGINS) {
 
     var linkFn = function($scope, ele, iAttrs) {
 
-      $scope.$parent.element = ele;
+      function initDropdown() {
+        $scope.window.addDropdown({
+          type: "export:svg",
+          element: $scope.element
+        });
+
+        $scope.window.addDropdown({
+          type: "export:png",
+          element: $scope.element
+        });
+
+        $scope.window.addDropdown({
+          type: "correlation",
+          limit: $scope.limitDisp,
+          window: $scope.window
+        });
+      }
+
+      // function addLimit() {
+      //   $scope.$parent.settingsDropdown.push({
+      //     'text': '<i class="fa fa-sliders"></i> Show correlations with p > <b>' + $scope.limitDisp + '</b>',
+      //     'type': 'correlations',
+      //     'click': function() {
+      //       var entry = _.last($scope.$parent.settingsDropdown).text;
+      //       $scope.filtered = !$scope.filtered;
+      //       if($scope.filtered) { 
+      //         $scope.$parent.headerText[2] = '(p < ' + $scope.limitDisp + ')';
+      //         _.last($scope.$parent.settingsDropdown).text = entry.replace(/Hide/, 'Show');
+      //       } else {
+      //         $scope.$parent.headerText[2] = '';
+      //         _.last($scope.$parent.settingsDropdown).text = entry.replace(/Show/, 'Hide');
+      //       }
+      //       $scope.heatmap.render();
+      //     }
+      //   });
+      // }
+
+      // _.once(addLimit);
+
+      // $scope.$watch('limitDisp', function(value) {
+      //   if(!value) { return; }
+      //   var index = Utils.indexOf($scope.$parent.settingsDropdown, function(drop) {
+      //     return drop.type == 'correlations';
+      //   });
+
+      //   if(index != -1) {
+      //     $scope.$parent.settingsDropdown.splice(index, 1);
+      //   }
+      //   addLimit();
+      // });
+
+
+
+      $scope.element = ele;
+
+      initDropdown();
 
       $scope.heatmapAnchor = d3.select(ele[0])
       .append('div')
@@ -270,43 +338,34 @@ visu.directive('heatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFactory
         $scope.drawHeatmap(
           $scope.heatmapAnchor, 
           $scope.coordDim, 
-          $scope.coordGroup, 
-          $scope.margins, 
-          $scope.width, 
-          $scope.height );        
+          $scope.coordGroup,
+          HEATMAP_MARGINS,
+          HEATMAP_WIDTH,
+          HEATMAP_HEIGHT);        
       }
 
-      DatasetFactory.getVariables().then(function(variables) {
-        $scope.variablesLookup = _.chain(variables).map(function(d) { return [d.name, d]; }).object().value();
+      function doLookup(variables) {
+        $scope.variablesLookup = _.chain(variables).map(function(d) { return [d.name, d]; }).object().value();  
+      }
 
-        // load previous state provided by url routing
-        if($scope.window.coordinates && $scope.window.coordinates.length > 0) {
-          var bonferroni = 0.5 * variables.length * (variables.length - 1);
-          $scope.limit = 0.05 / bonferroni;
-          $scope.limitDisp = $scope.format($scope.limit);
-          
-          $scope.crossfilter.add($scope.window.coordinates);
-          $timeout(function() {
-            draw();
-          });
-        } else {
-          // default route to do things
-          $scope.computeVariables(function() {
-            draw();
-          });
-        }
+      // do init if not done
+      DatasetFactory.getVariables().then(function(variables) {
+        doLookup(variables);
+        $scope.computeVariables(function() {
+          draw();
+        });        
       });
 
       $scope.deregisters = [];
 
       var resizeUnbind = $rootScope.$on('gridster.resize', function(event,$element) {
-        if( $element.is( $scope.$parent.element.parent() ) ) {
+        if( $element.is( $scope.element.parent() ) ) {
           $scope.heatmap.render();
         }
       });
 
       var reRenderUnbind =  $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
-        if( winHandler == $scope.window.handler ) {
+        function doRedraw() {
           $timeout( function() {
             if(config.compute) {
               $scope.redraw();
@@ -316,10 +375,23 @@ visu.directive('heatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFactory
             }
           });
         }
+
+        if( winHandler == $scope.window.handler() ) {
+          var filtered = _.startsWith(config.action, 'filter');
+
+          if($scope.window.separate) {
+            if(filtered) {
+              doRedraw();
+            }
+          } else {
+            doRedraw();
+          }
+
+        }
       });
 
       var redrawUnbind =  $rootScope.$on('window-handler.redraw', function(event, winHandler) {
-        if( winHandler == $scope.window.handler ) {
+        if( winHandler == $scope.window.handler() ) {
           $timeout( function() {
             $scope.heatmap.redraw();
           });
@@ -342,7 +414,6 @@ visu.directive('heatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFactory
         _.each($scope.deregisters, function(unbindFn) {
           unbindFn();
         });
-        $scope.sampDimensionInst.decrement();
         $scope.coordGroup.dispose();
         $scope.coordDim.dispose();
       });
@@ -363,3 +434,118 @@ visu.directive('heatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFactory
     };
   }
   ]);
+
+
+function CustomScale() {
+  var obj = {},
+  priv = {
+    coordinates: [],
+    interpolated: {},
+    lower: {
+      min: null,
+      max: null
+    },
+    upper: {
+      min: null,
+      max: null
+    },
+    constant: {
+      lower: null,
+      middle: null,
+      upper: null,
+      threshold: 0.3
+    }
+  };
+
+  function getName(coord, reverse) {
+    if(reverse) {
+      return [coord.y, coord.x].join("|");
+    } else {
+      return [coord.x, coord.y].join("|");
+    }
+  }
+
+  function computeInterpolated() {
+    var thre = priv.constant.threshold,
+    correlation;
+    _.each(priv.coordinates, function(coord) {
+      correlation = coord.corr;
+      if(correlation > 0) {
+        priv.interpolated[getName(coord)] = (thre) + (1-thre) * ( correlation - priv.upper.min ) / (priv.upper.max - priv.upper.min);
+      } 
+      else if(correlation < 0) {
+        priv.interpolated[getName(coord)] = -(thre) - (1-thre) * ( correlation - priv.lower.min ) / (priv.lower.max - priv.lower.min);
+      }
+    });
+  }
+
+  function computeMaxMin() {
+    var lowerExtent = d3.extent(priv.coordinates, function(d) {
+      if(d.corr > 0) { return undefined; }
+      return d.corr;
+    });
+    var upperExtent = d3.extent(priv.coordinates, function(d) {
+      if(d.corr < 0) { return undefined; }
+      return d.corr;
+    });
+
+    priv.lower.min = _.isUndefined(lowerExtent[0]) ? priv.constant.lower : lowerExtent[0];
+    priv.lower.max = _.isUndefined(lowerExtent[1]) ? priv.constant.upper : lowerExtent[1];
+    priv.upper.min = upperExtent[0];
+    priv.upper.max = upperExtent[1];
+  }
+
+  obj.lower = function(x) {
+    if(!arguments.length) { return priv.constant.lower; }
+    priv.constant.lower = x;
+    return obj;
+  };
+
+  obj.middle = function(x) {
+    if(!arguments.length) { return priv.constant.middle; }
+    priv.constant.middle = x;
+    return obj;
+  };
+
+  obj.upper = function(x) {
+    if(!arguments.length) { return priv.constant.upper; }
+    priv.constant.upper = x;
+    return obj;
+  };
+
+  obj.threshold = function(x) {
+    if(!arguments.length) { return priv.constant.threshold; }
+    priv.constant.threshold = x;
+    return obj;
+  };
+
+  // get color value
+  obj.color = function(obj) {
+    var red, green, blue,
+    interp = priv.interpolated[getName(obj)];
+    interp = _.isUndefined(interp) ? priv.interpolated[getName(obj, true)] : interp;
+
+    if(interp > 0) {
+      // upper, red
+      red = 255;
+      green = 255 * (1 - interp);
+      blue = 255 * (1 - interp);
+    } else {
+      // lower, blue
+      red = 255 * (1 + interp);
+      green = 255 * (1 + interp);
+      blue = 255;
+    }
+    return d3.rgb(red, green, blue).toString();
+  };
+
+  obj.coordinates = function(x) {
+    if(!arguments.length) { return priv.coordinates; }
+    priv.coordinates = x;
+    computeMaxMin();
+    computeInterpolated();
+    return obj;
+  };
+
+  return obj;
+}

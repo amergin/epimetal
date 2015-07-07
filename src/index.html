@@ -26,32 +26,19 @@
   <script src="//cdn.jsdelivr.net/angular-material-icons/0.4.0/angular-material-icons.min.js"></script> 
 </head>
 
-<body layout>
-    <div growl class="" limit-messages="4"></div>
-    <div layout ui-view="sidenav"></div>
-    <div flex layout="column" class="relative" role="main">
-      <md-toolbar>
-        <div class="md-toolbar-tools">
-          <md-button class="md-icon-button" aria-label="Open Menu" ng-show="!sideMenuVisible('left')" ng-click="toggleSideMenu()">
-            <i class="fa fa-bars"></i>
-          </md-button>
-          <h2>
-            <span>Plotter</span>
-          </h2>
-          <span flex></span>
-          <md-button class="md-raised" aria-label="Link this view">Link this view</md-button>
-          <md-button class="md-icon-button" aria-label="More">
-            <i class="fa fa-ellipsis-v"></i>
-          </md-button>
-        </div>
-      </md-toolbar>
-      <div ui-view="header"></div>
-
-      <!-- layout layout-fill -->
-      <md-content md-scroll-y md-scroll-x flex layout="column" layout-fill style="">
-        <div ui-view="content" style="" flex layout layout-fill>
-        </div>
-      </md-content>
+<body>
+<div class="pl-container pl-flex-row">
+  <div class="pl-sidenav am-fade-left" ui-view="sidenav" ng-show="sideMenuVisible()"></div>
+  <div class="pl-right pl-container pl-flex-column">
+    <div class="pl-header" ui-view="header"></div>
+    <span us-spinner="{radius:30, width:8, length: 16}" spinner-key="main" class="ng-scope"></span>
+    <div growl class="ng-isolate-scope" limit-messages="4"></div>      
+    <div class="pl-content" ui-view="content">
     </div>
+    <div class="yellow pl-bottom-content" resizable r-directions="['top']" r-flex="true" ng-show="showBottomContainer()" ui-view="bottom">
+      bottom
+    </div>
+  </div>
+</div>
 </body>
 </html>

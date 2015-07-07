@@ -15,9 +15,11 @@ var vis =
     ]);
 
 mod.constant('EXPLORE_DEFAULT_HISTOGRAMS', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc']);
+mod.constant('EXPLORE_DEFAULT_SIZE_X', 3);
+mod.constant('EXPLORE_DEFAULT_SIZE_Y', 3);
 
-mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', 'windowHandler', 'DatasetFactory', '$q', 'PlotService', 'WindowHandler', 'SOMService', '$timeout',
-  function ExploreController($scope, $templateCache, $rootScope, windowHandler, DatasetFactory, $q, PlotService, WindowHandler, SOMService, $timeout) {
+mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', 'windowHandler', 'DatasetFactory', '$q', 'PlotService', 'WindowHandler', 'SOMService', '$timeout', 'EXPLORE_DEFAULT_SIZE_X', 'EXPLORE_DEFAULT_SIZE_Y',
+  function ExploreController($scope, $templateCache, $rootScope, windowHandler, DatasetFactory, $q, PlotService, WindowHandler, SOMService, $timeout, EXPLORE_DEFAULT_SIZE_X, EXPLORE_DEFAULT_SIZE_Y) {
     console.log("explore ctrl");
 
     $scope.windowHandler = windowHandler;
@@ -46,12 +48,14 @@ mod.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', '
         enabled: true,
         handle: '.handle'
       },
-      defaultSizeX: 3,
-      defaultSizeY: 3,
-      columns: 4 * 10,
-      // width: 4 * 10 * 150,
-      colWidth: 150,
-      rowHeight: '125',
+      defaultSizeX: EXPLORE_DEFAULT_SIZE_X,
+      defaultSizeY: EXPLORE_DEFAULT_SIZE_Y,
+      columns: 4 * 3,
+      width: 'auto',
+      colWidth: 'auto',
+      rowHeight: 'match',
+      // colWidth: 150,
+      // rowHeight: '125',
       minSizeX: 2,
       maxSizeX: 8,
       minSizeY: 2,

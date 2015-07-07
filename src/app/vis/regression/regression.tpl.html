@@ -1,8 +1,9 @@
 <div gridster="gridOptions">
     <ul>
-        <li gridster-item="itemMapper" ng-repeat="window in windows">
-        	<div window-header></div>
-			<div replace-and-compile re-name="window.type" re-window="window" class="text-center"></div>
+        <li gridster-item="itemMapper" ng-repeat="window in windows track by window.object.id()" pl-grid-window pl-window="window">
+        </li>
+        <li layout="row" class="am-fade" ng-show="!windows.length">
+        	<h4 class="text-info">No regression computations to show. Start by selecting variables to use in the computation.</h4>
         </li>
     </ul>
 </div>

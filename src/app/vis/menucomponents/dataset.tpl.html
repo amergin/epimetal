@@ -1,64 +1,29 @@
-<div layout-padding>
+<div>
     <div growl inline="true" limit-messages="1" reference="datasetinfo" class="am-fade container-fluid"></div>
 
     <div class="panel panel-default">
       <div class="panel-heading">
-        <h3 class="panel-title">Datasets from database</h3>
+        <h3 class="panel-title text-center">Datasets</h3>
       </div>
       <table class="table table-hover table-condensed" id="dataset-db">
         <thead>
           <tr>
-            <th class="col-sm-2">Selected</th>
+            <th class="col-sm-1">Selected</th>
             <th class="col-sm-7">Name</th>
-            <th class="col-sm-3">Samples</th>
+            <th class="col-sm-3">Size</th>
+            <th class="col-sm-2">Remove</th>
           </tr>
         </thead>
         <tbody>
-          <tr ng-repeat="set in dbTypes = (datasets | filter:isDatabase)" ng-style="{ 'background-color': set.color() }" ng-click="toggle(set)" class="ctrl">
-            <td class="dataset-select col-sm-2"><input type="checkbox" ng-click="set(toggle)" ng-checked="set.active()"></td>
-            <td class="dataset-name col-sm-7">{{set.name()}}</td>
-            <td class="dataset-size col-sm-2">{{set.size()}}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-  <div>
-    <div class="panel panel-default text-center">
-      <div class="panel-heading">
-        <h3 class="panel-title">Derived datasets</h3>
-      </div>
-      <table class="table table-hover text-left table-condensed" id="dataset-derived" ng-show="derivedTypes.length">
-        <thead>
-          <tr>
-            <th class="col-sm-2">Selected</th>
-            <th class="col-sm-5">Name</th>
-            <th class="col-sm-3">Samples</th>
-            <th class="col-sm-2">Delete</th>          
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-repeat="set in derivedTypes = (datasets | filter:isDerived)" ng-style="{ 'background-color': set.color() }" ng-click="toggle(set)" class="ctrl">
-            <td class="dataset-select col-sm-2"><input type="checkbox" ng-click="set(toggle)" ng-checked="set.active()"></td>
-            <td class="dataset-name col-sm-5">{{set.name()}}</td>
-            <td class="dataset-size col-sm-2">{{set.size()}}</td>
+          <tr ng-repeat="set in datasets track by $index" ng-style="{ 'background-color': set.color() }" ng-click="!canToggle() || toggle(set)" class="ctrl">
+            <td class="dataset-select col-sm-1"><input type="checkbox" ng-disabled="!canToggle()" ng-click="toggle(set)" ng-checked="set.active()"></td>
+            <td class="dataset-name col-sm-6">{{set.name()}}</td>
+            <td class="dataset-size col-sm-3">{{set.size()}}</td>
             <td class="dataset-size col-sm-2">
-                <i class="fa fa-lg fa-times-circle ctrl" ng-click="removeDerived(set)"></i>
+                <i class="fa fa-lg fa-times-circle" ng-show="set.type() == 'derived'" ng-click="removeDerived(set)"></i>
             </td>
           </tr>
         </tbody>
       </table>
-      <div ng-show="!derivedTypes.length" class="text-info">No derived datasets defined.</div>
-
-      <div class="panel-heading">
-        <h4 class="panel-title">Create a derived dataset</h4>
-      </div>
-      <div class="form-group">
-        <input ng-model="derivedInput" type="text" class="form-control" id="name" placeholder="Name">
-      </div>
-      <button type="submit" class="btn btn-primary" ng-disabled="!derivedInput" ng-click="createDerived(derivedInput)">Create</button>
     </div>
-
-  </div>
-
 </div>

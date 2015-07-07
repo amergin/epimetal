@@ -6,40 +6,52 @@ var visu = angular.module('plotter.vis.plotting.classedbarchart',
   'services.som',
   'services.window'
   ]);
-visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout',
-  function ClassedBarChartPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout) {
+visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'FilterService',
+  function ClassedBarChartPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, FilterService) {
 
-    $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
+    $scope.dimensionService = $scope.window.handler().getDimensionService();
 
     $scope.isSpecial = function() {
-      return $scope.window.somSpecial;
+      return $scope.window.extra().somSpecial;
     };
 
     $scope.filterButton = function(x) {
-      $scope.window.showResetBtn = x;
-    };
-
-    $scope.addStateFilters = function() {
-      if(!$scope.window.filters) { return; }
-      _.each($scope.window.filters, function(filter) {
-        if(!$scope.isSpecial()) {
-          filter.valueOf = function() {
-            return _.isUndefined(this.classed) ? constants.nanValue : this.classed + "|" + this.dataset;
-          };
-        }
-        $scope.chart.filter(filter);
+      $timeout(function() {
+        $scope.window.resetButton(x);
       });
     };
 
+    $scope.$watch(function() {
+      return FilterService.getFiltersByType('classed');
+    }, function(newVal, oldVal) {
+      if(newVal != oldVal) {
+        if(newVal.length === 0) {
+          $scope.window.resetButton(false);
+        }
+      }
+    }, true);
+
+    // $scope.addStateFilters = function() {
+    //   if(!$scope.window.extra().filters) { return; }
+    //   _.each($scope.window.extra().filters, function(filter) {
+    //     if(!$scope.isSpecial()) {
+    //       filter.valueOf = function() {
+    //         return _.isUndefined(this.classed) ? constants.nanValue : this.classed + "|" + this.dataset;
+    //       };
+    //     }
+    //     $scope.chart.filter(filter);
+    //   });
+    // };
+
     function initSOMSpecial() {
       $scope.primary = $injector.get('DimensionService').getPrimary();
-      $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables);
+      $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables());
       $scope.totalDimension = $scope.totalDimensionInst.get();
-      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables);
+      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables());
       $scope.dimension = $scope.dimensionInst.get();
       $scope.groupInst = $scope.dimensionInst.groupDefault();
 
-      $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables.x);
+      $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables().x);
       $scope.reduced = $scope.groupInst.get();
       // total will always have largest count
       $scope.extent = [0, $scope.totalDimensionInst.groupAll().get().reduceCount().value()];
@@ -50,11 +62,11 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
     }
 
     function initDefault() {
-      $scope.dimensionInst = $scope.dimensionService.classHistogramDimension($scope.window.variables.x);
+      $scope.dimensionInst = $scope.dimensionService.classHistogramDimension($scope.window.variables().x);
       $scope.dimension = $scope.dimensionInst.get();
       $scope.groupInst = $scope.dimensionInst.groupDefault();
 
-      $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables.x);
+      $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables().x);
       $scope.reduced = $scope.groupInst.get();
       $scope.extent = [0, d3.max($scope.dimension.group().all(), function(d) { return d.value; } )];
 
@@ -68,21 +80,31 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
       initDefault();
     }
 
-    $scope.$parent.resetFilter = function() {
+    $scope.window.resetFn(function() {
       $scope.chart.filterAll();
       $injector.get('WindowHandler').reRenderVisible({ compute: true, omit: 'histogram' });
-      $scope.window.showResetBtn = false;
-    };
+      $scope.filterButton(false);
+    });
+
+    // $scope.$parent.resetFilter = function() {
+    //   $scope.chart.filterAll();
+    //   $injector.get('WindowHandler').reRenderVisible({ compute: true, omit: 'histogram' });
+    //   $scope.window.showResetBtn = false;
+    // };
 
     // share information with the plot window
-    $scope.$parent.headerText = ['Histogram of', $scope.window.variables.x, ''];
-    $scope.$parent.showResetBtn = false;
+
+    $scope.window.headerText(['Histogram of', $scope.window.variables().x, '']);
+    // $scope.$parent.headerText = ['Histogram of', $scope.window.variables.x, ''];
+    $scope.filterButton(false);
+    // $scope.window.resetButton(false);
+    // $scope.$parent.showResetBtn = false;
 
     // see https://github.com/dc-js/dc.js/wiki/FAQ#filter-the-data-before-its-charted
     // this used to filter to only the one set & limit out NaN's
     $scope.filterSOMSpecial = function(group) {
       var FilterService = $injector.get('FilterService'),
-      info = DatasetFactory.getVariable($scope.window.variables.x);
+      info = DatasetFactory.getVariable($scope.window.variables().x);
 
       function getCircleLookup(grp) {
         var lookup = {};
@@ -162,7 +184,7 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
             var legalGroups = group.all().filter(function(d) {
               return (d.value.counts[d.key.dataset] > 0) && (d.key.valueOf() !== constants.nanValue);
             }),
-            info = DatasetFactory.getVariable($scope.window.variables.x),
+            info = DatasetFactory.getVariable($scope.window.variables().x),
             ret = [];
 
             _.each(legalGroups, function(group) {
@@ -284,8 +306,8 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
             $timeout(function() {
               var instance = new ClassedBarChartFilter()
               .chart($scope.chart)
-              .variable($scope.window.variables.x)
-              .windowid($scope.window._winid)
+              .variable($scope.window.variables().x)
+              .windowid($scope.window.id())
               .payload(filter);
 
               $injector.get('FilterService').addFilter(instance);
@@ -338,12 +360,34 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
 
 }]);
 
-visu.directive('classedBarChart', ['constants', '$timeout', '$rootScope', '$injector',
+visu.constant('CLASSED_BARCHART_SIZE', {
+  height: 375,
+  width: 450,
+  aspectRatio: 'stretch'
+});
 
-  function(constants, $timeout, $rootScope, $injector) {
+visu.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$injector', 'CLASSED_BARCHART_SIZE',
+
+  function(constants, $timeout, $rootScope, $injector, CLASSED_BARCHART_SIZE) {
     function postLink($scope, ele, attrs, ctrl) {
 
-      $scope.$parent.element = ele;
+      function initDropdown() {
+        $scope.window.addDropdown({
+          type: "export:svg",
+          element: $scope.element
+        });
+
+        $scope.window.addDropdown({
+          type: "export:png",
+          element: $scope.element
+        });
+      }
+
+      // $scope.$parent.element = ele;
+      $scope.element = ele;
+
+      initDropdown();
+
       var drawFunction = null,
       config;
 
@@ -351,7 +395,7 @@ visu.directive('classedBarChart', ['constants', '$timeout', '$rootScope', '$inje
         drawFunction = $scope.drawSOMSpecial;
         config = {
           element: ele[0],
-          size: $scope.window.size,
+          size: CLASSED_BARCHART_SIZE,
           extent: $scope.extent,
           filter: $scope.filterSOMSpecial,
           groupNames: $scope.groupNames,
@@ -359,13 +403,13 @@ visu.directive('classedBarChart', ['constants', '$timeout', '$rootScope', '$inje
           dimension: $scope.dimension,
           reduced: $scope.reduced,
           chartGroup: constants.groups.histogram.nonInteractive,
-          variable: $scope.window.variables.x
+          variable: $scope.window.variables().x
         };
 
       } else {
         config = {
           element: ele[0],
-          size: $scope.window.size,
+          size: CLASSED_BARCHART_SIZE,
           extent: $scope.extent,
           filter: $scope.filterDefault,
           groupNames: $scope.groupNames,
@@ -373,14 +417,14 @@ visu.directive('classedBarChart', ['constants', '$timeout', '$rootScope', '$inje
           dimension: $scope.dimension,
           reduced: $scope.reduced,
           chartGroup: constants.groups.histogram.interactive,
-          variable: $scope.window.variables.x
+          variable: $scope.window.variables().x
         };
         drawFunction = $scope.drawDefault;
       }
 
       $timeout(function() {
         drawFunction(config);
-        $scope.addStateFilters();
+        // $scope.addStateFilters();
         $scope.chart.render();
       });
 
@@ -394,7 +438,7 @@ visu.directive('classedBarChart', ['constants', '$timeout', '$rootScope', '$inje
       });
 
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
-        if( winHandler == $scope.window.handler ) {
+        if( winHandler == $scope.window.handler() ) {
 
           $timeout(function() {
             if($scope.isSpecial()) {
@@ -402,13 +446,13 @@ visu.directive('classedBarChart', ['constants', '$timeout', '$rootScope', '$inje
             } else {
               $scope.chart.group($scope.filterDefault($scope.reduced));
             }
+            $scope.chart.redraw();
           });
-          $scope.chart.redraw();
         }
       });
 
       var redrawUnbind = $rootScope.$on('window-handler.redraw', function(event, winHandler) {
-        if( winHandler == $scope.window.handler ) {
+        if( winHandler == $scope.window.handler() ) {
           $timeout( function() {
             $scope.chart.redraw();
           });
@@ -416,13 +460,13 @@ visu.directive('classedBarChart', ['constants', '$timeout', '$rootScope', '$inje
       });
 
       var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
-        var retObj = _.chain($scope.window)
-        .pick(['type', 'grid', 'somSpecial', 'variables', 'handler'])
-        .clone()
-        .extend({ filters: $scope.chart.filters() || [] }) //$scope.chart.filters()[0] || [] })
-        .value();
+        // var retObj = _.chain($scope.window)
+        // .pick(['type', 'grid', 'somSpecial', 'variables', 'handler'])
+        // .clone()
+        // .extend({ filters: $scope.chart.filters() || [] }) //$scope.chart.filters()[0] || [] })
+        // .value();
 
-        callback(retObj);
+        // callback(retObj);
       });
 
       $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind, gatherStateUnbind);

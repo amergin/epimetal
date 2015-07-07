@@ -1,0 +1,44 @@
+<div>
+	<tabset>
+		<tab select="selectTab('profiles')" >
+			<tab-heading>Profiles</tab-heading>
+			<h1>Profiles</h1>
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">Predefined profiles</div>
+						<div class="panel-body">
+							<div ng-repeat="profile in selection.profiles track by $index">
+								<div class="col-sm-2">
+									<label>
+										<input type="checkbox" ng-model="profile.selected">
+										{{profile.name}}
+									</label>
+								</div>
+								<div class="col-sm-10">
+									<md-chips ng-model="profile.variables" readonly="true">
+										<md-chip-template>
+											<strong>{{$chip.name}}</strong>
+											<em>({{$chip.desc}})</em>
+										</md-chip-template>
+									</md-chips>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</tab>
+		<tab select="selectTab('distributions')">
+			<tab-heading>Distributions</tab-heading>
+			<h1>Distributions</h1>
+			<div class="multiple-variable-selection" re-selection="selection.distributions" re-mode="'multi'"></div>
+		</tab>
+		<tab select="selectTab('planes')">
+			<tab-heading>Planes</tab-heading>
+			<h1>Create a new SOM component plane</h1>
+			<div class="multiple-variable-selection" re-selection="selection.planes" re-mode="'multi'"></div>
+		</tab>
+	</tabset>
+</div>

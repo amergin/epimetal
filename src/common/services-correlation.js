@@ -12,19 +12,36 @@ mod.factory('CorrelationService', ['$injector', '$q', '$rootScope', 'DatasetFact
     var _inProgress = false;
     var _result = [];
 
-    var getData = function(variables, windowHandler) {
-      var getRaw = function(samples, variables) {
+    var getData = function(config, windowHandler) {
+      var getRaw = function(samples) {
         return _.map(samples, function(s) {
           return s.variables;
         });
       };
-      var deferred = $q.defer();
-      DatasetFactory.getVariableData(variables, windowHandler)
+      var deferred = $q.defer(),
+      variables = config.variables,
+      separated = config.separate === true,
+      raw;
+
+      if(separated) {
+        that.sampleDimension = windowHandler.getDimensionService().getSampleDimension();
+        var samples = _.filter(that.sampleDimension.get().top(Infinity), function(s) { 
+          return s.dataset == config.dataset.name();
+        });
+        raw = getRaw(samples);
+        deferred.resolve(raw);
+        // config.dataset.getVariables(variables).then(function(data) {
+        //   raw = getRaw(data.samples.all);
+        //   deferred.resolve(raw);
+        // });
+      } else {
+        DatasetFactory.getVariableData(variables, windowHandler)
         .then(function() {
           that.sampleDimension = windowHandler.getDimensionService().getSampleDimension();
           var raw = getRaw(that.sampleDimension.get().top(Infinity), variables);
           deferred.resolve(raw);
         });
+      }
       return deferred.promise;
     };
 
@@ -124,7 +141,7 @@ mod.factory('CorrelationService', ['$injector', '$q', '$rootScope', 'DatasetFact
 
       var cellInfo = partitionHeatmapTable(config.variables);
 
-      getData(config.variables, windowHandler).then(function(data) {
+      getData(config, windowHandler).then(function(data) {
 
         var parallel = new Parallel(cellInfo.coordinates, {
             evalPath: 'assets/threads/eval.js',

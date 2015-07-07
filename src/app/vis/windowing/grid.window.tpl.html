@@ -1,0 +1,12 @@
+<span us-spinner="{radius:30, width:8, length: 16}" spinner-key="{{window.object.id()}}"></span>
+<div class="handle text-center">
+	<i class="ctrl fa fa-cog pull-left action-btn" enable-animate data-html="true" bs-dropdown="window.object.dropdown()" title="Settings"></i>
+	<a class="close ctrl ctrl-close" ng-click="close()" title="Close this figure">&times;</a>
+	<a class="btn btn-default btn-xs ctrl-filter" ng-click="resetFilter()" ng-show="window.object.resetButton()">reset filter</a>
+</div>
+<div class="text-center">
+	<span ng-repeat="text in window.object.headerText() track by $index">
+		{{text}}
+	</span>
+</div>
+<div replace-and-compile re-name="window.object.figure()" re-window="window.object"></div>

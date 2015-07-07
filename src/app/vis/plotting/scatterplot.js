@@ -4,11 +4,14 @@ var visu = angular.module('plotter.vis.plotting.scatterplot',
   'services.dimensions',
   'services.dataset'
   ]);
-visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$state', '$rootScope', '$timeout',
-  function($scope, DatasetFactory, DimensionService, constants, $state, $rootScope, $timeout) {
 
-    $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
-    $scope.dimensionInst = $scope.dimensionService.getXYDimension($scope.window.variables);
+visu.constant('SCATTERPLOT_POOLING_COLOR', 'black');
+
+visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$state', '$rootScope', '$timeout', 'SCATTERPLOT_POOLING_COLOR',
+  function($scope, DatasetFactory, DimensionService, constants, $state, $rootScope, $timeout, SCATTERPLOT_POOLING_COLOR) {
+
+    $scope.dimensionService = $scope.window.handler().getDimensionService();
+    $scope.dimensionInst = $scope.dimensionService.getXYDimension($scope.window.variables());
     $scope.dimension = $scope.dimensionInst.get();
 
     $scope.initGroup = function() {
@@ -19,8 +22,8 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
     $scope.initGroup();
 
-    $scope.$parent.showResetBtn = false;
-    $scope.$parent.headerText = ['Scatter plot of', $scope.window.variables.x + ", " + $scope.window.variables.y, ''];
+    $scope.window.headerText(['Scatter plot of', $scope.window.variables().x + ", " + $scope.window.variables().y]);
+    $scope.window.resetButton(false);
 
     $scope._calcCanvasAttributes = function() {
       $scope.sets = DatasetFactory.activeSets();
@@ -42,7 +45,7 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       var data = $scope.group.all().filter(function(d) {
         return (d.value.counts[name] > 0) && d.key.valueOf() >= constants.legalMinValue;
       });
-      var color = $scope.window.pooled ? 'black' : set.color();
+      var color = $scope.window.pooled() ? SCATTERPLOT_POOLING_COLOR : set.color();
       var canvas = $scope.createCanvas(
         $scope.element,
         $scope.width,
@@ -69,6 +72,12 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       $(stored.canvas.canvas).remove();
     };
 
+    $scope.$watch(function() {
+      return $scope.window.pooled();
+    }, function() {
+      $scope.redrawAll();
+    });
+
     $scope.redrawAll = function() {
       console.log("redraw scatter plot");
       $scope._calcCanvasAttributes();
@@ -88,17 +97,6 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
         $scope._createCanvas(set, ++$scope.zIndexCount);
       });
 
-
-      // _.each($scope.sets, function(set, ind) {
-      //   // remove previous canvas, if any
-      //   if( !_.isUndefined( $scope.canvases[set.name()] ) ) {
-      //     $scope.removeCanvas($scope.canvases[set.name()]);
-      //   }
-
-      //   // create a new one
-      //   $scope._createCanvas(set, ++$scope.zIndexCount);
-      // });
-
       // create the axes last and place them on top of other canvases
       var axesCanvas = $scope.createAxisCanvas(
         $scope.element,
@@ -110,8 +108,8 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
         $scope.xRange,
         $scope.yRange,
         100,
-        $scope.window.variables.x,
-        $scope.window.variables.y
+        $scope.window.variables().x,
+        $scope.window.variables().y
         );
       $scope.canvases['axes'] = {
         'zindex': 100,
@@ -139,8 +137,8 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       var xscale = d3.scale.linear(), // x scale
         yscale = d3.scale.linear(); // yscale
 
-      var X_TICK_FORMAT = constants.tickFormat; //d3.format(".2s");
-      var Y_TICK_FORMAT = constants.tickFormat; //d3.format(".2s");
+      var X_TICK_FORMAT = constants.tickFormat;
+      var Y_TICK_FORMAT = constants.tickFormat;
 
       // create canvas element
       var c = document.createElement('canvas');
@@ -364,14 +362,31 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
   ]);
 
-visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
+visu.directive('plScatterplot', ['$timeout', '$rootScope', 'NotifyService',
 
   function($timeout, $rootScope, NotifyService) {
 
     var linkFn = function($scope, ele, iAttrs) {
-
       $scope.element = ele;
-      $scope.$parent.element = ele;
+
+      function initDropdown() {
+        $scope.window.addDropdown({
+          type: "export:svg",
+          element: $scope.element
+        });
+
+        $scope.window.addDropdown({
+          type: "export:png",
+          element: $scope.element
+        });
+
+        $scope.window.addDropdown({
+          type: "pooling",
+          window: $scope.window
+        });
+      }
+
+      initDropdown();
 
       $timeout(function() {
         $scope.width = ele.width() || 490;
@@ -381,19 +396,14 @@ visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
       });
 
 
-      NotifyService.addTransient(
-        'Scatter plot added', 
-        'Scatter plot for ' + '(' + $scope.window.variables.x + ", " + $scope.window.variables.y + ') has been added', 
+      NotifyService.addTransient('Scatter plot added', 
+        'Scatter plot for ' + '(' + $scope.window.variables().x + ", " + $scope.window.variables().y + ') has been added', 
         'success');
 
       $scope.deregisters = [];
 
       var derivedAddUnbind = $rootScope.$on('dataset:derived:add', function(eve, set) {
         $scope.initGroup();
-        // $scope._calcCanvasAttributes();
-        // // add canvas as 'layer'
-        // $scope._createCanvas(set, ++$scope.zIndexCount);
-        // $scope.redrawAll();
       });
 
       var derivedRemoveUnbind = $rootScope.$on('dataset:derived:remove', function(eve, set) {
@@ -402,9 +412,9 @@ visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
       });
 
       var resizeUnbind = $rootScope.$on('gridster.resize', function(event, $element) {
-        if( $element.is( $scope.$parent.element.parent() ) ) {
-          $scope.width = $scope.$parent.element.width();
-          $scope.height = $scope.$parent.element.height();
+        if( $element.is( $scope.element.parent() ) ) {
+          $scope.width = $scope.element.width();
+          $scope.height = $scope.element.height();
           if( !_($scope.canvases).isEmpty() ) {
             $scope.redrawAll();
           }
@@ -412,7 +422,7 @@ visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
       });
 
       var redrawUnbind =  $rootScope.$on('window-handler.redraw', function(event, winHandler) {
-        if( winHandler == $scope.window.handler ) {
+        if( winHandler == $scope.window.handler() ) {
         //   $timeout( function() {
         //   // nothing to do
         // });
@@ -420,20 +430,19 @@ visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
       });
 
       var reRenderUnbind =  $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
-        if( winHandler == $scope.window.handler ) {
+        if( winHandler == $scope.window.handler() ) {
           $timeout( function() {
             var action = config.action,
             dset = config.dset,
             compute = config.compute;
 
-            if( !action && !dset && compute ) {
+            if(action == 'filter:add' || action == 'filter:reset') {
               $scope.redrawAll();
             }
-            else {
-              if (action === 'disabled') {
-                $scope.disable(dset);
-              } else if (action === 'enabled') {
-
+            else if(action == 'dataset:disabled') {
+              $scope.disable(dset);
+            }
+            else if(action == 'dataset:enabled') {
                 var canvas = $scope.canvases[dset.name()];
                 if (_.isUndefined(canvas)) {
                 // new, not drawn before
@@ -446,7 +455,6 @@ visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
                 $scope.enable(dset);
               }
             }
-          }
         });
         }
       });
@@ -478,7 +486,7 @@ visu.directive('scatterplot', ['$timeout', '$rootScope', 'NotifyService',
     };
 
     return {
-      scope: false,
+      // scope: false,
       // scope: {},
       restrict: 'C',
       require: '^?window',

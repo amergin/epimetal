@@ -30,8 +30,8 @@ module.directive('noclick', [function() {
 module.directive('replaceAndCompile', ['$compile', '$timeout', function($compile, $timeout) {
   return {
     scope: { 
-      name: '=reName', 
-      window: '=reWindow',
+      'name': '=reName',
+      'window': '=reWindow' 
     },
     restrict: 'A',
     priority: 200,
@@ -39,7 +39,7 @@ module.directive('replaceAndCompile', ['$compile', '$timeout', function($compile
       post: function(scope, element, attrs) {
         $timeout( function() {
           var el = angular.element('<div/>')
-          .addClass(scope.window.type)
+          .addClass(scope.name)
           .addClass('figure');
           element.parent().append(el);
           $compile(el)(scope);
