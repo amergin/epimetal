@@ -279,6 +279,10 @@ function GroupedBarChart(element, width, height) {
       // update
       _bodyG.selectAll("g.group")
       .selectAll(".group-rect")
+      .attr("width", _x1.rangeBand())
+      .style("fill", function(d) {
+        return _colorAccessor(d, _colors);
+      })      
       // .transition().ease("linear")
       .attr("x", function(d) { return _x1(d.name); })
       // .transition().ease("linear")

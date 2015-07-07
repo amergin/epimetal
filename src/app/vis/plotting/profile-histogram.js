@@ -18,8 +18,6 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
 
     $scope.window.headerText(['Profile histogram for ', $scope.window.extra().name]);
 
-    // $scope.$parent.headerText = ['Profile histogram for ', $scope.window.name];
-
     $scope.dimensionService = $scope.window.handler().getDimensionService();
     $scope.colorScale = FilterService.getSOMFilterColors();
 
@@ -153,8 +151,6 @@ visu.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$i
           pooled: false,
           somSpecial: true
         };
-        // remove the old histogram window, if any
-        // $scope.window.handler.removeByType('histogram');
         // draw a new one
         PlotService.drawHistogram( config, $scope.window.handler() );
 
@@ -216,12 +212,6 @@ visu.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$i
       });
 
       var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
-        // var retObj = _.chain($scope.window)
-        // .pick(['type', 'grid', 'variables', 'handler', 'plane'])
-        // .clone()
-        // .value();
-
-        // callback(retObj);
       });
 
       $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind);

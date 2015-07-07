@@ -31,18 +31,6 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
       }
     }, true);
 
-    // $scope.addStateFilters = function() {
-    //   if(!$scope.window.extra().filters) { return; }
-    //   _.each($scope.window.extra().filters, function(filter) {
-    //     if(!$scope.isSpecial()) {
-    //       filter.valueOf = function() {
-    //         return _.isUndefined(this.classed) ? constants.nanValue : this.classed + "|" + this.dataset;
-    //       };
-    //     }
-    //     $scope.chart.filter(filter);
-    //   });
-    // };
-
     function initSOMSpecial() {
       $scope.primary = $injector.get('DimensionService').getPrimary();
       $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables());
@@ -383,7 +371,6 @@ visu.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$in
         });
       }
 
-      // $scope.$parent.element = ele;
       $scope.element = ele;
 
       initDropdown();
@@ -424,7 +411,6 @@ visu.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$in
 
       $timeout(function() {
         drawFunction(config);
-        // $scope.addStateFilters();
         $scope.chart.render();
       });
 
@@ -432,9 +418,6 @@ visu.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$in
       $scope.deregisters = [];
 
       var resizeUnbind = $rootScope.$on('gridster.resize', function(event,$element) {
-        // if( $element.is( $scope.$parent.element.parent() ) ) {
-        //   $scope.chart.render();
-        // }
       });
 
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
@@ -460,13 +443,6 @@ visu.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$in
       });
 
       var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
-        // var retObj = _.chain($scope.window)
-        // .pick(['type', 'grid', 'somSpecial', 'variables', 'handler'])
-        // .clone()
-        // .extend({ filters: $scope.chart.filters() || [] }) //$scope.chart.filters()[0] || [] })
-        // .value();
-
-        // callback(retObj);
       });
 
       $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind, gatherStateUnbind);
