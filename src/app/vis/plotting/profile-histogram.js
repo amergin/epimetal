@@ -149,7 +149,8 @@ visu.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$i
         var config = {
           variables: { x: d.custom.variable },
           pooled: false,
-          somSpecial: true
+          somSpecial: true,
+          filterEnabled: false
         };
         // draw a new one
         PlotService.drawHistogram( config, $scope.window.handler() );
