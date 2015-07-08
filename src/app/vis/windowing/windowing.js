@@ -55,6 +55,15 @@ win.directive('plExport', function() {
 win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EXPORT_PNG_BACKGROUND_COLOR', '$q', 'EXPORT_FILENAME_MAX_LENGTH',
   function($scope, DatasetFactory, EXPORT_CONFIG, EXPORT_PNG_BACKGROUND_COLOR, $q, EXPORT_FILENAME_MAX_LENGTH) {
 
+    function removeDirective() {
+      console.log("destroying export instance");
+      $scope.$destroy();
+      $scope.element.removeAttr('pl-export');
+      $scope.element.removeAttr('pl-export-source');
+      $scope.element.removeAttr('pl-export-target');
+      $scope.element.removeAttr('pl-export-window');
+    }
+
     function getFileName() {
       function getVariables(variables) {
         var hasX = !_.isUndefined(variables.x),
@@ -120,6 +129,7 @@ win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EX
       var url = EXPORT_CONFIG.svg;
 
       sendFile(b64str, url, filename);
+      removeDirective();
     };
 
     $scope.exportPNG = function() {
@@ -204,6 +214,7 @@ win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EX
         svgToCanvas(svgElement).then(function(canvas) {
           base64str = canvasToBase64(canvas, EXPORT_PNG_BACKGROUND_COLOR);
           sendFile(base64str, url, filename);
+          removeDirective();
         });
       }
 
@@ -245,4 +256,5 @@ win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EX
         throw new Error('unsupported type for export.');
       }
     };
+
 }]);
