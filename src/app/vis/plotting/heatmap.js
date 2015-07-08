@@ -8,6 +8,7 @@ var visu = angular.module('plotter.vis.plotting.heatmap',
 
 visu.constant('HEATMAP_WIDTH', 420);
 visu.constant('HEATMAP_HEIGHT', 350);
+visu.constant('HEATMAP_UNDEFINED_COLOR', '#FFFFFF');
 visu.constant('HEATMAP_MARGINS', { 
   top: 0,
   right: 0,
@@ -15,8 +16,8 @@ visu.constant('HEATMAP_MARGINS', {
   left: 80
 });
 
-visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService', 'TabService', 'HEATMAP_HEIGHT', 'HEATMAP_WIDTH', 'HEATMAP_MARGINS',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService, TabService, HEATMAP_HEIGHT, HEATMAP_WIDTH, HEATMAP_MARGINS) {
+visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService', 'TabService', 'HEATMAP_HEIGHT', 'HEATMAP_WIDTH', 'HEATMAP_MARGINS', 'HEATMAP_UNDEFINED_COLOR',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService, TabService, HEATMAP_HEIGHT, HEATMAP_WIDTH, HEATMAP_MARGINS, HEATMAP_UNDEFINED_COLOR) {
 
     $scope.resetFilter = function() {
       $scope.heatmap.filterAll();
@@ -53,7 +54,8 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
                 .lower(-1)
                 .middle(0)
                 .upper(1)
-                .threshold(0.25),
+                .threshold(0.25)
+                .undefinedColor(HEATMAP_UNDEFINED_COLOR),
 
           calculator: function(d) {
             if($scope.filtered) {
@@ -259,6 +261,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         var bonferroni = 0.5 * variables.length * (variables.length - 1);
         $scope.limit = 0.05 / bonferroni;
         $scope.limitDisp = $scope.format($scope.limit);
+        console.log("limitdisp =======", $scope.limitDisp);
         $scope.window.modifyDropdown('correlation', 'limit', $scope.limitDisp, $scope.limitDisp);
         $scope.updateHeader();
 
@@ -484,7 +487,8 @@ function CustomScale() {
       lower: null,
       middle: null,
       upper: null,
-      threshold: 0.3
+      threshold: 0.3,
+      undefinedColor: '#FFFFFF'
     }
   };
 
@@ -550,8 +554,20 @@ function CustomScale() {
     return obj;
   };
 
+  obj.undefinedColor = function(x) {
+    if(!arguments.length) { return priv.constant.undefinedColor; }
+    priv.constant.undefinedColor = x;
+    return obj;
+  };
+
   // get color value
   obj.color = function(obj) {
+    function datumIsNaN() {
+      return _.isNaN(obj.corr);
+    }
+
+    if(datumIsNaN()) { return priv.constant.undefinedColor; }
+
     var red, green, blue,
     interp = priv.interpolated[getName(obj)];
     interp = _.isUndefined(interp) ? priv.interpolated[getName(obj, true)] : interp;
