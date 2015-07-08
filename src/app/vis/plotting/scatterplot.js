@@ -47,7 +47,8 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       });
       var color = $scope.window.pooled() ? SCATTERPLOT_POOLING_COLOR : set.color();
       var canvas = $scope.createCanvas(
-        $scope.element,
+        // $scope.element,
+        $scope.wrapper,
         $scope.width,
         $scope.height,
         $scope.margins,
@@ -99,7 +100,8 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
 
       // create the axes last and place them on top of other canvases
       var axesCanvas = $scope.createAxisCanvas(
-        $scope.element,
+        // $scope.element,
+        $scope.wrapper,
         $scope.width,
         $scope.height,
         $scope.margins,
@@ -369,15 +371,17 @@ visu.directive('plScatterplot', ['$timeout', '$rootScope', 'NotifyService',
     var linkFn = function($scope, ele, iAttrs) {
       $scope.element = ele;
 
+      var wrapper = angular.element('<div/>').addClass('pl-scatterplot-wrapper');
+      $scope.element.append(wrapper);
+      $scope.wrapper = wrapper;
+
       function initDropdown() {
         $scope.window.addDropdown({
-          type: "export:svg",
-          element: $scope.element
-        });
-
-        $scope.window.addDropdown({
           type: "export:png",
-          element: $scope.element
+          element: $scope.wrapper,
+          scope: $scope,
+          source: 'canvas',
+          window: $scope.window
         });
 
         $scope.window.addDropdown({
@@ -386,13 +390,11 @@ visu.directive('plScatterplot', ['$timeout', '$rootScope', 'NotifyService',
         });
       }
 
-      initDropdown();
-
       $timeout(function() {
         $scope.width = ele.width() || 490;
         $scope.height = ele.height() || 345;
-
         $scope.redrawAll();
+        initDropdown();
       });
 
 
@@ -486,8 +488,6 @@ visu.directive('plScatterplot', ['$timeout', '$rootScope', 'NotifyService',
     };
 
     return {
-      // scope: false,
-      // scope: {},
       restrict: 'C',
       require: '^?window',
       replace: true,

@@ -464,14 +464,16 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
     // Called on dataset toggling!
     service.checkActiveVariables = function(set) {
 
-      var defer = $q.defer();
-      var DimensionService = $injector.get('DimensionService');
-      var activeVars = DimensionService.getPrimary().activeVariables();
+      var defer = $q.defer(),
+      DimensionService = $injector.get('DimensionService'),
+      $state = $injector.get('$state'),
+      activeVars = DimensionService.getPrimary().activeVariables(),
+      isPrimary = $state.current.name == 'vis.som';
 
       // nothing to add if disabled
       if (!set.active()) {
         defer.resolve('disabled');
-      } else if (activeVars.length === 0) {
+      } else if (isPrimary && activeVars.length === 0) {
         // this is the case when no windows are present but selections are made
         // on the datasets. Just update the dimensionFilter...
         defer.resolve('empty');

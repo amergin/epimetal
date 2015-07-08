@@ -19,6 +19,6 @@
   <div class="form-group">
     <input ng-model="circleName" type="text" class="form-control" id="pl-cir-name" placeholder="Create a new circle with name" maxlength="{{cirleMaxLength}}">
   </div>
-  <button type="submit" class="btn btn-primary" ng-disabled="!circleName" ng-click="createCircle(circleName)">Create circle</button>
+  <button type="submit" class="btn btn-primary" ng-disabled="!canSubmit() || !circleName" ng-click="createCircle(circleName)">Create circle</button>
 
 </div>

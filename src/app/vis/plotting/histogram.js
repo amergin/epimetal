@@ -34,13 +34,8 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetFact
       }
     });
 
-    // $scope.filterButton = function(x) {
-    //   $scope.window.showResetBtn = x;
-    // };
-
     $scope.dimensionService = $scope.window.handler().getDimensionService();
 
-    // $scope.dimensionService = $scope.$parent.window.handler.getDimensionService();
     // work-around, weird scope issue on filters ?!
     $scope.FilterService = $injector.get('FilterService');
 
@@ -70,18 +65,6 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetFact
       $scope.histogram.filterAll();
       $scope.window.handler().redrawAll();
     });
-
-    // $scope.$parent.resetFilter = function() {
-    //   $scope.histogram.filterAll();
-    //   $scope.window.handler.redrawAll();
-    // };
-
-    // $scope.window.showResetBtn = false;
-    // $scope.resetButton = function(x) {
-    //   $timeout(function() {
-    //     $scope.window.showResetBtn = x;
-    //   });
-    // };
 
     $scope.resetButton = function(x) {
       $timeout(function() {
@@ -411,12 +394,18 @@ visu.directive('plHistogram', ['constants', '$timeout', '$rootScope', '$injector
       function initDropdown() {
         $scope.window.addDropdown({
           type: "export:svg",
-          element: $scope.element
+          element: $scope.element.find('svg'),
+          scope: $scope,
+          source: 'svg',
+          window: $scope.window
         });
 
         $scope.window.addDropdown({
           type: "export:png",
-          element: $scope.element
+          element: $scope.element.find('svg'),
+          scope: $scope,
+          source: 'svg',
+          window: $scope.window
         });
 
         $scope.window.addDropdown({
@@ -426,8 +415,6 @@ visu.directive('plHistogram', ['constants', '$timeout', '$rootScope', '$injector
       }
 
       $scope.element = ele;
-
-      initDropdown();
 
       var config = {
         dimension: $scope.dimension,
@@ -447,6 +434,7 @@ visu.directive('plHistogram', ['constants', '$timeout', '$rootScope', '$injector
 
       $timeout( function() {
         createSVG($scope, config);
+        initDropdown();
       });
 
       $scope.deregisters = [];
@@ -604,9 +592,6 @@ visu.directive('plHistogram', ['constants', '$timeout', '$rootScope', '$injector
     }
 
     return {
-      // scope: {
-      //   'window': "=reWindow"
-      // },
       restrict: 'C',
       controller: 'HistogramPlotController',
       link: {

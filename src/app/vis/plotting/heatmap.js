@@ -268,62 +268,31 @@ visu.directive('plHeatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFacto
 
     var linkFn = function($scope, ele, iAttrs) {
 
+      $scope.window.addDropdown({
+        type: "correlation",
+        limit: $scope.limitDisp,
+        window: $scope.window
+      });
+
       function initDropdown() {
         $scope.window.addDropdown({
           type: "export:svg",
-          element: $scope.element
+          element: $scope.element.find('.heatmap-chart-anchor > svg'),
+          scope: $scope,
+          source: 'svg',
+          window: $scope.window
         });
 
         $scope.window.addDropdown({
           type: "export:png",
-          element: $scope.element
-        });
-
-        $scope.window.addDropdown({
-          type: "correlation",
-          limit: $scope.limitDisp,
+          element: $scope.element.find('.heatmap-chart-anchor > svg'),
+          scope: $scope,
+          source: 'svg',
           window: $scope.window
         });
       }
 
-      // function addLimit() {
-      //   $scope.$parent.settingsDropdown.push({
-      //     'text': '<i class="fa fa-sliders"></i> Show correlations with p > <b>' + $scope.limitDisp + '</b>',
-      //     'type': 'correlations',
-      //     'click': function() {
-      //       var entry = _.last($scope.$parent.settingsDropdown).text;
-      //       $scope.filtered = !$scope.filtered;
-      //       if($scope.filtered) { 
-      //         $scope.$parent.headerText[2] = '(p < ' + $scope.limitDisp + ')';
-      //         _.last($scope.$parent.settingsDropdown).text = entry.replace(/Hide/, 'Show');
-      //       } else {
-      //         $scope.$parent.headerText[2] = '';
-      //         _.last($scope.$parent.settingsDropdown).text = entry.replace(/Show/, 'Hide');
-      //       }
-      //       $scope.heatmap.render();
-      //     }
-      //   });
-      // }
-
-      // _.once(addLimit);
-
-      // $scope.$watch('limitDisp', function(value) {
-      //   if(!value) { return; }
-      //   var index = Utils.indexOf($scope.$parent.settingsDropdown, function(drop) {
-      //     return drop.type == 'correlations';
-      //   });
-
-      //   if(index != -1) {
-      //     $scope.$parent.settingsDropdown.splice(index, 1);
-      //   }
-      //   addLimit();
-      // });
-
-
-
       $scope.element = ele;
-
-      initDropdown();
 
       $scope.heatmapAnchor = d3.select(ele[0])
       .append('div')
@@ -353,6 +322,7 @@ visu.directive('plHeatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFacto
         doLookup(variables);
         $scope.computeVariables(function() {
           draw();
+          initDropdown();
         });        
       });
 

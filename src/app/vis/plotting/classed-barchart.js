@@ -362,18 +362,22 @@ visu.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$in
       function initDropdown() {
         $scope.window.addDropdown({
           type: "export:svg",
-          element: $scope.element
+          element: $scope.element.find('svg'),
+          scope: $scope,
+          source: 'svg',
+          window: $scope.window
         });
 
         $scope.window.addDropdown({
           type: "export:png",
-          element: $scope.element
+          element: $scope.element.find('svg'),
+          scope: $scope,
+          source: 'svg',
+          window: $scope.window
         });
       }
 
       $scope.element = ele;
-
-      initDropdown();
 
       var drawFunction = null,
       config;
@@ -412,6 +416,7 @@ visu.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$in
       $timeout(function() {
         drawFunction(config);
         $scope.chart.render();
+        initDropdown();
       });
 
 

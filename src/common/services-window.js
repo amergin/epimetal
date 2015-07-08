@@ -17,7 +17,6 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         dropdown: [],
         resetButton: false,
         resetFn: null,
-        // canFilter: true,
         extra: {}
       };
 
@@ -74,18 +73,26 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         return obj;
       };
 
-      // obj.canFilter = function(x) {
-      //   if(!arguments.length) { return priv.canFilter; }
-      //   priv.canFilter = x;
-      //   return obj;
-      // };
-
-      function exportSVG(element) {
-        console.log("exportSVG", element);
+      function exportFn(cfg) {
+        if(cfg.element.length > 1) {
+          cfg.element = _.first(cfg.element);
+        }
+        cfg.element.attr('pl-export', '');
+        cfg.element.attr('pl-export-source', "'" + cfg.source + "'");
+        cfg.element.attr('pl-export-target', "'" + cfg.type + "'");
+        cfg.element.attr('pl-export-window', 'window');
+        $compile = $injector.get('$compile');
+        $compile(cfg.element)(cfg.scope);
       }
 
-      function exportPNG(element) {
-        console.log("exportPNG", element);
+      function exportSVG(cfg) {
+        cfg.type = 'svg';
+        exportFn(cfg);
+      }
+
+      function exportPNG(cfg) {
+        cfg.type = 'png';
+        exportFn(cfg);
       }
 
       function togglePooling(window) {
@@ -105,15 +112,15 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         function getSVG(cfg) {
           return {
             'text': '<i class="fa fa-download"></i> Export as SVG',
-            'click': _.wrap(cfg.element, exportSVG),
+            'click': _.wrap(cfg, exportSVG),
             'type': cfg.type
           };
         }
 
         function getPNG(cfg) {
           return {
-            'text': '<i class="fa fa-download"></i> Export as SVG',
-            'click': _.wrap(cfg.element, exportPNG),
+            'text': '<i class="fa fa-download"></i> Export as PNG',
+            'click': _.wrap(cfg, exportPNG),
             'type': cfg.type
           };
         }

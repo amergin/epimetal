@@ -430,20 +430,24 @@ visu.directive('plSomplane', [ '$rootScope', 'SOMService', 'NotifyService',
       function initDropdown() {
         $scope.window.addDropdown({
           type: "export:svg",
-          element: $scope.element
+          element: $scope.element.find('svg'),
+          scope: $scope,
+          source: 'svg',
+          window: $scope.window
         });
 
         $scope.window.addDropdown({
           type: "export:png",
-          element: $scope.element
+          element: $scope.element.find('svg'),
+          scope: $scope,
+          source: 'svg',
+          window: $scope.window
         });
 
       }
 
       // $scope.$parent.element = ele;
       $scope.element = ele;
-
-      initDropdown();
 
       $scope.width = ele.parent().width(); //455;
       $scope.height = ele.parent().height(); //360;
@@ -487,6 +491,7 @@ visu.directive('plSomplane', [ '$rootScope', 'SOMService', 'NotifyService',
         $scope.width, 
         $scope.height);
 
+      initDropdown();
     };
 
     return {

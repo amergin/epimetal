@@ -17,8 +17,6 @@ visu.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionS
         x: Math.round(width/REGRESSION_WIN_X_PX) + 1,
         y: Math.round(height/REGRESSION_WIN_Y_PX) + 1
       });
-      // $scope.window.grid.size.x = Math.round(width/REGRESSION_WIN_X_PX) + 1;
-      // $scope.window.grid.size.y = Math.round(height/REGRESSION_WIN_Y_PX) + 1;
     }
 
     $scope.drawChart = function($scope, data, variables) {
@@ -57,6 +55,24 @@ visu.directive('plRegression', ['constants', '$timeout', '$rootScope', '$injecto
   function(constants, $timeout, $rootScope, $injector, DatasetFactory, RegressionService, NotifyService) {
 
     function postLink($scope, ele, attrs, ctrl) {
+      function initDropdown() {
+        $scope.window.addDropdown({
+          type: "export:svg",
+          element: $scope.element.find('svg.regression'),
+          scope: $scope,
+          source: 'svg',
+          window: $scope.window
+        });
+
+        $scope.window.addDropdown({
+          type: "export:png",
+          element: $scope.element.find('svg.regression'),
+          scope: $scope,
+          source: 'svg',
+          window: $scope.window
+        });
+      }
+
       function updateChart() {
         var selectedVariables = RegressionService.selectedVariables();
         $scope.window.spin(true);
@@ -76,12 +92,10 @@ visu.directive('plRegression', ['constants', '$timeout', '$rootScope', '$injecto
 
       $scope.element = ele;
 
-      // $scope.$parent.element = ele;
-
       DatasetFactory.getVariables().then(function(variables) {
         $scope.drawChart($scope, $scope.window.extra().computation.result, variables);
+        initDropdown();
       });
-
 
       $scope.deregisters = [];
 
@@ -103,12 +117,7 @@ visu.directive('plRegression', ['constants', '$timeout', '$rootScope', '$injecto
       });
 
       var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
-        // var retObj = _.chain($scope.window)
-        // .pick(['type', 'grid', 'handler', 'computation'])
-        // .clone()
-        // .value();
 
-        // callback(retObj);
       });
 
       $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind);
@@ -127,7 +136,6 @@ visu.directive('plRegression', ['constants', '$timeout', '$rootScope', '$injecto
     }
 
     return {
-      // scope: false,
       restrict: 'C',
       controller: 'RegressionPlotController',
       link: {

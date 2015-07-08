@@ -1,5 +1,5 @@
 // Based on https://nytimes.github.io/svg-crowbar/svg-crowbar-2.js
-function svgExport(element) {
+function SVGExport(element) {
 
   var _prefix = {
     xmlns: "http://www.w3.org/2000/xmlns/",
@@ -36,6 +36,10 @@ function svgExport(element) {
     _empty = window.document.createElementNS(_prefix.svg, 'svg');
     window.document.body.appendChild(_empty);
     _emptyStyle = getComputedStyle(_empty);
+  }
+
+  function removeEmpty() {
+    window.document.body.removeChild(_empty);
   }
 
 
@@ -80,24 +84,30 @@ function svgExport(element) {
   }
 
   _export.get = function() {
-    _clone = _ele.cloneNode(true);
+    try {
+      init(element);
+      _clone = _ele.cloneNode(true);
 
-    _clone.setAttribute("width", _ele.width.baseVal.value);
-    _clone.setAttribute("height", _ele.height.baseVal.value);
+      _clone.setAttribute("width", _ele.width.baseVal.value);
+      _clone.setAttribute("height", _ele.height.baseVal.value);
 
-    _ele.parentNode.appendChild(_clone);
-    setNS(_clone);
+      _ele.parentNode.appendChild(_clone);
+      // window.document.body.appendChild(_clone);
+      setNS(_clone);
 
-    setInlineStyles(_clone, _emptyStyle);
-    var svgString = _serializer.serializeToString(_clone);
+      setInlineStyles(_clone, _emptyStyle);
+      var svgString = _serializer.serializeToString(_clone);
 
-    _clone.remove();
-    // _clone.parentNode.removeChild(_clone);
+      // _clone.remove();
+      _clone.parentNode.removeChild(_clone);
 
-    return svgString;
+      removeEmpty();
+      return svgString;
+    } catch(err) {
+      removeEmpty();
+    }
+    
   };
 
-  init(element);
   return _export;
-
 }

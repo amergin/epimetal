@@ -31,8 +31,12 @@ mod.controller('CircleFilterControlCtrl', ['$scope', 'FilterService', '$state', 
     $scope.remove = function(filter) {
       FilterService.removeCircleFilter(filter);
       update();
-      WindowHandler.reRenderVisible();
-      // WindowHandler.redrawVisible();
+      // WindowHandler.reRenderVisible();
+      WindowHandler.redrawVisible();
+    };
+
+    $scope.canSubmit = function() {
+      return !TabService.lock();
     };
 
     update();

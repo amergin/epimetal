@@ -171,19 +171,23 @@ visu.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$i
       function initDropdown() {
         $scope.window.addDropdown({
           type: "export:svg",
-          element: $scope.element
+          element: $scope.element.find('svg'),
+          scope: $scope,
+          source: 'svg',
+          window: $scope.window
         });
 
         $scope.window.addDropdown({
           type: "export:png",
-          element: $scope.element
+          element: $scope.element.find('svg'),
+          scope: $scope,
+          source: 'svg',
+          window: $scope.window
         });
       }
 
       // $scope.$parent.element = ele;
       $scope.element = ele;
-
-      initDropdown();
 
       var config = {
         data: $scope.formGroups($scope.groups),
@@ -192,6 +196,9 @@ visu.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$i
       };
 
       createChart($scope, config);
+
+      initDropdown();
+
       $scope.deregisters = [];
 
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
