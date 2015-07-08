@@ -34,7 +34,59 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       $scope.window.headerText(text);
     }
 
+    function initCrossfilter() {
+      $scope.crossfilter = crossfilter([]);
+      $scope.coordDim = $scope.crossfilter.dimension(function(d) {
+        return _.extend(d, { 'valueOf': function() { return d.x + "|" + d.y; } });
+      });
+      $scope.coordGroup = $scope.coordDim.group().reduceSum(function(d) {
+        return d.corr;
+      });
+    }
+
+    function initColorScale() {
+      $scope.window.extra()['colorScaleMode'] = 'stretch';
+
+      $scope.colorScale = {
+        stretch: {
+          scale: new CustomScale()
+                .lower(-1)
+                .middle(0)
+                .upper(1)
+                .threshold(0.25),
+
+          calculator: function(d) {
+            if($scope.filtered) {
+              if( !_.isUndefined(d.key.pvalue) && d.key.pvalue > $scope.limit ) {
+                return d3.rgb('white');
+              }
+            }
+            return $scope.colorScale.stretch.scale.color(d.key); //$scope.colorScale.color(d.key);
+          },
+          initial: null // override later
+        },
+
+        linear: {
+          scale: d3.scale.linear()
+                .domain([-1, 0, 1])
+                .range(['blue', 'white', 'red']),
+
+          accessor: function(d) {
+            if($scope.filtered) {
+              if( !_.isUndefined(d.key.pvalue) && d.key.pvalue > $scope.limit ) {
+                return 0;
+              }
+            }
+            return d.value;
+          },
+          initial: null // override
+        }
+      };
+    }
+
     initHeader();
+    initColorScale();
+    initCrossfilter();
 
     $scope.window.resetButton(false);
 
@@ -54,6 +106,8 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       }
     });
 
+    $scope.variablesLookup = {};
+
     $scope.updateHeader = function() {
       var header = $scope.window.headerText(),
       contains = _.contains(header[header.length-1], 'p < ');
@@ -67,14 +121,6 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       }
       $scope.window.headerText(header);
     };
-
-    $scope.colorScale = new CustomScale()
-                            .lower(-1)
-                            .middle(0)
-                            .upper(1)
-                            .threshold(0.25);
-
-    $scope.variablesLookup = {};
 
     $scope.drawHeatmap = function(element, dimension, group, margins, width, height) {
 
@@ -153,14 +199,6 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
         "P-value:   " + 
         ( _(d.key.pvalue).isNaN() || _(d.key.pvalue).isUndefined() ? "(not available)" : $scope.format(d.key.pvalue) );
       })
-      .colorCalculator(function(d) {
-        if($scope.filtered) {
-          if( !_.isUndefined(d.key.pvalue) && d.key.pvalue > $scope.limit ) {
-            return d3.rgb('white');
-          }
-        }
-        return $scope.colorScale.color(d.key);
-      })
       .renderlet(function(chart) {
           // rotate labels
           chart.selectAll('g.cols > text')
@@ -180,72 +218,85 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       .on('postRender', function(chart) {
         chart.transitionDuration(500);
       })
-        // override default click actions
-        .xAxisOnClick( function() {} )
-        .yAxisOnClick( function() {} )
-        .boxOnClick( function(cell) {
-          $timeout( function() {
-            $injector.get('PlotService').drawScatter({
-              variables: {
-                x: cell.key.x,
-                y: cell.key.y
-              }
-            }, $scope.window.handler() );
-          });
+      // override default click actions
+      .xAxisOnClick( function() {} )
+      .yAxisOnClick( function() {} )
+      .boxOnClick( function(cell) {
+        $timeout( function() {
+          $injector.get('PlotService').drawScatter({
+            variables: {
+              x: cell.key.x,
+              y: cell.key.y
+            }
+          }, $scope.window.handler() );
         });
-
-        $scope.heatmap.render();
-        $scope.legend = _drawLegend($scope.colorbarAnchor, height);
-
-      };
-
-      $scope.crossfilter = crossfilter([]);
-      $scope.coordDim = $scope.crossfilter.dimension(function(d) {
-        return _.extend(d, { 'valueOf': function() { return d.x + "|" + d.y; } });
-      });
-      $scope.coordGroup = $scope.coordDim.group().reduceSum(function(d) {
-        return d.corr;
       });
 
-      $scope.computeVariables = function(callback) {
-        var variables = $scope.window.variables().x;
-        $scope.window.spin(true);
+      $scope.colorScale.stretch['initial'] = $scope.heatmap.getColor;
+      $scope.colorScale.linear['initial'] = $scope.heatmap.colorAccessor;
+      $scope.doStretch();
+      $scope.heatmap.render();
+      $scope.legend = _drawLegend($scope.colorbarAnchor, height);
 
-        // lock tab switching
-        TabService.lock(true);
-        // get coordinates in a separate worker
-        CorrelationService.compute( { 
-          variables: variables, 
-          separate: $scope.window.extra().separate, 
-          dataset: $scope.window.extra().dataset 
-        }, $scope.window.handler() )
-        .then(function succFn(coordinates) {
-          $scope.colorScale.coordinates(coordinates);
+    };
 
-          // compute Bonferroni correction
-          var bonferroni = 0.5 * variables.length * (variables.length - 1);
-          $scope.limit = 0.05 / bonferroni;
-          $scope.limitDisp = $scope.format($scope.limit);
-          $scope.window.modifyDropdown('correlation', 'limit', $scope.limitDisp, $scope.limitDisp);
-          $scope.updateHeader();
+    $scope.computeVariables = function(callback) {
+      var variables = $scope.window.variables().x;
+      $scope.window.spin(true);
 
-          // create a tiny crossfilt. instance for heatmap. so tiny that it's outside of dimension
-          // service reach.
-          $scope.crossfilter.remove();
-          $scope.crossfilter.add(coordinates);
-          callback();
-        }).finally(function() {
-          // unlock tabs
-          TabService.lock(false);
-          $scope.window.spin(false);
-        });
+      // lock tab switching
+      TabService.lock(true);
+      // get coordinates in a separate worker
+      CorrelationService.compute( { 
+        variables: variables, 
+        separate: $scope.window.extra().separate, 
+        dataset: $scope.window.extra().dataset 
+      }, $scope.window.handler() )
+      .then(function succFn(coordinates) {
+        $scope.applyColorScale(coordinates);
 
-      };
+        // compute Bonferroni correction
+        var bonferroni = 0.5 * variables.length * (variables.length - 1);
+        $scope.limit = 0.05 / bonferroni;
+        $scope.limitDisp = $scope.format($scope.limit);
+        $scope.window.modifyDropdown('correlation', 'limit', $scope.limitDisp, $scope.limitDisp);
+        $scope.updateHeader();
 
-    // $scope.filter = function() {
-    //   $scope.filtered = !$scope.filtered;
-    //   $scope.heatmap.render();
-    // };
+        // create a tiny crossfilt. instance for heatmap. so tiny that it's outside of dimension
+        // service reach.
+        $scope.crossfilter.remove();
+        $scope.crossfilter.add(coordinates);
+        callback();
+      }).finally(function() {
+        // unlock tabs
+        TabService.lock(false);
+        $scope.window.spin(false);
+      });
+    };
+
+    $scope.applyColorScale = function(coordinates) {
+      var mode = $scope.window.extra().colorScaleMode;
+
+      if(mode == 'stretch') {
+        $scope.colorScale.stretch.scale.coordinates(coordinates);
+      }
+      else if(mode == 'linear') {
+        // do nothing
+      }
+    };
+
+    $scope.doLinear = function() {
+      $scope.heatmap.colorCalculator($scope.colorScale.stretch.initial);
+      $scope.heatmap.colors($scope.colorScale.linear.scale);
+      $scope.heatmap.colorAccessor($scope.colorScale.linear.accessor);
+      return 'linear';
+    };
+
+    $scope.doStretch = function() {
+      $scope.heatmap.colorAccessor($scope.colorScale.linear.initial);
+      $scope.heatmap.colorCalculator($scope.colorScale.stretch.calculator);
+      return 'stretch';
+    };
 
     var callback = function() {
       // update the chart and redraw
@@ -275,6 +326,16 @@ visu.directive('plHeatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFacto
       });
 
       function initDropdown() {
+        $scope.window.addDropdown({
+          type: "colorscale",
+          scope: $scope,
+          callback: function() {
+            var mode = $scope.window.extra().colorScaleMode;
+            $scope.window.extra()['colorScaleMode'] = (mode == 'linear') ? $scope.doStretch() : $scope.doLinear();
+            $scope.heatmap.render();
+          }
+        });
+
         $scope.window.addDropdown({
           type: "export:svg",
           element: $scope.element.find('.heatmap-chart-anchor > svg'),

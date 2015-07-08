@@ -104,6 +104,10 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         window.extra()['filtered'] = _.isUndefined(value) ? true : !value;
       }
 
+      function doCallback(fn) {
+        fn();
+      }
+
       function getCorrelationText(limit) {
         return '<i class="fa fa-sliders"></i> Toggle correlation cutoff of p < ' + limit + '</b>';
       }
@@ -133,6 +137,14 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
           };
         }
 
+        function getColorScale(cfg) {
+          return {
+            'text': '<i class="fa fa-adjust"></i> Toggle color scale stretching',
+            'click': _.wrap(cfg.callback, doCallback),
+            'type': cfg.type
+          };
+        }
+
         function getPooling(cfg) {
           return {
             'text': '<i class="fa fa-adjust"></i> Toggle figure pooling',
@@ -149,6 +161,9 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
 
           case 'correlation':
           return getCorrelation(cfg);
+
+          case 'colorscale':
+          return getColorScale(cfg);
 
           case 'pooling':
           return getPooling(cfg);
