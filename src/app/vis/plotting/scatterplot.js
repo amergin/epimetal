@@ -376,9 +376,11 @@ visu.directive('plScatterplot', ['$timeout', '$rootScope', 'NotifyService',
       $scope.wrapper = wrapper;
 
       function initDropdown() {
+        var selector = _.template('#<%= id %> .<%= cl %>'),
+        id = $scope.element.parent().attr('id');
         $scope.window.addDropdown({
           type: "export:png",
-          element: $scope.wrapper,
+          selector: selector({ id: id, cl: 'pl-scatterplot-wrapper' }),
           scope: $scope,
           source: 'canvas',
           window: $scope.window

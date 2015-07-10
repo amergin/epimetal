@@ -2,18 +2,6 @@ var visu = angular.module('plotter.vis.plotting.som', ['services.dimensions', 's
 visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'FilterService',
   function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, FilterService) {
 
-    // $scope.resetFilter = function() {
-    //   removeFilters();
-    // };
-
-    // function removeFilters() {
-    //   var filters = angular.copy($scope.ownFilters);
-    //   _.each( filters, function(f,i) {
-    //     $scope.removeFilter(f, false);
-    //   });
-    //   _callRedraw();
-    // }    
-
     $scope.redraw = function() {
       // remove previous
       $scope.element.empty();
@@ -428,9 +416,12 @@ visu.directive('plSomplane', [ '$rootScope', 'SOMService', 'NotifyService',
     var linkFn = function($scope, ele, iAttrs) {
 
       function initDropdown() {
+        var selector = _.template('#<%= id %> <%= element %>'),
+        id = $scope.element.parent().attr('id');
+
         $scope.window.addDropdown({
           type: "export:svg",
-          element: $scope.element.find('svg'),
+          selector: selector({ id: id, element: 'svg' }),
           scope: $scope,
           source: 'svg',
           window: $scope.window
@@ -438,7 +429,7 @@ visu.directive('plSomplane', [ '$rootScope', 'SOMService', 'NotifyService',
 
         $scope.window.addDropdown({
           type: "export:png",
-          element: $scope.element.find('svg'),
+          selector: selector({ id: id, element: 'svg' }),
           scope: $scope,
           source: 'svg',
           window: $scope.window

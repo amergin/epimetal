@@ -360,9 +360,12 @@ visu.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$in
     function postLink($scope, ele, attrs, ctrl) {
 
       function initDropdown() {
+        var selector = _.template('#<%= id %> <%= element %>'),
+        id = $scope.element.parent().attr('id');
+
         $scope.window.addDropdown({
           type: "export:svg",
-          element: $scope.element.find('svg'),
+          selector: selector({ id: id, element: 'svg' }),
           scope: $scope,
           source: 'svg',
           window: $scope.window
@@ -370,7 +373,7 @@ visu.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$in
 
         $scope.window.addDropdown({
           type: "export:png",
-          element: $scope.element.find('svg'),
+          selector: selector({ id: id, element: 'svg' }),
           scope: $scope,
           source: 'svg',
           window: $scope.window

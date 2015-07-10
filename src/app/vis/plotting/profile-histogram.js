@@ -170,9 +170,12 @@ visu.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$i
     function postLink($scope, ele, attrs, ctrl) {
 
       function initDropdown() {
+        var selector = _.template('#<%= id %> <%= element %>'),
+        id = $scope.element.parent().attr('id');
+
         $scope.window.addDropdown({
           type: "export:svg",
-          element: $scope.element.find('svg'),
+          selector: selector({ id: id, element: 'svg' }),
           scope: $scope,
           source: 'svg',
           window: $scope.window
@@ -180,7 +183,7 @@ visu.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$i
 
         $scope.window.addDropdown({
           type: "export:png",
-          element: $scope.element.find('svg'),
+          selector: selector({ id: id, element: 'svg' }),
           scope: $scope,
           source: 'svg',
           window: $scope.window

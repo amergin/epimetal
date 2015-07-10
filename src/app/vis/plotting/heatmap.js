@@ -329,6 +329,9 @@ visu.directive('plHeatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFacto
       });
 
       function initDropdown() {
+        var selector = _.template('#<%= id %> .<%= cls %> <%= element %>'),
+        id = $scope.element.parent().attr('id');
+
         $scope.window.addDropdown({
           type: "colorscale",
           scope: $scope,
@@ -341,7 +344,7 @@ visu.directive('plHeatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFacto
 
         $scope.window.addDropdown({
           type: "export:svg",
-          element: $scope.element.find('.heatmap-chart-anchor > svg'),
+          selector: selector({ id: id, cls: 'heatmap-chart-anchor', element: 'svg' }),
           scope: $scope,
           source: 'svg',
           window: $scope.window
@@ -349,7 +352,7 @@ visu.directive('plHeatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFacto
 
         $scope.window.addDropdown({
           type: "export:png",
-          element: $scope.element.find('.heatmap-chart-anchor > svg'),
+          selector: selector({ id: id, cls: 'heatmap-chart-anchor', element: 'svg' }),
           scope: $scope,
           source: 'svg',
           window: $scope.window

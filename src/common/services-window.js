@@ -1,7 +1,7 @@
 var mod = angular.module('services.window', ['angularSpinner', 'ui.router.state']);
 
-mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout', 'usSpinnerService', '$state',
-  function ($injector, constants, $rootScope, $timeout, usSpinnerService, $state, name) { // notice 'name'
+mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout', 'usSpinnerService', '$state', 'EXPORT_FILENAME_MAX_LENGTH', 'DatasetFactory',
+  function ($injector, constants, $rootScope, $timeout, usSpinnerService, $state, EXPORT_FILENAME_MAX_LENGTH, DatasetFactory, name) { // notice 'name'
 
     function GridWindow(injector) {
       var obj = {},
@@ -73,16 +73,53 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         return obj;
       };
 
-      function exportFn(cfg) {
-        if(cfg.element.length > 1) {
-          cfg.element = _.first(cfg.element);
+      function getFileName(windowInst) {
+        function getVariables(variables) {
+          var hasX = !_.isUndefined(variables.x),
+          hasY = !_.isUndefined(variables.y),
+          hasTarget = !_.isUndefined(variables.target);
+
+          if(hasX && hasY) {
+            return _.template('X_<%= x %>_Y_<%= y %>')({ x: variables.x, y: variables.y });
+          }
+          if(hasX) {
+            if(_.isArray(variables.x)) {
+              return _.map(variables.x, function(v) { return v; }).join("_");
+            }
+            else {
+              return _.template('X_<%= x %>')({ x: variables.x });
+            }
+          }
+          if(hasTarget) {
+            var template = _.template('target_<%= target %>_association_<%= assoc %>_vars_adjusted_<%= adjust %>_vars');
+            return template({ target: variables.target, assoc: variables.association.length, adjust: variables.adjust.length });
+          }
         }
-        cfg.element.attr('pl-export', '');
-        cfg.element.attr('pl-export-source', "'" + cfg.source + "'");
-        cfg.element.attr('pl-export-target', "'" + cfg.type + "'");
-        cfg.element.attr('pl-export-window', 'window');
+        var setNames = _.map(DatasetFactory.activeSets(), 
+          function(set) { return set.name(); }).join("_"),
+        template = _.template('<%= type %>_of_<%= variable %>_on_<%= datasets %>'),
+        fullLength = template({ type: windowInst.figure(), variable: getVariables(windowInst.variables()), datasets: setNames });
+
+        return _.trunc(fullLength, {
+          'length': EXPORT_FILENAME_MAX_LENGTH,
+          'omission': '[...]'
+        });
+      }
+
+      function exportFn(cfg) {
+        // if(cfg.element.length > 1) {
+        //   cfg.element = _.first(cfg.element);
+        // }
+        var directiveEl = angular.element('<div/>');
+        directiveEl.attr('pl-export', '');
+        directiveEl.attr('pl-export-source', "'" + cfg.source + "'");
+        directiveEl.attr('pl-export-target', "'" + cfg.type + "'");
+        directiveEl.attr('pl-export-window', 'window');
+        directiveEl.attr('pl-export-selector', "'" + cfg.selector + "'");
+        directiveEl.attr('pl-export-filename', "'" + getFileName(cfg.window) + "'");
+        angular.element('body').append(directiveEl);
         $compile = $injector.get('$compile');
-        $compile(cfg.element)(cfg.scope);
+        $compile(directiveEl)(cfg.scope);
       }
 
       function exportSVG(cfg) {

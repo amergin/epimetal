@@ -43,7 +43,9 @@ win.directive('plExport', function() {
     scope: {
       "source": "=plExportSource",
       "target": "=plExportTarget",
-      "window": "=plExportWindow"
+      "window": "=plExportWindow",
+      "selector": "=plExportSelector",
+      "filename": "=plExportFilename"
     },
     link: function($scope, element, attrs) {
       $scope.element = element;
@@ -52,8 +54,8 @@ win.directive('plExport', function() {
   };
 });
 
-win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EXPORT_PNG_BACKGROUND_COLOR', '$q', 'EXPORT_FILENAME_MAX_LENGTH',
-  function($scope, DatasetFactory, EXPORT_CONFIG, EXPORT_PNG_BACKGROUND_COLOR, $q, EXPORT_FILENAME_MAX_LENGTH) {
+win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EXPORT_PNG_BACKGROUND_COLOR', '$q',
+  function($scope, DatasetFactory, EXPORT_CONFIG, EXPORT_PNG_BACKGROUND_COLOR, $q) {
 
     function removeDirective() {
       console.log("destroying export instance");
@@ -62,39 +64,12 @@ win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EX
       $scope.element.removeAttr('pl-export-source');
       $scope.element.removeAttr('pl-export-target');
       $scope.element.removeAttr('pl-export-window');
+      $scope.element.removeAttr('pl-export-selector');
+      $scope.element.removeAttr('pl-export-filename');
     }
 
-    function getFileName() {
-      function getVariables(variables) {
-        var hasX = !_.isUndefined(variables.x),
-        hasY = !_.isUndefined(variables.y),
-        hasTarget = !_.isUndefined(variables.target);
-
-        if(hasX && hasY) {
-          return _.template('X_<%= x %>_Y_<%= y %>')({ x: variables.x, y: variables.y });
-        }
-        if(hasX) {
-          if(_.isArray(variables.x)) {
-            return _.map(variables.x, function(v) { return v; }).join("_");
-          }
-          else {
-            return _.template('X_<%= x %>')({ x: variables.x });
-          }
-        }
-        if(hasTarget) {
-          var template = _.template('target_<%= target %>_association_<%= assoc %>_vars_adjusted_<%= adjust %>_vars');
-          return template({ target: variables.target, assoc: variables.association.length, adjust: variables.adjust.length });
-        }
-      }
-      var setNames = _.map(DatasetFactory.activeSets(), 
-        function(set) { return set.name(); }).join("_"),
-      template = _.template('<%= type %>_of_<%= variable %>_on_<%= datasets %>'),
-      fullLength = template({ type: $scope.window.figure(), variable: getVariables($scope.window.variables()), datasets: setNames });
-
-      return _.trunc(fullLength, {
-        'length': EXPORT_FILENAME_MAX_LENGTH,
-        'omission': '---'
-      });
+    function getSelection() {
+      return angular.element('body').find($scope.selector);
     }
 
     var sendFile = function(b64, url, filename) {
@@ -122,13 +97,15 @@ win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EX
 
 
     $scope.exportSVG = function() {
-      var svgElement = $scope.element[0];
-      var exportStr = new SVGExport(svgElement).get();
-      var filename = getFileName();
-      var b64str = btoa(exportStr);
-      var url = EXPORT_CONFIG.svg;
-
-      sendFile(b64str, url, filename);
+      var elements = getSelection(),
+      exportStr,
+      b64str,
+      url = EXPORT_CONFIG.svg;
+      _.each(elements, function(ele) {
+        exportStr = new SVGExport(ele).get();
+        b64str = btoa(exportStr);
+        sendFile(b64str, url, $scope.filename);
+      });
       removeDirective();
     };
 
@@ -187,11 +164,12 @@ win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EX
       };
 
       function getCombined(element) {
-        var combinedEl = document.createElement('canvas');
+        var combinedEl = document.createElement('canvas'),
+        combinedCtx = combinedEl.getContext('2d'),
+        canvases = element.getElementsByTagName('canvas');
 
-        var combinedCtx = combinedEl.getContext('2d');
 
-        _.each(element.find('canvas'), function(canvas, ind) {
+        _.each(canvases, function(canvas, ind) {
           if (ind === 0) {
             combinedEl.setAttribute('width', canvas.width);
             combinedEl.setAttribute('height', canvas.height);
@@ -206,24 +184,38 @@ win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EX
       }
 
       function sourceSVG() {
-        var svgElement = $scope.element[0],
+        var elements = getSelection(),
         base64str,
         url = EXPORT_CONFIG.png,
-        filename = getFileName();
+        filename = $scope.filename,
+        promises = [];
 
-        svgToCanvas(svgElement).then(function(canvas) {
-          base64str = canvasToBase64(canvas, EXPORT_PNG_BACKGROUND_COLOR);
-          sendFile(base64str, url, filename);
+        _.each(elements, function(ele) {
+          var promise = svgToCanvas(ele);
+          promise.then(function(canvas) {
+            var base64str = canvasToBase64(canvas, EXPORT_PNG_BACKGROUND_COLOR);
+            sendFile(base64str, url, filename);
+          });
+          promises.push(promise);
+        });
+
+        $q.all(promises).then(function() {
           removeDirective();
         });
+
       }
 
       function sourceCanvas() {
         // combine the canvas images:
-        var base64str = getCombined($scope.element),
+        var selection = getSelection(),
+        base64str,
         url = EXPORT_CONFIG.png,
-        filename = getFileName();
-        sendFile(base64str, url, filename);
+        filename = $scope.filename;
+
+        _.each(selection, function(ele) {
+          base64str = getCombined(ele);
+          sendFile(base64str, url, filename);
+        });
       }
 
       switch($scope.source) {

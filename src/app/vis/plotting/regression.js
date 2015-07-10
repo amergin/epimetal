@@ -56,9 +56,12 @@ visu.directive('plRegression', ['constants', '$timeout', '$rootScope', '$injecto
 
     function postLink($scope, ele, attrs, ctrl) {
       function initDropdown() {
+        var selector = _.template('#<%= id %> <%= element %>.<%= cls %>'),
+        id = $scope.element.parent().attr('id');
+
         $scope.window.addDropdown({
           type: "export:svg",
-          element: $scope.element.find('svg.regression'),
+          selector: selector({ id: id, element: 'svg', cls: 'regression' }),
           scope: $scope,
           source: 'svg',
           window: $scope.window
@@ -66,7 +69,7 @@ visu.directive('plRegression', ['constants', '$timeout', '$rootScope', '$injecto
 
         $scope.window.addDropdown({
           type: "export:png",
-          element: $scope.element.find('svg.regression'),
+          selector: selector({ id: id, element: 'svg', cls: 'regression' }),
           scope: $scope,
           source: 'svg',
           window: $scope.window
