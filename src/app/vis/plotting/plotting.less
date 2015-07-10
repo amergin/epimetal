@@ -68,7 +68,14 @@ svg text.label {
   height: 90%;
 }
 
-.profile-histogram {
+.pl-histogram, .pl-classed-bar-chart {
+  .x-axis-label {
+    font-size: 13px;
+    font-weight: normal;
+  }
+}
+
+.pl-profile-histogram {
   min-height: 250px;
 
 
@@ -79,15 +86,25 @@ svg text.label {
       shape-rendering: crispEdges;
     }
 
-  /*  .bar {
-      fill: steelblue;
-    }*/
-
-    .x.axis path {
+    /*.x.axis path {
       display: none;
+    } */
+
+    .x.axis text {
+      font-size: 13px;
+      font-weight: normal;
     }
 
 }
+
+.pl-somplane {
+  text.label {
+    font-size: 13px;
+    font-weight: normal;
+  }
+}
+
+
 
 .d3-tip {
   line-height: 1;

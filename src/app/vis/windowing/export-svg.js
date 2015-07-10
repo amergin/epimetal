@@ -48,10 +48,13 @@ function SVGExport(element) {
       var cSSStyleDeclarationComputed = getComputedStyle(element);
       var i, len, key, value;
       var computedStyleStr = "";
+      var widthIsAuto, heightIsAuto;
       for (i=0, len=cSSStyleDeclarationComputed.length; i<len; i++) {
         key=cSSStyleDeclarationComputed[i];
         value=cSSStyleDeclarationComputed.getPropertyValue(key);
-        if (value!==emptySvgDeclarationComputed.getPropertyValue(key) && key != 'font-family') {
+        widthIsAuto = (key == 'width') && (value == 'auto');
+        heightIsAuto = (key == 'height') && (value == 'auto');
+        if (value!==emptySvgDeclarationComputed.getPropertyValue(key) && key != 'font-family' && !widthIsAuto && !heightIsAuto) {
           computedStyleStr+=key+":"+value+";";
         }
       }

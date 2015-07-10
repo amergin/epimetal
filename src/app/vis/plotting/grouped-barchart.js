@@ -175,7 +175,7 @@ function GroupedBarChart(element, width, height) {
     if(_rotateGroupLabel) {
       x.selectAll("text")
       .style("text-anchor", "end")
-      .style("font-size", "1em")
+      // .style("font-size", "1em")
       .attr("dx", "-1.5em")
       .attr("dy", "0.3em")
       .attr("transform", "rotate(-65)");
