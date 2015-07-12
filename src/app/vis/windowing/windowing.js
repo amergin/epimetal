@@ -127,27 +127,30 @@ win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EX
 
         var svgXml = new SVGExport(svgElement).get();
 
-        var image = new Image();
-        var svg = new Blob([svgXml], {
-          type: 'image/svg+xml;charset=utf-8'
-        });
-        var url = DOMURL.createObjectURL(svg);
+        var image = new Image(),
+        data = "data:image/svg+xml;utf8," + encodeURIComponent(svgXml);
+        // this won't work on Safari
+        // var svg = new Blob([svgXml], {
+        //   type: 'image/svg+xml;charset=utf-8'
+        // });
+        // var url = DOMURL.createObjectURL(svg);
 
         var defer = $q.defer();
 
         image.onload = function() {
           image.width = getWidth(svgElement);
           image.height = getHeight(svgElement);
-          // image.width = svgElement.width.baseVal.value; //width;
-          // image.height = svgElement.height.baseVal.value; //height;
           var canvas = document.createElement('canvas');
           canvas.width = image.width;
           canvas.height = image.height;
           var context = canvas.getContext('2d');
           context.drawImage(image, 0, 0);
+          // DOMURL.revokeObjectURL(url);
           defer.resolve(canvas);
         };
-        image.src = url;
+
+        // image.src = url;
+        image.src = data;
         return defer.promise;
       };
 
