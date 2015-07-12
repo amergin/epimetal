@@ -86,13 +86,28 @@ function SVGExport(element) {
     }
   }
 
+  function getWidth(ele) {
+    var vb = ele.viewBox.baseVal === null ? 0 : ele.viewBox.baseVal.width;
+    var px = ele.width.baseVal.value;
+    return (px > vb) ? px : vb;
+  }
+
+  function getHeight(ele) {
+    var vb = ele.viewBox.baseVal === null ? 0 : ele.viewBox.baseVal.height;
+    var px = ele.height.baseVal.value;
+    return (px > vb) ? px : vb;
+  }
+
   _export.get = function() {
     try {
       init(element);
       _clone = _ele.cloneNode(true);
 
-      _clone.setAttribute("width", _ele.width.baseVal.value);
-      _clone.setAttribute("height", _ele.height.baseVal.value);
+      var width = getWidth(_ele),
+      height = getHeight(_ele);
+
+      _clone.setAttribute("width", width);
+      _clone.setAttribute("height", height);
 
       _ele.parentNode.appendChild(_clone);
       // window.document.body.appendChild(_clone);

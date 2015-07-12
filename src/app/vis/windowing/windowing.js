@@ -72,6 +72,18 @@ win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EX
       return angular.element('body').find($scope.selector);
     }
 
+    function getWidth(ele) {
+      var vb = ele.viewBox.baseVal === null ? 0 : ele.viewBox.baseVal.width;
+      var px = ele.width.baseVal.value;
+      return (px > vb) ? px : vb;
+    }
+
+    function getHeight(ele) {
+      var vb = ele.viewBox.baseVal === null ? 0 : ele.viewBox.baseVal.height;
+      var px = ele.height.baseVal.value;
+      return (px > vb) ? px : vb;
+    }
+
     var sendFile = function(b64, url, filename) {
       //create a hidden form that is submitted to get the file.
       var form = angular.element('<form/>')
@@ -124,8 +136,10 @@ win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EX
         var defer = $q.defer();
 
         image.onload = function() {
-          image.width = svgElement.width.baseVal.value; //width;
-          image.height = svgElement.height.baseVal.value; //height;
+          image.width = getWidth(svgElement);
+          image.height = getHeight(svgElement);
+          // image.width = svgElement.width.baseVal.value; //width;
+          // image.height = svgElement.height.baseVal.value; //height;
           var canvas = document.createElement('canvas');
           canvas.width = image.width;
           canvas.height = image.height;
@@ -139,9 +153,9 @@ win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EX
 
       // sets background color from transparent to white
       // see http://www.mikechambers.com/blog/2011/01/31/setting-the-background-color-when-generating-images-from-canvas-todataurl/
-      var canvasToBase64 = function(canvas, backgroundColor) {
-        var w = canvas.width;
-        var h = canvas.height;
+      var canvasToBase64 = function(canvas, backgroundColor, w, h) {
+        // var w = canvas.width;
+        // var h = canvas.height;
 
         var context = canvas.getContext('2d');
         //get the current ImageData for the canvas.
@@ -188,12 +202,15 @@ win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EX
         base64str,
         url = EXPORT_CONFIG.png,
         filename = $scope.filename,
-        promises = [];
+        promises = [],
+        width, height;
 
         _.each(elements, function(ele) {
+          width = getWidth(ele);
+          height = getHeight(ele);
           var promise = svgToCanvas(ele);
           promise.then(function(canvas) {
-            var base64str = canvasToBase64(canvas, EXPORT_PNG_BACKGROUND_COLOR);
+            var base64str = canvasToBase64(canvas, EXPORT_PNG_BACKGROUND_COLOR, width, height);
             sendFile(base64str, url, filename);
           });
           promises.push(promise);
