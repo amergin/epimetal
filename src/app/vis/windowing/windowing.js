@@ -115,7 +115,7 @@ win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EX
       url = EXPORT_CONFIG.svg;
       _.each(elements, function(ele) {
         exportStr = new SVGExport(ele).get();
-        b64str = btoa(exportStr);
+        b64str = btoa(unescape(encodeURIComponent(exportStr))); //btoa(exportStr);
         sendFile(b64str, url, $scope.filename);
       });
       removeDirective();
