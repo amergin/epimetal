@@ -2,7 +2,7 @@ var mod = angular.module('services.filter', ['services.dimensions', 'services.wi
 
 
 
-mod.constant('SOM_MAX_FILTERS', 4);
+mod.constant('SOM_MAX_FILTERS', 5);
 mod.factory('FilterService', ['$injector', '$rootScope', 'WindowHandler', 'SOM_MAX_FILTERS',
   function ($injector, $rootScope, WindowHandler, SOM_MAX_FILTERS) {
 
@@ -63,7 +63,7 @@ mod.factory('FilterService', ['$injector', '$rootScope', 'WindowHandler', 'SOM_M
       if(nameTaken) {
         throw new Error('The supplied circle name is already in use');
       }
-      if( service.getSOMFilters().length > SOM_MAX_FILTERS ) {
+      if( service.getSOMFilters().length >= SOM_MAX_FILTERS ) {
         throw new Error('Maximum amount of circle filters reached.');
       }
 
