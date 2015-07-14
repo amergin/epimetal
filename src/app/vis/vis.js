@@ -6,25 +6,20 @@
   'services.dataset', 
   'services.notify',
   'services.window',
-  // 'wu.packery',
+  'services.urlhandler',
   'plotter.vis.explore',
   'plotter.vis.som',
-  'plotter.vis.som.distributions',
   'plotter.vis.regression',
   'plotter.vis.menucomponents',
-  'services.urlhandler',
   'plotter.vis.filterinfo',
   'plotter.vis.sampleinfo',
   'mgcrea.ngStrap.popover',
   'services.som',
   'services.tab',
   'services.notify',
-  // 'ui.layout',
   'ngProgress',
   'progressBarInterceptor',
-  'angularResizable',
-  'pageslide-directive',
-  'plotter.vis.menucomponents.sidenav'
+  'angularResizable'
   ] );
 
  vis.config(['$stateProvider', '$urlRouterProvider', 'ngProgressProvider', function ($stateProvider, $urlRouterProvider, ngProgressProvider) {
@@ -39,10 +34,6 @@
     params: {
       state: undefined
     },
-    // templateUrl: 'vis/vis.tpl.html',
-    // important: the app will NOT change state to 'vis' until
-    // these object promises have been resolved. Failure is generally indication
-    // that the user is not logged in -> redirect to 'login' state.
     resolve: {
       variables: ['DatasetFactory', function(DatasetFactory) {
         return DatasetFactory.getVariables();
@@ -103,9 +94,6 @@
     data: { pageTitle: 'Explore datasets and filter | Visualization' },
     resolve: {
       windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
-        // var handler = WindowHandler.create('vis.explore');
-        // handler.setDimensionService( DimensionService.get('vis.explore') );
-        // return handler;
         return WindowHandler.get('vis.explore');
       }]
     },
@@ -129,9 +117,6 @@
     resolve: {
       // bottom portion of the page only!
       bottomWindowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
-        // var handler = WindowHandler.create('vis.som');
-        // handler.setDimensionService( DimensionService.get('vis.som') );
-        // return handler;
         return WindowHandler.get('vis.som.plane');
       }],
 
@@ -149,87 +134,10 @@
         templateUrl: 'vis/som/vis.som.bottom.tpl.html',
         controller: 'SOMBottomContentCtrl'
       }
-      // 'submenu-som@vis': {
-      //   templateUrl: 'vis/som/som.submenu.tpl.html'
-      // },
-      // 'som@vis': {
-      //   templateUrl: 'vis/som/som.tpl.html'
-      //   // controller: 'ExploreMenuCtrl'
-      // },
-
-      // 'som-bottom-menu@vis.som': {
-      //   controller: 'SOMBottomMenuController',
-      //   templateUrl: 'vis/som/som.bottom.menu.tpl.html'
-      // },
-      // 'som-bottom-content@vis.som': {
-      //   controller: 'SOMBottomContentController',
-      //   templateUrl: 'vis/som/som.bottom.content.tpl.html'
-      // }
     },
-    // deepStateRedirect: {
-    //   default: { state: 'vis.som.profiles', params: {} },
-    //   params: ['state']
-    // },
     deepStateRedirect: true,
     sticky: true
   };
-  // abstract-like state, route elsewhere
-  // $urlRouterProvider.when('/vis/som', '/vis/som/distributions');
-
-  // var somDistributions = {
-  //   name: 'vis.som.distributions',
-  //   url: '/distributions',
-  //   // parent: 'vis.som',
-  //   reloadOnSearch: false,
-  //   data: { pageTitle: 'Compare distributions | Self-organizing maps | Visualization' },
-  //   resolve: {
-  //     windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
-  //       // var handler = WindowHandler.create('vis.som.distributions');
-  //       // handler.setDimensionService( DimensionService.get('vis.som') );
-  //       // return handler;
-  //       return WindowHandler.get('vis.som.distributions');
-  //     }]
-  //   },
-  //   views: {
-  //     'submenu-distributions@vis.som': {
-  //       controller: 'SOMMenuController',
-  //       templateUrl: 'vis/som/distributions/som.submenu.tpl.html'
-  //     },
-  //     'top-distributions@vis.som': {
-  //       controller: 'SOMDistributionsController',
-  //       templateUrl: 'vis/som/distributions/som.top.tpl.html'
-  //     }
-  //   },
-  //   deepStateRedirect: true,
-  //   sticky: true
-  // };
-
-  // var somProfiles = {
-  //   name: 'vis.som.profiles',
-  //   url: '/profiles',
-  //   // parent: 'vis.som',
-  //   data: { pageTitle: 'Compare profiles | Self-organizing maps | Visualization' },
-  //   resolve: {
-  //     windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
-  //       // var handler = WindowHandler.create('vis.som.profiles');
-  //       // handler.setDimensionService( DimensionService.get('vis.som') );
-  //       // return handler;
-  //       return WindowHandler.get('vis.som.profiles');
-  //     }]
-  //   },
-  //   views: {
-  //     'submenu-profiles@vis.som': {
-  //       controller: 'SOMProfilesMenuController',
-  //       templateUrl: 'vis/som/profiles/som.submenu.tpl.html'
-  //     },
-  //     'top-profiles@vis.som': {
-  //       controller: 'SOMProfilesController',
-  //       templateUrl: 'vis/som/profiles/som.top.tpl.html'
-  //     }
-  //   },
-  //   deepStateRedirect: true,
-  //   sticky: true
-  // };   
 
   var regression = {
     name: 'vis.regression',
@@ -238,10 +146,6 @@
     reloadOnSearch: false,
     data: { pageTitle: 'Regression analysis | Visualization' },
     views: {
-      // 'submenu-regression@vis': {
-      //   templateUrl: 'vis/regression/regression.submenu.tpl.html',
-      //   controller: 'RegressionSubmenuController'
-      // },
       'regression@vis': {
         templateUrl: 'vis/regression/regression.tpl.html',
         controller: 'RegressionController'
@@ -249,16 +153,12 @@
     },
     resolve: {
       windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
-        // var handler = WindowHandler.create('vis.regression');
-        // handler.setDimensionService( DimensionService.getPrimary() );
-        // return handler;
         return WindowHandler.get('vis.regression');
       }]
     },
     sticky: true,
     deepStateRedirect: true
   };
-
 
   $stateProvider.state(vis);
   $stateProvider.state(explore);
@@ -295,7 +195,6 @@
     // quickfix: http://stackoverflow.com/questions/22054391/angular-ui-router-how-do-i-get-parent-view-to-be-active-when-navigating-to-ne
     $scope.$state = $state;
 
-    console.log("header ctrl");
 
     $scope.toggleSidenav = function() {
       plSidenav.toggle();
@@ -305,6 +204,7 @@
       return plSidenav.isOpen();
     };
 
+    console.log("header ctrl");
   }]);
 
   vis.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$mdSidenav', '$injector', '$mdMedia', 'WindowHandler', 'PlotService', 'RegressionService', 'plSidenav', 'SOMService',
@@ -494,15 +394,18 @@
 
     $scope.getMenuButtonType = function() {
       var state = TabService.activeState();
-      if(state.name === 'vis.regression') {
+      switch(state.name) {
+        case 'vis.regression':
         return 'regression';
-      } else if(state.name === 'vis.som') {
+
+        case 'vis.som':
         return 'som';
-      }
-      else {
+
+        default:
         return 'default';
       }
-    };     
+    };
+
   }
   ]);
 
@@ -564,11 +467,6 @@
     $scope.menuVariables = variables;
 
     $scope.dimensionService = DimensionService.getPrimary();
-
-
-    // for debugging
-    // $scope.usedVariables = $scope.dimensionService.getUsedVariables();
-    $scope.activeVariables = $scope.dimensionService.getDimensions();
 
     $rootScope.sideMenuVisible = function() {
       return plSidenav.isOpen();

@@ -63,7 +63,7 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
                 return d3.rgb('white');
               }
             }
-            return $scope.colorScale.stretch.scale.color(d.key); //$scope.colorScale.color(d.key);
+            return $scope.colorScale.stretch.scale.color(d.key);
           },
           initial: null // override later
         },

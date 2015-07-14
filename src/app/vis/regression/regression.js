@@ -6,7 +6,6 @@ angular.module('plotter.vis.regression',
   'services.window',
   'services.notify', 
   'services.dimensions', 
-  'localytics.directives',
   'services.urlhandler'
   ]);
 

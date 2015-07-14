@@ -64,17 +64,7 @@ module.exports = {
     js: [
       // notice the order: jquery before angular!
       'vendor/jquery/dist/jquery.js',
-      // 'vendor/jquery-ui/jquery-ui.min.js',
-      // 'vendor/jquery-ui/ui/minified/core.min.js',
-      // 'vendor/jquery-ui/ui/minified/widget.min.js',
-      // 'vendor/jquery-ui/ui/minified/mouse.min.js',
-      // 'vendor/jquery-ui/ui/minified/resizable.min.js',
       'vendor/javascript-detect-element-resize/jquery.resize.js',
-      // resizeable x4
-      // 'vendor/jquery-ui/ui/minified/core.min.js',
-      // 'vendor/jquery-ui/ui/minified/widget.min.js',
-      // 'vendor/jquery-ui/ui/minified/mouse.min.js',
-      // 'vendor/jquery-ui/ui/minified/resizable.min.js',
       'vendor/angular/angular.js',
       // html sanitizer for notify service
       'vendor/angular-sanitize/angular-sanitize.js',
@@ -82,23 +72,15 @@ module.exports = {
       'vendor/angular-animate/angular-animate.js',
       // windowing
       'vendor/angular-gridster/src/angular-gridster.js',
-      // 'vendor/packery/dist/packery.pkgd.js',
-      // 'vendor/draggabilly/draggabilly.js',
-      // dropdowns x2
-      'vendor/chosen/chosen.jquery.js',
-      'vendor/angular-chosen-localytics/chosen.js',
       // routing
       'vendor/angular-ui-router/release/angular-ui-router.js',
       'vendor/ui-router-extras/release/ct-ui-router-extras.js',
       'vendor/angular-ui-utils/modules/route/route.js',
-      // 'vendor/crossfilter/crossfilter-new-unmodified.js',
-      'vendor/crossfilter/crossfilter.new.js',//crossfilter.custom.old.js', //crossfilter.custom.js',
+      'vendor/crossfilter/crossfilter.new.js',
       'vendor/d3/d3.js',
       'vendor/dcjs/dc.js',
       'vendor/d3-tip/index.js',
-      // utilities
-      // 'vendor/underscore/underscore.js',
-      // 'vendor/lodash/lodash.js',
+      // Utilities
       'vendor/lodash/lodash.min.js',
       // core framework for UI
       'vendor/angular-strap/dist/angular-strap.js',
@@ -107,7 +89,6 @@ module.exports = {
       'vendor/d3-plugins/hexbin/hexbin.js',
       // compatibility-service
       'vendor/modernizr/modernizr.custom.min.js',
-      'vendor/angular-ui-layout/src/ui-layout.js',
       'vendor/spin.js/spin.js',
       'vendor/angular-spinner/angular-spinner.min.js',
       // customize this for release:
@@ -120,14 +101,12 @@ module.exports = {
       'vendor/hor-boxplot/horizontalboxplot.js',
       'vendor/SOM.js/SOM.js',
       'vendor/ngprogress/build/ngProgress.js',
-      'vendor/spark-md5/spark-md5.js',
       'vendor/ng-clip/dest/ng-clip.min.js',
       'vendor/zeroclipboard/dist/ZeroClipboard.js',
       // material x2
       'vendor/angular-material/angular-material.js',
       'vendor/angular-aria/angular-aria.js',
-      'vendor/angular-resizable/angular-resizable.min.js',
-      'vendor/ng-pageslide/dist/angular-pageslide-directive.min.js'
+      'vendor/angular-resizable/angular-resizable.min.js'
     ],
     css: [
       'vendor/dcjs/dc.css',

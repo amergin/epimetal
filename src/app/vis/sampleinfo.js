@@ -8,11 +8,6 @@ mod.directive('sampleInfo', ['$templateCache', '$compile', '$rootScope', '$injec
       replace: true,
       controller: 'SampleInfoController',
       templateUrl: 'vis/sampleinfo.tpl.html'
-      // template: function(tElem, tAttrs) {
-      //   var button = $templateCache.get('vis/sampleinfo.tpl.html');
-      //   var btnEl = angular.element(button);
-      //   return btnEl[0].outerHTML;
-      // }
     };
   }
 ]);

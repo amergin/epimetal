@@ -190,12 +190,11 @@ visu.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$i
         });
       }
 
-      // $scope.$parent.element = ele;
       $scope.element = ele;
 
       var config = {
         data: $scope.formGroups($scope.groups),
-        size: PROFILE_HISTOGRAM_SIZE, //$scope.window.size,
+        size: PROFILE_HISTOGRAM_SIZE,
         colors: $scope.colorScale
       };
 
@@ -248,7 +247,6 @@ visu.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$i
     }
 
     return {
-      // scope: false,
       restrict: 'C',
       controller: 'ProfileHistogramPlotController',
       link: {

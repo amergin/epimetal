@@ -6,11 +6,9 @@ var vis =
     'services.window',
     'services.notify', 
     'services.dimensions', 
-    'localytics.directives',
     'services.urlhandler',
     'gridster',
     'utilities',
-    // 'mgcrea.ngStrap.collapse',
     'mgcrea.ngStrap.scrollspy'
     ]);
 
@@ -83,32 +81,6 @@ mod.controller('ExploreMenuCtrl', ['$scope', '$rootScope', 'datasets', 'variable
     console.log("menu ctrl");
 
     $scope.windowHandler = windowHandler;
-
-    $scope.openHeatmapSelection = function() {
-      var $modalScope = $scope.$new({ isolate: true });
-
-      $modalScope.extend = {
-        canSubmit: function() { return true; },
-        title: 'Select a set of variables for a correlation plot',
-        submitButton: 'Add correlation plot',
-        upperLimit: 100
-      };
-
-      var promise = NotifyService.addClosableModal('vis/menucomponents/new.heatmap.modal.tpl.html', $modalScope, { 
-        controller: 'ModalFormController',
-        windowClass: 'modal-wide'
-      });
-
-      promise.then( function succFn(variables) {
-        PlotService.drawHeatmap({ variables: {x: variables} }, $scope.windowHandler);
-      }, function errFn(res) {
-        // cancelled
-      })
-      .finally(function() {
-        $modalScope.$destroy();
-      });
-
-    };
 
   }
 ])

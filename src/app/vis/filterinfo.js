@@ -6,7 +6,6 @@ mod.directive('filterInfo', ['$templateCache', '$compile', '$rootScope', '$injec
       restrict: 'C',
       scope: {},
       replace: false,
-      // priority: 7000,
       controller: 'FilterInfoController',
       templateUrl: 'vis/filterinfo.tpl.html'
     };

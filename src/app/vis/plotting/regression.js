@@ -103,7 +103,6 @@ visu.directive('plRegression', ['constants', '$timeout', '$rootScope', '$injecto
 
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
         if( winHandler == $scope.window.handler() ) {
-          // if( config.omit == 'histogram' ) { return; }
           $timeout( function() {
             updateChart();
           });
