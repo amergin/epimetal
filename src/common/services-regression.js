@@ -1,6 +1,6 @@
-var mod = angular.module('services.regression', ['services.dataset', 'services.filter', 'services.tab']);
+angular.module('services.regression', ['services.dataset', 'services.filter', 'services.tab'])
 
-mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'TabService',
+.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'TabService',
   function RegressionService($injector, $q, $rootScope, DatasetFactory, TabService) {
     var that = this;
     var service = {};

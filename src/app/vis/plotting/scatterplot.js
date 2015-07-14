@@ -1,13 +1,13 @@
-var visu = angular.module('plotter.vis.plotting.scatterplot', 
+angular.module('plotter.vis.plotting.scatterplot', 
   [
   'ui.router',
   'services.dimensions',
   'services.dataset'
-  ]);
+])
 
-visu.constant('SCATTERPLOT_POOLING_COLOR', 'black');
+.constant('SCATTERPLOT_POOLING_COLOR', 'black')
 
-visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$state', '$rootScope', '$timeout', 'SCATTERPLOT_POOLING_COLOR',
+.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$state', '$rootScope', '$timeout', 'SCATTERPLOT_POOLING_COLOR',
   function($scope, DatasetFactory, DimensionService, constants, $state, $rootScope, $timeout, SCATTERPLOT_POOLING_COLOR) {
 
     $scope.dimensionService = $scope.window.handler().getDimensionService();
@@ -358,13 +358,9 @@ visu.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'Dimension
       }
     };
 
+}])
 
-
-  }
-
-  ]);
-
-visu.directive('plScatterplot', ['$timeout', '$rootScope', 'NotifyService',
+.directive('plScatterplot', ['$timeout', '$rootScope', 'NotifyService',
 
   function($timeout, $rootScope, NotifyService) {
 
@@ -497,5 +493,5 @@ visu.directive('plScatterplot', ['$timeout', '$rootScope', 'NotifyService',
       transclude: true,
       link: linkFn
     };
-  }
-  ]);
+
+}]);

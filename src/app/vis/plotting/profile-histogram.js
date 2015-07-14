@@ -1,19 +1,19 @@
-var visu = angular.module('plotter.vis.plotting.profile-histogram', 
+angular.module('plotter.vis.plotting.profile-histogram', 
   [
   'ui.router',
   'services.dimensions',
   'services.dataset',
   'services.som',
   'services.window'
-  ]);
+  ])
 
-visu.constant('PROFILE_HISTOGRAM_SIZE', {
+.constant('PROFILE_HISTOGRAM_SIZE', {
   height: 400,
   width: 1400,
   aspectRatio: 'preserve'
-});
+})
 
-visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'FilterService',
+.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'FilterService',
   function ProfileHistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, FilterService) {
 
     $scope.window.headerText(['Profile histogram for ', $scope.window.extra().name]);
@@ -118,10 +118,9 @@ visu.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'Dime
     };
 
 
-  }
-  ]);
+}])
 
-visu.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'PROFILE_HISTOGRAM_SIZE',
+.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'PROFILE_HISTOGRAM_SIZE',
   function(constants, $timeout, $rootScope, $injector, PROFILE_HISTOGRAM_SIZE) {
 
     var PlotService = $injector.get('PlotService');
@@ -253,5 +252,5 @@ visu.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$i
         post: postLink
       }
     };
-  }
-  ]);
+
+}]);

@@ -1,4 +1,4 @@
-var visu = angular.module('plotter.vis.plotting', 
+angular.module('plotter.vis.plotting', 
   [
   'plotter.vis.windowing',
   'plotter.vis.plotting.histogram', 
@@ -14,10 +14,9 @@ var visu = angular.module('plotter.vis.plotting',
   'services.som',
   'services.regression',
   'services.tab'
-  ]);
+  ])
 
-// handles crossfilter.js dimensions/groupings and keeps them up-to-date
-visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'NotifyService', 'SOMService', '$q', 'RegressionService', 'TabService', 'EXPLORE_DEFAULT_SIZE_X', 'EXPLORE_DEFAULT_SIZE_Y',
+.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'NotifyService', 'SOMService', '$q', 'RegressionService', 'TabService', 'EXPLORE_DEFAULT_SIZE_X', 'EXPLORE_DEFAULT_SIZE_Y',
   function($injector, DimensionService, DatasetFactory, NotifyService, SOMService, $q, RegressionService, TabService, EXPLORE_DEFAULT_SIZE_X, EXPLORE_DEFAULT_SIZE_Y) {
 
     var that = this;
@@ -61,9 +60,6 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
 
     this.drawScatter = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
-        // var type = 'scatterplot';
-        // config.size = 'normal';
-        // config.type = 'scatterplot';
         var gridWindow = windowHandler.add();
 
         gridWindow
@@ -254,17 +250,6 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         .size({ x: 10, y: 3 })
         .variables(config.variables)
         .extra({ name: config.name });
-
-        // var type = 'profile-histogram';
-        // var cfg = angular.copy(config);
-        // cfg.type = type;
-        // cfg.size = {
-        //   width: 1400,
-        //   height: 400,
-        //   aspectRatio: 'preserve'
-        // };
-        // setSize(cfg, 10, 3);
-        // windowHandler.add(cfg);
       };
 
       var defer = $q.defer();
@@ -299,8 +284,6 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
 
     this.drawSOM = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
-        // config.size = 'normal';
-        // config.type = 'somplane';
         var gridWindow = windowHandler.add();
 
         gridWindow
@@ -338,12 +321,7 @@ visu.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 
         .figure('pl-regression')
         .variables(config.variables)
         .extra({ computation: result, source: config.source });
-        // var winObj = {
-        //   computation: result,
-        //   type: 'regression-plot',
-        //   source: config.source
-        // };
-        // windowHandler.add(winObj);
+
         defer.resolve();        
       }, function errFn(result) {
         var message = result.result[0].result.reason;

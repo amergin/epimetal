@@ -1,5 +1,6 @@
-var visu = angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dataset', 'angularSpinner']);
-visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'FilterService',
+angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dataset', 'angularSpinner'])
+
+.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'FilterService',
   function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, FilterService) {
 
     $scope.redraw = function() {
@@ -370,11 +371,6 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         circle.remove();
       }
 
-      // var origins = [{ y: circleY(1), x: circleX(1) }, { y: circleY(5), x: circleX(7) }];
-      // _.each( FilterService.getSOMFilters(), function(filt, ind) {
-      //   addCircle( filt, filt.position() || origins[ind] );
-      // });
-
       $scope.$watch(function() {
         return FilterService.getSOMFilters();
       }, function(newArray, oldArray) {
@@ -393,23 +389,14 @@ visu.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService'
         }
       }, true);
       
-      // var origins = [{ y: circleY(1), x: circleX(1) }, { y: circleY(5), x: circleX(7) }];
       _.each( FilterService.getSOMFilters(), function(filt, ind) {
         addCircle( filt, filt.position() || filt.position() || { x: circleX(filt.origin().x), y: circleY(filt.origin().y) } );
       });
 
-      // add two filter circles
-      // var origins = [{ y: circleY(1), x: circleX(1) }, { y: circleY(5), x: circleX(7) }];
-      // _.each( FilterService.getSOMFilters(), function(filt, ind) {
-      //   addCircle( filt, filt.position() || origins[ind] );
-      // });
-
     };
-  }]);
+  }])
 
-
-
-visu.directive('plSomplane', [ '$rootScope', 'SOMService', 'NotifyService',
+.directive('plSomplane', [ '$rootScope', 'SOMService', 'NotifyService',
 
   function($rootScope, SOMService, NotifyService) {
 
@@ -486,8 +473,6 @@ visu.directive('plSomplane', [ '$rootScope', 'SOMService', 'NotifyService',
     };
 
     return {
-      // scope: false,
-      // scope: {},
       restrict: 'C',
       require: '^?window',
       replace: true,
@@ -495,5 +480,5 @@ visu.directive('plSomplane', [ '$rootScope', 'SOMService', 'NotifyService',
       transclude: true,
       link: linkFn
     };
-  }
-  ]);
+
+}]);

@@ -1,22 +1,22 @@
-var visu = angular.module('plotter.vis.plotting.heatmap', 
+angular.module('plotter.vis.plotting.heatmap', 
   [
   'ui.router',
   'services.dimensions',
   'services.correlation',
   'services.tab'
-  ]);
+  ])
 
-visu.constant('HEATMAP_WIDTH', 420);
-visu.constant('HEATMAP_HEIGHT', 350);
-visu.constant('HEATMAP_UNDEFINED_COLOR', '#FFFFFF');
-visu.constant('HEATMAP_MARGINS', { 
+.constant('HEATMAP_WIDTH', 420)
+.constant('HEATMAP_HEIGHT', 350)
+.constant('HEATMAP_UNDEFINED_COLOR', '#FFFFFF')
+.constant('HEATMAP_MARGINS', { 
   top: 0,
   right: 0,
   bottom: 60,
   left: 80
-});
+})
 
-visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService', 'TabService', 'HEATMAP_HEIGHT', 'HEATMAP_WIDTH', 'HEATMAP_MARGINS', 'HEATMAP_UNDEFINED_COLOR',
+.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService', 'TabService', 'HEATMAP_HEIGHT', 'HEATMAP_WIDTH', 'HEATMAP_MARGINS', 'HEATMAP_UNDEFINED_COLOR',
   function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService, TabService, HEATMAP_HEIGHT, HEATMAP_WIDTH, HEATMAP_MARGINS, HEATMAP_UNDEFINED_COLOR) {
 
     $scope.resetFilter = function() {
@@ -313,11 +313,9 @@ visu.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionServ
       $scope.computeVariables(callback);
     }, 0, { maxWait: 600, trailing: true });
 
-  }]);
+}])
 
-
-
-visu.directive('plHeatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFactory', 'HEATMAP_HEIGHT', 'HEATMAP_WIDTH', 'HEATMAP_MARGINS',
+.directive('plHeatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFactory', 'HEATMAP_HEIGHT', 'HEATMAP_WIDTH', 'HEATMAP_MARGINS',
   function($compile, $rootScope, $timeout, DatasetFactory, HEATMAP_HEIGHT, HEATMAP_WIDTH, HEATMAP_MARGINS) {
 
     var linkFn = function($scope, ele, iAttrs) {
@@ -469,8 +467,8 @@ visu.directive('plHeatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFacto
       controller: 'HeatmapController',
       transclude: true
     };
-  }
-  ]);
+
+}]);
 
 
 function CustomScale() {

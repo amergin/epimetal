@@ -1,14 +1,14 @@
-var visu = angular.module('plotter.vis.plotting.regression', 
+angular.module('plotter.vis.plotting.regression', 
   [
   'services.dimensions',
   'services.dataset',
   'services.window',
   'services.notify'
-  ]);
+  ])
 
-visu.constant('REGRESSION_WIDTH', 450);
+.constant('REGRESSION_WIDTH', 450)
 
-visu.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'REGRESSION_WIN_X_PX', 'REGRESSION_WIN_Y_PX', 'REGRESSION_WIDTH', 'FilterService',
+.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'REGRESSION_WIN_X_PX', 'REGRESSION_WIN_Y_PX', 'REGRESSION_WIDTH', 'FilterService',
   function RegressionPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH, FilterService) {
     console.log("regression plot");
 
@@ -49,9 +49,9 @@ visu.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionS
     };
 
 
-}]);
+}])
 
-visu.directive('plRegression', ['constants', '$timeout', '$rootScope', '$injector', 'DatasetFactory', 'RegressionService', 'NotifyService',
+.directive('plRegression', ['constants', '$timeout', '$rootScope', '$injector', 'DatasetFactory', 'RegressionService', 'NotifyService',
   function(constants, $timeout, $rootScope, $injector, DatasetFactory, RegressionService, NotifyService) {
 
     function postLink($scope, ele, attrs, ctrl) {
@@ -143,5 +143,5 @@ visu.directive('plRegression', ['constants', '$timeout', '$rootScope', '$injecto
         post: postLink
       }
     };
-  }
-  ]);
+
+}]);

@@ -1,8 +1,7 @@
-var vis =
-  angular.module('plotter.vis.menucomponents.som-modalmenu', 
-    []);
+angular.module('plotter.vis.menucomponents.som-modalmenu', 
+[])
 
-vis.controller('SOMModalMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService', 'WindowHandler', 'PlotService',
+.controller('SOMModalMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService', 'WindowHandler', 'PlotService',
   function SOMModalMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService, WindowHandler, PlotService) {
 
     $scope.selection = {
@@ -90,10 +89,9 @@ vis.controller('SOMModalMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionServi
     };
 
   }
-]);
+])
 
-
-vis.directive('somModalMenu', function () {
+.directive('somModalMenu', function () {
   return {
     restrict: 'C',
     replace: false,

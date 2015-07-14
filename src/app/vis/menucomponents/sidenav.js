@@ -1,10 +1,7 @@
-var mod =
-  angular.module('plotter.vis.menucomponents.sidenav', 
-    [
-    ]);
+angular.module('plotter.vis.menucomponents.sidenav', 
+[])
 
-
-mod.service('plSidenav', ['$injector', function($injector) {
+.service('plSidenav', ['$injector', function($injector) {
     var that = this,
     values = {
         open: true

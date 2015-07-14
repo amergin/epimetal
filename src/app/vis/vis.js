@@ -1,5 +1,4 @@
- var vis = 
- angular.module( 'plotter.vis', [ 
+angular.module( 'plotter.vis', [ 
   'ui.router.state',
   'ui.router.util',
   'ct.ui.router.extras',
@@ -11,18 +10,15 @@
   'plotter.vis.som',
   'plotter.vis.regression',
   'plotter.vis.menucomponents',
-  'plotter.vis.filterinfo',
-  'plotter.vis.sampleinfo',
-  'mgcrea.ngStrap.popover',
   'services.som',
   'services.tab',
   'services.notify',
   'ngProgress',
   'progressBarInterceptor',
   'angularResizable'
-  ] );
+  ])
 
- vis.config(['$stateProvider', '$urlRouterProvider', 'ngProgressProvider', function ($stateProvider, $urlRouterProvider, ngProgressProvider) {
+.config(['$stateProvider', '$urlRouterProvider', 'ngProgressProvider', function ($stateProvider, $urlRouterProvider, ngProgressProvider) {
 
   var vis = {
     name: 'vis',
@@ -167,10 +163,10 @@
 
   // progress bar settings
   ngProgressProvider.setHeight('3px');
-}]);
+}])
 
 
- vis.controller( 'HeaderCtrl', ['$scope', '$stateParams', '$injector', '$state', 'TabService', 'plSidenav',
+.controller( 'HeaderCtrl', ['$scope', '$stateParams', '$injector', '$state', 'TabService', 'plSidenav',
   function ($scope, $stateParams, $injector, $state, TabService, plSidenav) {
 
     $scope.tabs = [
@@ -205,9 +201,9 @@
     };
 
     console.log("header ctrl");
-  }]);
+  }])
 
-  vis.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$mdSidenav', '$injector', '$mdMedia', 'WindowHandler', 'PlotService', 'RegressionService', 'plSidenav', 'SOMService',
+.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$mdSidenav', '$injector', '$mdMedia', 'WindowHandler', 'PlotService', 'RegressionService', 'plSidenav', 'SOMService',
     function ($scope, TabService, $rootScope, NotifyService, $mdSidenav, $injector, $mdMedia, WindowHandler, PlotService, RegressionService, plSidenav, SOMService) {
 
       $scope.toggleSidenav = function() {
@@ -406,11 +402,10 @@
       }
     };
 
-  }
-  ]);
 
+}])
 
- vis.controller( 'ModalCtrl', ['$scope', '$modal', 'DatasetFactory',
+.controller( 'ModalCtrl', ['$scope', '$modal', 'DatasetFactory',
   function ($scope, $modal, DatasetFactory) {
 
     $scope.canSubmit = {
@@ -438,10 +433,9 @@
       inherited: null
     };
 
-  }]); 
+}])
 
-
- vis.controller( 'VisCtrl', ['$scope', 'DimensionService', 'DatasetFactory', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets', '$q', 'SOMService', 'TabService', 'NotifyService', 'plSidenav', '$state',
+.controller( 'VisCtrl', ['$scope', 'DimensionService', 'DatasetFactory', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets', '$q', 'SOMService', 'TabService', 'NotifyService', 'plSidenav', '$state',
   function VisController( $scope, DimensionService, DatasetFactory, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets, $q, SOMService, TabService, NotifyService, plSidenav, $state) {
     console.log("viscontroller");
 
@@ -476,4 +470,4 @@
       return _.startsWith($state.current.name, 'vis.som');
     };
 
-  }]);
+}]);

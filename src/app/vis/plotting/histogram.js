@@ -1,18 +1,18 @@
-var visu = angular.module('plotter.vis.plotting.histogram', 
+angular.module('plotter.vis.plotting.histogram', 
   [
   'ui.router',
   'services.dimensions',
   'services.dataset',
   'services.som',
   'services.window'
-  ]);
+  ])
 
-visu.constant('HISTOGRAM_WIDTH', 450);
-visu.constant('HISTOGRAM_HEIGHT', 375);
-visu.constant('HISTOGRAM_POOLING_COLOR', '#000000');
-visu.constant('HISTOGRAM_SOM_TOTAL_COLOR', '#00b300');
+.constant('HISTOGRAM_WIDTH', 450)
+.constant('HISTOGRAM_HEIGHT', 375)
+.constant('HISTOGRAM_POOLING_COLOR', '#000000')
+.constant('HISTOGRAM_SOM_TOTAL_COLOR', '#00b300')
 
-visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR',
+.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR',
   function HistogramPlotController($scope, $rootScope, DatasetFactory, constants, $state, $injector, $timeout, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR) {
 
     $scope.isSpecial = function() {
@@ -204,9 +204,9 @@ visu.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetFact
     };
 
   }
-  ]);
+  ])
 
-visu.directive('plHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR', 'HISTOGRAM_SOM_TOTAL_COLOR',
+.directive('plHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR', 'HISTOGRAM_SOM_TOTAL_COLOR',
 
   function(constants, $timeout, $rootScope, $injector, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, HISTOGRAM_SOM_TOTAL_COLOR) {
 
@@ -600,5 +600,5 @@ visu.directive('plHistogram', ['constants', '$timeout', '$rootScope', '$injector
         post: postLink
       }
     };
-  }
-  ]);
+
+}]);

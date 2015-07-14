@@ -1,6 +1,6 @@
-var serv = angular.module('services.compatibility', []);
+angular.module('services.compatibility', [])
 
-serv.service('CompatibilityService', ['$q', '$timeout', '$modal', '$rootScope',
+.service('CompatibilityService', ['$q', '$timeout', '$modal', '$rootScope',
   function CompatibilityService($q, $timeout, $modal, $rootScope) {
 
     var that = this;

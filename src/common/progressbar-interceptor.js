@@ -1,6 +1,6 @@
-var mod = angular.module('progressBarInterceptor', ['ngProgress']);
+angular.module('progressBarInterceptor', ['ngProgress'])
 
-mod.factory('progressBarInterceptor', ['$injector', '$q', function($injector, $q) {  
+.factory('progressBarInterceptor', ['$injector', '$q', function($injector, $q) {  
   var progressBarInterceptor = {
     request: function(config) {
       $injector.invoke(function(ngProgress, $templateCache) {
@@ -34,9 +34,9 @@ mod.factory('progressBarInterceptor', ['$injector', '$q', function($injector, $q
 
   };
   return progressBarInterceptor;
-}]);
+}])
 
-mod.config(['$injector', function($injector) {
+.config(['$injector', function($injector) {
   $injector.invoke(function($httpProvider) {
     $httpProvider.interceptors.push('progressBarInterceptor');
   });

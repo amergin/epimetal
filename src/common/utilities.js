@@ -1,9 +1,9 @@
 // Utilities
 var Utils = Utils || {};
-var module = angular.module('utilities', []);
+var utilModule = angular.module('utilities', []);
 
 // selects all text for example in a input/text area when applied
-module.directive('selectOnClick', function() {
+utilModule.directive('selectOnClick', function() {
   return {
     restrict: 'A',
     // Linker function
@@ -15,7 +15,7 @@ module.directive('selectOnClick', function() {
   };
 });
 
-module.directive('noclick', [function() {
+utilModule.directive('noclick', [function() {
     return {
       restrict: 'A',
       link: function link(scope, element, attrs) {
@@ -27,7 +27,7 @@ module.directive('noclick', [function() {
 }]);
 
 // for introducing a custom directive in a nested directive situation
-module.directive('replaceAndCompile', ['$compile', '$timeout', function($compile, $timeout) {
+utilModule.directive('replaceAndCompile', ['$compile', '$timeout', function($compile, $timeout) {
   return {
     scope: { 
       'name': '=reName',
@@ -52,7 +52,7 @@ module.directive('replaceAndCompile', ['$compile', '$timeout', function($compile
 
 // disables angular-animate on elements. See
 //http://stackoverflow.com/questions/21249441/disable-nganimate-form-some-elements
-module.directive('disableAnimate', ['$animate', function($animate) {
+utilModule.directive('disableAnimate', ['$animate', function($animate) {
   return {
     link: function(scope, element) {
       $animate.enabled(false, element);
@@ -61,14 +61,14 @@ module.directive('disableAnimate', ['$animate', function($animate) {
   };
 }]);
 
-module.directive('enableAnimate', ['$animate', function($animate) {
+utilModule.directive('enableAnimate', ['$animate', function($animate) {
   return function(scope, element) {
     $animate.enabled(true, element);
   };
 }]);
 
 // see http://stackoverflow.com/questions/25600071/how-to-achieve-that-ui-sref-be-conditionally-executed
-module.directive('eatClickIf', ['$parse', '$rootScope',
+utilModule.directive('eatClickIf', ['$parse', '$rootScope',
   function($parse, $rootScope) {
     return {
       // this ensure eatClickIf be compiled before ngClick

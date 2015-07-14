@@ -35,8 +35,6 @@ App.constant('constants', {
   }
 });
 
-var plotter = plotter || {};
-
 App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStateProvider', '$locationProvider', '$futureStateProvider',
   function ($stateProvider, $urlRouterProvider, $injector, $stickyStateProvider, $locationProvider, $futureStateProvider) {
 
@@ -86,8 +84,6 @@ App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStatePr
         console.log('$stateNotFound '+unfoundState.to+'  - fired when a state cannot be found by its name.');
         console.log(unfoundState, fromState, fromParams);
       });
-
-      // $state.go('vis.explore');
 
 }
 ]);

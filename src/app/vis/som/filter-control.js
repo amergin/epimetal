@@ -1,20 +1,20 @@
-var mod = angular.module('plotter.vis.som.circle-filter-control', ['services.dimensions', 'services.filter', 'mgcrea.ngStrap.alert']);
+angular.module('plotter.vis.som.circle-filter-control', ['services.dimensions', 'services.filter', 'mgcrea.ngStrap.alert'])
 
-mod.directive('circleFilterControl', ['$templateCache', '$compile', '$rootScope', '$injector', 'FilterService',
+.directive('plCircleFilterControl', ['$templateCache', '$compile', '$rootScope', '$injector', 'FilterService',
   function($templateCache, $compile, $rootScope, $injector, FilterService) {
     return {
-      restrict: 'C',
+      restrict: 'A',
       scope: {},
       replace: false,
       controller: 'CircleFilterControlCtrl',
       templateUrl: 'vis/som/circle-filter-control.tpl.html'
     };
   }
-]);
+])
 
-mod.constant('CIRCLE_FILTER_NAME_MAX_LENGTH', 4);
+.constant('CIRCLE_FILTER_NAME_MAX_LENGTH', 4)
 
-mod.controller('CircleFilterControlCtrl', ['$scope', 'FilterService', '$state', 'NotifyService', 'TabService', 'CIRCLE_FILTER_NAME_MAX_LENGTH', 'WindowHandler',
+.controller('CircleFilterControlCtrl', ['$scope', 'FilterService', '$state', 'NotifyService', 'TabService', 'CIRCLE_FILTER_NAME_MAX_LENGTH', 'WindowHandler',
   function CircleFilterControlCtrl($scope, FilterService, $state, NotifyService, TabService, CIRCLE_FILTER_NAME_MAX_LENGTH, WindowHandler) {
 
     $scope.isVisible = function() {

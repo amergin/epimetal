@@ -1,6 +1,6 @@
-var mod = angular.module('services.tab', []);
+angular.module('services.tab', [])
 
-mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '$state', 'WindowHandler', 'DimensionService', 'NotifyService',
+.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '$state', 'WindowHandler', 'DimensionService', 'NotifyService',
   function ($injector, $timeout, constants, $rootScope, $state, WindowHandler, DimensionService, NotifyService) {
 
     var _service = {},
@@ -100,24 +100,11 @@ mod.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '
               if(win.object.figure() == 'pl-somplane') {
                 win.object.spin(false);
               }
-              // if( win.type == 'somplane' ) {
-              //   handler.stopSpin(win._winid);
-              // }
             });
           });              
         })
         .finally(function() {
           WindowHandler.stopAllSpins();
-          // _.each(WindowHandler.getVisible(), function(handler) {
-          //   _.each(handler.get(), function(win) {
-          //     if(win.object.figure() !== 'pl-somplane') {
-          //       win.spin(false);
-          //     }
-          //     // if( win.type != 'somplane' ) {
-          //     //   handler.stopSpin(win._winid);
-          //     // }
-          //   });
-          // });
         });        
       }
 

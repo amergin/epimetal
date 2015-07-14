@@ -1,14 +1,14 @@
-var win = angular.module('plotter.vis.windowing', ['services.window', 'services.dataset', 'mgcrea.ngStrap.dropdown', 'mgcrea.ngStrap.tooltip', 'angularSpinner']);
+angular.module('plotter.vis.windowing', ['services.window', 'services.dataset', 'mgcrea.ngStrap.dropdown', 'mgcrea.ngStrap.tooltip', 'angularSpinner'])
 
-win.constant('EXPORT_CONFIG', {
+.constant('EXPORT_CONFIG', {
   'svg': '/API/export/svg',
   'png': '/API/export/png'
-});
+})
 
-win.constant('EXPORT_PNG_BACKGROUND_COLOR', '#FFFFFF');
-win.constant('EXPORT_FILENAME_MAX_LENGTH', 80);
+.constant('EXPORT_PNG_BACKGROUND_COLOR', '#FFFFFF')
+.constant('EXPORT_FILENAME_MAX_LENGTH', 80)
 
-win.directive('plGridWindow', function() {
+.directive('plGridWindow', function() {
   return {
     restrict: 'A',
     controller: 'PlGridWindowCtrl',
@@ -20,9 +20,9 @@ win.directive('plGridWindow', function() {
       scope.element = element;
     }
   };
-});
+})
 
-win.controller('PlGridWindowCtrl', ['$scope',
+.controller('PlGridWindowCtrl', ['$scope',
   function($scope) {
 
     $scope.close = function() {
@@ -33,10 +33,10 @@ win.controller('PlGridWindowCtrl', ['$scope',
       $scope.window.object.resetFn();
     };
 
-}]);
+}])
 
 
-win.directive('plExport', function() {
+.directive('plExport', function() {
   return {
     restrict: 'AE',
     controller: 'PlExportCtrl',
@@ -52,9 +52,9 @@ win.directive('plExport', function() {
       $scope.doExport();
     }
   };
-});
+})
 
-win.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EXPORT_PNG_BACKGROUND_COLOR', '$q',
+.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EXPORT_PNG_BACKGROUND_COLOR', '$q',
   function($scope, DatasetFactory, EXPORT_CONFIG, EXPORT_PNG_BACKGROUND_COLOR, $q) {
 
     function removeDirective() {

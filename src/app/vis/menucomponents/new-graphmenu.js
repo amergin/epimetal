@@ -1,8 +1,7 @@
-var vis =
-  angular.module('plotter.vis.menucomponents.new-graphmenu', 
-    []);
+angular.module('plotter.vis.menucomponents.new-graphmenu', 
+  [])
 
-vis.controller('NewGraphMenuCtrl', ['$scope', 'DatasetFactory',
+.controller('NewGraphMenuCtrl', ['$scope', 'DatasetFactory',
   function NewGraphMenuCtrl($scope, DatasetFactory) {
 
     $scope.tab = {
@@ -90,9 +89,9 @@ vis.controller('NewGraphMenuCtrl', ['$scope', 'DatasetFactory',
     ];
 
   }
-]);
+])
 
-vis.directive('newGraphMenu', function () {
+.directive('newGraphMenu', function () {
   return {
     restrict: 'C',
     scope: {

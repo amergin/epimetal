@@ -1,21 +1,20 @@
-var vis =
-  angular.module('plotter.vis.menucomponents.dataset', 
-    [
-    ]);
+angular.module('plotter.vis.menucomponents.dataset', 
+  [
+  ])
 
 // directive for displaying the dataset table on sidebar
-vis.directive('datasetForm', function () {
+.directive('plDatasetForm', function () {
   return {
     scope: {},
-    restrict: 'C',
+    restrict: 'A',
     templateUrl: 'vis/menucomponents/dataset.tpl.html',
     replace: true,
     controller: 'DatasetTableController'
   };
-});
+})
 
 // dataset table controller
-vis.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService', 'constants', '$location', 'UrlHandler', 'WindowHandler', 'FilterService', 'TabService',
+.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService', 'constants', '$location', 'UrlHandler', 'WindowHandler', 'FilterService', 'TabService',
   function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService, constants, $location, UrlHandler, WindowHandler, FilterService, TabService) {
 
     $scope.$watch(function() {

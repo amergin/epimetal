@@ -1,9 +1,7 @@
-var vis =
-  angular.module('plotter.vis.menucomponents.multiple-variable-selection', 
-    [
-    ]);
+angular.module('plotter.vis.menucomponents.multiple-variable-selection', 
+  [])
 
-vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
+.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
   function MultipleVariableSelectionCtrl($scope, DatasetFactory) {
 
     // the results go here
@@ -543,9 +541,9 @@ vis.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
     };
 
   }
-]);
+])
 
-vis.directive('multipleVariableSelection', function () {
+.directive('multipleVariableSelection', function () {
   return {
     restrict: 'C',
     replace: false,

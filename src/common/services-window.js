@@ -1,6 +1,6 @@
-var mod = angular.module('services.window', ['angularSpinner', 'ui.router.state']);
+angular.module('services.window', ['angularSpinner', 'ui.router.state'])
 
-mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout', 'usSpinnerService', '$state', 'EXPORT_FILENAME_MAX_LENGTH', 'DatasetFactory',
+.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout', 'usSpinnerService', '$state', 'EXPORT_FILENAME_MAX_LENGTH', 'DatasetFactory',
   function ($injector, constants, $rootScope, $timeout, usSpinnerService, $state, EXPORT_FILENAME_MAX_LENGTH, DatasetFactory, name) { // notice 'name'
 
     function GridWindow(injector) {
@@ -346,29 +346,6 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         .remove(removeFn);
 
         return gridWindow;
-
-        // var id = _.uniqueId('win_');
-        // // provide only default values, if url router
-        // // has provided some of these, don't override
-        // windows.push( _.defaults(config,
-        //   { '_winid': id, 
-        //   handler: that,
-        //   grid: {
-        //     // will be overwritten by gridster on layout
-        //     position: {
-        //       row: null,
-        //       col: null
-        //     },
-        //     // use 0 so it will be overwritten by default gridster config
-        //     // (which is specific for each handler)
-        //     size: {
-        //       x: 0,
-        //       y: 0,
-        //     }
-        //   }
-        // }) );
-
-        // $rootScope.$emit('variable:add', config.type, config.variables);
       };
 
       this.getName = function() {
@@ -388,7 +365,6 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
       this.spinAll = function() {
         _.each(windows, function(win) {
           win.object.spin(true);
-          // usSpinnerService.spin(win['_winid']);
         });
         return that;
       };
@@ -396,7 +372,6 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
       this.stopAllSpins = function() {
         _.each(windows, function(win) {
           win.object.spin(false);
-          // usSpinnerService.stop(win['_winid']);
         });
         return that;
       };
@@ -412,46 +387,15 @@ mod.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout'
         return that;
       };
 
-      // var _findWin = function(id) {
-      //   var rwin;
-      //   var rind;
-      //   _.every( windows, function(win,ind) {
-      //     if( win['_winid'] === id ) {
-      //       rwin = win;
-      //       rind = ind;
-      //       return false;
-      //     }
-      //     return true;
-      //   });
-      //   return [rwin, rind];
-      // };
-
       this.remove = function(id) {
         throw new Error("remove");
-        // var fnd = _findWin(id);
-        // var win  = fnd[0];
-        // var wind = fnd[1];
-        // if( _.isUndefined(win) ) { return; }
-
-        // windows.splice(wind,1);
-        // return that;
       }; 
 
       this.getId = function(key,val) {
-        // var ret;
-        // _.every(windows, function(win) {
-        //   if( win[key] === val ) {
-        //     ret = win['_winid'];
-        //     return false; // stop
-        //   }
-        //   return true;
-        // });
-        // return ret;
       };
 
       this.get = function() {
         return windows;
-        // return _findWin(id)[0];
       };
 
       this.valueOf = function() {

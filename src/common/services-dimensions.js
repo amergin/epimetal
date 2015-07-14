@@ -1,7 +1,7 @@
-var dimMod = angular.module('services.dimensions', ['services.dataset', 'ui.router.state']);
+angular.module('services.dimensions', ['services.dataset', 'ui.router.state'])
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope', '$state',
+.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope', '$state',
   function ($injector, $q, constants, $rootScope, $state) {
 
     var _instances = {};
@@ -829,8 +829,7 @@ dimMod.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope'
     };
     return _service;
 
-  }
-  ]);
+}]);
 
 function CrossfilterDimension(type, variable, injector, crossfilterInst, creationFn, destructFn) {
 

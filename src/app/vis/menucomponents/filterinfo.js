@@ -1,18 +1,21 @@
-var mod = angular.module('plotter.vis.filterinfo', ['services.dimensions', 'services.filter', 'mgcrea.ngStrap.alert']);
+angular.module('plotter.vis.menucomponents.filterinfo', 
+  ['services.dimensions', 
+  'services.filter', 
+  'mgcrea.ngStrap.alert'])
 
-mod.directive('filterInfo', ['$templateCache', '$compile', '$rootScope', '$injector', 'FilterService',
+.directive('plFilterInfo', ['$templateCache', '$compile', '$rootScope', '$injector', 'FilterService',
   function($templateCache, $compile, $rootScope, $injector, FilterService) {
     return {
-      restrict: 'C',
+      restrict: 'A',
       scope: {},
       replace: false,
       controller: 'FilterInfoController',
-      templateUrl: 'vis/filterinfo.tpl.html'
+      templateUrl: 'vis/menucomponents/filterinfo.tpl.html'
     };
   }
-]);
+])
 
-mod.controller('FilterInfoController', ['$scope', '$timeout', '$injector', 'DimensionService', '$rootScope', 'constants', 'FilterService', '$state', 'NotifyService', 'TabService', 'DatasetFactory', 'SOMService',
+.controller('FilterInfoController', ['$scope', '$timeout', '$injector', 'DimensionService', '$rootScope', 'constants', 'FilterService', '$state', 'NotifyService', 'TabService', 'DatasetFactory', 'SOMService',
   function FilterInfoController($scope, $timeout, $injector, DimensionService, $rootScope, constants, FilterService, $state, NotifyService, TabService, DatasetFactory, SOMService) {
     var numFormat = d3.format('.2e');
     var dimensionService = DimensionService.getPrimary();
@@ -168,5 +171,4 @@ mod.controller('FilterInfoController', ['$scope', '$timeout', '$injector', 'Dime
       return true;
     };    
 
-  }
-]);
+}]);

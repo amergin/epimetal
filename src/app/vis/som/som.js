@@ -1,18 +1,17 @@
-var vis =
-  angular.module('plotter.vis.som', 
+angular.module('plotter.vis.som', 
     [
     'plotter.vis.plotting',
     'plotter.vis.som.circle-filter-control',
     'services.dataset',
     'services.notify',
     'services.som',
-    ]);
+    ])
 
-mod.constant('SOM_DEFAULT_SIZE_X', 3);
-mod.constant('SOM_DEFAULT_SIZE_Y', 3);
-mod.constant('SOM_DEFAULT_PLANES', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc']);
+.constant('SOM_DEFAULT_SIZE_X', 3)
+.constant('SOM_DEFAULT_SIZE_Y', 3)
+.constant('SOM_DEFAULT_PLANES', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'])
 
-mod.controller('SOMContentCtrl', ['$scope', '$rootScope', 'NotifyService', 'contentWindowHandler', 'SOM_DEFAULT_SIZE_X', 'SOM_DEFAULT_SIZE_Y',
+.controller('SOMContentCtrl', ['$scope', '$rootScope', 'NotifyService', 'contentWindowHandler', 'SOM_DEFAULT_SIZE_X', 'SOM_DEFAULT_SIZE_Y',
   function SOMContentCtrl($scope, $rootScope, NotifyService, contentWindowHandler, SOM_DEFAULT_SIZE_X, SOM_DEFAULT_SIZE_Y) {
 
     $scope.windowHandler = contentWindowHandler;
@@ -68,11 +67,9 @@ mod.controller('SOMContentCtrl', ['$scope', '$rootScope', 'NotifyService', 'cont
     };    
 
   }
-]);
+])
 
-
-
-mod.controller('SOMBottomContentCtrl', ['$scope', '$injector', '$timeout', '$rootScope', 'bottomWindowHandler', 'DatasetFactory', 'DimensionService', 'SOMService', 'PlotService', 'NotifyService', 'SOM_DEFAULT_PLANES',
+.controller('SOMBottomContentCtrl', ['$scope', '$injector', '$timeout', '$rootScope', 'bottomWindowHandler', 'DatasetFactory', 'DimensionService', 'SOMService', 'PlotService', 'NotifyService', 'SOM_DEFAULT_PLANES',
   function SOMBottomContentCtrl($scope, $injector, $timeout, $rootScope, bottomWindowHandler, DatasetFactory, DimensionService, SOMService, PlotService, NotifyService, SOM_DEFAULT_PLANES) {
     $scope.windowHandler = bottomWindowHandler;
     $scope.windows = $scope.windowHandler.get();

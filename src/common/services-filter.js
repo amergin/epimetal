@@ -1,17 +1,13 @@
-var mod = angular.module('services.filter', ['services.dimensions', 'services.window']);
+angular.module('services.filter', ['services.dimensions', 'services.window'])
 
-
-
-mod.constant('SOM_MAX_FILTERS', 5);
-mod.factory('FilterService', ['$injector', '$rootScope', 'WindowHandler', 'SOM_MAX_FILTERS',
+.constant('SOM_MAX_FILTERS', 5)
+.factory('FilterService', ['$injector', '$rootScope', 'WindowHandler', 'SOM_MAX_FILTERS',
   function ($injector, $rootScope, WindowHandler, SOM_MAX_FILTERS) {
 
     var DimensionService = $injector.get('DimensionService');
     var _activeDimensionService = DimensionService.getPrimary();
     var _colors = d3.scale.category10();
     var _filters = [
-    // new CircleFilter().injector($injector).name('A').id('circle1').color(_colors('circle1')),
-    // new CircleFilter().injector($injector).name('B').id('circle2').color(_colors('circle2'))
     ];
     var _disabled = false;
 

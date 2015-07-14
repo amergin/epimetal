@@ -1,8 +1,7 @@
-var vis =
-  angular.module('plotter.vis.menucomponents.som-inputmenu', 
-    []);
+angular.module('plotter.vis.menucomponents.som-inputmenu', 
+  [])
 
-vis.controller('SOMInputMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService',
+.controller('SOMInputMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService',
   function SOMInputMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService) {
 
     $scope.selection = [];
@@ -36,10 +35,9 @@ vis.controller('SOMInputMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionServi
     };
 
   }
-]);
+])
 
-
-vis.directive('somInputMenu', function () {
+.directive('somInputMenu', function () {
   return {
     restrict: 'C',
     replace: false,

@@ -1,12 +1,19 @@
-var visu = angular.module('plotter.vis.plotting.classedbarchart', 
+angular.module('plotter.vis.plotting.classedbarchart', 
   [
   'ui.router',
   'services.dimensions',
   'services.dataset',
   'services.som',
   'services.window'
-  ]);
-visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'FilterService',
+  ])
+
+.constant('CLASSED_BARCHART_SIZE', {
+  height: 375,
+  width: 450,
+  aspectRatio: 'stretch'
+})
+
+.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'FilterService',
   function ClassedBarChartPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, FilterService) {
 
     $scope.dimensionService = $scope.window.handler().getDimensionService();
@@ -74,19 +81,9 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
       $scope.filterButton(false);
     });
 
-    // $scope.$parent.resetFilter = function() {
-    //   $scope.chart.filterAll();
-    //   $injector.get('WindowHandler').reRenderVisible({ compute: true, omit: 'histogram' });
-    //   $scope.window.showResetBtn = false;
-    // };
-
     // share information with the plot window
-
     $scope.window.headerText(['Histogram of', $scope.window.variables().x, '']);
-    // $scope.$parent.headerText = ['Histogram of', $scope.window.variables.x, ''];
     $scope.filterButton(false);
-    // $scope.window.resetButton(false);
-    // $scope.$parent.showResetBtn = false;
 
     // see https://github.com/dc-js/dc.js/wiki/FAQ#filter-the-data-before-its-charted
     // this used to filter to only the one set & limit out NaN's
@@ -346,15 +343,9 @@ visu.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'Dimen
 
 
 
-}]);
+}])
 
-visu.constant('CLASSED_BARCHART_SIZE', {
-  height: 375,
-  width: 450,
-  aspectRatio: 'stretch'
-});
-
-visu.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$injector', 'CLASSED_BARCHART_SIZE',
+.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$injector', 'CLASSED_BARCHART_SIZE',
 
   function(constants, $timeout, $rootScope, $injector, CLASSED_BARCHART_SIZE) {
     function postLink($scope, ele, attrs, ctrl) {
@@ -482,5 +473,5 @@ visu.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$in
         post: postLink
       }
     };
-  }
-  ]);
+
+}]);

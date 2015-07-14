@@ -1,6 +1,6 @@
-var serv = angular.module('services.dataset', ['services.notify', 'ui.router.state']);
+angular.module('services.dataset', ['services.notify', 'ui.router.state'])
 
-serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootScope', 'NotifyService',
+.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootScope', 'NotifyService',
   function($http, $q, $injector, constants, $rootScope, NotifyService) {
 
     // privates
@@ -277,15 +277,6 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         return dset;
       };
 
-      // dset.variables = function(name) {
-      //   return _.chain(priv.samplesByDataset[name])
-      //   .sample(4)
-      //   .map(function(d) { return _.keys(d.variables); })
-      //   .flatten()
-      //   .uniq()
-      //   .value();
-      // };
-
       // get
       priv.getDatasets = function() {
         return _.keys(priv.samplesByDataset);
@@ -382,16 +373,6 @@ serv.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootS
         if(!arguments.length) { return priv.samples; }
         priv.samplesByDataset = {};
         priv.processSamples(samples, true);
-        // var copySample;
-        // _.each(samples, function(samp, id) {
-        //   if(!priv.samplesByDataset[samp.dataset]) { priv.samplesByDataset[samp.dataset] = []; }
-        //   // shallow copy, otherwise this will mess up other datasets that have this sample
-        //   copySample = angular.copy(samp);
-        //   copySample.originalDataset = samp.dataset;
-        //   copySample.dataset = priv.name;
-        //   priv.samplesByDataset[copySample.originalDataset].push(copySample);
-        //   priv.samples[priv.getKey(copySample)] = copySample;
-        // });
         return dset;
       };
 

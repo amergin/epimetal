@@ -1,4 +1,3 @@
-var vis =
 angular.module('plotter.vis.regression', 
   [
   'plotter.vis.plotting',
@@ -7,12 +6,12 @@ angular.module('plotter.vis.regression',
   'services.notify', 
   'services.dimensions', 
   'services.urlhandler'
-  ]);
+  ])
 
-mod.constant('REGRESSION_WIN_X_PX', 40);
-mod.constant('REGRESSION_WIN_Y_PX', 100);
+.constant('REGRESSION_WIN_X_PX', 40)
+.constant('REGRESSION_WIN_Y_PX', 100)
 
-mod.controller('RegressionController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants', 'variables', 'windowHandler', 'REGRESSION_WIN_X_PX', 'REGRESSION_WIN_Y_PX',
+.controller('RegressionController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants', 'variables', 'windowHandler', 'REGRESSION_WIN_X_PX', 'REGRESSION_WIN_Y_PX',
   function RegressionController($scope, $templateCache, DimensionService, $rootScope, constants, variables, windowHandler, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX) {
     $scope.handler = windowHandler;
     $scope.windows = windowHandler.get();
@@ -46,11 +45,5 @@ mod.controller('RegressionController', ['$scope', '$templateCache', 'DimensionSe
            enabled: false
       }
     };    
-  }
-  ])
-
-.controller('RegressionSubmenuController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'windowHandler',
-  function RegressionController($scope, $templateCache, DimensionService, $rootScope, windowHandler) {
-    $scope.windowHandler = windowHandler;
   }
 ]);

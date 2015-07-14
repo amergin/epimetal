@@ -1,9 +1,7 @@
-var vis =
-  angular.module('plotter.vis.menucomponents.new-regressionmenu', 
-    []);
+angular.module('plotter.vis.menucomponents.new-regressionmenu', 
+  [])
 
-
-vis.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService',
+.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService',
   function RegressionMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService) {
 
     $scope.selection = {
@@ -151,9 +149,9 @@ vis.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionSer
     };
 
   }
-]);
+])
 
-vis.directive('newRegressionMenu', function () {
+.directive('newRegressionMenu', function () {
   return {
     restrict: 'C',
     replace: false,

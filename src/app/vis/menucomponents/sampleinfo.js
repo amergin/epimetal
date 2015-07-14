@@ -1,18 +1,22 @@
-var mod = angular.module('plotter.vis.sampleinfo', ['services.dimensions', 'services.filter']);
+angular.module('plotter.vis.menucomponents.sampleinfo', 
+  [
+  'services.dimensions', 
+  'services.filter'
+  ])
 
-mod.directive('sampleInfo', ['$templateCache', '$compile', '$rootScope', '$injector',
+.directive('plSampleInfo', ['$templateCache', '$compile', '$rootScope', '$injector',
   function($templateCache, $compile, $rootScope, $injector) {
     return {
-      restrict: 'C',
+      restrict: 'A',
       scope: false,
       replace: true,
       controller: 'SampleInfoController',
-      templateUrl: 'vis/sampleinfo.tpl.html'
+      templateUrl: 'vis/menucomponents/sampleinfo.tpl.html'
     };
   }
-]);
+])
 
-mod.controller('SampleInfoController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants', 'FilterService',
+.controller('SampleInfoController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants', 'FilterService',
   function FilterInfoController($scope, $templateCache, DimensionService, $rootScope, constants, FilterService) {
 
     // update value on change

@@ -1,5 +1,4 @@
-var vis =
-  angular.module('plotter.vis.menucomponents', 
+angular.module('plotter.vis.menucomponents', 
     [
     'plotter.vis.menucomponents.multiple-variable-selection',
     'plotter.vis.menucomponents.dataset',
@@ -9,6 +8,8 @@ var vis =
     'plotter.vis.menucomponents.som-inputmenu',
     'plotter.vis.menucomponents.som-modalmenu',
     'plotter.vis.menucomponents.sidenav',
+    'plotter.vis.menucomponents.filterinfo',
+    'plotter.vis.menucomponents.sampleinfo',
     'services.dataset',
     'services.window',
     'services.notify', 

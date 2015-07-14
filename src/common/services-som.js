@@ -1,17 +1,17 @@
-var mod = angular.module('services.som', ['services.dataset', 'services.dimensions', 'services.notify', 'services.tab']);
+angular.module('services.som', ['services.dataset', 'services.dimensions', 'services.notify', 'services.tab'])
 
-mod.constant('SOM_PLANE_SIZE', { x: 9, y: 7 });
-mod.constant('SOM_MIN_SAMPLE_COUNT', 10);
-mod.constant('SOM_DEFAULT_PLANES', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc']);
-mod.constant('SOM_DEFAULT_TESTVARS', 
+.constant('SOM_PLANE_SIZE', { x: 9, y: 7 })
+.constant('SOM_MIN_SAMPLE_COUNT', 10)
+.constant('SOM_DEFAULT_PLANES', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'])
+.constant('SOM_DEFAULT_TESTVARS', 
   ['XXL-VLDL-L', 'XL-VLDL-L', 'L-VLDL-L', 'M-VLDL-L', 
     'S-VLDL-L', 'XS-VLDL-L', 'IDL-L', 'L-LDL-L',
     'M-LDL-L', 'S-LDL-L', 'XL-HDL-L', 'L-HDL-L', 
     'M-HDL-L', 'S-HDL-L', 'Serum-C', 'Serum-TG', 
     'HDL-C', 'LDL-C', 'Glc', 'Cit', 'Phe', 'Gp', 'Tyr', 
-    'FAw3toFA', 'FAw6toFA', 'SFAtoFA']);
+    'FAw3toFA', 'FAw6toFA', 'SFAtoFA'])
 
-mod.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', 'NotifyService', '$q', 'DatasetFactory', 'TabService', 'SOM_PLANE_SIZE', 'SOM_DEFAULT_PLANES', 'SOM_DEFAULT_TESTVARS', 'SOM_MIN_SAMPLE_COUNT',
+.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', 'NotifyService', '$q', 'DatasetFactory', 'TabService', 'SOM_PLANE_SIZE', 'SOM_DEFAULT_PLANES', 'SOM_DEFAULT_TESTVARS', 'SOM_MIN_SAMPLE_COUNT',
   function ($injector, $timeout, constants, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_PLANE_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT) {
 
     var that = this;
