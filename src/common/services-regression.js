@@ -283,11 +283,11 @@ mod.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFacto
         return normalized;
       };
 
-      var compute = function(config) { //assocData, nanIndices, targetData, adjustData) {
+      var compute = function(config) {
         var assocData = config.association,
         nanIndices = config.nans,
         targetData = config.target,
-        adjustData = config.adjust;
+        adjustData = config.adjustData;
 
         var threadNaNs = getNaNIndices(assocData),
         allNaNIndices = _.union(threadNaNs, nanIndices),

@@ -77,9 +77,8 @@ visu.directive('plRegression', ['constants', '$timeout', '$rootScope', '$injecto
       }
 
       function updateChart() {
-        var selectedVariables = RegressionService.selectedVariables();
+        var selectedVariables = $scope.window.extra().computation.input;
         $scope.window.spin(true);
-        // $scope.$parent.startSpin();
         RegressionService.compute({ variables: selectedVariables, source: $scope.window.extra().source }, $scope.window.handler())
         .then(function succFn(result) {
           $scope.window.extra()['computation'] = result;
