@@ -287,7 +287,6 @@ angular.module( 'plotter.vis', [
 
     $scope.openSOMModal = function(ev) {
       var diagScope = $rootScope.$new(true);
-      $scope.selection = null;
 
       diagScope.config = {
         title: 'Add SOM figures',
@@ -321,8 +320,6 @@ angular.module( 'plotter.vis', [
     $scope.openSOMInputModal = function(ev) {
 
       var diagScope = $rootScope.$new(true);
-
-      $scope.selection = null;
 
       diagScope.config = {
         title: 'Select Self-organizing Map input variables',
@@ -383,7 +380,7 @@ angular.module( 'plotter.vis', [
           source: result.source
         };
 
-        RegressionService.selectedVariables(config.variables);
+        RegressionService.selectedVariables(result.selection);
         PlotService.drawRegression(config, winHandler);
       });      
     };

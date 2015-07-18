@@ -1,14 +1,23 @@
 angular.module('plotter.vis.menucomponents.new-regressionmenu', 
   [])
 
-.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService',
-  function RegressionMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService) {
+.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService',
+  function RegressionMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService) {
 
-    $scope.selection = {
-      adjust: [],
-      association: [],
-      target: []
-    };
+    function initVariables() {
+      function doDefault() {
+        $scope.selection = {
+          adjust: [],
+          association: [],
+          target: []
+        };
+      }
+
+      $scope.selection = RegressionService.selectedVariables();
+      if(!$scope.canSubmit()) {
+        doDefault();
+      }
+    }
 
     DatasetFactory.getVariables().then(function(res) {
       $scope.variables = angular.copy(res);
@@ -60,12 +69,6 @@ angular.module('plotter.vis.menucomponents.new-regressionmenu',
 
     var lodash = getEquality();
 
-    $scope.accordionOpen = {
-      'target': true,
-      'adjust': false,
-      'association': false
-    };
-
     var assocAndAdjustOverlapping = function() {
       return lodash.intersection(_copy($scope.selection.association), _copy($scope.selection.adjust)).length > 0;
     };
@@ -93,7 +96,8 @@ angular.module('plotter.vis.menucomponents.new-regressionmenu',
     };
 
     $scope.submit = function() {
-      var error = false;
+      var error = false,
+      selection = {};
       if( assocAndAdjustOverlapping() ) {
         NotifyService.addSticky('Incorrect variable combination', 
           'Association variables and adjust variables overlap. Please modify the selection.', 'error',  { referenceId: 'regressioninfo' });
@@ -114,39 +118,24 @@ angular.module('plotter.vis.menucomponents.new-regressionmenu',
           'Please wait until the previous computation has been completed.', 'error', { referenceId: 'regressioninfo' });
       }
       if(error) {
-        $scope.closeAccordion();
         return false;
       }
 
+      selection.target = $scope.selection.target;
+      selection.adjust = $scope.selection.adjust;
+      selection.association = $scope.selection.association;
+
       return {
         type: 'regression',
-        selection: {
-          target: $scope.selection.target,
-          adjust: $scope.selection.adjust,
-          association: $scope.selection.association
-        },
-        source: $scope.dataSource
+        selection: selection,
+        source: 'dataset'
       };
     };
 
     $scope.cancel = function() {
     };
 
-    $scope.somButtonDisabled = function() {
-      return SOMService.empty();
-    };
-
-    $scope.dataSource = 'dataset';
-
-    $scope.setDataSource = function(s) { 
-      $scope.dataSource = s;
-    };
-
-    $scope.closeAccordion = function() {
-      _.each($scope.accordionOpen, function(val, key) {
-        $scope.accordionOpen[key] = false;
-      });
-    };
+    initVariables();
 
   }
 ])
