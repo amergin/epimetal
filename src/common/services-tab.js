@@ -34,6 +34,11 @@ angular.module('services.tab', [])
       else if(toState.name == 'vis.regression') {
         checkRegressionState();
       }
+
+      if(fromState.name == 'vis.explore') {
+        // exit from explore resets all current filters
+        $injector.get('FilterService').resetFilters({ spareSOM: true });
+      }
     });
 
     function checkDefaultPlanes() {
