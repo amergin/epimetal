@@ -341,26 +341,60 @@ angular.module('services.dataset', ['services.notify', 'ui.router.state'])
       };
 
       priv.processSamples = function(addSamples, initial) {
+        function setOrigin(sample, source) {
+          var dsetName = source.dataset,
+          isDerived = service.getSet(dsetName).type() == 'derived';
+
+          if(isDerived) {
+            // do nothing, preserve original
+            return;
+          } else {
+            sample.originalDataset = dsetName;
+          }
+        }
+
+        function setByDataset(sample) {
+          var obj = {},
+          isDerived = service.getSet(sample.dataset).type() == 'derived',
+          name;
+
+          if(isDerived) {
+            name = sample.originalDataset;
+          } else {
+            name = sample.dataset;
+          }
+          obj[name] = {};
+          _.defaults(priv.samplesByDataset, obj);
+        }
+
+        function placeSample(sample) {
+          var name = sample.originalDataset;
+          key = priv.getKey(sample);
+          priv.samplesByDataset[name][key] = sample;
+        }
+
         var copySample,
         initialCall = !_.isUndefined(initial) ? initial : false;
         _.each(addSamples, function(samp) {
-          // shallow copy, otherwise this will mess up other datasets that have this sample
           if(initialCall) {
-            priv.samplesByDataset[samp.dataset] = {};
+            setByDataset(samp);
           }
+
+          // shallow copy, otherwise this will mess up other datasets that have this sample
           copySample = angular.copy(samp);
-          copySample.originalDataset = samp.dataset;
+          setOrigin(copySample, samp);
+          // copySample.originalDataset = samp.dataset;
           copySample.dataset = dset.name();
 
           var key = priv.getKey(copySample);
           if(initialCall) {
             priv.samples[key] = copySample;
-            priv.samplesByDataset[copySample.originalDataset][key] = copySample;
+            placeSample(copySample);
           } else {
             // extending variables for ONLY existing samples
             if(priv.samples[key]) {
               _.extend(priv.samples[key].variables, copySample.variables);
-              priv.samplesByDataset[copySample.originalDataset][key] = copySample;
+              placeSample(copySample);
             } else {
               // outside scope of active samples for this set, do nothing
             }
