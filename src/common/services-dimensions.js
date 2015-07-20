@@ -103,12 +103,12 @@ angular.module('services.dimensions', ['services.dataset', 'ui.router.state'])
             classed: d.variables[classvar],
             dataset: d.dataset,
             valueOf: function() {
-              return _.isUndefined(this.classed) ? constants.nanValue : this.classed + "|" + this.dataset;
+              return _.isUndefined(this.classed) ? String(constants.nanValue) : this.classed + "|" + this.dataset;
             }
           };
         };
 
-        key = getDimensionKey('normal', classvar, 'dataset');
+        var key = getDimensionKey('normal', classvar);
         if(dimensions[key]) {
           //pass
         } else {

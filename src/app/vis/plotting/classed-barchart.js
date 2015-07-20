@@ -13,8 +13,8 @@ angular.module('plotter.vis.plotting.classedbarchart',
   aspectRatio: 'stretch'
 })
 
-.controller('ClassedBarChartPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'FilterService',
-  function ClassedBarChartPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, FilterService) {
+.controller('ClassedBarChartPlotController', ['$scope', 'DimensionService', 'DatasetFactory', 'constants', '$injector', '$timeout', 'FilterService',
+  function ClassedBarChartPlotController($scope, DimensionService, DatasetFactory, constants, $injector, $timeout, FilterService) {
 
     $scope.dimensionService = $scope.window.handler().getDimensionService();
 
@@ -39,7 +39,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
     }, true);
 
     function initSOMSpecial() {
-      $scope.primary = $injector.get('DimensionService').getPrimary();
+      $scope.primary = DimensionService.getPrimary();
       $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables());
       $scope.totalDimension = $scope.totalDimensionInst.get();
       $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables());
@@ -51,8 +51,6 @@ angular.module('plotter.vis.plotting.classedbarchart',
       // total will always have largest count
       $scope.extent = [0, $scope.totalDimensionInst.groupAll().get().reduceCount().value()];
 
-      var filters = $injector.get('FilterService').getSOMFilters();
-      $scope.groupNames = _.map(filters, function(f) { return f.id(); } );
       $scope.colorScale = $injector.get('FilterService').getSOMFilterColors();
     }
 
@@ -60,12 +58,10 @@ angular.module('plotter.vis.plotting.classedbarchart',
       $scope.dimensionInst = $scope.dimensionService.classHistogramDimension($scope.window.variables().x);
       $scope.dimension = $scope.dimensionInst.get();
       $scope.groupInst = $scope.dimensionInst.groupDefault();
-
       $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables().x);
       $scope.reduced = $scope.groupInst.get();
       $scope.extent = [0, d3.max($scope.dimension.group().all(), function(d) { return d.value; } )];
 
-      $scope.groupNames = DatasetFactory.getSetNames();
       $scope.colorScale = DatasetFactory.getColorScale();
     }
 
@@ -383,7 +379,6 @@ angular.module('plotter.vis.plotting.classedbarchart',
           size: CLASSED_BARCHART_SIZE,
           extent: $scope.extent,
           filter: $scope.filterSOMSpecial,
-          groupNames: $scope.groupNames,
           colorScale: $scope.colorScale,
           dimension: $scope.dimension,
           reduced: $scope.reduced,
@@ -397,7 +392,6 @@ angular.module('plotter.vis.plotting.classedbarchart',
           size: CLASSED_BARCHART_SIZE,
           extent: $scope.extent,
           filter: $scope.filterDefault,
-          groupNames: $scope.groupNames,
           colorScale: $scope.colorScale,
           dimension: $scope.dimension,
           reduced: $scope.reduced,
