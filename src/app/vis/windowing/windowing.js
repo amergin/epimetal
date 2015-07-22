@@ -7,6 +7,7 @@ angular.module('plotter.vis.windowing', ['services.window', 'services.dataset', 
 
 .constant('EXPORT_PNG_BACKGROUND_COLOR', '#FFFFFF')
 .constant('EXPORT_FILENAME_MAX_LENGTH', 80)
+.constant('GRID_WINDOW_PADDING', 35)
 
 .directive('plGridWindow', function() {
   return {

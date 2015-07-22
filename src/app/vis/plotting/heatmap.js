@@ -8,6 +8,7 @@ angular.module('plotter.vis.plotting.heatmap',
 
 .constant('HEATMAP_WIDTH', 420)
 .constant('HEATMAP_HEIGHT', 350)
+.constant('HEATMAP_COLORBAR_WIDTH', 60)
 .constant('HEATMAP_UNDEFINED_COLOR', '#FFFFFF')
 .constant('HEATMAP_MARGINS', { 
   top: 0,
@@ -16,8 +17,8 @@ angular.module('plotter.vis.plotting.heatmap',
   left: 80
 })
 
-.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService', 'TabService', 'HEATMAP_HEIGHT', 'HEATMAP_WIDTH', 'HEATMAP_MARGINS', 'HEATMAP_UNDEFINED_COLOR',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService, TabService, HEATMAP_HEIGHT, HEATMAP_WIDTH, HEATMAP_MARGINS, HEATMAP_UNDEFINED_COLOR) {
+.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService', 'TabService', 'HEATMAP_MARGINS', 'HEATMAP_UNDEFINED_COLOR', 'GRID_WINDOW_PADDING', 'HEATMAP_COLORBAR_WIDTH',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService, TabService, HEATMAP_MARGINS, HEATMAP_UNDEFINED_COLOR, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH) {
 
     $scope.resetFilter = function() {
       $scope.heatmap.filterAll();
@@ -124,14 +125,13 @@ angular.module('plotter.vis.plotting.heatmap',
       $scope.window.headerText(header);
     };
 
-    $scope.drawHeatmap = function(element, dimension, group, margins, width, height) {
+    $scope.drawHeatmap = function(element, baseElement, dimension, group, margins, colorBarWidth) {
 
-      var _drawLegend = function(element, height) {
+      var _drawLegend = function(element, height, width) {
         var colorScale = d3.scale.linear()
         .domain([-1, 0, 1])
         .range(['blue', 'white', 'red']);
 
-        var width = 60;
         var svg = d3.select(element)
         .append('svg')
         .attr("viewBox", "0 0 " + width + " " + height)
@@ -154,6 +154,9 @@ angular.module('plotter.vis.plotting.heatmap',
 
       $scope.heatmap = dc.heatMap(element[0], constants.groups.heatmap);
 
+      var width = $scope.getWidth(baseElement),
+      height = $scope.getHeight(baseElement);
+
       function labelOrdering(a, b) {
         var grpA = $scope.variablesLookup[a].group.order,
         grpB = $scope.variablesLookup[b].group.order,
@@ -163,8 +166,10 @@ angular.module('plotter.vis.plotting.heatmap',
       }
 
       $scope.heatmap
-      .width(null)
-      .height(null)
+      .width(width)
+      .height(height)
+      // .width(null)
+      // .height(null)
       .margins(margins)
       .turnOffControls()
       .dimension(dimension)
@@ -213,13 +218,13 @@ angular.module('plotter.vis.plotting.heatmap',
             return +d3.select(this).attr('dy') / 2;
           });
         })
-      .on('preRender', function(chart) {
-          // try to hide flickering from renderlet
-          chart.transitionDuration(0);
-        })
-      .on('postRender', function(chart) {
-        chart.transitionDuration(500);
-      })
+      // .on('preRender', function(chart) {
+      //     // try to hide flickering from renderlet
+      //     chart.transitionDuration(0);
+      //   })
+      // .on('postRender', function(chart) {
+      //   chart.transitionDuration(500);
+      // })
       // override default click actions
       .xAxisOnClick( function() {} )
       .yAxisOnClick( function() {} )
@@ -238,7 +243,7 @@ angular.module('plotter.vis.plotting.heatmap',
       $scope.colorScale.linear['initial'] = $scope.heatmap.colorAccessor;
       $scope.doStretch();
       $scope.heatmap.render();
-      $scope.legend = _drawLegend($scope.colorbarAnchor, height);
+      $scope.legend = _drawLegend($scope.colorbarAnchor, height, colorBarWidth);
 
     };
 
@@ -313,10 +318,19 @@ angular.module('plotter.vis.plotting.heatmap',
       $scope.computeVariables(callback);
     }, 0, { maxWait: 600, trailing: true });
 
+    $scope.getHeight = function(ele) {
+      return ele.parent().height() - GRID_WINDOW_PADDING;
+    };
+
+    $scope.getWidth = function(ele) {
+      return ele.parent().width() - Math.ceil( 1.1 * HEATMAP_COLORBAR_WIDTH );
+    };
+
+
 }])
 
-.directive('plHeatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFactory', 'HEATMAP_HEIGHT', 'HEATMAP_WIDTH', 'HEATMAP_MARGINS',
-  function($compile, $rootScope, $timeout, DatasetFactory, HEATMAP_HEIGHT, HEATMAP_WIDTH, HEATMAP_MARGINS) {
+.directive('plHeatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFactory', 'HEATMAP_MARGINS', 'GRID_WINDOW_PADDING', 'HEATMAP_COLORBAR_WIDTH',
+  function($compile, $rootScope, $timeout, DatasetFactory, HEATMAP_MARGINS, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH) {
 
     var linkFn = function($scope, ele, iAttrs) {
 
@@ -370,12 +384,13 @@ angular.module('plotter.vis.plotting.heatmap',
 
       function draw() {
         $scope.drawHeatmap(
-          $scope.heatmapAnchor, 
+          $scope.heatmapAnchor,
+          $scope.element,
           $scope.coordDim, 
           $scope.coordGroup,
           HEATMAP_MARGINS,
-          HEATMAP_WIDTH,
-          HEATMAP_HEIGHT);        
+          HEATMAP_COLORBAR_WIDTH
+          );
       }
 
       function doLookup(variables) {
@@ -395,6 +410,8 @@ angular.module('plotter.vis.plotting.heatmap',
 
       var resizeUnbind = $rootScope.$on('gridster.resize', function(event,$element) {
         if( $element.is( $scope.element.parent() ) ) {
+          $scope.heatmap.width($scope.getWidth($scope.element));
+          $scope.heatmap.height($scope.getHeight($scope.element));
           $scope.heatmap.render();
         }
       });

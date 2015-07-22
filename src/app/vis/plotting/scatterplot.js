@@ -7,8 +7,8 @@ angular.module('plotter.vis.plotting.scatterplot',
 
 .constant('SCATTERPLOT_POOLING_COLOR', 'black')
 
-.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$state', '$rootScope', '$timeout', 'SCATTERPLOT_POOLING_COLOR',
-  function($scope, DatasetFactory, DimensionService, constants, $state, $rootScope, $timeout, SCATTERPLOT_POOLING_COLOR) {
+.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$state', '$rootScope', '$timeout', 'SCATTERPLOT_POOLING_COLOR', 'GRID_WINDOW_PADDING',
+  function($scope, DatasetFactory, DimensionService, constants, $state, $rootScope, $timeout, SCATTERPLOT_POOLING_COLOR, GRID_WINDOW_PADDING) {
 
     $scope.dimensionService = $scope.window.handler().getDimensionService();
     $scope.dimensionInst = $scope.dimensionService.getXYDimension($scope.window.variables());
@@ -358,6 +358,15 @@ angular.module('plotter.vis.plotting.scatterplot',
       }
     };
 
+
+    $scope.getHeight = function(ele) {
+      return ele.height() - GRID_WINDOW_PADDING - 10;
+    };
+
+    $scope.getWidth = function(ele) {
+      return ele.width();
+    };
+
 }])
 
 .directive('plScatterplot', ['$timeout', '$rootScope', 'NotifyService',
@@ -388,13 +397,14 @@ angular.module('plotter.vis.plotting.scatterplot',
         });
       }
 
-      $timeout(function() {
-        $scope.width = ele.width() || 490;
-        $scope.height = ele.height() || 345;
-        $scope.redrawAll();
-        initDropdown();
+      $scope.element.ready(function() {
+        $timeout(function() {
+          $scope.width = $scope.getWidth($scope.element);
+          $scope.height = $scope.getHeight($scope.element);
+          $scope.redrawAll();
+          initDropdown();
+        });
       });
-
 
       NotifyService.addTransient('Scatter plot added', 
         'Scatter plot for ' + '(' + $scope.window.variables().x + ", " + $scope.window.variables().y + ') has been added', 
@@ -413,8 +423,8 @@ angular.module('plotter.vis.plotting.scatterplot',
 
       var resizeUnbind = $rootScope.$on('gridster.resize', function(event, $element) {
         if( $element.is( $scope.element.parent() ) ) {
-          $scope.width = $scope.element.width();
-          $scope.height = $scope.element.height();
+          $scope.width = $scope.getWidth($scope.element);
+          $scope.height = $scope.getHeight($scope.element);
           if( !_($scope.canvases).isEmpty() ) {
             $scope.redrawAll();
           }

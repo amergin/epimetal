@@ -1,17 +1,33 @@
 angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dataset', 'angularSpinner'])
 
-.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'FilterService',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, FilterService) {
+.constant('SOM_PLANE_MARGINS', {
+  top: 20,
+  bottom: 20,
+  right: 30,
+  left: 30
+})
+
+.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'FilterService', 'GRID_WINDOW_PADDING',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, FilterService, GRID_WINDOW_PADDING) {
+
+    $scope.getHeight = function(ele) {
+      return ele.height();
+    };
+
+    $scope.getWidth = function(ele) {
+      return ele.width();
+    };
 
     $scope.redraw = function() {
       // remove previous
       $scope.element.empty();
 
-      $scope.drawSOMPlane(
-        $scope.window.extra().plane, 
-        $scope.element, 
-        $scope.width, 
-        $scope.height);
+      $scope.drawSOMPlane({
+        plane: $scope.window.extra().plane,
+        element: $scope.element,
+        width: $scope.width,
+        height: $scope.height
+      });
     };
 
     $scope.$watch(function() {
@@ -39,7 +55,13 @@ angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dat
       FilterService.updateCircleFilters();
     };
 
-    $scope.drawSOMPlane = function(plane, element, width, height) {
+    $scope.drawSOMPlane = function(config) { //plane, element, width, height, margins) {
+
+      var plane = config.plane,
+      element = config.element,
+      margin = config.margin,
+      width = config.width - (margin.left + margin.right),
+      height = config.height - (margin.top + margin.bottom);
 
       var labelFormat = d3.format('.2f');
 
@@ -63,19 +85,9 @@ angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dat
       //   .style("fill-opacity", 1);
       // }
 
-      //svg sizes and margins
-      var margin = {
-        top: 10,
-        bottom: 10,
-        right: 30,
-        left: 30
-      };
-
       //The number of columns and rows of the heatmap
       var MapColumns = plane.size.n;
       var MapRows = plane.size.m;
-      // var MapColumns = 9,
-      //   MapRows = 7;
 
       //The maximum radius the hexagons can have to still fit the screen
       var hexRadius = d3.min([width / ((MapColumns + 0.5) * Math.sqrt(3)),
@@ -109,12 +121,15 @@ angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dat
       } //for i
 
       //Create SVG element
-      var svg = d3.select(element[0]).append('svg')
+      var svg = d3.select(element[0])
+      .append('svg')
       .attr('xmlns', "http://www.w3.org/2000/svg")
-      .attr("viewBox", "0 0 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom) )
-      .attr("preserveAspectRatio", "xMidYMid meet")
-      .attr("width", "100%")
-      .attr("height", "100%")
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      // .attr("viewBox", "0 0 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom) )
+      // .attr("preserveAspectRatio", "xMidYMid meet")
+      // .attr("width", "100%")
+      // .attr("height", "100%")
       .attr('x',0)
       .attr('y',0);
 
@@ -396,9 +411,9 @@ angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dat
     };
   }])
 
-.directive('plSomplane', [ '$rootScope', 'SOMService', 'NotifyService',
+.directive('plSomplane', [ '$rootScope', 'SOMService', 'NotifyService', '$timeout', 'SOM_PLANE_MARGINS',
 
-  function($rootScope, SOMService, NotifyService) {
+  function($rootScope, SOMService, NotifyService, $timeout, SOM_PLANE_MARGINS) {
 
     var linkFn = function($scope, ele, iAttrs) {
 
@@ -424,11 +439,10 @@ angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dat
 
       }
 
-      // $scope.$parent.element = ele;
       $scope.element = ele;
 
-      $scope.width = ele.parent().width(); //455;
-      $scope.height = ele.parent().height(); //360;
+      $scope.width = $scope.getWidth($scope.element);
+      $scope.height = $scope.getHeight($scope.element);
 
       $scope.deregisters = [];
 
@@ -463,13 +477,19 @@ angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dat
         $scope.$destroy();
       });
 
-      $scope.drawSOMPlane(
-        $scope.window.extra().plane, 
-        $scope.element,
-        $scope.width, 
-        $scope.height);
+      $scope.element.ready(function() {
+        $timeout(function() {
+          $scope.drawSOMPlane({
+            plane: $scope.window.extra().plane,
+            element: $scope.element,
+            width: $scope.width,
+            height: $scope.height,
+            margin: SOM_PLANE_MARGINS
+          });
+          initDropdown();
+        });
+      });
 
-      initDropdown();
     };
 
     return {

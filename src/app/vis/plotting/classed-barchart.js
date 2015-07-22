@@ -13,8 +13,8 @@ angular.module('plotter.vis.plotting.classedbarchart',
   aspectRatio: 'stretch'
 })
 
-.controller('ClassedBarChartPlotController', ['$scope', 'DimensionService', 'DatasetFactory', 'constants', '$injector', '$timeout', 'FilterService',
-  function ClassedBarChartPlotController($scope, DimensionService, DatasetFactory, constants, $injector, $timeout, FilterService) {
+.controller('ClassedBarChartPlotController', ['$scope', 'DimensionService', 'DatasetFactory', 'constants', '$injector', '$timeout', 'FilterService', 'GRID_WINDOW_PADDING',
+  function ClassedBarChartPlotController($scope, DimensionService, DatasetFactory, constants, $injector, $timeout, FilterService, GRID_WINDOW_PADDING) {
 
     $scope.dimensionService = $scope.window.handler().getDimensionService();
 
@@ -179,6 +179,14 @@ angular.module('plotter.vis.plotting.classedbarchart',
       };
     };
 
+    $scope.getHeight = function(ele) {
+      return ele.height() - GRID_WINDOW_PADDING;
+    };
+
+    $scope.getWidth = function(ele) {
+      return ele.width();
+    };
+
     $scope.drawSOMSpecial = function(config) {
       var resizeSVG = function(chart) {
         var ratio = config.size.aspectRatio === 'stretch' ? 'none' : 'xMinYMin';
@@ -190,7 +198,13 @@ angular.module('plotter.vis.plotting.classedbarchart',
       };
 
       var plainchart = function() {
-        $scope.chart = dc.rowChart(config.element, config.chartGroup)
+        $scope.chart = dc.rowChart(config.element[0], config.chartGroup)
+        .margins({
+          top: 0,
+          right: 20,
+          bottom: 40,
+          left: 20
+        })
         .elasticX(true)
         .label(function(d) {
           var name = _.capitalize(d.key.name),
@@ -208,8 +222,10 @@ angular.module('plotter.vis.plotting.classedbarchart',
         })
         .renderTitleLabel(false)
         .titleLabelOffsetX(5)
-        .width(config.size.width)
-        .height(config.size.height)
+        .width($scope.getWidth(config.element))
+        .height($scope.getHeight(config.element))
+        // .width(config.size.width)
+        // .height(config.size.height)
         .x(d3.scale.linear().domain(config.extent))
         .renderLabel(true)
         .dimension(config.dimension)
@@ -221,8 +237,8 @@ angular.module('plotter.vis.plotting.classedbarchart',
           return d.value.count;
         })
         .colors(config.colorScale)
-        .on("postRender", resizeSVG)
-        .on("postRedraw", resizeSVG)
+        // .on("postRender", resizeSVG)
+        // .on("postRedraw", resizeSVG)
         .ordering(function(d) {
           return d.value.type == 'total' ? 'total|' : d.value.circle.id() + "|" + d.key.name;
         });
@@ -248,8 +264,14 @@ angular.module('plotter.vis.plotting.classedbarchart',
       };
 
       var plainchart = function() {
-        $scope.chart = dc.rowChart(config.element, config.chartGroup)
+        $scope.chart = dc.rowChart(config.element[0], config.chartGroup)
         // .gap(10)
+        .margins({
+          top: 0,
+          right: 20,
+          bottom: 40,
+          left: 20
+        })
         .elasticX(true)
         .label(function(d) {
           var name = _.capitalize(d.key.name);
@@ -262,8 +284,10 @@ angular.module('plotter.vis.plotting.classedbarchart',
         })
         .renderTitleLabel(false)
         .titleLabelOffsetX(5)
-        .width(config.size.width)
-        .height(config.size.height)
+        .width($scope.getWidth(config.element))
+        .height($scope.getHeight(config.element))
+        // .width(config.size.width)
+        // .height(config.size.height)
         .x(d3.scale.linear().domain(config.extent))
         .renderLabel(true)
         .dimension(config.dimension)
@@ -275,8 +299,8 @@ angular.module('plotter.vis.plotting.classedbarchart',
           return d.value.counts[d.key.dataset];
         })
         .colors(config.colorScale)
-        .on("postRender", resizeSVG)
-        .on("postRedraw", resizeSVG)
+        // .on("postRender", resizeSVG)
+        // .on("postRedraw", resizeSVG)
         .addFilterHandler(function(filters, filter) {
           function defaultFn(filters, filter) {
             filters.push(filter);
@@ -341,9 +365,9 @@ angular.module('plotter.vis.plotting.classedbarchart',
 
 }])
 
-.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$injector', 'CLASSED_BARCHART_SIZE',
+.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$injector', 'CLASSED_BARCHART_SIZE', 'GRID_WINDOW_PADDING',
 
-  function(constants, $timeout, $rootScope, $injector, CLASSED_BARCHART_SIZE) {
+  function(constants, $timeout, $rootScope, $injector, CLASSED_BARCHART_SIZE, GRID_WINDOW_PADDING) {
     function postLink($scope, ele, attrs, ctrl) {
 
       function initDropdown() {
@@ -375,7 +399,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
       if($scope.isSpecial()) {
         drawFunction = $scope.drawSOMSpecial;
         config = {
-          element: ele[0],
+          element: $scope.element,
           size: CLASSED_BARCHART_SIZE,
           extent: $scope.extent,
           filter: $scope.filterSOMSpecial,
@@ -388,7 +412,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
 
       } else {
         config = {
-          element: ele[0],
+          element: $scope.element,
           size: CLASSED_BARCHART_SIZE,
           extent: $scope.extent,
           filter: $scope.filterDefault,
@@ -401,16 +425,24 @@ angular.module('plotter.vis.plotting.classedbarchart',
         drawFunction = $scope.drawDefault;
       }
 
-      $timeout(function() {
-        drawFunction(config);
-        $scope.chart.render();
-        initDropdown();
+      $scope.element.ready(function() {
+        $timeout(function() {
+          drawFunction(config);
+          $scope.chart.render();
+          initDropdown();
+        });
       });
-
 
       $scope.deregisters = [];
 
       var resizeUnbind = $rootScope.$on('gridster.resize', function(event,$element) {
+        if( $element.is( $scope.element.parent() ) ) {
+          var width = $scope.getWidth($scope.element),
+          height = $scope.getHeight($scope.element);
+          $scope.chart.width(width);
+          $scope.chart.height(height);
+          $scope.chart.render();
+        }
       });
 
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {

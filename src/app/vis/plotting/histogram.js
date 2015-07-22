@@ -12,8 +12,8 @@ angular.module('plotter.vis.plotting.histogram',
 .constant('HISTOGRAM_POOLING_COLOR', '#000000')
 .constant('HISTOGRAM_SOM_TOTAL_COLOR', '#00b300')
 
-.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR',
-  function HistogramPlotController($scope, $rootScope, DatasetFactory, constants, $state, $injector, $timeout, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR) {
+.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR', 'GRID_WINDOW_PADDING',
+  function HistogramPlotController($scope, $rootScope, DatasetFactory, constants, $state, $injector, $timeout, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, GRID_WINDOW_PADDING) {
 
     $scope.isSpecial = function() {
       return $scope.window.extra().somSpecial || false;
@@ -203,17 +203,22 @@ angular.module('plotter.vis.plotting.histogram',
       };
     };
 
+    $scope.getHeight = function(ele) {
+      return ele.height() - GRID_WINDOW_PADDING;
+    };
+
+    $scope.getWidth = function(ele) {
+      return ele.width();
+    };
+
   }
   ])
 
-.directive('plHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR', 'HISTOGRAM_SOM_TOTAL_COLOR',
+.directive('plHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR', 'HISTOGRAM_SOM_TOTAL_COLOR', 'GRID_WINDOW_PADDING',
 
-  function(constants, $timeout, $rootScope, $injector, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, HISTOGRAM_SOM_TOTAL_COLOR) {
+  function(constants, $timeout, $rootScope, $injector, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, HISTOGRAM_SOM_TOTAL_COLOR, GRID_WINDOW_PADDING) {
 
     var createSVG = function($scope, config) {
-      // check css window rules before touching these
-      var _width = 470;
-      var _height = 345;
       var _xBarWidth = 50;
 
       // collect charts here
@@ -231,13 +236,15 @@ angular.module('plotter.vis.plotting.histogram',
           // don't redraw here, or it will form a feedback loop
       };
 
-        var dcGroup = $scope.isSpecial() ? constants.groups.histogram.nonInteractive : constants.groups.histogram.interactive;
+      var dcGroup = $scope.isSpecial() ? constants.groups.histogram.nonInteractive : constants.groups.histogram.interactive;
 
       // 1. create composite chart
       $scope.histogram = dc.compositeChart(config.element[0], dcGroup)
       .dimension(config.dimension)
-      .width(HISTOGRAM_WIDTH)
-      .height(HISTOGRAM_HEIGHT)
+      .width( $scope.getWidth(config.element) )
+      .height( $scope.getHeight(config.element) )
+      // .width(HISTOGRAM_WIDTH)
+      // .height(HISTOGRAM_HEIGHT)
       .shareColors(true)
       .elasticY(true)
       .elasticX(false)
@@ -323,9 +330,9 @@ angular.module('plotter.vis.plotting.histogram',
           .attr("class", 'bar pooled')
           .attr("fill", HISTOGRAM_POOLING_COLOR);
         }
-      })
-      .on("postRender", resizeSVG)
-      .on("postRedraw", resizeSVG);
+      });
+      // .on("postRender", resizeSVG)
+      // .on("postRedraw", resizeSVG);
 
       // set x axis format
       $scope.histogram
@@ -423,7 +430,6 @@ angular.module('plotter.vis.plotting.histogram',
         element: ele,
         variableX: $scope.window.variables().x,
         noBins: $scope.noBins,
-        // size: $scope.window.size,
         extent: $scope.extent,
         binWidth: $scope.binWidth,
         groups: $scope.groups,
@@ -434,9 +440,11 @@ angular.module('plotter.vis.plotting.histogram',
         filterEnabled: $scope.window.extra().filterEnabled
       };
 
-      $timeout( function() {
-        createSVG($scope, config);
-        initDropdown();
+      $scope.element.ready(function() {
+        $timeout(function() {
+          createSVG($scope, config);
+          initDropdown();
+        });
       });
 
       $scope.deregisters = [];
@@ -533,11 +541,13 @@ angular.module('plotter.vis.plotting.histogram',
       });
 
       var resizeUnbind = $rootScope.$on('gridster.resize', function(eve, $element) {
-        // if( $element.is( $scope.$parent.element.parent() ) ) {
-        //   $timeout( function() {
-        //     $scope.histogram.render();
-        //   });
-        // }
+        if( $element.is( $scope.element.parent() ) ) {
+          var width = $scope.getWidth($scope.element),
+          height = $scope.getHeight($scope.element);
+          $scope.histogram.width(width);
+          $scope.histogram.height(height);
+          $scope.histogram.render();
+        }
       });
 
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
