@@ -22,6 +22,15 @@ angular.module('services.tab', [])
       updateFilterService(rootName);
     }
 
+    $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
+
+      if(fromState.name == 'vis.explore') {
+        // exit from explore resets all current filters
+        $injector.get('FilterService').resetFilters({ spareSOM: true });
+      }
+
+    });
+
     // listen on tab changes
     $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
       console.log("tab change: ", fromState.name, " -> ", toState.name);
@@ -35,10 +44,6 @@ angular.module('services.tab', [])
         checkRegressionState();
       }
 
-      if(fromState.name == 'vis.explore') {
-        // exit from explore resets all current filters
-        $injector.get('FilterService').resetFilters({ spareSOM: true });
-      }
     });
 
     function checkDefaultPlanes() {
