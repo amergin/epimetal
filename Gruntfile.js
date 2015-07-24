@@ -11,16 +11,13 @@ module.exports = function ( grunt ) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-coffee');
+  grunt.loadNpmTasks('grunt-contrib-less');
   grunt.loadNpmTasks('grunt-conventional-changelog');
   grunt.loadNpmTasks('grunt-bump');
   grunt.loadNpmTasks('grunt-coffeelint');
-  grunt.loadNpmTasks('grunt-contrib-less');
   grunt.loadNpmTasks('grunt-karma');
-  grunt.loadNpmTasks('grunt-ngmin');
+  grunt.loadNpmTasks('grunt-ng-annotate');
   grunt.loadNpmTasks('grunt-html2js');
-
-  grunt.file.defaultEncoding = 'utf-8';
-  grunt.file.preserveBOM = true;
 
   /**
    * Load in our build configuration file.
@@ -142,12 +139,28 @@ module.exports = function ( grunt ) {
           }
         ]
       },
+      build_vendorcss: {
+        files: [
+          {
+            src: [ '<%= vendor_files.css %>' ],
+            dest: '<%= build_dir %>/',
+            cwd: '.',
+            expand: true
+          }
+        ]
+      },
       compile_assets: {
         files: [
           {
             src: [ '**' ],
             dest: '<%= compile_dir %>/assets',
             cwd: '<%= build_dir %>/assets',
+            expand: true
+          },
+          {
+            src: [ '<%= vendor_files.css %>' ],
+            dest: '<%= compile_dir %>/',
+            cwd: '.',
             expand: true
           }
         ]
@@ -210,10 +223,10 @@ module.exports = function ( grunt ) {
     },
 
     /**
-     * `ng-min` annotates the sources before minifying. That is, it allows us
+     * `ngAnnotate` annotates the sources before minifying. That is, it allows us
      * to code without the array syntax.
      */
-    ngmin: {
+    ngAnnotate: {
       compile: {
         files: [
           {
@@ -243,7 +256,7 @@ module.exports = function ( grunt ) {
     /**
      * `grunt-contrib-less` handles our LESS compilation and uglification automatically.
      * Only our `main.less` file is included in compilation; all other files
-     * must be imported from this file. For further options see https://github.com/gruntjs/grunt-contrib-less
+     * must be imported from this file.
      */
     less: {
       build: {
@@ -252,12 +265,12 @@ module.exports = function ( grunt ) {
         }
       },
       compile: {
+        files: {
+          '<%= build_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.css': '<%= app_files.less %>'
+        },
         options: {
           cleancss: true,
           compress: true
-        },
-        files: {
-          '<%= build_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.css': '<%= app_files.less %>'
         }
       }
     },
@@ -288,6 +301,7 @@ module.exports = function ( grunt ) {
         sub: true,
         boss: true,
         eqnull: true,
+        esnext: false,
         // for 3rd party d3 code
         onevar: false
       },
@@ -350,7 +364,7 @@ module.exports = function ( grunt ) {
         configFile: '<%= build_dir %>/karma-unit.js'
       },
       unit: {
-        runnerPort: 9101,
+        port: 9019,
         background: true
       },
       continuous: {
@@ -476,7 +490,7 @@ module.exports = function ( grunt ) {
         files: [ 
           'src/assets/**/*'
         ],
-        tasks: [ 'copy:build_assets' ]
+        tasks: [ 'copy:build_app_assets', 'copy:build_vendor_assets' ]
       },
 
       /**
@@ -559,7 +573,7 @@ module.exports = function ( grunt ) {
   grunt.registerTask( 'build', [
     'clean', 'html2js', 'jshint', 'coffeelint', 'coffee', 'less:build',
     'concat:build_css', 'copy:build_app_assets', 'copy:build_vendor_assets',
-    'copy:build_appjs', 'copy:build_vendorjs', 'index:build', 'karmaconfig',
+    'copy:build_appjs', 'copy:build_vendorjs', 'copy:build_vendorcss', 'index:build', 'karmaconfig',
     'karma:continuous' 
   ]);
 
@@ -568,7 +582,7 @@ module.exports = function ( grunt ) {
    * minifying your code.
    */
   grunt.registerTask( 'compile', [
-    'less:compile', 'concat:build_css', 'copy:compile_assets', 'ngmin', 'concat:compile_js', 'uglify', 'index:compile'
+    'less:compile', 'copy:compile_assets', 'ngAnnotate', 'concat:compile_js', 'uglify', 'index:compile'
   ]);
 
   /**
@@ -581,12 +595,11 @@ module.exports = function ( grunt ) {
   }
 
   /**
-   * A utility function to get all app CSS sources. Accept only files that contain
-   * '.css' substring and do not contain 'vendor' substring
+   * A utility function to get all app CSS sources.
    */
   function filterForCSS ( files ) {
     return files.filter( function ( file ) {
-      return file.match(/^(?=.*.css)((?!vendor).)*$/);
+      return file.match( /\.css$/ );
     });
   }
 

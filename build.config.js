@@ -76,7 +76,7 @@ module.exports = {
       'vendor/angular-ui-router/release/angular-ui-router.js',
       'vendor/ui-router-extras/release/ct-ui-router-extras.js',
       'vendor/angular-ui-utils/modules/route/route.js',
-      'vendor/crossfilter/crossfilter.new.js',
+      'vendor/crossfilter/crossfilter.js',
       'vendor/d3/d3.js',
       'vendor/dcjs/dc.js',
       'vendor/d3-tip/index.js',
@@ -92,8 +92,7 @@ module.exports = {
       'vendor/spin.js/spin.js',
       'vendor/angular-spinner/angular-spinner.min.js',
       // customize this for release:
-      // 'vendor/angular-bootstrap/custom/ui-bootstrap-custom-tpls-0.12.1.js',
-      'vendor/angular-bootstrap/custom2/ui-bootstrap-custom-tpls-0.13.0.js',
+      'vendor/angular-bootstrap/custom-build/ui-bootstrap-custom-tpls-0.13.0.js',
       'vendor/paralleljs/lib/parallel.js',
       'vendor/numericjs/lib/numeric.min.js',
       'vendor/angular-growl-2/build/angular-growl.js',
