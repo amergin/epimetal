@@ -421,15 +421,29 @@ angular.module('plotter.vis.plotting.scatterplot',
         $scope.initGroup();
       });
 
-      var resizeUnbind = $rootScope.$on('gridster.resize', function(event, $element) {
-        if( $element.is( $scope.element.parent() ) ) {
-          $scope.width = $scope.getWidth($scope.element);
-          $scope.height = $scope.getHeight($scope.element);
-          if( !_($scope.canvases).isEmpty() ) {
-            $scope.redrawAll();
-          }
+      function setResize() {
+        function setSize() {
+          $scope.size = angular.copy($scope.window.size()); 
         }
-      });
+
+        var resizeUnbind = $scope.$on('gridster-item-transition-end', function(item) {
+          function gridSizeSame() {
+            return _.isEqual($scope.size, $scope.window.size());
+          }
+          if(!gridSizeSame()) {
+            $scope.width = $scope.getWidth($scope.element);
+            $scope.height = $scope.getHeight($scope.element);
+            if( !_($scope.canvases).isEmpty() ) {
+              $scope.redrawAll();
+            }
+            setSize();
+          }
+        });
+
+        setSize();
+        $scope.deregisters.push(resizeUnbind);
+      }
+      setResize();
 
       var redrawUnbind =  $rootScope.$on('window-handler.redraw', function(event, winHandler) {
         if( winHandler == $scope.window.handler() ) {
