@@ -204,11 +204,11 @@ angular.module('plotter.vis.plotting.histogram',
     };
 
     $scope.getHeight = function(ele) {
-      return ele.height() - GRID_WINDOW_PADDING;
+      return _.max([ele.height() - GRID_WINDOW_PADDING, 150]);
     };
 
     $scope.getWidth = function(ele) {
-      return ele.width();
+      return _.max([ele.width(), 150]);
     };
 
   }
@@ -243,7 +243,7 @@ angular.module('plotter.vis.plotting.histogram',
       .dimension(config.dimension)
       .width( $scope.getWidth(config.element) )
       .height( $scope.getHeight(config.element) )
-      .transitionDuration(0)
+      .transitionDuration(250)
       // .width(HISTOGRAM_WIDTH)
       // .height(HISTOGRAM_HEIGHT)
       .shareColors(true)
@@ -257,7 +257,9 @@ angular.module('plotter.vis.plotting.histogram',
         ].join("\n");
       })
       .x(d3.scale.linear().domain(config.extent).range([0, config.noBins]))
-      .xUnits( function() { return _xBarWidth; } )
+      .xUnits(function(low, high) {
+        return 45;
+      })
       .margins({
         top: 15,
         right: 10,
@@ -541,6 +543,19 @@ angular.module('plotter.vis.plotting.histogram',
         }
       });
 
+      function renderWithNewDimensions() {
+        function setSize() {
+          $scope.size = angular.copy($scope.window.size()); 
+        }
+
+        var width = $scope.getWidth($scope.element),
+        height = $scope.getHeight($scope.element);
+        $scope.histogram.width(width);
+        $scope.histogram.height(height);
+        $scope.histogram.render();
+        setSize();
+      }
+
       function setResize() {
         function setSize() {
           $scope.size = angular.copy($scope.window.size()); 
@@ -551,12 +566,7 @@ angular.module('plotter.vis.plotting.histogram',
             return _.isEqual($scope.size, $scope.window.size());
           }
           if(!gridSizeSame()) {
-            var width = $scope.getWidth($scope.element),
-            height = $scope.getHeight($scope.element);
-            $scope.histogram.width(width);
-            $scope.histogram.height(height);
-            $scope.histogram.render();
-            setSize();
+            renderWithNewDimensions();
           }
         });
 
@@ -565,6 +575,18 @@ angular.module('plotter.vis.plotting.histogram',
       }
 
       setResize();
+
+      function setResizeElement() {
+        var renderThr = _.debounce(function() {
+          renderWithNewDimensions();
+        }, 150, { leading: false, trailing: true });
+
+        var resizeUnbind = $scope.$on('gridster-resized', function(sizes, gridster) {
+          renderThr();
+        });
+      }
+
+      setResizeElement();
 
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
         if( winHandler == $scope.window.handler() ) {

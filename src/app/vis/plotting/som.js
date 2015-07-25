@@ -267,7 +267,7 @@ angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dat
 
         };
 
-        var resolveArea = _.debounce( resolveAreaCells, 400 );
+        var resolveArea = _.debounce(resolveAreaCells, 400, { leading: false, trailing: true });
 
         var innerDragMove = function(d) {
           var x = Math.max(0, Math.min(width -margin.left - margin.right + d.r, d3.event.x)),

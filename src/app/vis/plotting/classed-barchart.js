@@ -444,19 +444,27 @@ angular.module('plotter.vis.plotting.classedbarchart',
           function gridSizeSame() {
             return _.isEqual($scope.size, $scope.window.size());
           }
-          var width = $scope.getWidth($scope.element),
-          height = $scope.getHeight($scope.element);
           if(!gridSizeSame()) {
-            $scope.chart.width(width);
-            $scope.chart.height(height);
-            $scope.chart.render();
-
-            setSize();
+            renderWithNewDimensions();
           }
         });
 
         setSize();
         $scope.deregisters.push(resizeUnbind);
+      }
+
+      function renderWithNewDimensions() {
+        function setSize() {
+          $scope.size = angular.copy($scope.window.size()); 
+        }
+        var width = $scope.getWidth($scope.element),
+        height = $scope.getHeight($scope.element);
+
+        $scope.chart.width(width);
+        $scope.chart.height(height);
+        $scope.chart.render();
+
+        setSize();
       }
 
       function setRerender() {
@@ -474,6 +482,16 @@ angular.module('plotter.vis.plotting.classedbarchart',
           }
         });
         $scope.deregisters.push(reRenderUnbind);
+      }
+
+      function setResizeElement() {
+        var renderThr = _.debounce(function() {
+          renderWithNewDimensions();
+        }, 150, { leading: false, trailing: true });
+
+        var resizeUnbind = $scope.$on('gridster-resized', function(sizes, gridster) {
+          renderThr();
+        });
       }
 
       function setRedraw() {
@@ -498,6 +516,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
       setRerender();
       setRedraw();
       setState();
+      setResizeElement();
 
       $scope.$on('$destroy', function() {
         console.log("destroying histogram for", $scope.window.variables.x);

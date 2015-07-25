@@ -432,14 +432,14 @@ angular.module('services.window', ['angularSpinner', 'ui.router.state'])
         _.each(visibles, function(hand) {
           hand.rerenderAll(config);
         });
-      }),
+      }, 1000, { leading: false, trailing: true }),
 
       redrawVisible: _.debounce(function() {
         var visibles = this.getVisible();
         _.each( visibles, function(hand) {
           hand.redrawAll();
         });
-      }),
+      }, 1000, { leading: false, trailing: true }),
       
       getVisible: function() {
         var res = [];

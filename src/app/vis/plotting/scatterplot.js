@@ -421,6 +421,19 @@ angular.module('plotter.vis.plotting.scatterplot',
         $scope.initGroup();
       });
 
+      function renderWithNewDimensions() {
+        function setSize() {
+          $scope.size = angular.copy($scope.window.size()); 
+        }
+
+        $scope.width = $scope.getWidth($scope.element);
+        $scope.height = $scope.getHeight($scope.element);
+        if( !_($scope.canvases).isEmpty() ) {
+          $scope.redrawAll();
+        }
+        setSize();
+      }
+
       function setResize() {
         function setSize() {
           $scope.size = angular.copy($scope.window.size()); 
@@ -431,12 +444,7 @@ angular.module('plotter.vis.plotting.scatterplot',
             return _.isEqual($scope.size, $scope.window.size());
           }
           if(!gridSizeSame()) {
-            $scope.width = $scope.getWidth($scope.element);
-            $scope.height = $scope.getHeight($scope.element);
-            if( !_($scope.canvases).isEmpty() ) {
-              $scope.redrawAll();
-            }
-            setSize();
+            renderWithNewDimensions();
           }
         });
 
@@ -444,6 +452,18 @@ angular.module('plotter.vis.plotting.scatterplot',
         $scope.deregisters.push(resizeUnbind);
       }
       setResize();
+
+      function setResizeElement() {
+        var renderThr = _.debounce(function() {
+          renderWithNewDimensions();
+        }, 150, { leading: false, trailing: true });
+
+        var resizeUnbind = $scope.$on('gridster-resized', function(sizes, gridster) {
+          renderThr();
+        });
+      }
+
+      setResizeElement();
 
       var redrawUnbind =  $rootScope.$on('window-handler.redraw', function(event, winHandler) {
         if( winHandler == $scope.window.handler() ) {
@@ -492,7 +512,7 @@ angular.module('plotter.vis.plotting.scatterplot',
         callback(retObj);
       });
 
-      $scope.deregisters.push(reRenderUnbind, redrawUnbind, resizeUnbind, gatherStateUnbind, derivedAddUnbind, derivedRemoveUnbind);
+      $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind, derivedAddUnbind, derivedRemoveUnbind);
 
       $scope.$on('$destroy', function() {
         _.each($scope.deregisters, function(unbindFn) {

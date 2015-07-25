@@ -267,7 +267,6 @@ angular.module('plotter.vis.plotting.heatmap',
         var bonferroni = 0.5 * variables.length * (variables.length - 1);
         $scope.limit = 0.05 / bonferroni;
         $scope.limitDisp = $scope.format($scope.limit);
-        console.log("limitdisp =======", $scope.limitDisp);
         $scope.window.modifyDropdown('correlation', 'limit', $scope.limitDisp, $scope.limitDisp);
         $scope.updateHeader();
 
@@ -409,6 +408,17 @@ angular.module('plotter.vis.plotting.heatmap',
 
       $scope.deregisters = [];
 
+      function renderWithNewDimensions() {
+        function setSize() {
+          $scope.size = angular.copy($scope.window.size()); 
+        }
+
+        $scope.heatmap.width($scope.getWidth($scope.element));
+        $scope.heatmap.height($scope.getHeight($scope.element));
+        $scope.heatmap.render();
+        setSize();
+      }
+
       function setResize() {
         function setSize() {
           $scope.size = angular.copy($scope.window.size()); 
@@ -419,10 +429,7 @@ angular.module('plotter.vis.plotting.heatmap',
             return _.isEqual($scope.size, $scope.window.size());
           }
           if(!gridSizeSame()) {
-            $scope.heatmap.width($scope.getWidth($scope.element));
-            $scope.heatmap.height($scope.getHeight($scope.element));
-            $scope.heatmap.render();
-            setSize();
+            renderWithNewDimensions();
           }
         });
 
@@ -431,6 +438,18 @@ angular.module('plotter.vis.plotting.heatmap',
       }
 
       setResize();
+
+      function setResizeElement() {
+        var renderThr = _.debounce(function() {
+          renderWithNewDimensions();
+        }, 150, { leading: false, trailing: true });
+
+        var resizeUnbind = $scope.$on('gridster-resized', function(sizes, gridster) {
+          renderThr();
+        });
+      }
+
+      setResizeElement();
 
       var reRenderUnbind =  $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
         function doRedraw() {
