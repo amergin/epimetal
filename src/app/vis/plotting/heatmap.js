@@ -170,6 +170,7 @@ angular.module('plotter.vis.plotting.heatmap',
       .height(height)
       // .width(null)
       // .height(null)
+      .transitionDuration(0)
       .margins(margins)
       .turnOffControls()
       .dimension(dimension)
@@ -408,13 +409,28 @@ angular.module('plotter.vis.plotting.heatmap',
 
       $scope.deregisters = [];
 
-      var resizeUnbind = $rootScope.$on('gridster.resize', function(event,$element) {
-        if( $element.is( $scope.element.parent() ) ) {
-          $scope.heatmap.width($scope.getWidth($scope.element));
-          $scope.heatmap.height($scope.getHeight($scope.element));
-          $scope.heatmap.render();
+      function setResize() {
+        function setSize() {
+          $scope.size = angular.copy($scope.window.size()); 
         }
-      });
+
+        var resizeUnbind = $scope.$on('gridster-item-transition-end', function(item) {
+          function gridSizeSame() {
+            return _.isEqual($scope.size, $scope.window.size());
+          }
+          if(!gridSizeSame()) {
+            $scope.heatmap.width($scope.getWidth($scope.element));
+            $scope.heatmap.height($scope.getHeight($scope.element));
+            $scope.heatmap.render();
+            setSize();
+          }
+        });
+
+        setSize();
+        $scope.deregisters.push(resizeUnbind);
+      }
+
+      setResize();
 
       var reRenderUnbind =  $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
         function doRedraw() {
@@ -460,7 +476,7 @@ angular.module('plotter.vis.plotting.heatmap',
         callback(retObj);
       });
 
-      $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind, gatherStateUnbind);
+      $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind);
 
       $scope.$on('$destroy', function() {
         _.each($scope.deregisters, function(unbindFn) {

@@ -243,6 +243,7 @@ angular.module('plotter.vis.plotting.histogram',
       .dimension(config.dimension)
       .width( $scope.getWidth(config.element) )
       .height( $scope.getHeight(config.element) )
+      .transitionDuration(0)
       // .width(HISTOGRAM_WIDTH)
       // .height(HISTOGRAM_HEIGHT)
       .shareColors(true)
@@ -540,15 +541,30 @@ angular.module('plotter.vis.plotting.histogram',
         }
       });
 
-      var resizeUnbind = $rootScope.$on('gridster.resize', function(eve, $element) {
-        if( $element.is( $scope.element.parent() ) ) {
-          var width = $scope.getWidth($scope.element),
-          height = $scope.getHeight($scope.element);
-          $scope.histogram.width(width);
-          $scope.histogram.height(height);
-          $scope.histogram.render();
+      function setResize() {
+        function setSize() {
+          $scope.size = angular.copy($scope.window.size()); 
         }
-      });
+
+        var resizeUnbind = $scope.$on('gridster-item-transition-end', function(item) {
+          function gridSizeSame() {
+            return _.isEqual($scope.size, $scope.window.size());
+          }
+          if(!gridSizeSame()) {
+            var width = $scope.getWidth($scope.element),
+            height = $scope.getHeight($scope.element);
+            $scope.histogram.width(width);
+            $scope.histogram.height(height);
+            $scope.histogram.render();
+            setSize();
+          }
+        });
+
+        setSize();
+        $scope.deregisters.push(resizeUnbind);
+      }
+
+      setResize();
 
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
         if( winHandler == $scope.window.handler() ) {
@@ -584,7 +600,7 @@ angular.module('plotter.vis.plotting.histogram',
       var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
       });
 
-      $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind, gatherStateUnbind, derivedAddUnbind, derivedRemoveUnbind, somFilterRemovedUnbind, somFilterAddedUnbind);
+      $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind, derivedAddUnbind, derivedRemoveUnbind, somFilterRemovedUnbind, somFilterAddedUnbind);
 
       $scope.$on('$destroy', function() {
         console.log("destroying histogram for", $scope.window.variables.x);

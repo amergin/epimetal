@@ -435,42 +435,69 @@ angular.module('plotter.vis.plotting.classedbarchart',
 
       $scope.deregisters = [];
 
-      var resizeUnbind = $rootScope.$on('gridster.resize', function(event,$element) {
-        if( $element.is( $scope.element.parent() ) ) {
+      function setResize() {
+        function setSize() {
+          $scope.size = angular.copy($scope.window.size()); 
+        }
+
+        var resizeUnbind = $scope.$on('gridster-item-transition-end', function(item) {
+          function gridSizeSame() {
+            return _.isEqual($scope.size, $scope.window.size());
+          }
           var width = $scope.getWidth($scope.element),
           height = $scope.getHeight($scope.element);
-          $scope.chart.width(width);
-          $scope.chart.height(height);
-          $scope.chart.render();
-        }
-      });
+          if(!gridSizeSame()) {
+            $scope.chart.width(width);
+            $scope.chart.height(height);
+            $scope.chart.render();
 
-      var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
-        if( winHandler == $scope.window.handler() ) {
+            setSize();
+          }
+        });
 
-          $timeout(function() {
-            if($scope.isSpecial()) {
-              $scope.chart.group($scope.filterSOMSpecial($scope.reduced));
-            } else {
-              $scope.chart.group($scope.filterDefault($scope.reduced));
-            }
-            $scope.chart.redraw();
-          });
-        }
-      });
+        setSize();
+        $scope.deregisters.push(resizeUnbind);
+      }
 
-      var redrawUnbind = $rootScope.$on('window-handler.redraw', function(event, winHandler) {
-        if( winHandler == $scope.window.handler() ) {
-          $timeout( function() {
-            $scope.chart.redraw();
-          });
-        }
-      });
+      function setRerender() {
+        var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
+          if( winHandler == $scope.window.handler() ) {
 
-      var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
-      });
+            $timeout(function() {
+              if($scope.isSpecial()) {
+                $scope.chart.group($scope.filterSOMSpecial($scope.reduced));
+              } else {
+                $scope.chart.group($scope.filterDefault($scope.reduced));
+              }
+              $scope.chart.redraw();
+            });
+          }
+        });
+        $scope.deregisters.push(reRenderUnbind);
+      }
 
-      $scope.deregisters.push(resizeUnbind, reRenderUnbind, redrawUnbind, gatherStateUnbind);
+      function setRedraw() {
+        var redrawUnbind = $rootScope.$on('window-handler.redraw', function(event, winHandler) {
+          if( winHandler == $scope.window.handler() ) {
+            $timeout( function() {
+              $scope.chart.redraw();
+            });
+          }
+        });
+        $scope.deregisters.push(redrawUnbind);
+      }
+
+      function setState() {
+        var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
+        });
+
+        $scope.deregisters.push(gatherStateUnbind);
+      }
+
+      setResize();
+      setRerender();
+      setRedraw();
+      setState();
 
       $scope.$on('$destroy', function() {
         console.log("destroying histogram for", $scope.window.variables.x);

@@ -60,16 +60,16 @@ angular.module('plotter.vis.explore',
       maxRows: 50,
       resizable: {
            enabled: true,
-           handles: ['se'],
-           start: function(event, $element, widget) { console.log("resize start"); },
-           resize: function(event, $element, widget) { 
-            // event.stopImmediatePropagation();
-            emitResize($element); 
-            },
-           stop: function(event, $element, widget) { 
-            // event.stopImmediatePropagation();
-            emitResize($element);
-          }
+           handles: ['se']
+          //  start: function(event, $element, widget) { console.log("resize start"); },
+          //  resize: function(event, $element, widget) { 
+          //   // event.stopImmediatePropagation();
+          //   emitResize($element); 
+          //   },
+          //  stop: function(event, $element, widget) { 
+          //   // event.stopImmediatePropagation();
+          //   emitResize($element);
+          // }
       }
     };
   }
