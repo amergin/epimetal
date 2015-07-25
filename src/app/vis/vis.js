@@ -203,8 +203,8 @@ angular.module( 'plotter.vis', [
     console.log("header ctrl");
   }])
 
-.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$mdSidenav', '$injector', '$mdMedia', 'WindowHandler', 'PlotService', 'RegressionService', 'plSidenav', 'SOMService',
-    function ($scope, TabService, $rootScope, NotifyService, $mdSidenav, $injector, $mdMedia, WindowHandler, PlotService, RegressionService, plSidenav, SOMService) {
+.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$injector', 'WindowHandler', 'PlotService', 'RegressionService', 'plSidenav', 'SOMService',
+    function ($scope, TabService, $rootScope, NotifyService, $injector, WindowHandler, PlotService, RegressionService, plSidenav, SOMService) {
 
       $scope.toggleSidenav = function() {
         plSidenav.toggle();

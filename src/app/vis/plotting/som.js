@@ -7,8 +7,8 @@ angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dat
   left: 30
 })
 
-.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'FilterService', 'GRID_WINDOW_PADDING',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, FilterService, GRID_WINDOW_PADDING) {
+.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'FilterService', 'GRID_WINDOW_PADDING', 'SOM_PLANE_MARGINS',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, FilterService, GRID_WINDOW_PADDING, SOM_PLANE_MARGINS) {
 
     $scope.getHeight = function(ele) {
       return ele.height();
@@ -18,16 +18,20 @@ angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dat
       return ele.width();
     };
 
-    $scope.redraw = function() {
-      // remove previous
-      $scope.element.empty();
-
+    $scope.draw = function() {
       $scope.drawSOMPlane({
         plane: $scope.window.extra().plane,
         element: $scope.element,
         width: $scope.width,
-        height: $scope.height
+        height: $scope.height,
+        margin: SOM_PLANE_MARGINS
       });
+    };
+
+    $scope.redraw = function() {
+      // remove previous
+      $scope.element.empty();
+      $scope.draw();
     };
 
     $scope.$watch(function() {
@@ -479,13 +483,7 @@ angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dat
 
       $scope.element.ready(function() {
         $timeout(function() {
-          $scope.drawSOMPlane({
-            plane: $scope.window.extra().plane,
-            element: $scope.element,
-            width: $scope.width,
-            height: $scope.height,
-            margin: SOM_PLANE_MARGINS
-          });
+          $scope.draw();
           initDropdown();
         });
       });

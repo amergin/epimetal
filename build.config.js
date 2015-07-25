@@ -76,7 +76,7 @@ module.exports = {
       'vendor/angular-ui-router/release/angular-ui-router.js',
       'vendor/ui-router-extras/release/ct-ui-router-extras.js',
       'vendor/angular-ui-utils/modules/route/route.js',
-      'vendor/crossfilter/crossfilter.new.js',
+      'vendor/crossfilter/patched/crossfilter.js',
       'vendor/d3/d3.js',
       'vendor/dcjs/dc.js',
       'vendor/d3-tip/index.js',
@@ -102,10 +102,8 @@ module.exports = {
       'vendor/ngprogress/build/ngProgress.js',
       'vendor/ng-clip/dest/ng-clip.min.js',
       'vendor/zeroclipboard/dist/ZeroClipboard.js',
-      // material x2
-      'vendor/angular-material/angular-material.js',
-      'vendor/angular-aria/angular-aria.js',
-      'vendor/angular-resizable/angular-resizable.min.js'
+      'vendor/angular-resizable/angular-resizable.min.js',
+      'vendor/ng-tags-input/ng-tags-input.js'
     ],
     css: [
       'vendor/dcjs/dc.css',
@@ -115,7 +113,10 @@ module.exports = {
       'vendor/angular-growl-2/build/angular-growl.min.css',
       'vendor/ngprogress/ngProgress.css',
       'vendor/angular-material/angular-material.css',
-      'vendor/angular-resizable/angular-resizable.min.css'
+      'vendor/angular-resizable/angular-resizable.min.css',
+      // preserve this order:
+      'vendor/ng-tags-input/ng-tags-input.min.css',
+      'vendor/ng-tags-input/ng-tags-input.bootstrap.min.css'
     ],
     assets: [
       'vendor/font-awesome/fonts/*',

@@ -1,5 +1,5 @@
 angular.module('plotter.vis.menucomponents.multiple-variable-selection', 
-  [])
+  ['ngTagsInput'])
 
 .controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
   function MultipleVariableSelectionCtrl($scope, DatasetFactory) {
@@ -15,30 +15,58 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     // $scope.payloadAdjust = [];
     // $scope.payloadAssociation = [];
 
-    function payloadRemoveListener(newArray, oldArray) {
-      if(oldArray.length > newArray.length) {
-        // something removed
-        var diff = _.difference(oldArray, newArray)[0];
-        diff.selected = false;
-        $scope.updateSelection(diff, true);
-      }
-    }
+    $scope.lengthLegal = function() {
+      var payload = getPayloadField();
 
-    if($scope.mode == 'multi') {
-      $scope.$watchCollection('payload', payloadRemoveListener);
-    } else if($scope.mode == 'scatterplot') {
-      $scope.$watchCollection('payloadX', payloadRemoveListener);
-      $scope.$watchCollection('payloadY', payloadRemoveListener);      
-    } else if($scope.mode == 'regression') {
-      $scope.$watchCollection('payloadTarget', payloadRemoveListener);
-      $scope.$watchCollection('payloadAdjust', payloadRemoveListener);
-      $scope.$watchCollection('payloadAssociation', payloadRemoveListener);
-    }
+      if(!$scope.canSelectMultiple()) {
+        return payload.length < 1;
+      }
+      return true;
+    };
+
+    $scope.tagAdding = function(obj) {
+      function isIncluded(variable) {
+        return _.contains(payload, variable);
+      }
+      var found = _.find($scope.variables, function(d) { return d.name.toLowerCase() == obj.text.toLowerCase(); }),
+      payload = getPayloadField();
+      return !_.isUndefined(found) && !isIncluded(found) && $scope.lengthLegal();
+    };
+
+    $scope.tagRemoving = function(obj) {
+      return true;
+    };
+
+    $scope.tagAdded = function(obj) {
+      function removeText(payload) {
+        // remove the text obj
+        payload.splice(payload.length-1, 1);
+      }
+      function getAdded() {
+        return _.find($scope.variables, function(d) { return d.name.toLowerCase() == obj.text.toLowerCase(); });
+      }
+
+      function setSelected(variable) {
+        variable.selected = true;
+      }
+
+      var added = getAdded(),
+      payload = getPayloadField();
+      removeText(payload);
+      setSelected(added);
+      payload.push(added);
+      $scope.updateSelection(added, true);
+    };
+
+    $scope.tagRemoved = function(variable) {
+      variable.selected = false;
+      $scope.updateSelection(variable, true);
+    };
 
     //$scope.mode is from directive init
 
     $scope.toggleVariable = function(variable) {
-      var notDefined = _.isUndefined(variable) || _.isNull(variable);
+      var notDefined = _.isUndefined(variable.selected) || _.isNull(variable.selected);
       if(notDefined) { variable.selected = true; }
       else { variable.selected = !variable.selected; }
     };

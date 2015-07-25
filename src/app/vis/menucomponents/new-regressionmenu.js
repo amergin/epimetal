@@ -40,7 +40,7 @@ angular.module('plotter.vis.menucomponents.new-regressionmenu',
     };
 
     $scope.targetSelected = function() {
-      return !_.isNull($scope.selection.target);
+      return !_.isNull($scope.selection.target) && $scope.selection.target.length > 0;
     };
 
     function typeSelected(type) {

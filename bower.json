@@ -23,17 +23,15 @@
     "paralleljs": "master",
     "mathjs": "~1.2.0",
     "numericjs": "~1.2.6",
-    "angular-growl": "~0.4.0",
     "angular-growl-2": "~0.7.3",
     "statistics-distributions-js": "svn+http://statistics-distributions-js.googlecode.com/svn/",
     "lodash": "~3.9.3",
     "ngprogress": "~1.0.7",
     "zeroclipboard": "~2.2.0",
     "ng-clip": "~0.2.6",
-    "angular-material": "master",
-    "material-design-icons": "~2.0.0",
     "angular-resizable": "~1.2.0",
-    "SOM.js": "https://github.com/anttikan/SOM.js.git"
+    "SOM.js": "https://github.com/anttikan/SOM.js.git",
+    "ng-tags-input": "~3.0.0"
   },
   "dependencies": {},
   "resolutions": {

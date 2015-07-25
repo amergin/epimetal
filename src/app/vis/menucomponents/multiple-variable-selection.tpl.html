@@ -3,15 +3,10 @@
 		<div ng-switch-when="multi">
 			<div class="col-sm-12 panel panel-default">
 				<div class="panel-body">
-					 <md-card-content>
-					 <md-chips ng-model="payload">
-						<input type="text" id="query" ng-model="filter.input" placeholder="Type to search for a variable"/>
-						<md-chip-template>
-							<strong>{{$chip.name}}</strong>
-							<em>({{$chip.desc}})</em>
-						</md-chip-template>
-					 </md-chips>
-					 </md-card-content>
+					<div class="input-group">
+					    <span class="input-group-addon">Selected variables</span>
+					    <tags-input ng-model="payload" key-property="name" text="filter.input" template="vis/menucomponents/tag.tpl.html" placeholder="Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)"></tags-input>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -19,63 +14,37 @@
 		 <div ng-switch-when="scatterplot">
 		 	<div class="col-sm-5 panel panel-default">
 		 		<div class="panel-body">
-					<md-chips ng-model="payloadX">
-						<input type="text" id="query-x" ng-model="filter.x" ng-focus="setFocus('x')" placeholder="Variable X - Type to search for a variable" autofocus/>
-						<md-chip-template>
-							<strong>{{$chip.name}}</strong>
-							<em>({{$chip.desc}})</em>
-						</md-chip-template>
-					 </md-chips>
+					<div class="input-group">
+					    <span class="input-group-addon">Variable X</span>
+					    <tags-input ng-model="payloadX" key-property="name" text="filter.x" ng-focus="setFocus('x')" template="vis/menucomponents/tag.tpl.html" placeholder="Variable X - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)" max-tags="1"></tags-input>
+					</div>
 		 		</div>
 			</div>
 			<div class="col-sm-offset-1 col-sm-5 panel panel-default">
 				<div class="panel-body">
-					<md-chips ng-model="payloadY">
-						<input type="text" id="query-y" ng-model="filter.y" ng-focus="setFocus('y')" placeholder="Variable Y - Type to search for a variable"/>
-						<md-chip-template>
-							<strong>{{$chip.name}}</strong>
-							<em>({{$chip.desc}})</em>
-						</md-chip-template>
-					 </md-chips>
+					<div class="input-group">
+					    <span class="input-group-addon">Variable Y</span>
+					    <tags-input ng-model="payloadY" key-property="name" text="filter.y" ng-focus="setFocus('y')" template="vis/menucomponents/tag.tpl.html" placeholder="Variable Y - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)" max-tags="1"></tags-input>
+					</div>
 				</div>
 			</div>
 	     </div>
 
 		 <div ng-switch-when="regression">
 		 	<div class="col-sm-12 panel panel-default">
-		 		<div class="panel-heading">Target variable</div>
 		 		<div class="panel-body">
-					<md-chips ng-model="payloadTarget">
-						<input type="text" id="query-target" ng-model="filter.target" ng-focus="setFocus('target')" placeholder="Type to search for a variable" autofocus/>
-						<md-chip-template>
-							<strong>{{$chip.name}}</strong>
-							<em>({{$chip.desc}})</em>
-						</md-chip-template>
-					 </md-chips>
-		 		</div>
-		 	</div>
-		 	<div class="col-sm-12 panel panel-default">
-		 		<div class="panel-heading">Association variables</div>
-		 		<div class="panel-body">
-					 <md-chips ng-model="payloadAssociation">
-						<input type="text" id="query-association" ng-model="filter.association" ng-focus="setFocus('association')" placeholder="Type to search for a variable"/>
-						<md-chip-template>
-							<strong>{{$chip.name}}</strong>
-							<em>({{$chip.desc}})</em>
-						</md-chip-template>
-					 </md-chips>
-		 		</div>
-		 	</div>
-		 	<div class="col-sm-12 panel panel-default">
-		 		<div class="panel-heading">Adjust variables</div>
-		 		<div class="panel-body">
-					 <md-chips ng-model="payloadAdjust">
-						<input type="text" id="query-adjust" ng-model="filter.adjust" ng-focus="setFocus('adjust')" placeholder="Type to search for a variable"/>
-						<md-chip-template>
-							<strong>{{$chip.name}}</strong>
-							<em>({{$chip.desc}})</em>
-						</md-chip-template>
-					 </md-chips>
+					<div class="input-group">
+					    <span class="input-group-addon">Target variable</span>
+					    <tags-input ng-model="payloadTarget" key-property="name" text="filter.target" ng-focus="setFocus('target')" template="vis/menucomponents/tag.tpl.html" placeholder="Target variable - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)" max-tags="1"></tags-input>
+					</div>
+					<div class="input-group">
+					    <span class="input-group-addon">Association variables</span>
+					    <tags-input ng-model="payloadAssociation" key-property="name" text="filter.association" ng-focus="setFocus('association')" template="vis/menucomponents/tag.tpl.html" placeholder="Association variables - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)"></tags-input>
+					</div>
+					<div class="input-group">
+					    <span class="input-group-addon">Adjust variables</span>
+					    <tags-input ng-model="payloadAdjust" key-property="name" text="filter.adjust" ng-focus="setFocus('adjust')" template="vis/menucomponents/tag.tpl.html" placeholder="Adjust variables - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)"></tags-input>
+					</div>					
 		 		</div>
 		 	</div>
 	     </div>
