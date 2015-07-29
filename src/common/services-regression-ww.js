@@ -19,6 +19,7 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
     };
 
     var _queuePromises = [];
+    var _queueWindows = [];
     var _workers = [];
     var _availableCores = (coreEstimator.get() - 1) === 0 ? coreEstimator.get() : coreEstimator.get() - 1;
 
@@ -371,7 +372,23 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
         });
       }
 
+      function checkWorkers() {
+        if(_.isEmpty(_workers)) {
+          initWorkers(_availableCores);
+        }
+      }
+
       function doDefault(config, windowObject, deferred) {
+        function onTerminate() {
+          windowObject.circleSpin(false);
+          windowObject.circleSpinValue(0);
+          _.each(_queueWindows, function(win) {
+            win.remove();
+          });
+          _queueWindows.length = 0;
+          TabService.lock(false);
+          deferred.reject('User cancelled computation task');
+        }
         TabService.lock(true);
         var percentProgress = {},
         windowHandler = windowObject.handler();
@@ -398,11 +415,13 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
           };
 
           _.each(_workers, function(worker, ind) {
-            var promise = worker.run({
-              workerId: worker.id(),
-              data: splitThreadData[ind],
-              globals: globals
-            });
+            var promise = worker
+                          .onTerminate(onTerminate)
+                          .run({
+                            workerId: worker.id(),
+                            data: splitThreadData[ind],
+                            globals: globals
+                          });
             promise.then(null, null, function notifyFn(data) {
               percentProgress[data.thread] = data.progress;
               var totalProgress = Math.ceil(_.chain(percentProgress).values().sum().value() / _availableCores * 100);
@@ -439,12 +458,17 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
             TabService.lock(false);
             windowObject.circleSpin(false);
             windowObject.circleSpinValue(0);
+            _.remove(_queueWindows, function(win) { return win == windowObject; });
+            _.remove(_queuePromises, function(d) { return d == deferred.promise; });
           });
         });
       }
 
+      checkWorkers();
+
       var deferred = $q.defer();
       _queuePromises.push(deferred.promise);
+      _queueWindows.push(windowObject);
 
       if(service.inProgress()) {
         doQueue(config, windowObject, deferred);
@@ -460,8 +484,15 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
       return _sampleCount;
     };
 
-    initWorkers(_availableCores);
+    service.cancel = function() {
+      _.each(_workers, function(worker) {
+        worker.terminate();
+      });
+      _workers.length = 0;
+      _queuePromises.length = 0;
+    };
 
+    initWorkers(_availableCores);
     return service;
   }
 ]);

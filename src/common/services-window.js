@@ -313,7 +313,7 @@ angular.module('services.window', ['angularSpinner', 'ui.router.state'])
       };
 
       return obj;
-    }
+    } // GridWindow
 
     var _handlers = {};
 

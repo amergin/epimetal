@@ -14,7 +14,8 @@ angular.module('services.webworker', ['ext.lodash'])
         worker: null,
         script: null,
         dependencies: [],
-        busy: false
+        busy: false,
+        onTerminate: null
       },
       _obj = {
       };
@@ -23,8 +24,15 @@ angular.module('services.webworker', ['ext.lodash'])
         return priv.id;
       };
 
+      _obj.onTerminate = function(fn) {
+        if(!arguments.length) { return priv.onTerminate; }
+        priv.onTerminate = fn;
+        return _obj;
+      };
+
       _obj.terminate = function() {
         priv.worker.terminate();
+        priv.onTerminate();
         return _obj;
       };
 

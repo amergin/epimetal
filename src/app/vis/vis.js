@@ -13,6 +13,7 @@ angular.module( 'plotter.vis', [
   'services.som',
   'services.tab',
   'services.notify',
+  'services.task-handler',
   'ngProgress',
   'progressBarInterceptor',
   'angularResizable'

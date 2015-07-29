@@ -103,7 +103,7 @@ angular.module('plotter.vis.plotting.regression',
           $scope.window.extra()['computation'] = result;
           $scope.drawChart($scope, $scope.window.extra().computation.result, variables);
         }, function errFn(result) {
-          NotifyService.addTransient('Regression computation failed', 'Something went wrong while updating the regression chart.', 'error');
+          // NotifyService.addTransient('Regression computation failed', 'Something went wrong while updating the regression chart.', 'error');
         })
         .finally(function() {
         });
@@ -137,7 +137,9 @@ angular.module('plotter.vis.plotting.regression',
         _.each($scope.deregisters, function(unbindFn) {
           unbindFn();
         });
-        $scope.chart.remove();
+        if($scope.chart) {
+          $scope.chart.remove();
+        }
       });
 
       ele.on('$destroy', function() {

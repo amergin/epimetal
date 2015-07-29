@@ -1,4 +1,4 @@
-angular.module('services.correlation.ww', ['services.dataset', 'services.notify', 'services.webworker', 'ext.lodash', 'utilities.math', 'services.tab'])
+angular.module('services.correlation.ww', ['services.dataset', 'services.notify', 'services.webworker', 'ext.lodash', 'utilities.math', 'services.tab', 'ext.core-estimator'])
 
 .constant('CORRELATION_SPLIT_MAX', 10)
 .constant('CORRELATION_SPLIT_MIN', 4)
@@ -12,14 +12,16 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
 //   WorkerService.addDependency('mathUtils', 'utilities.math', baseUrl + 'assets/utilities.math.js');
 // })
 
-.factory('CorrelationService', ['$q', 'DatasetFactory', 'NotifyService', 'CORRELATION_SPLIT_MAX', 'CORRELATION_SPLIT_MIN', 'CORRELATION_VAR_THRESHOLD', 'CORRELATION_THREADS', 'WebWorkerService', 'TabService',
-  function CorrelationServiceWW($q, DatasetFactory, NotifyService, CORRELATION_SPLIT_MAX, CORRELATION_SPLIT_MIN, CORRELATION_VAR_THRESHOLD, CORRELATION_THREADS, WebWorkerService, TabService) {
+.factory('CorrelationService', ['$q', 'DatasetFactory', 'NotifyService', 'CORRELATION_SPLIT_MAX', 'CORRELATION_SPLIT_MIN', 'CORRELATION_VAR_THRESHOLD', 'CORRELATION_THREADS', 'WebWorkerService', 'TabService', 'coreEstimator',
+  function CorrelationServiceWW($q, DatasetFactory, NotifyService, CORRELATION_SPLIT_MAX, CORRELATION_SPLIT_MIN, CORRELATION_VAR_THRESHOLD, CORRELATION_THREADS, WebWorkerService, TabService, coreEstimator) {
     var that = this;
     var service = {};
 
     var _result = [];
     var _queuePromises = [];
+    var _queueWindows = [];
     var _workers = [];
+    var _availableCores = (coreEstimator.get() - 1) === 0 ? coreEstimator.get() : coreEstimator.get() - 1;
 
     // function initWorkers(count) {
     //   function thread(input) {
@@ -123,7 +125,7 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
         });
       });
 
-      var subArrayCount = CORRELATION_THREADS;//(variables.length <= CORRELATION_VAR_THRESHOLD) ? CORRELATION_SPLIT_MIN : CORRELATION_SPLIT_MAX;
+      var subArrayCount = _availableCores;
       return {
         diagonals: diagonals,
         coordinates: Utils.subarrays(coordinates, subArrayCount)
@@ -196,7 +198,23 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
         });
       }
 
+      function checkWorkers() {
+        if(_.isEmpty(_workers)) {
+          initWorkers(_availableCores);
+        }
+      }
+
       function doDefault(config, windowObject, deferred) {
+        function onTerminate() {
+          windowObject.circleSpin(false);
+          windowObject.circleSpinValue(0);
+          _.each(_queueWindows, function(win) {
+            win.remove();
+          });
+          _queueWindows.length = 0;
+          TabService.lock(false);
+          deferred.reject('User cancelled computation task');
+        }
         TabService.lock(true);
         var percentProgress = {},
         windowHandler = windowObject.handler();
@@ -209,15 +227,18 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
         getData(config, windowHandler).then(function(data) {
           var workerPromises = [];
           _.each(_workers, function(worker, ind) {
-            var promise = worker.run({
-              samples: data.slice(0),
-              variables: config.variables,
-              coordinates: cellInfo.coordinates[ind],
-              workerId: worker.id()
-            });
+            var promise = worker
+                          .onTerminate(onTerminate)
+                          .run({
+                            samples: data.slice(0),
+                            variables: config.variables,
+                            coordinates: cellInfo.coordinates[ind],
+                            workerId: worker.id()
+                          });
+
             promise.then(null, null, function notifyFn(data) {
               percentProgress[data.thread] = data.progress;
-              var totalProgress = Math.ceil(_.chain(percentProgress).values().sum().value() / CORRELATION_THREADS * 100);
+              var totalProgress = Math.ceil(_.chain(percentProgress).values().sum().value() / _availableCores * 100);
               windowObject.circleSpinValue(totalProgress);
             });
             workerPromises.push(promise);
@@ -236,24 +257,37 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
             TabService.lock(false);
             windowObject.circleSpin(false);
             windowObject.circleSpinValue(0);
+            _.remove(_queueWindows, function(win) { return win == windowObject; });
+            _.remove(_queuePromises, function(d) { return d == deferred.promise; });
           });
 
         });
       }
 
+      checkWorkers();
+
       var deferred = $q.defer();
-      var queueNo = _queuePromises.push(deferred.promise) - 1;
+      _queueWindows.push(windowObject);
+      _queuePromises.push(deferred.promise);
 
       if(service.inProgress()) {
-        doQueue(config, windowObject, deferred, queueNo);
+        doQueue(config, windowObject, deferred);
       } else {
-        doDefault(config, windowObject, deferred, queueNo);
+        doDefault(config, windowObject, deferred);
       }
 
       return deferred.promise;
     };
 
-    initWorkers(CORRELATION_THREADS);
+    service.cancel = function() {
+      _.each(_workers, function(worker) {
+        worker.terminate();
+      });
+      _workers.length = 0;
+      _queuePromises.length = 0;
+    };
+
+    initWorkers(_availableCores);
 
     return service;
   }
