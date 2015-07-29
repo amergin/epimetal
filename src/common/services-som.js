@@ -159,9 +159,9 @@ angular.module('services.som', ['services.dataset', 'services.dimensions', 'serv
         that.som = SOM.create(SOM_PLANE_SIZE.y, SOM_PLANE_SIZE.x, data.samples, data.columns);
 
         var parallel = new Parallel(that.som, {
-          evalPath: 'assets/threads/eval.js'
+          evalPath: 'assets/eval.js'
         })
-        .require('underscore-min.js')
+        .require('lodash.min.js')
         .require('SOM.js')
         .map(trainThread)
         .then(function succFn(somObject) {
@@ -250,7 +250,7 @@ angular.module('services.som', ['services.dataset', 'services.dimensions', 'serv
         var skipNaNs = false;
         var threadData = getThreadData(testVar, skipNaNs);
         var parallel = new Parallel(threadData, {
-          evalPath: 'assets/threads/eval.js',
+          evalPath: 'assets/eval.js',
           env : {
             som: that.som,
             sampleids: threadData[0].samples // == that.trainSamples

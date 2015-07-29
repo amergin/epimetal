@@ -130,7 +130,8 @@ module.exports = {
       'vendor/SOM.js/SOM.js',
       'vendor/lodash/lodash.min.js',
       'vendor/numericjs/lib/numeric.min.js',
-      'vendor/statistics-distributions-js/statistics-distributions-packaged.js'
+      'vendor/statistics-distributions-js/statistics-distributions-packaged.js',
+      'vendor/paralleljs/lib/eval.js'
     ]
   },
 };
