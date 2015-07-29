@@ -9,4 +9,20 @@
 		{{text}}
 	</span>
 </div>
-<div replace-and-compile re-name="window.object.figure()" re-window="window.object"></div>
+<div
+	ng-show="window.object.circleSpin()"
+    round-progress
+    max="100"
+    current="window.object.circleSpinValue()"
+    color="#45ccce"
+    bgcolor="#eaeaea"
+    radius="100"
+    stroke="20"
+    semi="false"
+    rounded="true"
+    clockwise="true"
+    iterations="50"
+    animation="easeInOutQuart">
+</div>
+
+<div ng-hide="window.object.circleSpin()" replace-and-compile re-name="window.object.figure()" re-window="window.object"></div>

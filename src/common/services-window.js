@@ -6,6 +6,7 @@ angular.module('services.window', ['angularSpinner', 'ui.router.state'])
     function GridWindow(injector) {
       var obj = {},
       $injector = injector,
+      $timeout = $injector.get('$timeout'),
       priv = {
         reference: null,
         type: null,
@@ -17,6 +18,10 @@ angular.module('services.window', ['angularSpinner', 'ui.router.state'])
         dropdown: [],
         resetButton: false,
         resetFn: null,
+        circleSpin: {
+          spinning: false,
+          value: 0
+        },
         extra: {}
       };
 
@@ -33,6 +38,22 @@ angular.module('services.window', ['angularSpinner', 'ui.router.state'])
         if(!arguments.length) { return priv.reference; }
         priv.reference = x;
         initGrid();
+        return obj;
+      };
+
+      obj.circleSpin = function(x) {
+        if(!arguments.length) { return priv.circleSpin.spinning; }
+        $timeout(function() {
+          priv.circleSpin.spinning = x;
+        });
+        return obj;
+      };
+
+      obj.circleSpinValue = function(x) {
+        if(!arguments.length) { return priv.circleSpin.value; }
+        $timeout(function() {
+          priv.circleSpin.value = x;
+        });
         return obj;
       };
 
@@ -432,14 +453,14 @@ angular.module('services.window', ['angularSpinner', 'ui.router.state'])
         _.each(visibles, function(hand) {
           hand.rerenderAll(config);
         });
-      }, 1000, { leading: false, trailing: true }),
+      }, 300, { leading: false, trailing: true }),
 
       redrawVisible: _.debounce(function() {
         var visibles = this.getVisible();
         _.each( visibles, function(hand) {
           hand.redrawAll();
         });
-      }, 1000, { leading: false, trailing: true }),
+      }, 300, { leading: false, trailing: true }),
       
       getVisible: function() {
         var res = [];

@@ -3,10 +3,13 @@ angular.module('plotter.vis.plotting.regression',
   'services.dimensions',
   'services.dataset',
   'services.window',
-  'services.notify'
+  'services.notify',
+  'services.regression.ww'
   ])
 
 .constant('REGRESSION_WIDTH', 450)
+.constant('REGRESSION_DEFAULT_X', 9)
+.constant('REGRESSION_DEFAULT_Y', 4)
 
 .controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'REGRESSION_WIN_X_PX', 'REGRESSION_WIN_Y_PX', 'REGRESSION_WIDTH', 'FilterService',
   function RegressionPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH, FilterService) {
@@ -78,25 +81,32 @@ angular.module('plotter.vis.plotting.regression',
 
       function updateChart() {
         var selectedVariables = $scope.window.extra().computation.input;
-        $scope.window.spin(true);
-        RegressionService.compute({ variables: selectedVariables, source: $scope.window.extra().source }, $scope.window.handler())
+        NotifyService.addTransient('Regression analysis started', 'Regression analysis computation started.', 'info');
+        RegressionService.compute({ variables: selectedVariables, source: $scope.window.extra().source }, $scope.window)
         .then(function succFn(result) {
+          NotifyService.addTransient('Regression analysis completed', 'Regression chart ready.', 'success');
           $scope.window.extra()['computation'] = result;
           $scope.updateChart($scope, $scope.window.extra().computation.result);
         }, function errFn(result) {
           NotifyService.addTransient('Regression computation failed', 'Something went wrong while updating the regression chart.', 'error');
-          $scope.window.handler.removeByType('pl-regression');
+          // $scope.window.handler.removeByType('pl-regression');
         })
         .finally(function() {
-          $scope.window.spin(false);
         });
       }
 
       $scope.element = ele;
 
       DatasetFactory.getVariables().then(function(variables) {
-        $scope.drawChart($scope, $scope.window.extra().computation.result, variables);
-        initDropdown();
+        RegressionService.compute({ variables: $scope.window.variables(), source: $scope.window.extra().source }, $scope.window)
+        .then(function succFn(result) {
+          $scope.window.extra()['computation'] = result;
+          $scope.drawChart($scope, $scope.window.extra().computation.result, variables);
+        }, function errFn(result) {
+          NotifyService.addTransient('Regression computation failed', 'Something went wrong while updating the regression chart.', 'error');
+        })
+        .finally(function() {
+        });
       });
 
       $scope.deregisters = [];
@@ -134,6 +144,7 @@ angular.module('plotter.vis.plotting.regression',
         $scope.$destroy();
       });
 
+      initDropdown();
     }
 
     return {

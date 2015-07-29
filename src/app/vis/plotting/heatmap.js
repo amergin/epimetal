@@ -2,7 +2,7 @@ angular.module('plotter.vis.plotting.heatmap',
   [
   'ui.router',
   'services.dimensions',
-  'services.correlation',
+  'services.correlation.ww',
   'services.tab'
   ])
 
@@ -17,8 +17,8 @@ angular.module('plotter.vis.plotting.heatmap',
   left: 80
 })
 
-.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService', 'TabService', 'HEATMAP_MARGINS', 'HEATMAP_UNDEFINED_COLOR', 'GRID_WINDOW_PADDING', 'HEATMAP_COLORBAR_WIDTH',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService, TabService, HEATMAP_MARGINS, HEATMAP_UNDEFINED_COLOR, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH) {
+.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService', 'HEATMAP_MARGINS', 'HEATMAP_UNDEFINED_COLOR', 'GRID_WINDOW_PADDING', 'HEATMAP_COLORBAR_WIDTH',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService, HEATMAP_MARGINS, HEATMAP_UNDEFINED_COLOR, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH) {
 
     $scope.resetFilter = function() {
       $scope.heatmap.filterAll();
@@ -250,16 +250,14 @@ angular.module('plotter.vis.plotting.heatmap',
 
     $scope.computeVariables = function(callback) {
       var variables = $scope.window.variables().x;
-      $scope.window.spin(true);
+      // $scope.window.spin(true);
 
-      // lock tab switching
-      TabService.lock(true);
       // get coordinates in a separate worker
       CorrelationService.compute( { 
         variables: variables, 
         separate: $scope.window.extra().separate, 
         dataset: $scope.window.extra().dataset 
-      }, $scope.window.handler() )
+      }, $scope.window )
       .then(function succFn(coordinates) {
         $scope.applyColorScale(coordinates);
 
@@ -276,9 +274,7 @@ angular.module('plotter.vis.plotting.heatmap',
         $scope.crossfilter.add(coordinates);
         callback();
       }).finally(function() {
-        // unlock tabs
-        TabService.lock(false);
-        $scope.window.spin(false);
+        // $scope.window.spin(false);
       });
     };
 

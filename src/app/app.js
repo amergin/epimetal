@@ -8,7 +8,8 @@ var App = angular.module('plotter', [
   'plotter.compatibility',
   'ngSanitize', 
   'ngAnimate',
-  'angularSpinner'
+  'angularSpinner',
+  'ext.lodash'
   ]);
 
 App.constant('constants', {

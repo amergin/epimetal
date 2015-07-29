@@ -1,4 +1,11 @@
-angular.module('plotter.vis.windowing', ['services.window', 'services.dataset', 'mgcrea.ngStrap.dropdown', 'mgcrea.ngStrap.tooltip', 'angularSpinner'])
+angular.module('plotter.vis.windowing', 
+  ['services.window', 
+  'services.dataset', 
+  'mgcrea.ngStrap.dropdown', 
+  'mgcrea.ngStrap.tooltip', 
+  'angularSpinner',
+  'angular-svg-round-progress'  
+  ])
 
 .constant('EXPORT_CONFIG', {
   'svg': '/API/export/svg',

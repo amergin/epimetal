@@ -85,6 +85,7 @@ angular.module('services.tab', [])
 
         return primaryIsSame && secondaryIsSame;
       }
+      if(cfg && cfg.origin && cfg.origin == 'dataset') { return; }
       if(!sameSamples()) {
         WindowHandler.get('vis.regression').redrawAll();
       }

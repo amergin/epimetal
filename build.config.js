@@ -103,7 +103,10 @@ module.exports = {
       'vendor/ng-clip/dest/ng-clip.min.js',
       'vendor/zeroclipboard/dist/ZeroClipboard.js',
       'vendor/angular-resizable/angular-resizable.min.js',
-      'vendor/ng-tags-input/ng-tags-input.js'
+      'vendor/ng-tags-input/ng-tags-input.js',
+      // 'vendor/angular-workers/dist/angular-workers.js',
+      'vendor/angular-svg-round-progressbar/build/roundProgress.js',
+      'vendor/core-estimator/core-estimator.js'
     ],
     css: [
       'vendor/dcjs/dc.css',
@@ -121,7 +124,13 @@ module.exports = {
     assets: [
       'vendor/font-awesome/fonts/*',
       'vendor/bootstrap-chosen/chosen-sprite*',
-      'vendor/zeroclipboard/dist/ZeroClipboard.swf'
+      'vendor/zeroclipboard/dist/ZeroClipboard.swf',
+      'src/common/utilities.math.js',
+      'src/common/utilities.regression.js',
+      'vendor/SOM.js/SOM.js',
+      'vendor/lodash/lodash.min.js',
+      'vendor/numericjs/lib/numeric.min.js',
+      'vendor/statistics-distributions-js/statistics-distributions-packaged.js'
     ]
   },
 };

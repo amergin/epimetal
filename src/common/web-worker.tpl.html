@@ -1,0 +1,22 @@
+<script id="ww-template" type="JavaScript/worker">
+	self.output = {
+		notify: function(message) {
+			self.postMessage({ event: 'update', data: message });
+		},
+		success: function(data) {
+			self.postMessage({ event: 'success', data: data });
+		},
+		failure: function(reason) {
+			self.postMessage({ event: 'failure', data: reason });
+		},
+		terminate: function(reason) {
+			self.close();
+		}
+	};
+	self.onmessage = function(e) {
+		var bodyFn = <%= bodyFn %>;
+
+		// start
+		bodyFn(e.data, self.output);
+	};
+</script>
