@@ -94,7 +94,6 @@ module.exports = {
       // customize this for release:
       'vendor/angular-bootstrap/custom-build/ui-bootstrap-custom-tpls-0.13.0.js',
       'vendor/paralleljs/lib/parallel.js',
-      'vendor/numericjs/lib/numeric.min.js',
       'vendor/angular-growl-2/build/angular-growl.js',
       'vendor/statistics-distributions-js/statistics-distributions-packaged.js',
       'vendor/SOM.js/SOM.js',
