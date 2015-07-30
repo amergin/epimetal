@@ -133,12 +133,15 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
           coord['corr'] = mathUtils.sampleCorrelation(samples, varX, meanX, stdX, varY, meanY, stdY);
           // p-value
           coord['pvalue'] = mathUtils.calcPForPearsonR(coord['corr'], samples.length);
-          if(ind % (_.round(coordinates.length, -3) / 10) === 0) { notify(ind, coordinates.length); }
+
+          if(Math.ceil(((ind+1)/coordinates.length)*100) % 5 === 0) { notify(ind, coordinates.length); }
         });
+        notify(1, 1);
         output.success(coordinates);
       } catch(e) {
         output.failure(e.message);
       }
+
       console.log("Thread ready");
     }
 
@@ -206,6 +209,7 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
           });
 
           $q.all(workerPromises).then(function succFn(results) {
+            windowObject.circleSpinValue(100);
             var flattened = _.chain(results).values().flatten(true).unique().value(),
             _result = combineResults(flattened, cellInfo.diagonals);
             NotifyService.addTransient('Correlation computation ready', 'Correlation plot updated.', 'success');

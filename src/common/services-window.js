@@ -43,17 +43,13 @@ angular.module('services.window', ['angularSpinner', 'ui.router.state'])
 
       obj.circleSpin = function(x) {
         if(!arguments.length) { return priv.circleSpin.spinning; }
-        $timeout(function() {
-          priv.circleSpin.spinning = x;
-        });
+        priv.circleSpin.spinning = x;
         return obj;
       };
 
       obj.circleSpinValue = function(x) {
         if(!arguments.length) { return priv.circleSpin.value; }
-        $timeout(function() {
           priv.circleSpin.value = x;
-        });
         return obj;
       };
 

@@ -313,6 +313,7 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
       var succeeded = !_.chain(results).find(function(v) { return v.result.success === false; }).isNull().value();
 
       if(succeeded) {
+        output.notify({ progress: 1.1, thread: input.workerId });
         output.success(results);
       } else {
         output.failure(results);
@@ -432,6 +433,7 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
           });
 
           $q.all(workerPromises).then(function succFn(results) {
+            windowObject.circleSpinValue(100);
             results = _.flatten(results);
             if( !results[0].result.success ) {
               // computation failed
