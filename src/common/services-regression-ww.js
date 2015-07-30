@@ -22,7 +22,6 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
     var _queueWindows = [];
     var _workers = [];
     var _availableCores = null;
-    // var _availableCores = (coreEstimator.get() - 1) === 0 ? coreEstimator.get() : coreEstimator.get() - 1;
 
     function initWorkers(count) {
       _workers = _.times(count, function() {
