@@ -1,8 +1,10 @@
 angular.module('plotter.vis.menucomponents.new-regressionmenu', 
   [])
 
-.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService',
-  function RegressionMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService) {
+.constant('REGRESSION_MAX_VARIABLES', 60)
+
+.controller('RegressionMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'REGRESSION_MAX_VARIABLES',
+  function RegressionMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, REGRESSION_MAX_VARIABLES) {
 
     function initVariables() {
       function doDefault() {
@@ -81,6 +83,10 @@ angular.module('plotter.vis.menucomponents.new-regressionmenu',
       return lodash.intersection(_copy($scope.selection.adjust), _copy($scope.selection.target)).length > 0;
     };
 
+    var exceedsMaxVariables = function(count) {
+      return count > REGRESSION_MAX_VARIABLES;
+    };
+
     $scope.canEdit = function() {
       return DatasetFactory.activeSets().length > 0;
     };
@@ -116,7 +122,14 @@ angular.module('plotter.vis.menucomponents.new-regressionmenu',
       if(RegressionService.inProgress()) {
         NotifyService.addSticky('Regression already being computed', 
           'Please wait until the previous computation has been completed.', 'error', { referenceId: 'regressioninfo' });
+        error = true;
       }
+      if(exceedsMaxVariables($scope.selection.association.length) || exceedsMaxVariables($scope.selection.association.length)) {
+        NotifyService.addSticky('Too many selected variables', 
+          'Please select a maximum of ' + REGRESSION_MAX_VARIABLES + ' variables.', 'error', { referenceId: 'regressioninfo' });        
+        error = true;
+      }
+
       if(error) {
         return false;
       }

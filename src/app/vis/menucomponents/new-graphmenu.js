@@ -1,8 +1,10 @@
 angular.module('plotter.vis.menucomponents.new-graphmenu', 
-  [])
+  ['services.dimensions', 'services.notify'])
 
-.controller('NewGraphMenuCtrl', ['$scope', 'DatasetFactory',
-  function NewGraphMenuCtrl($scope, DatasetFactory) {
+.constant('MAX_HEATMAP_VARS', 100)
+
+.controller('NewGraphMenuCtrl', ['$scope', 'DatasetFactory', 'MAX_HEATMAP_VARS', 'NotifyService', 'DimensionService',
+  function NewGraphMenuCtrl($scope, DatasetFactory, MAX_HEATMAP_VARS, NotifyService, DimensionService) {
 
     $scope.tab = {
       ind: 0
@@ -15,14 +17,16 @@ angular.module('plotter.vis.menucomponents.new-graphmenu',
     };
 
     function getSelection() {
-      if($scope.tab.ind === 0) {
-        return $scope.histogram.selection;
+      switch($scope.tab.ind) {
+        case 0:
+        return { 'type': 'histogram', 'data': $scope.histogram.selection };
+
+        case 1:
+        return { 'type': 'scatterplot', 'data': $scope.scatterplot };
+
+        case 2:
+        return { 'type': 'heatmap', 'data': $scope.heatmap.selection };
       }
-      else if($scope.tab.ind === 1) {
-        return $scope.scatterplot;
-      } else if($scope.tab.ind === 2) {
-        return $scope.heatmap.selection;
-      }      
     }
 
     $scope.selectTab = function(ind) {
@@ -44,13 +48,13 @@ angular.module('plotter.vis.menucomponents.new-graphmenu',
     $scope.canSubmit = function() {
       var selection = getSelection();
       if($scope.tab.ind === 0) {
-        return selection.length > 0;
+        return selection.data.length > 0;
       }
       else if($scope.tab.ind === 1) {
-        return _.size(selection.x) > 0 &&
-        _.size(selection.y) > 0;
+        return _.size(selection.data.x) > 0 &&
+        _.size(selection.data.y) > 0;
       } else if($scope.tab.ind === 2) {
-        return selection.length > 0;
+        return selection.data.length > 0;
       }
     };
 
@@ -58,10 +62,45 @@ angular.module('plotter.vis.menucomponents.new-graphmenu',
       function getType() {
         return $scope.tabs[$scope.tab.ind].label.toLowerCase();
       }
+
+      function hasError() {
+        var selection = getSelection(),
+        error = false,
+        dimensionCount;
+        if(selection.type == 'heatmap') {
+          if(selection.data.length > MAX_HEATMAP_VARS) {
+            NotifyService.addSticky('Too many selected variables', 'Please limit your selections to ' + MAX_HEATMAP_VARS + ' variables.', 'error', 
+              { referenceId: 'graphinfo' });
+            error = true;
+          }
+        }
+        else if(selection.type == 'scatterplot') {
+          dimensionCount = DimensionService.getPrimary().availableDimensionsCount();
+          if(dimensionCount < selection.data.length) {
+            NotifyService.addSticky('Too many selected variables', 'Please close unnecessary figure windows first.',
+              'error', { referenceId: 'graphinfo' });
+            error = true;
+          }
+        }
+        else if(selection.type == 'histogram') {
+          dimensionCount = DimensionService.getPrimary().availableDimensionsCount();
+          if(dimensionCount < selection.data.length) {
+            NotifyService.addSticky('Too many selected variables', 'Please select a maximum of ' + dimensionCount + ' variables. You can free variables by first closing unnecessary figure windows.', 
+              'error', { referenceId: 'graphinfo' });
+            error = true;
+          }
+        }
+        return error;
+      }
+
+      if(hasError()) {
+        return false;
+      }
+
       var type = getType();
       return {
         type: getType(),
-        selection: getSelection(),
+        selection: getSelection().data,
         config: $scope.exportConfig[type]
       };
     };

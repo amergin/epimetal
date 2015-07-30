@@ -1,8 +1,10 @@
 angular.module('services.dimensions', ['services.dataset', 'ui.router.state'])
 
+.constant('DIMENSIONS_MAX_COUNT', 32)
+
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope', '$state',
-  function ($injector, $q, constants, $rootScope, $state) {
+.factory('DimensionService', ['$injector', '$q', 'constants', '$rootScope', '$state', 'DIMENSIONS_MAX_COUNT',
+  function ($injector, $q, constants, $rootScope, $state, DIMENSIONS_MAX_COUNT) {
 
     var _instances = {};
 
@@ -689,6 +691,11 @@ angular.module('services.dimensions', ['services.dataset', 'ui.router.state'])
 
       this.getDimensions = function() {
         return dimensions;
+      };
+
+      this.availableDimensionsCount = function() {
+        var currentNo = _.chain(dimensions).keys().value().length;
+        return DIMENSIONS_MAX_COUNT - currentNo;
       };
 
       this.copy = function() {
