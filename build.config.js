@@ -97,7 +97,6 @@ module.exports = {
       'vendor/numericjs/lib/numeric.min.js',
       'vendor/angular-growl-2/build/angular-growl.js',
       'vendor/statistics-distributions-js/statistics-distributions-packaged.js',
-      'vendor/hor-boxplot/horizontalboxplot.js',
       'vendor/SOM.js/SOM.js',
       'vendor/ngprogress/build/ngProgress.js',
       'vendor/ng-clip/dest/ng-clip.min.js',
