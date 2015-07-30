@@ -1,6 +1,6 @@
 angular.module('services.regression.ww', ['services.dataset', 'services.filter', 'services.tab', 'services.webworker', 'ext.core-estimator'])
 
-.constant('REGRESSION_THREADS', 4)
+.constant('REGRESSION_THREADS', 3)
 
 .factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'TabService', 'WebWorkerService', 'REGRESSION_THREADS', 'coreEstimator',
   function RegressionServiceWW($injector, $q, $rootScope, DatasetFactory, TabService, WebWorkerService, REGRESSION_THREADS, coreEstimator) {
@@ -21,7 +21,8 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
     var _queuePromises = [];
     var _queueWindows = [];
     var _workers = [];
-    var _availableCores = (coreEstimator.get() - 1) === 0 ? coreEstimator.get() : coreEstimator.get() - 1;
+    var _availableCores = null;
+    // var _availableCores = (coreEstimator.get() - 1) === 0 ? coreEstimator.get() : coreEstimator.get() - 1;
 
     function initWorkers(count) {
       _workers = _.times(count, function() {
@@ -492,7 +493,19 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
       _queuePromises.length = 0;
     };
 
-    initWorkers(_availableCores);
+    _.delay(function() {
+      console.log("delayed start");
+      coreEstimator.get().then(function succFn(cores) {
+        _availableCores = cores;
+      }, function errFn() {
+        _availableCores = REGRESSION_THREADS;
+      })
+      .finally(function() {
+        initWorkers(_availableCores);
+      });
+
+    }, 3000);
+
     return service;
   }
 ]);

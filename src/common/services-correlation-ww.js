@@ -3,17 +3,10 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
 .constant('CORRELATION_SPLIT_MAX', 10)
 .constant('CORRELATION_SPLIT_MIN', 4)
 .constant('CORRELATION_VAR_THRESHOLD', 40)
-.constant('CORRELATION_THREADS', 4)
+.constant('CORRELATION_THREADS', 3)
 
-// .run(function (WorkerService, $location) {
-//   var baseUrl = $location.protocol() + '://' + $location.host() + ':' + $location.port() + window.location.pathname;
-//   WorkerService.setAngularUrl('https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js');
-//   // WorkerService.addDependency('_', 'ext.lodash', 'https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.0/lodash.min.js');
-//   WorkerService.addDependency('mathUtils', 'utilities.math', baseUrl + 'assets/utilities.math.js');
-// })
-
-.factory('CorrelationService', ['$q', 'DatasetFactory', 'NotifyService', 'CORRELATION_SPLIT_MAX', 'CORRELATION_SPLIT_MIN', 'CORRELATION_VAR_THRESHOLD', 'CORRELATION_THREADS', 'WebWorkerService', 'TabService', 'coreEstimator',
-  function CorrelationServiceWW($q, DatasetFactory, NotifyService, CORRELATION_SPLIT_MAX, CORRELATION_SPLIT_MIN, CORRELATION_VAR_THRESHOLD, CORRELATION_THREADS, WebWorkerService, TabService, coreEstimator) {
+.factory('CorrelationService', ['$q', 'DatasetFactory', 'NotifyService', 'CORRELATION_SPLIT_MAX', 'CORRELATION_SPLIT_MIN', 'CORRELATION_VAR_THRESHOLD', 'CORRELATION_THREADS', 'WebWorkerService', 'TabService', 'coreEstimator', '$timeout',
+  function CorrelationServiceWW($q, DatasetFactory, NotifyService, CORRELATION_SPLIT_MAX, CORRELATION_SPLIT_MIN, CORRELATION_VAR_THRESHOLD, CORRELATION_THREADS, WebWorkerService, TabService, coreEstimator, $timeout) {
     var that = this;
     var service = {};
 
@@ -21,39 +14,7 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
     var _queuePromises = [];
     var _queueWindows = [];
     var _workers = [];
-    var _availableCores = (coreEstimator.get() - 1) === 0 ? coreEstimator.get() : coreEstimator.get() - 1;
-
-    // function initWorkers(count) {
-    //   function thread(input) {
-    //     var callback = function(i) {
-    //       output.notify(i);
-    //       i++;
-    //     };
-    //     console.log("input = ", input);
-    //     // console.log(mathUtils);
-
-    //     setInterval(function(){ callback(++i); }, Math.floor((Math.random() * 1000) + 100));
-    //     //output.resolve(true);
-    //     //output.reject(false);
-    //   }
-
-    //   var promises = _.times(count, function() {
-    //     return WorkerService.createAngularWorker(['input', 'output', '$http', 'mathUtils', thread]);
-    //   });
-
-    //   $q.all(promises)
-    //   .then(function succFn(angularWorkers) {
-    //     _workers = _.map(angularWorkers, function(worker) {
-    //       return {
-    //         busy: false,
-    //         worker: worker
-    //       };
-    //     });
-    //   }, function errFn(reason) {
-    //     console.log("WW init failed!");
-    //     console.log(reason);
-    //   });
-    // }
+    var _availableCores = null;
 
     function initWorkers(count) {
       _workers = _.times(count, function() {
@@ -287,7 +248,19 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
       _queuePromises.length = 0;
     };
 
-    initWorkers(_availableCores);
+    _.delay(function() {
+      console.log("delayed start");
+      coreEstimator.get().then(function succFn(cores) {
+        _availableCores = cores;
+      }, function errFn() {
+        _availableCores = CORRELATION_THREADS;
+      })
+      .finally(function() {
+        initWorkers(_availableCores);
+      });
+
+    }, 2000);
+
 
     return service;
   }

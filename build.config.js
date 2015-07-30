@@ -106,7 +106,8 @@ module.exports = {
       'vendor/ng-tags-input/ng-tags-input.js',
       // 'vendor/angular-workers/dist/angular-workers.js',
       'vendor/angular-svg-round-progressbar/build/roundProgress.js',
-      'vendor/core-estimator/core-estimator.js'
+      // this is a hack to allow the subdirectories to be copied
+      'build/assets/core-estimator/core-estimator.js'
     ],
     css: [
       'vendor/dcjs/dc.css',
