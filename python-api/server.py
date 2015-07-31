@@ -20,6 +20,7 @@ from base64 import b64decode
 import random
 from hashids import Hashids
 import hashlib
+import time
 
 app = Flask(__name__)
 config = Config('setup.config')
@@ -299,6 +300,16 @@ def getBulk():
 		resp.status_code = 400
 		return resp
 
+	# def getSamples(samples):
+	# 	dicts = []
+	# 	for sample in [ob.to_mongo() for ob in samples]:
+	# 		# this is SON instance
+	# 		dictionary = sample.to_dict()
+	# 		# remove id so it's serializable
+	# 		dictionary.pop('_id', None)
+	# 		dicts.append(dictionary)
+	# 	return dicts
+
 	try:
 		payload = request.get_json()
 		dataset = payload.get('dataset')
@@ -308,15 +319,15 @@ def getBulk():
 			return getError()
 		else:
 			samples = Sample.objects.filter(dataset=dataset).only(*_getModifiedParameters(variables))
-			response = flask.jsonify({
-				'success': 'true',
-				'query': { 'variables': variables, 'dataset': dataset },
-				'result': { 'values': samples.as_pymongo() }
-			})
+			response = Response(json.dumps({
+				'success': 'true', 'query': { 'variables': variables, 'dataset': dataset },
+				'result': { 'values': list(samples.as_pymongo()) }
+				}), mimetype='application/json')
 			response.status_code = 200
 			return response
 
-	except:
+	except 	Exception, e:
+		print e
 		return getError()
 
 @app.route( config.getFlaskVar('prefix') + 'list/<variable>/in/<dataset>', methods=['GET'] )
