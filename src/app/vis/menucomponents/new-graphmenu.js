@@ -85,7 +85,7 @@ angular.module('plotter.vis.menucomponents.new-graphmenu',
         else if(selection.type == 'histogram') {
           dimensionCount = DimensionService.getPrimary().availableDimensionsCount();
           if(dimensionCount < selection.data.length) {
-            NotifyService.addSticky('Too many selected variables', 'Please select a maximum of ' + dimensionCount + ' variables. You can free variables by first closing unnecessary figure windows.', 
+            NotifyService.addSticky('Too many selected variables', 'Please select a maximum of ' + dimensionCount + ' variables. You can free variables by first closing unnecessary figure windows on this tab.', 
               'error', { referenceId: 'graphinfo' });
             error = true;
           }

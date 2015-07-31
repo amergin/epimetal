@@ -1,8 +1,10 @@
 angular.module('plotter.vis.menucomponents.som-modalmenu', 
 [])
 
-.controller('SOMModalMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService', 'WindowHandler', 'PlotService',
-  function SOMModalMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService, WindowHandler, PlotService) {
+.constant('MAX_PLANE_VARS', 25)
+
+.controller('SOMModalMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService', 'WindowHandler', 'PlotService', 'MAX_PLANE_VARS', 'DimensionService',
+  function SOMModalMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService, WindowHandler, PlotService, MAX_PLANE_VARS, DimensionService) {
 
     $scope.selection = {
       planes: [],
@@ -38,11 +40,42 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
     };
 
     $scope.submit = function() {
+      function hasError() {
+        var error = false,
+        selectionCount = $scope.selection[$scope.selectedTab].length;
+
+        switch($scope.selectedTab) {
+          case 'planes':
+          if(selectionCount > MAX_PLANE_VARS) {
+            NotifyService.addSticky('Too many selected variables', 'Please limit your selections to ' + MAX_PLANE_VARS + ' variables.', 'error', 
+              { referenceId: 'sominfo' });
+            error = true;
+          }
+          break;
+
+          case 'distributions':
+          var dimensionCount = DimensionService.getSecondary().availableDimensionsCount();
+          if(dimensionCount < selectionCount) {
+            NotifyService.addSticky('Too many selected variables', 'Please select a maximum of ' + dimensionCount + ' variables. You can free variables by first closing unnecessary figure windows on this tab.', 
+              'error', { referenceId: 'sominfo' });
+            error = true;
+          }
+          break;
+        }
+
+        return error;
+      }
+
       function justNames(variables) {
         return _.map(variables, function(v) {
           return v.name;
         });
       }
+
+      if(hasError()) {
+        return false;
+      }
+
       var contentHandler = WindowHandler.get('vis.som.content'),
       planeHandler = WindowHandler.get('vis.som.plane');
       lookup = {
