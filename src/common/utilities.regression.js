@@ -28,7 +28,84 @@
     return ret;
   };
 
-  root.getCIAndPvalue = function(dotInverse, xMatrix, xMatrixTransposed, yMatrixTransposed, n, k, beta) {
+  root.getCIAndPvalueMathjs = function(dotInverse, xMatrix, xMatrixTransposed, yMatrixTransposed, n, k, beta) {
+    var VARIABLE_INDEX = 1;
+
+    // H = X (X^T X)^{-1} X^T
+    var hMatrix = math.chain(xMatrix)
+    .multiply(dotInverse)
+    .multiply(xMatrixTransposed)
+    .done();
+
+    xMatrix = null;
+
+    // console.log("hmatrix", math.size(hMatrix));
+
+    var hMatrixSize = math.size(hMatrix).subset(math.index(0));
+    // console.log("hMatrixSize", hMatrixSize);
+    var identity = math.eye(hMatrixSize, 'sparse');
+    // console.log("before");
+    var subtracted = math.subtract(identity, hMatrix);
+    var yMatrix = math.transpose(yMatrixTransposed);
+    // console.log("after");
+
+    // var mul1 = math.multiply(yMatrixTransposed, subtracted);
+    // console.log("mul1", mul1);
+    // var mul2 = math.multiply(mul1, yMatrix);
+    // console.log("mul2", mul2);
+
+    // var sigma = math.chain(yMatrixTransposed)
+    // .multiply(subtracted)
+    // .multiply(yMatrix)
+    // .subset(math.index(0,0))
+    // .done();
+
+    // console.log("subset", sigma);
+
+    // var sigma = math.divide(mul2, n-(k+1));
+    var degrees = n-(k+1);
+
+    var sigma = math.chain(yMatrixTransposed)
+    .multiply(subtracted)
+    .multiply(yMatrix)
+    .divide(degrees)
+    .done();
+
+    yMatrix = null;
+    subtracted = null;
+    identity = null;
+    yMatrixTransposed = null;
+
+    // console.log("sigma", sigma);
+
+    var cMatrix = math.multiply(sigma, dotInverse);
+
+    dotInverse = null;
+
+    var alpha = 0.05 / k;
+
+    var sqrt = Math.sqrt( cMatrix.subset(math.index(VARIABLE_INDEX, VARIABLE_INDEX)) );
+    cMatrix = null;
+    var ci = statDist.tdistr(degrees, alpha/2) * sqrt;
+    // console.log("sqrt, ci", sqrt, ci);
+
+    // See http://reliawiki.org/index.php/Multiple_Linear_Regression_Analysis 
+    // -> p value = 2 * (1-P(T <= |t0|)
+    var t = beta / sqrt;
+    sqrt = null;
+    var pvalue = statDist.tprob(degrees, t);
+    // console.log("math degrees", degrees, "t", t, "beta", beta, "sqrt", sqrt);
+
+    var ret = {
+      ci: [ beta - ci, beta + ci ],
+      pvalue: pvalue
+    };
+    // console.log("ret=", ret, t);
+    return ret;
+  };
+
+
+  root.getCIAndPvalueNumericjs = function(dotInverse, xMatrix, xMatrixTransposed, yMatrixTransposed, n, k, beta) {
     var VARIABLE_INDEX = 1;
 
     var hMatrix = numeric.dot( numeric.dot(xMatrix, dotInverse), xMatrixTransposed );
@@ -61,6 +138,8 @@
     // -> p value = 2 * (1-P(T <= |t0|)
     var t = beta / _sqrt;
     var pvalue = statDist.tprob(degrees, t);
+
+    // console.log("numeric degrees", degrees, "t", t, "beta", beta, "sqrt", _sqrt);
 
     // console.log("CI before [sub, add] of beta = ", ci);
     return {

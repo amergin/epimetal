@@ -31,6 +31,7 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
         .script(threadFunction)
         .addDependency(absUrl + 'assets/lodash.min.js')
         .addDependency(absUrl + 'assets/numeric.min.js')
+        .addDependency(absUrl + 'assets/math.min.js')
         .addDependency(absUrl + 'assets/statistics-distributions-packaged.js')
         .addDependency(absUrl + 'assets/utilities.regression.js')
         .addDependency(absUrl + 'assets/utilities.math.js');
@@ -218,6 +219,84 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
     // this is called on each thread execution
     function threadFunction(input, output) {
       var compute = function(config) {
+
+        function mathJs() {
+          // see https://en.wikipedia.org/wiki/Ordinary_least_squares#Estimation
+          // beta = (X^T X)^{-1} X^T y 
+          var _xMatrixTransp = math.matrix(xMatrixTransp);
+          var _xMatrix = math.transpose(xMatrixTransp);
+          var _normalTargetData = math.matrix(normalTargetData);
+
+          // Compute beta = (X^T X)^{-1} X^T y 
+          var dotProduct = math.multiply(_xMatrixTransp, _xMatrix);
+          var inverse = math.inv(dotProduct);
+          var multi2 = math.multiply(inverse, _xMatrixTransp);
+          var betas = math.multiply(multi2, normalTargetData);
+
+          // var betas = math.chain(_xMatrixTransp)
+          // .multiply(_xMatrix)
+          // .inv()
+          // .multiply(_xMatrixTransp)
+          // .multiply(_normalTargetData)
+          // .done();
+
+          // console.log("mathjs betas=", String(betas));
+
+          // console.log("xMatrixTransp", _xMatrixTransp);
+          // console.log("xMatrix", _xMatrix);
+          // console.log("size=", math.size(_xMatrix), math.size(_xMatrix).subset);
+          // var n = math.size(_xMatrix).subset(math.index(0)),
+          // k = math.size(_xMatrix).subset(math.index(1)),
+          var n = math.size(_xMatrix)[0];
+          var k = math.size(_xMatrix)[1];
+          var beta = betas.subset(math.index(1));
+
+          // console.log("beta=", beta, n, k);
+
+          var _yMatrixTransp = math.matrix([normalTargetData]);
+
+          // get confidence interval and p-value
+          var ciAndPvalue = regressionUtils.getCIAndPvalueMathjs(inverse, _xMatrix, _xMatrixTransp, _yMatrixTransp, n, k, beta);
+
+          return {
+            result: { success: true },
+            ci: ciAndPvalue.ci,
+            pvalue: ciAndPvalue.pvalue,
+            betas: betas.valueOf()
+          };
+
+        }
+
+        function numericJs() {
+          var xMatrix = numeric.transpose(xMatrixTransp);
+          // see https://en.wikipedia.org/wiki/Ordinary_least_squares#Estimation
+          // Compute beta = (X^T X)^{-1} X^T y 
+          var dotProduct = numeric.dot(xMatrixTransp, xMatrix);
+          var inverse = numeric.inv(dotProduct);
+          dotProduct = null;
+          var multi2 = numeric.dot(inverse, xMatrixTransp);
+          var betas = numeric.dot(multi2, normalTargetData);
+          multi2 = null;
+
+          console.log("numericjs betas", betas);
+
+          var n = _.size(xMatrix),
+          k = _.size(xMatrix[0]),
+          beta = betas[1];
+
+          console.log("n, k", n, k);
+
+          // get confidence interval and p-value
+          var ciAndPvalue = regressionUtils.getCIAndPvalueNumericjs(inverse, xMatrix, xMatrixTransp, [normalTargetData], n, k, beta);
+
+          return {
+            result: { success: true },
+            ci: ciAndPvalue.ci,
+            pvalue: ciAndPvalue.pvalue,
+            betas: betas
+          };
+
+        }
         var assocData = config.association,
         nanIndices = config.nans,
         targetData = config.target,
@@ -230,29 +309,36 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
         normalTargetData = regressionUtils.getNormalizedData( regressionUtils.stripNaNs(targetData, allNaNIndices) ),
         normalAdjustData = regressionUtils.getNormalizedData( regressionUtils.getStrippedAdjust(adjustData, allNaNIndices) );
 
-        var xMatrixTransp = [onesArray, normalAssocData].concat(normalAdjustData),
-        xMatrix = numeric.transpose(xMatrixTransp);
+        var xMatrixTransp = [onesArray, normalAssocData].concat(normalAdjustData);
+        // var xMatrix = numeric.transpose(xMatrixTransp);
 
-        // see https://en.wikipedia.org/wiki/Ordinary_least_squares#Estimation
-        // Compute beta = (X^T X)^{-1} X^T y 
-        var dotProduct = numeric.dot(xMatrixTransp, xMatrix),
-        inverse = numeric.inv(dotProduct),
-        multi2 = numeric.dot(inverse, xMatrixTransp),
-        betas = numeric.dot(multi2, normalTargetData),
 
-        n = _.size(xMatrix),
-        k = _.size(xMatrix[0]),
-        beta = betas[1];
+        return mathJs();
+        // return numericJs();
 
-        // get confidence interval and p-value
-        var ciAndPvalue = regressionUtils.getCIAndPvalue(inverse, xMatrix, xMatrixTransp, [normalTargetData], n, k, beta);
 
-        return {
-          result: { success: true },
-          betas: betas,
-          ci: ciAndPvalue.ci,
-          pvalue: ciAndPvalue.pvalue
-        };
+
+
+
+        // var beta1 = math.chain()
+        // .multiply(xMatrix)
+        // .inv()
+        // .multiply(xMatrixTransp)
+        // .multiply(normalTargetData)
+        // .done();
+        // console.log("beta=", beta1);
+
+        // regressionUtils.dispSize("xMatrixTransp", xMatrixTransp);
+        // regressionUtils.dispSize("xMatrix", xMatrix);
+        // regressionUtils.dispSize("normalTargetData", normalTargetData);
+
+
+        // return {
+        //   result: { success: true },
+        //   betas: betas,
+        //   ci: ciAndPvalue.ci,
+        //   pvalue: ciAndPvalue.pvalue
+        // };
 
       }; // end compute 
 
@@ -441,6 +527,7 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
                 result: results
               });
             } else {
+              console.log("resolve", results);
               deferred.resolve({
                 input: config.variables,
                 result: results
