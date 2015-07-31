@@ -497,7 +497,7 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
     _.delay(function() {
       console.log("delayed start");
       coreEstimator.get().then(function succFn(cores) {
-        _availableCores = cores;
+        _availableCores = (cores - 1 > 0) ?  cores - 1 : cores;
       }, function errFn() {
         _availableCores = REGRESSION_THREADS;
       })

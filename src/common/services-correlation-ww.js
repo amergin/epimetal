@@ -255,7 +255,7 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
     _.delay(function() {
       console.log("delayed start");
       coreEstimator.get().then(function succFn(cores) {
-        _availableCores = cores;
+        _availableCores = (cores - 1 > 0) ? cores - 1 : cores;
       }, function errFn() {
         _availableCores = CORRELATION_THREADS;
       })
