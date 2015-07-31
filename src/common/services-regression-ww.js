@@ -1,9 +1,10 @@
 angular.module('services.regression.ww', ['services.dataset', 'services.filter', 'services.tab', 'services.webworker', 'ext.core-estimator'])
 
-.constant('REGRESSION_THREADS', 3)
+.constant('DEFAULT_REGRESSION_THREADS', 3)
+.constant('MAX_REGRESSION_THREADS', 4)
 
-.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'TabService', 'WebWorkerService', 'REGRESSION_THREADS', 'coreEstimator',
-  function RegressionServiceWW($injector, $q, $rootScope, DatasetFactory, TabService, WebWorkerService, REGRESSION_THREADS, coreEstimator) {
+.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'TabService', 'WebWorkerService', 'DEFAULT_REGRESSION_THREADS', 'coreEstimator', 'MAX_REGRESSION_THREADS',
+  function RegressionServiceWW($injector, $q, $rootScope, DatasetFactory, TabService, WebWorkerService, DEFAULT_REGRESSION_THREADS, coreEstimator, MAX_REGRESSION_THREADS) {
     var that = this;
     var service = {};
     var FilterService = $injector.get('FilterService');
@@ -547,8 +548,9 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
       console.log("delayed start");
       coreEstimator.get().then(function succFn(cores) {
         _availableCores = (cores - 1 > 0) ?  cores - 1 : cores;
+        _availableCores = (_availableCores > MAX_REGRESSION_THREADS) ? MAX_REGRESSION_THREADS : _availableCores;
       }, function errFn() {
-        _availableCores = REGRESSION_THREADS;
+        _availableCores = DEFAULT_REGRESSION_THREADS;
       })
       .finally(function() {
         initWorkers(_availableCores);
