@@ -233,25 +233,11 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
           var multi2 = math.multiply(inverse, _xMatrixTransp);
           var betas = math.multiply(multi2, normalTargetData);
 
-          // var betas = math.chain(_xMatrixTransp)
-          // .multiply(_xMatrix)
-          // .inv()
-          // .multiply(_xMatrixTransp)
-          // .multiply(_normalTargetData)
-          // .done();
-
           // console.log("mathjs betas=", String(betas));
 
-          // console.log("xMatrixTransp", _xMatrixTransp);
-          // console.log("xMatrix", _xMatrix);
-          // console.log("size=", math.size(_xMatrix), math.size(_xMatrix).subset);
-          // var n = math.size(_xMatrix).subset(math.index(0)),
-          // k = math.size(_xMatrix).subset(math.index(1)),
           var n = math.size(_xMatrix)[0];
           var k = math.size(_xMatrix)[1];
           var beta = betas.subset(math.index(1));
-
-          // console.log("beta=", beta, n, k);
 
           var _yMatrixTransp = math.matrix([normalTargetData]);
 
@@ -278,13 +264,13 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
           var betas = numeric.dot(multi2, normalTargetData);
           multi2 = null;
 
-          console.log("numericjs betas", betas);
+          // console.log("numericjs betas", betas);
 
           var n = _.size(xMatrix),
           k = _.size(xMatrix[0]),
           beta = betas[1];
 
-          console.log("n, k", n, k);
+          // console.log("n, k", n, k);
 
           // get confidence interval and p-value
           var ciAndPvalue = regressionUtils.getCIAndPvalueNumericjs(inverse, xMatrix, xMatrixTransp, [normalTargetData], n, k, beta);
@@ -313,33 +299,9 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
         // var xMatrix = numeric.transpose(xMatrixTransp);
 
 
-        return mathJs();
-        // return numericJs();
-
-
-
-
-
-        // var beta1 = math.chain()
-        // .multiply(xMatrix)
-        // .inv()
-        // .multiply(xMatrixTransp)
-        // .multiply(normalTargetData)
-        // .done();
-        // console.log("beta=", beta1);
-
-        // regressionUtils.dispSize("xMatrixTransp", xMatrixTransp);
-        // regressionUtils.dispSize("xMatrix", xMatrix);
-        // regressionUtils.dispSize("normalTargetData", normalTargetData);
-
-
-        // return {
-        //   result: { success: true },
-        //   betas: betas,
-        //   ci: ciAndPvalue.ci,
-        //   pvalue: ciAndPvalue.pvalue
-        // };
-
+        // change this if you want to try it out
+        // return mathJs();
+        return numericJs();
       }; // end compute 
 
       function getError(message) {

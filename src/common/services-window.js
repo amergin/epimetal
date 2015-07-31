@@ -20,6 +20,7 @@ angular.module('services.window', ['angularSpinner', 'ui.router.state'])
         resetFn: null,
         circleSpin: {
           spinning: false,
+          maxValue: 100,
           value: 0
         },
         extra: {}
@@ -47,8 +48,17 @@ angular.module('services.window', ['angularSpinner', 'ui.router.state'])
         return obj;
       };
 
+      obj.circleSpinMax = function(x) {
+        if(!arguments.length) { return priv.circleSpin.maxValue; }
+        priv.circleSpin.maxValue = x;
+        return obj;
+      };
+
       obj.circleSpinValue = function(x) {
         if(!arguments.length) { return priv.circleSpin.value; }
+          if(x > priv.circleSpin.maxValue) {
+            x = priv.circleSpin.maxValue;
+          }
           priv.circleSpin.value = x;
         return obj;
       };

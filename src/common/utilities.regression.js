@@ -23,7 +23,7 @@
     var ret = [];
     _.each(data, function(array) {
       var copy = array.slice(0);
-      ret.push(stripNaNs(copy, nanIndices));
+      ret.push(root.stripNaNs(copy, nanIndices));
     });
     return ret;
   };
