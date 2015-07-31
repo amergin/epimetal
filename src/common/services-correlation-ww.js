@@ -146,9 +146,10 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
     }
 
     service.inProgress = function() {
-      return !_.isEmpty(_queuePromises);
+      return !_.isEmpty(_queuePromises) ||
+      _.any(_workers, function(ww) { return ww.isBusy(); });
     };
-
+    
     service.compute = function(config, windowObject) {
       function doQueue(config, windowObject, deferred) {
         var queueWithoutMe = _.without(_queuePromises, deferred.promise);

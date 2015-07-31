@@ -400,7 +400,8 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
     };
 
     service.inProgress = function() {
-      return !_.isEmpty(_queuePromises);
+      return !_.isEmpty(_queuePromises) ||
+      _.any(_workers, function(ww) { return ww.isBusy(); });
     };
 
     service.selectedVariables = function(x) {

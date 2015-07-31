@@ -32,12 +32,13 @@ angular.module('services.webworker', ['ext.lodash'])
 
       _obj.terminate = function() {
         priv.worker.terminate();
+        priv.busy = false;
         priv.onTerminate();
         return _obj;
       };
 
       _obj.isBusy = function() {
-
+        return priv.busy;
       };
 
       _obj.run = function(input) {
