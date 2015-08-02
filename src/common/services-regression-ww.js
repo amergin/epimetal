@@ -224,9 +224,13 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
         function mathJs() {
           // see https://en.wikipedia.org/wiki/Ordinary_least_squares#Estimation
           // beta = (X^T X)^{-1} X^T y 
-          var _xMatrixTransp = math.matrix(xMatrixTransp);
+          var _xMatrixTransp = math.matrix(xMatrixTransp, 'dense', 'number');
           var _xMatrix = math.transpose(xMatrixTransp);
-          var _normalTargetData = math.matrix(normalTargetData);
+          var _normalTargetData = math.matrix(normalTargetData, 'dense', 'number');
+
+          // console.log("_xMatrixTransp size = ", String(_xMatrixTransp.size()));
+          // console.log("_xMatrix size = ", _.size(_xMatrix));
+          // console.log("_normalTargetData size = ", String(_normalTargetData.size()));
 
           // Compute beta = (X^T X)^{-1} X^T y 
           var dotProduct = math.multiply(_xMatrixTransp, _xMatrix);
@@ -240,7 +244,7 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
           var k = math.size(_xMatrix)[1];
           var beta = betas.subset(math.index(1));
 
-          var _yMatrixTransp = math.matrix([normalTargetData]);
+          var _yMatrixTransp = math.matrix([normalTargetData], 'dense', 'number');
 
           // get confidence interval and p-value
           var ciAndPvalue = regressionUtils.getCIAndPvalueMathjs(inverse, _xMatrix, _xMatrixTransp, _yMatrixTransp, n, k, beta);
@@ -298,7 +302,6 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
 
         var xMatrixTransp = [onesArray, normalAssocData].concat(normalAdjustData);
         // var xMatrix = numeric.transpose(xMatrixTransp);
-
 
         // change this if you want to try it out
         // return mathJs();
@@ -465,6 +468,7 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
             nanIndices: nanIndices
           };
 
+          var perf1 = performance.now();
           _.each(_workers, function(worker, ind) {
             var promise = worker
                           .onTerminate(onTerminate)
@@ -482,6 +486,8 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
           });
 
           $q.all(workerPromises).then(function succFn(results) {
+            var perf2 = performance.now();
+            console.log("elapsed time = ", Math.ceil((perf2 - perf1)/1000));
             windowObject.circleSpinValue(100);
             results = _.flatten(results);
             if( !results[0].result.success ) {
