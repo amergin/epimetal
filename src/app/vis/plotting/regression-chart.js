@@ -176,7 +176,10 @@ function RegressionChart() {
     text.each(function(d) {
       d3.select(this)
       .selectAll('tspan.content')
-      .data(d._chunked)
+      .data(function(d) {
+        if(!d._chunked.length) { return [[]]; }
+        else { return d._chunked; }
+      })
       .enter()
       .append('svg:tspan')
       .attr('x', info.xOffset)
