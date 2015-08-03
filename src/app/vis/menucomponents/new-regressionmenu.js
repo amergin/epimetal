@@ -124,7 +124,7 @@ angular.module('plotter.vis.menucomponents.new-regressionmenu',
           'Please wait until the previous computation has been completed.', 'error', { referenceId: 'regressioninfo' });
         error = true;
       }
-      if(exceedsMaxVariables($scope.selection.association.length) || exceedsMaxVariables($scope.selection.association.length)) {
+      if(exceedsMaxVariables($scope.selection.association.length) || exceedsMaxVariables($scope.selection.adjust.length)) {
         NotifyService.addSticky('Too many selected variables', 
           'Please select a maximum of ' + REGRESSION_MAX_VARIABLES + ' variables.', 'error', { referenceId: 'regressioninfo' });        
         error = true;
