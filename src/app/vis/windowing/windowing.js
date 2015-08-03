@@ -41,6 +41,15 @@ angular.module('plotter.vis.windowing',
       $scope.window.object.resetFn();
     };
 
+    $scope.getCircleInlineCSS = function(radius) {
+      var width = $scope.element[0].offsetWidth,
+      height = $scope.element[0].offsetHeight;
+      return {
+        'top': Math.ceil((height - radius*2)/2),
+        'left': Math.ceil((width - radius*2)/2)
+      };
+    };
+
 }])
 
 
