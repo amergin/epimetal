@@ -2,7 +2,7 @@ function RegressionChart() {
   var _chart = {};
 
   var _margins = {
-      top: 0,
+      top: 30,
       right: 5,
       bottom: 0,
       left: 0
@@ -10,8 +10,13 @@ function RegressionChart() {
     _element,
     // _callback,
     _width,
+    _indent = 15,
     _axis,
     _data,
+    _header,
+    _headerVarRowCount = 2,
+    _headerHeight = null,
+    _headerSpacing = 30,
     _groupedData,
     _groupSpacing = 30,
     _groupStartYOffset = 30,
@@ -55,8 +60,6 @@ function RegressionChart() {
 
       // exit
       _svg.exit().remove();
-
-
     }
 
     function bodyG() {
@@ -126,10 +129,72 @@ function RegressionChart() {
       resetRows();
     }
 
+    header();
     boxRows();
     // if(_callback) { doCallback(); }
     return _chart;
   };
+
+  function getHeaderHeight() {
+    var lastHeaderStart = (_header.length - 1) * _headerSpacing,
+    estRowHeight = 17,
+    lastHeight = _header[_header.length-1]._chunked.length * estRowHeight;
+
+    var ret = lastHeaderStart + lastHeight;
+    console.log("getHeaderHeight = ", ret);
+    return ret;
+  }
+
+  function header() {
+
+    var info = getChartMeasurements();
+
+    // enter
+    var group = _bodyG.selectAll('g.header')
+    .data([_header])
+    .enter()
+    .append('g')
+    .attr('class', 'header');
+
+    var rows = group.selectAll('g.header-row')
+    .data(function(d) { return d; })
+    .enter()
+    .append('g')
+    .attr('class', 'header-row');
+
+    var text = rows
+    .append('svg:text')
+    .attr('x', 0)
+    .attr('y', function(d, ind) { return ind * _headerSpacing; });
+
+    text.append('svg:tspan')
+    .attr('x', _indent)
+    .attr('class', 'title')
+    .attr('dy', 0)//10)
+    .text(function(d) { return d.title; });
+
+    text.each(function(d) {
+      d3.select(this)
+      .selectAll('tspan.content')
+      .data(d._chunked)
+      .enter()
+      .append('svg:tspan')
+      .attr('x', info.xOffset)
+      .attr('dy', function(d, ind) {
+        return !ind ? 0 : 15;
+      })
+      .attr('class', 'content')
+      .text(function(cont, ind) {
+        console.log("cont = ", cont);
+        if(!cont.length && ind === 0) {
+          return "(None)";
+        } else {
+          return cont.join(", ");
+        }
+      });
+    });
+
+  }
 
   function zeroLine() {
     function xOffset() {
@@ -151,7 +216,7 @@ function RegressionChart() {
     .append('line')
     .attr('x1', xOffset)
     .attr('x2', xOffset)
-    .attr('y1', getGroupY(0).firstLabel)
+    .attr('y1', getGroupY(0).firstRow)
     .attr('y2', function(d) {
       var noGroups = _groupedData.length;
       return getGroupY(noGroups-1).end;
@@ -160,30 +225,28 @@ function RegressionChart() {
 
   function getGroupY(groupInd) {
     function getSum() {
-      var sum = 0;
+      var sum = headerHeight;
       for(var i = groupInd-1; i >= 0; --i) {
         sum += getGroupHeight(i);
         sum += _groupSpacing;
       }
       return sum;
     }
-    var start,
-    firstLabel,
+    var headerHeight = getHeaderHeight(),
+    start = headerHeight, //_headerHeight,
+    firstRow = start + getBoxRowY(0, 0).start,
     end,
     labelConst = _groupStartYOffset;
 
     if(groupInd === 0) {
-      start = 0;
-      firstLabel = labelConst/2;
-      end = start + labelConst + getGroupHeight(groupInd);
     } else {
       start = getSum();
-      firstLabel = start + labelConst/2;
-      end = start + labelConst + getGroupHeight(groupInd);
     }
+    end = start + labelConst + getGroupHeight(groupInd);
+
     return {
       start: start,
-      firstLabel: firstLabel,
+      firstRow: firstRow,
       end: end
     };
   }
@@ -304,11 +367,9 @@ function RegressionChart() {
       .enter()
       .append('text')
       .attr('class', 'group-label')
+      .attr("dominant-baseline", "central")
       .attr('x', 0)
-      .attr('y', function(d, elInd, groupInd) {
-        var y = getGroupY(groupInd);
-        return y.firstLabel - y.start;
-      })
+      .attr('dy', 15)
       .text(function(d) { return d.name; });
 
       // exit
@@ -358,11 +419,13 @@ function RegressionChart() {
       boxRow
       .append('text')
       .attr('class', 'box-label')
-      .attr('x', 15)
+      .attr("dominant-baseline", "central")
+      .attr('x', _indent)
       .attr('transform', function(d, elInd, groupInd) {
         var offset = getBoxRowY(groupInd, elInd);
         return "translate(0," + offset.middle + ")";
       })
+
       .text(function(d) { return d.variable; });
     }
 
@@ -389,11 +452,6 @@ function RegressionChart() {
     function bgRects(boxRow) {
       var info = getChartMeasurements();
       boxRow
-      // .selectAll('rect.bg')
-      // .data(function(d,i) { 
-      //   return d;
-      // })
-      // .enter()
       .append('rect')
       .attr('class', 'bg')
       .attr('x', 0)
@@ -488,6 +546,15 @@ function RegressionChart() {
     return _chart;
   };
 
+  _chart.header = function(x) {
+    if(!arguments.length) { return _header; }
+    _header = x;
+    _.each(_header, function(group) {
+      // split to subarrays
+      group['_chunked'] = _.chunk(group.content.sort(), _headerVarRowCount);
+    });
+    return _chart;
+  };
 
   _chart.data = function(data) {
     if(!arguments.length) { return _data; }

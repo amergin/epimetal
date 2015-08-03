@@ -31,6 +31,10 @@ angular.module('plotter.vis.plotting.regression',
       .width(width)
       .data(data)
       .variables(variables)
+      .header([
+        { 'title': 'Target variable', 'content': $scope.window.extra().computation.input.target },
+        { 'title': 'Adjust variables', 'content': $scope.window.extra().computation.input.adjust }
+      ])
       .circleColors(FilterService.getSOMFilterColors())
       .datasetColors(DatasetFactory.getColorScale());
 
