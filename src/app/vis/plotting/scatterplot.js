@@ -459,6 +459,8 @@ angular.module('plotter.vis.plotting.scatterplot',
         }, 150, { leading: false, trailing: true });
 
         var resizeUnbind = $scope.$on('gridster-resized', function(sizes, gridster) {
+          var isVisible = _.contains($injector.get('WindowHandler').getVisible(), $scope.window.handler());
+          if(!isVisible) { return; }
           renderThr();
         });
       }
