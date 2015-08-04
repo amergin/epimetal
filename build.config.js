@@ -74,7 +74,10 @@ module.exports = {
       'vendor/angular-gridster/src/angular-gridster.js',
       // routing
       'vendor/angular-ui-router/release/angular-ui-router.js',
-      'vendor/ui-router-extras/release/ct-ui-router-extras.js',
+      // 'vendor/ui-router-extras/release/ct-ui-router-extras.js',
+      'vendor/ui-router-extras/release/modular/ct-ui-router-extras.core.js',
+      'vendor/ui-router-extras/release/modular/ct-ui-router-extras.dsr.js',
+      'vendor/ui-router-extras/release/modular/ct-ui-router-extras.sticky.js',
       'vendor/angular-ui-utils/modules/route/route.js',
       'vendor/crossfilter/patched/crossfilter.js',
       'vendor/d3/d3.js',

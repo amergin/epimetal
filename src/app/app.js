@@ -36,7 +36,7 @@ angular.module('plotter', [
   }
 })
 
-.config(function config($stateProvider, $urlRouterProvider, $injector, $stickyStateProvider, $locationProvider, $futureStateProvider) {
+.config(function config($stateProvider, $urlRouterProvider, $injector, $stickyStateProvider, $locationProvider) {
 
   $locationProvider
     // .html5Mode(true)
@@ -48,10 +48,6 @@ angular.module('plotter', [
     }]);
     $stickyStateProvider.enableDebug(true);
 
-    // see https://github.com/christopherthielen/ui-router-extras/issues/138
-    $futureStateProvider.addResolve(function($q) { 
-      return $q.reject();
-    });
   })
 .run(function run($rootScope, $state, $stateParams, $location, dc) {
   $rootScope.$state = $state;

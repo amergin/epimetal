@@ -1,7 +1,10 @@
 angular.module('plotter.vis', [
   'ui.router.state',
-  'ui.router.util',
-  'ct.ui.router.extras',
+  // 'ui.router.util',
+  // 'ct.ui.router.extras',
+  'ct.ui.router.extras.core',
+  'ct.ui.router.extras.dsr',
+  'ct.ui.router.extras.sticky',
   'services.dataset',
   'services.notify',
   'services.window',
