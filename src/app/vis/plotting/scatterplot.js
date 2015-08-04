@@ -2,13 +2,14 @@ angular.module('plotter.vis.plotting.scatterplot',
   [
   'ui.router',
   'services.dimensions',
-  'services.dataset'
+  'services.dataset',
+  'ext.d3'  
 ])
 
 .constant('SCATTERPLOT_POOLING_COLOR', 'black')
 
-.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$state', '$rootScope', '$timeout', 'SCATTERPLOT_POOLING_COLOR', 'GRID_WINDOW_PADDING',
-  function($scope, DatasetFactory, DimensionService, constants, $state, $rootScope, $timeout, SCATTERPLOT_POOLING_COLOR, GRID_WINDOW_PADDING) {
+.controller('ScatterPlotController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$state', '$rootScope', '$timeout', 'SCATTERPLOT_POOLING_COLOR', 'GRID_WINDOW_PADDING', 'd3',
+  function($scope, DatasetFactory, DimensionService, constants, $state, $rootScope, $timeout, SCATTERPLOT_POOLING_COLOR, GRID_WINDOW_PADDING, d3) {
 
     $scope.dimensionService = $scope.window.handler().getDimensionService();
     $scope.dimensionInst = $scope.dimensionService.getXYDimension($scope.window.variables());

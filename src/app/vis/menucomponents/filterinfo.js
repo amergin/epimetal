@@ -1,7 +1,9 @@
 angular.module('plotter.vis.menucomponents.filterinfo', 
   ['services.dimensions', 
   'services.filter', 
-  'mgcrea.ngStrap.alert'])
+  'mgcrea.ngStrap.alert',
+  'ext.d3'  
+  ])
 
 .directive('plFilterInfo', ['$templateCache', '$compile', '$rootScope', '$injector', 'FilterService',
   function($templateCache, $compile, $rootScope, $injector, FilterService) {
@@ -15,8 +17,8 @@ angular.module('plotter.vis.menucomponents.filterinfo',
   }
 ])
 
-.controller('FilterInfoController', ['$scope', '$timeout', '$injector', 'DimensionService', '$rootScope', 'constants', 'FilterService', '$state', 'NotifyService', 'TabService', 'DatasetFactory', 'SOMService',
-  function FilterInfoController($scope, $timeout, $injector, DimensionService, $rootScope, constants, FilterService, $state, NotifyService, TabService, DatasetFactory, SOMService) {
+.controller('FilterInfoController', ['$scope', '$timeout', '$injector', 'DimensionService', '$rootScope', 'constants', 'FilterService', '$state', 'NotifyService', 'TabService', 'DatasetFactory', 'SOMService', 'd3',
+  function FilterInfoController($scope, $timeout, $injector, DimensionService, $rootScope, constants, FilterService, $state, NotifyService, TabService, DatasetFactory, SOMService, d3) {
     var numFormat = d3.format('.2e');
     var dimensionService = DimensionService.getPrimary();
 
