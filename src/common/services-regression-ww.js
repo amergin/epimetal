@@ -362,6 +362,9 @@ angular.module('services.regression.ww', [
         }
       }
 
+      // avoid minification issues of renaming lodash
+      var _ = self["_"];
+
       console.log("Thread started");
 
       var results = _.map(input.data, function(varData, ind, arr) {

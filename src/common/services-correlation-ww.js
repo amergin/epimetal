@@ -127,6 +127,9 @@ angular.module('services.correlation.ww', [
         output.notify({ progress: loopInd/iterations, thread: input.workerId });
       }
 
+      // avoid minification issues of renaming lodash
+      var _ = self["_"];
+
       try {
         _.each(coordinates, function(coord, ind) {
           var varX = coord.x,
