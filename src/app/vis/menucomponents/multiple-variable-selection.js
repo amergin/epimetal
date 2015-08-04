@@ -74,9 +74,8 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     $scope.updateSelection = function(variable, force) {
       function multi(variables, indCollection) {
         // find index
-        var ind = _.findIndex(variables, function(v) {
-          return v == variable;
-        }), indInVars;
+        var ind = _.findIndex(variables, function(d) { return d.name == variable.name; }),
+        indInVars;
 
         if(ind < 0) {
           if(variable.selected) {
@@ -177,17 +176,17 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     };
 
     function getPayloadField() {
-      if($scope.mode == 'scatterplot') {
+      switch($scope.mode) {
+        case 'scatterplot':
         if($scope.focus.x) {
           return $scope.payloadX;
-        } else {
-          return $scope.payloadY;
         }
+        return $scope.payloadY;
 
-      } else if($scope.mode == 'multi') {
+        case 'multi':
         return $scope.payload;
-      } 
-      else if($scope.mode == 'regression') {
+
+        case 'regression':
         if($scope.focus.target) { 
           return $scope.payloadTarget;
         } else if($scope.focus.adjust) {
@@ -195,6 +194,11 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
         } else if($scope.focus.association) {
           return $scope.payloadAssociation;
         }
+        break;
+
+        default:
+        throw new Error("Unhandled type!");
+
       }
     }
 
@@ -223,17 +227,66 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     };
 
     function getPrepopulate(variables) {
-      var copy = angular.copy(variables),
-      hasPayload = !_.isUndefined($scope.payload);
-      if(hasPayload && $scope.payload.length > 0) {
-        var objs = [];
-        _.each($scope.payload, function(p) {
-          var found = _.find(copy, p);
-          found.selected = true;
-          objs.push(found);
-        });
-        $scope.payload = objs;
+      function getPreVariables() {
+        var joined;
+        switch($scope.mode) {
+          case 'scatterplot':
+          joined = _.union($scope.payloadX, $scope.payloadY);
+          break;
+
+          case 'multi':
+          joined = $scope.payload;
+          break;
+
+          case 'regression':
+          joined = _.union($scope.payloadAdjust, $scope.payloadAssociation, $scope.payloadTarget);
+          break;
+        }
+        return joined;
       }
+
+      function populateIndices(variables) {
+        function findIndex(variables, what) {
+          if(_.isUndefined(what)) { return -1; }
+          return _.findIndex(variables, function(d) { return d.name == what.name; });
+        }
+        var ind;
+        switch($scope.mode) {
+          case 'scatterplot':
+          ind = findIndex(variables, $scope.payloadX[0]);
+          if(ind !== -1) { $scope.selectedScatterInd.x = ind; }
+          ind = findIndex(variables, $scope.payloadY[0]);
+          if(ind !== -1) { $scope.selectedScatterInd.y = ind; }
+          break;
+
+          case 'regression':
+          ind = findIndex(variables, $scope.payloadTarget[0]);
+          if(ind !== -1) { $scope.selectedRegressionInd.target = ind; }
+
+          var indices = _.chain($scope.payloadAdjust)
+          .map(function(p) {
+            return findIndex(variables, p);
+          })
+          .value();
+          $scope.selectedRegressionInd.adjust = indices;
+
+          indices = _.chain($scope.payloadAssociation)
+          .map(function(p) {
+            return findIndex(variables, p);
+          })
+          .value();
+          $scope.selectedRegressionInd.association = indices;
+          break;
+        }
+      }
+
+      var copy = angular.copy(variables),
+      found;
+      _.each(getPreVariables(), function(v) {
+        found = _.find(copy, function(d) { return d.name == v.name; });
+        found.selected = true;
+      });
+      populateIndices(copy);
       return copy;
     }
 
@@ -469,21 +522,19 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       $scope.selectedScatterInd[active] = ind;
     }
 
-    function setActiveScatter(active, cpart) {
-      var activeInd = $scope.selectedScatterInd[active],
-      passiveInd = $scope.selectedScatterInd[cpart];
-      if(!_.isNull(activeInd)) {
-        $scope.variables[activeInd].selected = true;
-      }
-
-      if(!_.isNull(passiveInd)) {
-        $scope.variables[passiveInd].selected = false;
-      }
-
-    }
-
     $scope.setFocus = function(field) {
       function scatterplot() {
+        function setActiveScatter(active, cpart) {
+          var activeInd = $scope.selectedScatterInd[active],
+          passiveInd = $scope.selectedScatterInd[cpart];
+          if(!_.isNull(activeInd)) {
+            $scope.variables[activeInd].selected = true;
+          }
+
+          if(!_.isNull(passiveInd)) {
+            $scope.variables[passiveInd].selected = false;
+          }
+        }
         var cpart = (field == 'x') ? 'y' : 'x';
         setActiveScatter(field, cpart);
 
