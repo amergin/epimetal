@@ -2,7 +2,7 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
 
 .constant('CORRELATION_SPLIT_MAX', 10)
 .constant('CORRELATION_SPLIT_MIN', 4)
-.constant('CORRELATION_VAR_THRESHOLD', 40)
+.constant('CORRELATION_VAR_THRESHOLD', 10)
 .constant('CORRELATION_THREADS', 3)
 
 .factory('CorrelationService', ['$q', 'DatasetFactory', 'NotifyService', 'CORRELATION_SPLIT_MAX', 'CORRELATION_SPLIT_MIN', 'CORRELATION_VAR_THRESHOLD', 'CORRELATION_THREADS', 'WebWorkerService', 'TabService', 'coreEstimator', '$timeout',
@@ -86,7 +86,7 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
         });
       });
 
-      var subArrayCount = _availableCores;
+      var subArrayCount = (variables.length <= CORRELATION_VAR_THRESHOLD) ? 1 : _availableCores;
       return {
         diagonals: diagonals,
         coordinates: Utils.subarrays(coordinates, subArrayCount)
@@ -192,21 +192,26 @@ angular.module('services.correlation.ww', ['services.dataset', 'services.notify'
         getData(config, windowHandler).then(function(data) {
           var workerPromises = [];
           _.each(_workers, function(worker, ind) {
-            var promise = worker
-                          .onTerminate(onTerminate)
-                          .run({
-                            samples: data.slice(0),
-                            variables: config.variables,
-                            coordinates: cellInfo.coordinates[ind],
-                            workerId: worker.id()
-                          });
+            var coordinates = cellInfo.coordinates[ind];
+            // consider the case where there are more workers than variables  to calculate
+            if(coordinates) {
+              var promise = worker
+                            .onTerminate(onTerminate)
+                            .run({
+                              samples: data.slice(0),
+                              variables: config.variables,
+                              coordinates: coordinates,
+                              workerId: worker.id()
+                            });
 
-            promise.then(null, null, function notifyFn(data) {
-              percentProgress[data.thread] = data.progress;
-              var totalProgress = Math.ceil(_.chain(percentProgress).values().sum().value() / _availableCores * 100);
-              windowObject.circleSpinValue(totalProgress);
-            });
-            workerPromises.push(promise);
+              promise.then(null, null, function notifyFn(data) {
+                percentProgress[data.thread] = data.progress;
+                var workerCount  = workerPromises.length;
+                var totalProgress = Math.ceil(_.chain(percentProgress).values().sum().value() / workerCount * 100);
+                windowObject.circleSpinValue(totalProgress);
+              });
+              workerPromises.push(promise);
+            }
           });
 
           $q.all(workerPromises).then(function succFn(results) {

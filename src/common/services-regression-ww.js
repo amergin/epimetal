@@ -2,9 +2,10 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
 
 .constant('DEFAULT_REGRESSION_THREADS', 3)
 .constant('MAX_REGRESSION_THREADS', 4)
+.constant('REGRESSION_VAR_THRESHOLD', 4)
 
-.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'TabService', 'WebWorkerService', 'DEFAULT_REGRESSION_THREADS', 'coreEstimator', 'MAX_REGRESSION_THREADS',
-  function RegressionServiceWW($injector, $q, $rootScope, DatasetFactory, TabService, WebWorkerService, DEFAULT_REGRESSION_THREADS, coreEstimator, MAX_REGRESSION_THREADS) {
+.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'TabService', 'WebWorkerService', 'DEFAULT_REGRESSION_THREADS', 'coreEstimator', 'MAX_REGRESSION_THREADS', 'REGRESSION_VAR_THRESHOLD',
+  function RegressionServiceWW($injector, $q, $rootScope, DatasetFactory, TabService, WebWorkerService, DEFAULT_REGRESSION_THREADS, coreEstimator, MAX_REGRESSION_THREADS, REGRESSION_VAR_THRESHOLD) {
     var that = this;
     var service = {};
     var FilterService = $injector.get('FilterService');
@@ -456,10 +457,12 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
             assocVars = config.variables.association,
             adjustVars = config.variables.adjust;
 
+          var subArrayCount = (assocVars.length <= REGRESSION_VAR_THRESHOLD) ? 1 : _availableCores;
+
           var threadData = getThreads(data, assocVars),
             targetData = getVariableData(data, targetVar),
             adjustData = getAdjustData(data, adjustVars),
-            splitThreadData = Utils.subarrays(threadData, _availableCores),
+            splitThreadData = Utils.subarrays(threadData, subArrayCount),
             nanIndices = getAllNaNs(targetData, targetVar, adjustData, adjustVars);
 
           var globals = {
@@ -468,26 +471,31 @@ angular.module('services.regression.ww', ['services.dataset', 'services.filter',
             nanIndices: nanIndices
           };
 
-          var perf1 = performance.now();
+          // var perf1 = performance.now();
           _.each(_workers, function(worker, ind) {
-            var promise = worker
-                          .onTerminate(onTerminate)
-                          .run({
-                            workerId: worker.id(),
-                            data: splitThreadData[ind],
-                            globals: globals
-                          });
-            promise.then(null, null, function notifyFn(data) {
-              percentProgress[data.thread] = data.progress;
-              var totalProgress = Math.ceil(_.chain(percentProgress).values().sum().value() / _availableCores * 100);
-              windowObject.circleSpinValue(totalProgress);
-            });
-            workerPromises.push(promise);
+            var data = splitThreadData[ind];
+            // consider the case where there are more workers than variables  to calculate
+            if(data) {
+              var promise = worker
+                            .onTerminate(onTerminate)
+                            .run({
+                              workerId: worker.id(),
+                              data: splitThreadData[ind],
+                              globals: globals
+                            });
+              promise.then(null, null, function notifyFn(data) {
+                percentProgress[data.thread] = data.progress;
+                var workerCount  = workerPromises.length;                
+                var totalProgress = Math.ceil(_.chain(percentProgress).values().sum().value() / workerCount * 100);
+                windowObject.circleSpinValue(totalProgress);
+              });
+              workerPromises.push(promise);
+            }
           });
 
           $q.all(workerPromises).then(function succFn(results) {
-            var perf2 = performance.now();
-            console.log("elapsed time = ", Math.ceil((perf2 - perf1)/1000));
+            // var perf2 = performance.now();
+            // console.log("elapsed time = ", Math.ceil((perf2 - perf1)/1000));
             windowObject.circleSpinValue(100);
             results = _.flatten(results);
             if( !results[0].result.success ) {

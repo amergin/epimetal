@@ -325,8 +325,8 @@ angular.module('plotter.vis.plotting.heatmap',
 
 }])
 
-.directive('plHeatmap', ['$compile', '$rootScope', '$timeout', 'DatasetFactory', 'HEATMAP_MARGINS', 'GRID_WINDOW_PADDING', 'HEATMAP_COLORBAR_WIDTH',
-  function($compile, $rootScope, $timeout, DatasetFactory, HEATMAP_MARGINS, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH) {
+.directive('plHeatmap', ['$injector', '$rootScope', '$timeout', 'DatasetFactory', 'HEATMAP_MARGINS', 'GRID_WINDOW_PADDING', 'HEATMAP_COLORBAR_WIDTH',
+  function($injector, $rootScope, $timeout, DatasetFactory, HEATMAP_MARGINS, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH) {
 
     var linkFn = function($scope, ele, iAttrs) {
 

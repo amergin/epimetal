@@ -44,10 +44,10 @@ angular.module('services.webworker', ['ext.lodash'])
       _obj.run = function(input) {
         init();
         var deferred = $q.defer();
+        priv.busy = true;
 
         priv.worker.addEventListener('message', function(e) {
           var eventId = e.data.event;
-          priv.busy = true;
 
           switch(eventId) {
             case 'success':
@@ -65,6 +65,7 @@ angular.module('services.webworker', ['ext.lodash'])
             break;
 
             default:
+            console.log("default");
             priv.busy = false;
             deferred.reject(e.data.data);
             break;
