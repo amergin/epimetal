@@ -141,7 +141,6 @@ function RegressionChart() {
     lastHeight = _header[_header.length-1]._chunked.length * estRowHeight;
 
     var ret = lastHeaderStart + lastHeight;
-    console.log("getHeaderHeight = ", ret);
     return ret;
   }
 
@@ -188,7 +187,6 @@ function RegressionChart() {
       })
       .attr('class', 'content')
       .text(function(cont, ind) {
-        console.log("cont = ", cont);
         if(!cont.length && ind === 0) {
           return "(None)";
         } else {
