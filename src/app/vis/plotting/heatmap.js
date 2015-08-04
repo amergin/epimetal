@@ -4,7 +4,8 @@ angular.module('plotter.vis.plotting.heatmap',
   'services.dimensions',
   'services.correlation.ww',
   'services.tab',
-  'ext.d3'  
+  'ext.d3',
+  'ext.dc'
   ])
 
 .constant('HEATMAP_WIDTH', 420)
@@ -18,8 +19,8 @@ angular.module('plotter.vis.plotting.heatmap',
   left: 80
 })
 
-.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService', 'HEATMAP_MARGINS', 'HEATMAP_UNDEFINED_COLOR', 'GRID_WINDOW_PADDING', 'HEATMAP_COLORBAR_WIDTH', 'd3',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService, HEATMAP_MARGINS, HEATMAP_UNDEFINED_COLOR, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH, d3) {
+.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService', 'HEATMAP_MARGINS', 'HEATMAP_UNDEFINED_COLOR', 'GRID_WINDOW_PADDING', 'HEATMAP_COLORBAR_WIDTH', 'd3', 'dc',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService, HEATMAP_MARGINS, HEATMAP_UNDEFINED_COLOR, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH, d3, dc) {
 
     $scope.resetFilter = function() {
       $scope.heatmap.filterAll();

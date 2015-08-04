@@ -8,15 +8,15 @@ angular.module('plotter.vis.explore',
     'services.urlhandler',
     'gridster',
     'utilities',
-    'mgcrea.ngStrap.scrollspy'
+    'ext.dc'    
     ])
 
 .constant('EXPLORE_DEFAULT_HISTOGRAMS', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'])
 .constant('EXPLORE_DEFAULT_SIZE_X', 3)
 .constant('EXPLORE_DEFAULT_SIZE_Y', 3)
 
-.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', 'windowHandler', 'DatasetFactory', '$q', 'PlotService', 'WindowHandler', 'SOMService', '$timeout', 'EXPLORE_DEFAULT_SIZE_X', 'EXPLORE_DEFAULT_SIZE_Y',
-  function ExploreController($scope, $templateCache, $rootScope, windowHandler, DatasetFactory, $q, PlotService, WindowHandler, SOMService, $timeout, EXPLORE_DEFAULT_SIZE_X, EXPLORE_DEFAULT_SIZE_Y) {
+.controller('ExploreController', ['$scope', '$templateCache', '$rootScope', 'windowHandler', 'DatasetFactory', '$q', 'PlotService', 'WindowHandler', 'SOMService', '$timeout', 'EXPLORE_DEFAULT_SIZE_X', 'EXPLORE_DEFAULT_SIZE_Y', 'dc',
+  function ExploreController($scope, $templateCache, $rootScope, windowHandler, DatasetFactory, $q, PlotService, WindowHandler, SOMService, $timeout, EXPLORE_DEFAULT_SIZE_X, EXPLORE_DEFAULT_SIZE_Y, dc) {
     console.log("explore ctrl");
 
     $scope.windowHandler = windowHandler;

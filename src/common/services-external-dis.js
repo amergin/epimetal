@@ -6,12 +6,15 @@ angular.module('ext.d3', []).factory('d3', function() {
     return window.d3;
 });
 
+angular.module('ext.dc', []).factory('dc', function() {
+    return window.dc;
+});
+
 angular.module('utilities.math', []).factory('mathUtils', function() {
     return window.mathUtils;
 });
 
 angular.module('ext.core-estimator', [])
-
 .factory('coreEstimator', function($q, $timeout) {
   var _cores = null;
 

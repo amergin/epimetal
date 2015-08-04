@@ -9,7 +9,8 @@ var App = angular.module('plotter', [
   'ngSanitize', 
   'ngAnimate',
   'angularSpinner',
-  'ext.lodash'
+  'ext.lodash',
+  'ext.dc'
   ]);
 
 App.constant('constants', {
@@ -42,9 +43,6 @@ App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStatePr
     // .html5Mode(true)
     .hashPrefix('!');
 
-    // dc event/trigger delay
-    dc.constants.EVENT_DELAY = 150;
-
     // default route
     $urlRouterProvider.when('', ['$state', '$stateParams', function($state, $stateParams) {
       $state.go('vis.explore', { state: undefined });
@@ -57,10 +55,13 @@ App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStatePr
     });
   }
   ])
-    .run(['$rootScope', '$state', '$stateParams', '$location',
-      function ($rootScope, $state, $stateParams, $location) {
+    .run(['$rootScope', '$state', '$stateParams', '$location', 'dc',
+      function ($rootScope, $state, $stateParams, $location, dc) {
         $rootScope.$state = $state;
         $rootScope.$stateParams = $stateParams;
+
+      // dc event/trigger delay
+      dc.constants.EVENT_DELAY = 150;
 
       // debug ui-router
       $rootScope.$on('$stateChangeStart',function(event, toState, toParams, fromState, fromParams){

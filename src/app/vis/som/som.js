@@ -5,14 +5,15 @@ angular.module('plotter.vis.som',
     'services.dataset',
     'services.notify',
     'services.som',
+    'ext.dc'
     ])
 
 .constant('SOM_DEFAULT_SIZE_X', 3)
 .constant('SOM_DEFAULT_SIZE_Y', 3)
 .constant('SOM_DEFAULT_PLANES', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'])
 
-.controller('SOMContentCtrl', ['$scope', '$rootScope', 'NotifyService', 'contentWindowHandler', 'SOM_DEFAULT_SIZE_X', 'SOM_DEFAULT_SIZE_Y',
-  function SOMContentCtrl($scope, $rootScope, NotifyService, contentWindowHandler, SOM_DEFAULT_SIZE_X, SOM_DEFAULT_SIZE_Y) {
+.controller('SOMContentCtrl', ['$scope', '$rootScope', 'NotifyService', 'contentWindowHandler', 'SOM_DEFAULT_SIZE_X', 'SOM_DEFAULT_SIZE_Y', 'dc',
+  function SOMContentCtrl($scope, $rootScope, NotifyService, contentWindowHandler, SOM_DEFAULT_SIZE_X, SOM_DEFAULT_SIZE_Y, dc) {
 
     $scope.windowHandler = contentWindowHandler;
     $scope.windows = $scope.windowHandler.get();

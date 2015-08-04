@@ -5,7 +5,8 @@ angular.module('plotter.vis.plotting.classedbarchart',
   'services.dataset',
   'services.som',
   'services.window',
-  'ext.d3'
+  'ext.d3',
+  'ext.dc'  
   ])
 
 .constant('CLASSED_BARCHART_SIZE', {
@@ -14,8 +15,8 @@ angular.module('plotter.vis.plotting.classedbarchart',
   aspectRatio: 'stretch'
 })
 
-.controller('ClassedBarChartPlotController', ['$scope', 'DimensionService', 'DatasetFactory', 'constants', '$injector', '$timeout', 'FilterService', 'GRID_WINDOW_PADDING', 'd3',
-  function ClassedBarChartPlotController($scope, DimensionService, DatasetFactory, constants, $injector, $timeout, FilterService, GRID_WINDOW_PADDING, d3) {
+.controller('ClassedBarChartPlotController', ['$scope', 'DimensionService', 'DatasetFactory', 'constants', '$injector', '$timeout', 'FilterService', 'GRID_WINDOW_PADDING', 'd3', 'dc',
+  function ClassedBarChartPlotController($scope, DimensionService, DatasetFactory, constants, $injector, $timeout, FilterService, GRID_WINDOW_PADDING, d3, dc) {
 
     $scope.dimensionService = $scope.window.handler().getDimensionService();
 
