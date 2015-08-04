@@ -4,33 +4,28 @@ angular.module('plotter.compatibility', ['services.compatibility',
   'mgcrea.ngStrap.popover', 
   'mgcrea.ngStrap.modal'])
 
-.directive('compatibilityInform', ['$rootScope',
-  function($rootScope) {
-    return {
-      restrict: 'C',
-      scope: {},
-      replace: true,
-      controller: 'CompatibilityController'
-    };
-  }
-  ])
+.directive('compatibilityInform', function($rootScope) {
+  return {
+    restrict: 'C',
+    scope: {},
+    replace: true,
+    controller: 'CompatibilityController'
+  };
+})
 
-.controller('CompatibilityController', ['$scope', '$modal', 'CompatibilityService',
-  function CompatibilityController($scope, $modal, CompatibilityService) {
-    console.log("compatibility");
+.controller('CompatibilityController', function CompatibilityController($scope, $modal, CompatibilityService) {
+  console.log("compatibility");
 
-    $scope.features = CompatibilityService.getFeatures();
+  $scope.features = CompatibilityService.getFeatures();
 
-    var modal = $modal({
-      scope: $scope,
-      contentTemplate: 'compatibility-inform.tpl.html',
-      show: true,
-      backdrop: 'static',
-      keyboard: false,
-      placement: 'center',
-      animation: 'am-fade-and-scale'
-    });
+  var modal = $modal({
+    scope: $scope,
+    contentTemplate: 'compatibility-inform.tpl.html',
+    show: true,
+    backdrop: 'static',
+    keyboard: false,
+    placement: 'center',
+    animation: 'am-fade-and-scale'
+  });
 
-
-  }
-  ]);
+});

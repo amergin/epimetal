@@ -15,8 +15,7 @@ angular.module('plotter.vis.plotting.profile-histogram',
   aspectRatio: 'preserve'
 })
 
-.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'FilterService', '_',
-  function ProfileHistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, FilterService, _) {
+.controller('ProfileHistogramPlotController', function ProfileHistogramPlotController($scope, DimensionService, FilterService, _) {
 
     $scope.window.headerText(['Profile histogram for ', $scope.window.extra().name]);
 
@@ -119,11 +118,9 @@ angular.module('plotter.vis.plotting.profile-histogram',
       return ret;
     };
 
+})
 
-}])
-
-.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'PROFILE_HISTOGRAM_SIZE', 'd3', '_',
-  function(constants, $timeout, $rootScope, $injector, PROFILE_HISTOGRAM_SIZE, d3, _) {
+.directive('plProfileHistogram', function plProfileHistogram($timeout, $rootScope, $injector, PROFILE_HISTOGRAM_SIZE, d3, _) {
 
     var PlotService = $injector.get('PlotService');
 
@@ -255,4 +252,4 @@ angular.module('plotter.vis.plotting.profile-histogram',
       }
     };
 
-}]);
+});

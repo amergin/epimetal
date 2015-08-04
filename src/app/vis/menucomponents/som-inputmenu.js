@@ -3,43 +3,41 @@ angular.module('plotter.vis.menucomponents.som-inputmenu',
   'ext.lodash'
   ])
 
-.controller('SOMInputMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService', '_',
-  function SOMInputMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService, _) {
+.controller('SOMInputMenuCtrl', function SOMInputMenuCtrl($scope, DatasetFactory, SOMService, _) {
 
-    $scope.selection = [];
+  $scope.selection = [];
 
-    function setVariables() {
-      DatasetFactory.getVariables().then(function(variables) {
-        var somVariables = SOMService.getVariables();
-        $scope.selection = _.map(somVariables, function(somv) {
-          return _.find(variables, function(v) { return v.name == somv; });
-        });
+  function setVariables() {
+    DatasetFactory.getVariables().then(function(variables) {
+      var somVariables = SOMService.getVariables();
+      $scope.selection = _.map(somVariables, function(somv) {
+        return _.find(variables, function(v) { return v.name == somv; });
+      });
+    });
+  }
+
+  setVariables();
+
+  $scope.canSubmit = function() {
+    return $scope.selection.length >= 3;
+  };
+
+  $scope.submit = function() {
+    function justNames(variables) {
+      return _.map($scope.selection, function(v) {
+        return v.name;
       });
     }
 
-    setVariables();
+    var names = justNames($scope.selection);
 
-    $scope.canSubmit = function() {
-      return $scope.selection.length >= 3;
-    };
+    SOMService.setVariables(names);
+    return names;
+  };
 
-    $scope.submit = function() {
-      function justNames(variables) {
-        return _.map($scope.selection, function(v) {
-          return v.name;
-        });
-      }
+})
 
-      var names = justNames($scope.selection);
-
-      SOMService.setVariables(names);
-      return names;
-    };
-
-  }
-])
-
-.directive('somInputMenu', function () {
+.directive('somInputMenu', function somInputMenu() {
   return {
     restrict: 'C',
     replace: false,

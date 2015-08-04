@@ -1,12 +1,11 @@
 angular.module('plotter.vis.menucomponents.linkcreator', 
   ['ngClipboard'])
 
-.config(['ngClipProvider', function(ngClipProvider) {
+.config(function linkcreatorConfig(ngClipProvider) {
     ngClipProvider.setPath("assets/ZeroClipboard.swf");
-  }])
+})
 
-.controller('LinkCreatorController', ['$scope', 'UrlHandler', 'NotifyService', '$templateCache', '$http', '$location', '$timeout', '$state', 'usSpinnerService',
-  function LinkCreatorController($scope, UrlHandler, NotifyService, $templateCache, $http, $location, $timeout, $state, usSpinnerService) {
+.controller('LinkCreatorController', function LinkCreatorController($scope, UrlHandler, NotifyService, $state, usSpinnerService) {
     $scope.stateLink = null;
 
     $scope.clicked = function() {
@@ -35,8 +34,7 @@ angular.module('plotter.vis.menucomponents.linkcreator',
     // init on load
     $scope.getStateLink();
 
-  }
-])
+})
 
 // directive for heatmap form
 .directive('linkCreator', function () {

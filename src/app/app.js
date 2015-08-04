@@ -1,4 +1,4 @@
-var App = angular.module('plotter', [
+angular.module('plotter', [
   'templates-app',
   'templates-common',
   'plotter.vis',
@@ -11,9 +11,9 @@ var App = angular.module('plotter', [
   'angularSpinner',
   'ext.lodash',
   'ext.dc'
-  ]);
+  ])
 
-App.constant('constants', {
+.constant('constants', {
   nanValue: -1000,
   legalMinValue: 0,
   tickFormat: d3.format(".2s"),
@@ -34,12 +34,11 @@ App.constant('constants', {
       url: 'ws://' + window.location.host //'ws://localhost:6565'
     }
   }
-});
+})
 
-App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStateProvider', '$locationProvider', '$futureStateProvider',
-  function ($stateProvider, $urlRouterProvider, $injector, $stickyStateProvider, $locationProvider, $futureStateProvider) {
+.config(function config($stateProvider, $urlRouterProvider, $injector, $stickyStateProvider, $locationProvider, $futureStateProvider) {
 
-    $locationProvider
+  $locationProvider
     // .html5Mode(true)
     .hashPrefix('!');
 
@@ -53,12 +52,10 @@ App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStatePr
     $futureStateProvider.addResolve(function($q) { 
       return $q.reject();
     });
-  }
-  ])
-    .run(['$rootScope', '$state', '$stateParams', '$location', 'dc',
-      function ($rootScope, $state, $stateParams, $location, dc) {
-        $rootScope.$state = $state;
-        $rootScope.$stateParams = $stateParams;
+  })
+.run(function run($rootScope, $state, $stateParams, $location, dc) {
+  $rootScope.$state = $state;
+  $rootScope.$stateParams = $stateParams;
 
       // dc event/trigger delay
       dc.constants.EVENT_DELAY = 150;
@@ -86,11 +83,8 @@ App.config(['$stateProvider', '$urlRouterProvider', '$injector', '$stickyStatePr
         console.log(unfoundState, fromState, fromParams);
       });
 
-}
-]);
-
-App.controller('AppCtrl', ['$scope', '$location', '$templateCache', 'CompatibilityService', 'NotifyService', 'usSpinnerService',
-  function AppCtrl($scope, $location, $templateCache, CompatibilityService, NotifyService, usSpinnerService) {
+})
+.controller('AppCtrl', function AppCtrl($scope, $location, $templateCache, CompatibilityService, NotifyService, usSpinnerService) {
 
     $scope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
       if (toState.resolve) {
@@ -111,5 +105,4 @@ App.controller('AppCtrl', ['$scope', '$location', '$templateCache', 'Compatibili
 
     $scope.loading = { spinner: true };
 
-  }
-  ]);
+});

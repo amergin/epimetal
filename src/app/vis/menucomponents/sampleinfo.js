@@ -4,8 +4,7 @@ angular.module('plotter.vis.menucomponents.sampleinfo',
   'services.filter'
   ])
 
-.directive('plSampleInfo', ['$templateCache', '$compile', '$rootScope', '$injector',
-  function($templateCache, $compile, $rootScope, $injector) {
+.directive('plSampleInfo', function plSampleInfo() {
     return {
       restrict: 'A',
       scope: false,
@@ -13,11 +12,9 @@ angular.module('plotter.vis.menucomponents.sampleinfo',
       controller: 'SampleInfoController',
       templateUrl: 'vis/menucomponents/sampleinfo.tpl.html'
     };
-  }
-])
 
-.controller('SampleInfoController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants', 'FilterService',
-  function FilterInfoController($scope, $templateCache, DimensionService, $rootScope, constants, FilterService) {
+})
+.controller('SampleInfoController', function FilterInfoController($scope, FilterService) {
 
     // update value on change
     $scope.$watch( function() {
@@ -26,5 +23,4 @@ angular.module('plotter.vis.menucomponents.sampleinfo',
       $scope.info = val;
     });
 
-  }
-]);
+});

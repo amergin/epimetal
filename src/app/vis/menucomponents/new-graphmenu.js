@@ -7,8 +7,7 @@ angular.module('plotter.vis.menucomponents.new-graphmenu',
 
 .constant('MAX_HEATMAP_VARS', 100)
 
-.controller('NewGraphMenuCtrl', ['$scope', 'DatasetFactory', 'MAX_HEATMAP_VARS', 'NotifyService', 'DimensionService', '_',
-  function NewGraphMenuCtrl($scope, DatasetFactory, MAX_HEATMAP_VARS, NotifyService, DimensionService, _) {
+.controller('NewGraphMenuCtrl', function NewGraphMenuCtrl($scope, MAX_HEATMAP_VARS, NotifyService, DimensionService, _) {
 
     $scope.tab = {
       ind: 0
@@ -131,8 +130,7 @@ angular.module('plotter.vis.menucomponents.new-graphmenu',
       }
     ];
 
-  }
-])
+})
 
 .directive('newGraphMenu', function () {
   return {

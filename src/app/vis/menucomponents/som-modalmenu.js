@@ -5,8 +5,7 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
 
 .constant('MAX_PLANE_VARS', 25)
 
-.controller('SOMModalMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService', 'WindowHandler', 'PlotService', 'MAX_PLANE_VARS', 'DimensionService', '_',
-  function SOMModalMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService, WindowHandler, PlotService, MAX_PLANE_VARS, DimensionService, _) {
+.controller('SOMModalMenuCtrl', function SOMModalMenuCtrl($scope, DatasetFactory, NotifyService, WindowHandler, PlotService, MAX_PLANE_VARS, DimensionService, _) {
 
     $scope.selection = {
       planes: [],
@@ -123,10 +122,9 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
       return data;
     };
 
-  }
-])
+})
 
-.directive('somModalMenu', function () {
+.directive('somModalMenu', function somModalMenu() {
   return {
     restrict: 'C',
     replace: false,

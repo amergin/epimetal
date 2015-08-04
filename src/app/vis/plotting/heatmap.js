@@ -20,62 +20,61 @@ angular.module('plotter.vis.plotting.heatmap',
   left: 80
 })
 
-.controller('HeatmapController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'CorrelationService', 'HEATMAP_MARGINS', 'HEATMAP_UNDEFINED_COLOR', 'GRID_WINDOW_PADDING', 'HEATMAP_COLORBAR_WIDTH', 'd3', 'dc', '_',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, CorrelationService, HEATMAP_MARGINS, HEATMAP_UNDEFINED_COLOR, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH, d3, dc, _) {
+.controller('HeatmapController', function($scope, constants, $injector, $timeout, CorrelationService, HEATMAP_UNDEFINED_COLOR, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH, d3, dc, _) {
 
-    $scope.resetFilter = function() {
-      $scope.heatmap.filterAll();
-      dc.redrawAll(constants.groups.heatmap);
-    };
+  $scope.resetFilter = function() {
+    $scope.heatmap.filterAll();
+    dc.redrawAll(constants.groups.heatmap);
+  };
 
-    function initHeader() {
-      var text;
+  function initHeader() {
+    var text;
 
-      if($scope.window.extra().separate === true) {
-        text = ['Correlation heatmap of', $scope.window.variables().x.length + " variables", "(" + $scope.window.extra().dataset.name() + ")"];
-      } else {
-        text = ['Correlation heatmap of', $scope.window.variables().x.length + " variables"];
-      }
-      $scope.window.headerText(text);
+    if($scope.window.extra().separate === true) {
+      text = ['Correlation heatmap of', $scope.window.variables().x.length + " variables", "(" + $scope.window.extra().dataset.name() + ")"];
+    } else {
+      text = ['Correlation heatmap of', $scope.window.variables().x.length + " variables"];
     }
+    $scope.window.headerText(text);
+  }
 
-    function initCrossfilter() {
-      $scope.crossfilter = crossfilter([]);
-      $scope.coordDim = $scope.crossfilter.dimension(function(d) {
-        return _.extend(d, { 'valueOf': function() { return d.x + "|" + d.y; } });
-      });
-      $scope.coordGroup = $scope.coordDim.group().reduceSum(function(d) {
-        return d.corr;
-      });
-    }
+  function initCrossfilter() {
+    $scope.crossfilter = crossfilter([]);
+    $scope.coordDim = $scope.crossfilter.dimension(function(d) {
+      return _.extend(d, { 'valueOf': function() { return d.x + "|" + d.y; } });
+    });
+    $scope.coordGroup = $scope.coordDim.group().reduceSum(function(d) {
+      return d.corr;
+    });
+  }
 
-    function initColorScale() {
-      $scope.window.extra()['colorScaleMode'] = 'stretch';
+  function initColorScale() {
+    $scope.window.extra()['colorScaleMode'] = 'stretch';
 
-      $scope.colorScale = {
-        stretch: {
-          scale: new CustomScale()
-                .lower(-1)
-                .middle(0)
-                .upper(1)
-                .threshold(0.25)
-                .undefinedColor(HEATMAP_UNDEFINED_COLOR),
+    $scope.colorScale = {
+      stretch: {
+        scale: new CustomScale()
+        .lower(-1)
+        .middle(0)
+        .upper(1)
+        .threshold(0.25)
+        .undefinedColor(HEATMAP_UNDEFINED_COLOR),
 
-          calculator: function(d) {
-            if($scope.filtered) {
-              if( !_.isUndefined(d.key.pvalue) && d.key.pvalue > $scope.limit ) {
-                return d3.rgb('white');
-              }
+        calculator: function(d) {
+          if($scope.filtered) {
+            if( !_.isUndefined(d.key.pvalue) && d.key.pvalue > $scope.limit ) {
+              return d3.rgb('white');
             }
-            return $scope.colorScale.stretch.scale.color(d.key);
-          },
+          }
+          return $scope.colorScale.stretch.scale.color(d.key);
+        },
           initial: null // override later
         },
 
         linear: {
           scale: d3.scale.linear()
-                .domain([-1, 0, 1])
-                .range(['blue', 'white', 'red']),
+          .domain([-1, 0, 1])
+          .range(['blue', 'white', 'red']),
 
           accessor: function(d) {
             if($scope.filtered) {
@@ -326,75 +325,74 @@ angular.module('plotter.vis.plotting.heatmap',
     };
 
 
-}])
+  })
 
-.directive('plHeatmap', ['$injector', '$rootScope', '$timeout', 'DatasetFactory', 'HEATMAP_MARGINS', 'GRID_WINDOW_PADDING', 'HEATMAP_COLORBAR_WIDTH', '_',
-  function($injector, $rootScope, $timeout, DatasetFactory, HEATMAP_MARGINS, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH, _) {
+.directive('plHeatmap', function($injector, $rootScope, $timeout, DatasetFactory, HEATMAP_MARGINS, HEATMAP_COLORBAR_WIDTH, _) {
 
-    var linkFn = function($scope, ele, iAttrs) {
+  var linkFn = function($scope, ele, iAttrs) {
+
+    $scope.window.addDropdown({
+      type: "correlation",
+      limit: $scope.limitDisp,
+      window: $scope.window
+    });
+
+    function initDropdown() {
+      var selector = _.template('#<%= id %> .<%= cls %> <%= element %>'),
+      id = $scope.element.parent().attr('id');
 
       $scope.window.addDropdown({
-        type: "correlation",
-        limit: $scope.limitDisp,
+        type: "colorscale",
+        scope: $scope,
+        callback: function() {
+          var mode = $scope.window.extra().colorScaleMode;
+          $scope.window.extra()['colorScaleMode'] = (mode == 'linear') ? $scope.doStretch() : $scope.doLinear();
+          $scope.heatmap.render();
+        }
+      });
+
+      $scope.window.addDropdown({
+        type: "export:svg",
+        selector: selector({ id: id, cls: 'heatmap-chart-anchor', element: 'svg' }),
+        scope: $scope,
+        source: 'svg',
         window: $scope.window
       });
 
-      function initDropdown() {
-        var selector = _.template('#<%= id %> .<%= cls %> <%= element %>'),
-        id = $scope.element.parent().attr('id');
+      $scope.window.addDropdown({
+        type: "export:png",
+        selector: selector({ id: id, cls: 'heatmap-chart-anchor', element: 'svg' }),
+        scope: $scope,
+        source: 'svg',
+        window: $scope.window
+      });
+    }
 
-        $scope.window.addDropdown({
-          type: "colorscale",
-          scope: $scope,
-          callback: function() {
-            var mode = $scope.window.extra().colorScaleMode;
-            $scope.window.extra()['colorScaleMode'] = (mode == 'linear') ? $scope.doStretch() : $scope.doLinear();
-            $scope.heatmap.render();
-          }
-        });
+    $scope.element = ele;
 
-        $scope.window.addDropdown({
-          type: "export:svg",
-          selector: selector({ id: id, cls: 'heatmap-chart-anchor', element: 'svg' }),
-          scope: $scope,
-          source: 'svg',
-          window: $scope.window
-        });
-
-        $scope.window.addDropdown({
-          type: "export:png",
-          selector: selector({ id: id, cls: 'heatmap-chart-anchor', element: 'svg' }),
-          scope: $scope,
-          source: 'svg',
-          window: $scope.window
-        });
-      }
-
-      $scope.element = ele;
-
-      $scope.heatmapAnchor = d3.select(ele[0])
-      .append('div')
-      .attr('class', 'heatmap-chart-anchor')[0];
+    $scope.heatmapAnchor = d3.select(ele[0])
+    .append('div')
+    .attr('class', 'heatmap-chart-anchor')[0];
 
 
-      $scope.colorbarAnchor = d3.select(ele[0])
-      .append('div')
-      .attr('class', 'heatmap-legend-anchor')[0][0];
+    $scope.colorbarAnchor = d3.select(ele[0])
+    .append('div')
+    .attr('class', 'heatmap-legend-anchor')[0][0];
 
-      function draw() {
-        $scope.drawHeatmap(
-          $scope.heatmapAnchor,
-          $scope.element,
-          $scope.coordDim, 
-          $scope.coordGroup,
-          HEATMAP_MARGINS,
-          HEATMAP_COLORBAR_WIDTH
-          );
-      }
+    function draw() {
+      $scope.drawHeatmap(
+        $scope.heatmapAnchor,
+        $scope.element,
+        $scope.coordDim, 
+        $scope.coordGroup,
+        HEATMAP_MARGINS,
+        HEATMAP_COLORBAR_WIDTH
+        );
+    }
 
-      function doLookup(variables) {
-        $scope.variablesLookup = _.chain(variables).map(function(d) { return [d.name, d]; }).object().value();  
-      }
+    function doLookup(variables) {
+      $scope.variablesLookup = _.chain(variables).map(function(d) { return [d.name, d]; }).object().value();  
+    }
 
       // do init if not done
       DatasetFactory.getVariables().then(function(variables) {
@@ -521,7 +519,7 @@ angular.module('plotter.vis.plotting.heatmap',
       transclude: true
     };
 
-}]);
+  });
 
 
 function CustomScale() {

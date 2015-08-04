@@ -6,8 +6,7 @@ angular.module('plotter.vis.menucomponents.filterinfo',
   'ext.lodash'
   ])
 
-.directive('plFilterInfo', ['$templateCache', '$compile', '$rootScope', '$injector', 'FilterService',
-  function($templateCache, $compile, $rootScope, $injector, FilterService) {
+.directive('plFilterInfo', function plFilterInfo() {
     return {
       restrict: 'A',
       scope: {},
@@ -16,10 +15,9 @@ angular.module('plotter.vis.menucomponents.filterinfo',
       templateUrl: 'vis/menucomponents/filterinfo.tpl.html'
     };
   }
-])
+)
 
-.controller('FilterInfoController', ['$scope', '$timeout', '$injector', 'DimensionService', '$rootScope', 'constants', 'FilterService', '$state', 'NotifyService', 'TabService', 'DatasetFactory', 'SOMService', 'd3', '_',
-  function FilterInfoController($scope, $timeout, $injector, DimensionService, $rootScope, constants, FilterService, $state, NotifyService, TabService, DatasetFactory, SOMService, d3, _) {
+.controller('FilterInfoController', function FilterInfoController($scope, $timeout, $injector, DimensionService, FilterService, $state, NotifyService, TabService, DatasetFactory, SOMService, d3, _) {
     var numFormat = d3.format('.2e');
     var dimensionService = DimensionService.getPrimary();
 
@@ -174,4 +172,4 @@ angular.module('plotter.vis.menucomponents.filterinfo',
       return true;
     };    
 
-}]);
+});

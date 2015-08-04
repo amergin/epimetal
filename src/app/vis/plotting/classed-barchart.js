@@ -16,41 +16,40 @@ angular.module('plotter.vis.plotting.classedbarchart',
   aspectRatio: 'stretch'
 })
 
-.controller('ClassedBarChartPlotController', ['$scope', 'DimensionService', 'DatasetFactory', 'constants', '$injector', '$timeout', 'FilterService', 'GRID_WINDOW_PADDING', 'd3', 'dc', '_',
-  function ClassedBarChartPlotController($scope, DimensionService, DatasetFactory, constants, $injector, $timeout, FilterService, GRID_WINDOW_PADDING, d3, dc, _) {
+.controller('ClassedBarChartPlotController', function ClassedBarChartPlotController($scope, DimensionService, DatasetFactory, constants, $injector, $timeout, FilterService, GRID_WINDOW_PADDING, d3, dc, _) {
 
-    $scope.dimensionService = $scope.window.handler().getDimensionService();
+  $scope.dimensionService = $scope.window.handler().getDimensionService();
 
-    $scope.isSpecial = function() {
-      return $scope.window.extra().somSpecial;
-    };
+  $scope.isSpecial = function() {
+    return $scope.window.extra().somSpecial;
+  };
 
-    $scope.filterButton = function(x) {
-      $timeout(function() {
-        $scope.window.resetButton(x);
-      });
-    };
+  $scope.filterButton = function(x) {
+    $timeout(function() {
+      $scope.window.resetButton(x);
+    });
+  };
 
-    $scope.$watch(function() {
-      return FilterService.getFiltersByType('classed');
-    }, function(newVal, oldVal) {
-      if(newVal != oldVal) {
-        if(newVal.length === 0) {
-          $scope.window.resetButton(false);
-        }
+  $scope.$watch(function() {
+    return FilterService.getFiltersByType('classed');
+  }, function(newVal, oldVal) {
+    if(newVal != oldVal) {
+      if(newVal.length === 0) {
+        $scope.window.resetButton(false);
       }
-    }, true);
+    }
+  }, true);
 
-    function initSOMSpecial() {
-      $scope.primary = DimensionService.getPrimary();
-      $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables());
-      $scope.totalDimension = $scope.totalDimensionInst.get();
-      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables());
-      $scope.dimension = $scope.dimensionInst.get();
-      $scope.groupInst = $scope.dimensionInst.groupDefault();
+  function initSOMSpecial() {
+    $scope.primary = DimensionService.getPrimary();
+    $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables());
+    $scope.totalDimension = $scope.totalDimensionInst.get();
+    $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables());
+    $scope.dimension = $scope.dimensionInst.get();
+    $scope.groupInst = $scope.dimensionInst.groupDefault();
 
-      $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables().x);
-      $scope.reduced = $scope.groupInst.get();
+    $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables().x);
+    $scope.reduced = $scope.groupInst.get();
       // total will always have largest count
       $scope.extent = [0, $scope.totalDimensionInst.groupAll().get().reduceCount().value()];
 
@@ -165,19 +164,19 @@ angular.module('plotter.vis.plotting.classedbarchart',
     $scope.filterDefault = function(group) {
       return {
         'all': function() {
-            var legalGroups = group.all().filter(function(d) {
-              return (d.value.counts[d.key.dataset] > 0) && (d.key.valueOf() !== constants.nanValue);
-            }),
-            info = DatasetFactory.getVariable($scope.window.variables().x),
-            ret = [];
+          var legalGroups = group.all().filter(function(d) {
+            return (d.value.counts[d.key.dataset] > 0) && (d.key.valueOf() !== constants.nanValue);
+          }),
+          info = DatasetFactory.getVariable($scope.window.variables().x),
+          ret = [];
 
-            _.each(legalGroups, function(group) {
-              ret.push({
-                key: _.extend(group.key, { name: info.unit[Number(group.key.classed).toString()] }),
-                value: group.value
-              });
+          _.each(legalGroups, function(group) {
+            ret.push({
+              key: _.extend(group.key, { name: info.unit[Number(group.key.classed).toString()] }),
+              value: group.value
             });
-            return ret;
+          });
+          return ret;
         }
       };
     };
@@ -364,190 +363,187 @@ angular.module('plotter.vis.plotting.classedbarchart',
       plainchart();
     };
 
+  })
 
+.directive('plClassedBarChart', function plClassedBarChart(constants, $timeout, $rootScope, $injector, CLASSED_BARCHART_SIZE, GRID_WINDOW_PADDING, _) {
+  function postLink($scope, ele, attrs, ctrl) {
 
-}])
+    function initDropdown() {
+      var selector = _.template('#<%= id %> <%= element %>'),
+      id = $scope.element.parent().attr('id');
 
-.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$injector', 'CLASSED_BARCHART_SIZE', 'GRID_WINDOW_PADDING', '_',
-  function(constants, $timeout, $rootScope, $injector, CLASSED_BARCHART_SIZE, GRID_WINDOW_PADDING, _) {
-    function postLink($scope, ele, attrs, ctrl) {
-
-      function initDropdown() {
-        var selector = _.template('#<%= id %> <%= element %>'),
-        id = $scope.element.parent().attr('id');
-
-        $scope.window.addDropdown({
-          type: "export:svg",
-          selector: selector({ id: id, element: 'svg' }),
-          scope: $scope,
-          source: 'svg',
-          window: $scope.window
-        });
-
-        $scope.window.addDropdown({
-          type: "export:png",
-          selector: selector({ id: id, element: 'svg' }),
-          scope: $scope,
-          source: 'svg',
-          window: $scope.window
-        });
-      }
-
-      $scope.element = ele;
-
-      var drawFunction = null,
-      config;
-
-      if($scope.isSpecial()) {
-        drawFunction = $scope.drawSOMSpecial;
-        config = {
-          element: $scope.element,
-          size: CLASSED_BARCHART_SIZE,
-          extent: $scope.extent,
-          filter: $scope.filterSOMSpecial,
-          colorScale: $scope.colorScale,
-          dimension: $scope.dimension,
-          reduced: $scope.reduced,
-          chartGroup: constants.groups.histogram.nonInteractive,
-          variable: $scope.window.variables().x
-        };
-
-      } else {
-        config = {
-          element: $scope.element,
-          size: CLASSED_BARCHART_SIZE,
-          extent: $scope.extent,
-          filter: $scope.filterDefault,
-          colorScale: $scope.colorScale,
-          dimension: $scope.dimension,
-          reduced: $scope.reduced,
-          chartGroup: constants.groups.histogram.interactive,
-          variable: $scope.window.variables().x
-        };
-        drawFunction = $scope.drawDefault;
-      }
-
-      $scope.element.ready(function() {
-        $timeout(function() {
-          drawFunction(config);
-          $scope.chart.render();
-          initDropdown();
-        });
+      $scope.window.addDropdown({
+        type: "export:svg",
+        selector: selector({ id: id, element: 'svg' }),
+        scope: $scope,
+        source: 'svg',
+        window: $scope.window
       });
 
-      $scope.deregisters = [];
-
-      function setResize() {
-        function setSize() {
-          $scope.size = angular.copy($scope.window.size()); 
-        }
-
-        var resizeUnbind = $scope.$on('gridster-item-transition-end', function(item) {
-          function gridSizeSame() {
-            return _.isEqual($scope.size, $scope.window.size());
-          }
-          if(!gridSizeSame()) {
-            renderWithNewDimensions();
-          }
-        });
-
-        setSize();
-        $scope.deregisters.push(resizeUnbind);
-      }
-
-      function renderWithNewDimensions() {
-        function setSize() {
-          $scope.size = angular.copy($scope.window.size()); 
-        }
-        var width = $scope.getWidth($scope.element),
-        height = $scope.getHeight($scope.element);
-
-        $scope.chart.width(width);
-        $scope.chart.height(height);
-        $scope.chart.render();
-
-        setSize();
-      }
-
-      function setRerender() {
-        var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
-          if( winHandler == $scope.window.handler() ) {
-
-            $timeout(function() {
-              if($scope.isSpecial()) {
-                $scope.chart.group($scope.filterSOMSpecial($scope.reduced));
-              } else {
-                $scope.chart.group($scope.filterDefault($scope.reduced));
-              }
-              $scope.chart.redraw();
-            });
-          }
-        });
-        $scope.deregisters.push(reRenderUnbind);
-      }
-
-      function setResizeElement() {
-        var renderThr = _.debounce(function() {
-          renderWithNewDimensions();
-        }, 150, { leading: false, trailing: true });
-
-        var resizeUnbind = $scope.$on('gridster-resized', function(sizes, gridster) {
-          var isVisible = _.contains($injector.get('WindowHandler').getVisible(), $scope.window.handler());
-          if(!isVisible) { return; }
-          renderThr();
-        });
-      }
-
-      function setRedraw() {
-        var redrawUnbind = $rootScope.$on('window-handler.redraw', function(event, winHandler) {
-          if( winHandler == $scope.window.handler() ) {
-            $timeout( function() {
-              $scope.chart.redraw();
-            });
-          }
-        });
-        $scope.deregisters.push(redrawUnbind);
-      }
-
-      function setState() {
-        var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
-        });
-
-        $scope.deregisters.push(gatherStateUnbind);
-      }
-
-      setResize();
-      setRerender();
-      setRedraw();
-      setState();
-      setResizeElement();
-
-      $scope.$on('$destroy', function() {
-        console.log("destroying histogram for", $scope.window.variables.x);
-        _.each($scope.deregisters, function(unbindFn) {
-          unbindFn();
-        });
-
-        $scope.groupInst.decrement();
-        if($scope.isSpecial()) { 
-          $scope.totalDimensionInst.decrement();
-        }
-        $scope.dimensionInst.decrement();
+      $scope.window.addDropdown({
+        type: "export:png",
+        selector: selector({ id: id, element: 'svg' }),
+        scope: $scope,
+        source: 'svg',
+        window: $scope.window
       });
-
-      ele.on('$destroy', function() {
-        $scope.$destroy();
-      });
-
     }
 
-    return {
-      scope: false,
-      restrict: 'C',
-      controller: 'ClassedBarChartPlotController',
-      link: {
-        post: postLink
-      }
-    };
+    $scope.element = ele;
 
-}]);
+    var drawFunction = null,
+    config;
+
+    if($scope.isSpecial()) {
+      drawFunction = $scope.drawSOMSpecial;
+      config = {
+        element: $scope.element,
+        size: CLASSED_BARCHART_SIZE,
+        extent: $scope.extent,
+        filter: $scope.filterSOMSpecial,
+        colorScale: $scope.colorScale,
+        dimension: $scope.dimension,
+        reduced: $scope.reduced,
+        chartGroup: constants.groups.histogram.nonInteractive,
+        variable: $scope.window.variables().x
+      };
+
+    } else {
+      config = {
+        element: $scope.element,
+        size: CLASSED_BARCHART_SIZE,
+        extent: $scope.extent,
+        filter: $scope.filterDefault,
+        colorScale: $scope.colorScale,
+        dimension: $scope.dimension,
+        reduced: $scope.reduced,
+        chartGroup: constants.groups.histogram.interactive,
+        variable: $scope.window.variables().x
+      };
+      drawFunction = $scope.drawDefault;
+    }
+
+    $scope.element.ready(function() {
+      $timeout(function() {
+        drawFunction(config);
+        $scope.chart.render();
+        initDropdown();
+      });
+    });
+
+    $scope.deregisters = [];
+
+    function setResize() {
+      function setSize() {
+        $scope.size = angular.copy($scope.window.size()); 
+      }
+
+      var resizeUnbind = $scope.$on('gridster-item-transition-end', function(item) {
+        function gridSizeSame() {
+          return _.isEqual($scope.size, $scope.window.size());
+        }
+        if(!gridSizeSame()) {
+          renderWithNewDimensions();
+        }
+      });
+
+      setSize();
+      $scope.deregisters.push(resizeUnbind);
+    }
+
+    function renderWithNewDimensions() {
+      function setSize() {
+        $scope.size = angular.copy($scope.window.size()); 
+      }
+      var width = $scope.getWidth($scope.element),
+      height = $scope.getHeight($scope.element);
+
+      $scope.chart.width(width);
+      $scope.chart.height(height);
+      $scope.chart.render();
+
+      setSize();
+    }
+
+    function setRerender() {
+      var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
+        if( winHandler == $scope.window.handler() ) {
+
+          $timeout(function() {
+            if($scope.isSpecial()) {
+              $scope.chart.group($scope.filterSOMSpecial($scope.reduced));
+            } else {
+              $scope.chart.group($scope.filterDefault($scope.reduced));
+            }
+            $scope.chart.redraw();
+          });
+        }
+      });
+      $scope.deregisters.push(reRenderUnbind);
+    }
+
+    function setResizeElement() {
+      var renderThr = _.debounce(function() {
+        renderWithNewDimensions();
+      }, 150, { leading: false, trailing: true });
+
+      var resizeUnbind = $scope.$on('gridster-resized', function(sizes, gridster) {
+        var isVisible = _.contains($injector.get('WindowHandler').getVisible(), $scope.window.handler());
+        if(!isVisible) { return; }
+        renderThr();
+      });
+    }
+
+    function setRedraw() {
+      var redrawUnbind = $rootScope.$on('window-handler.redraw', function(event, winHandler) {
+        if( winHandler == $scope.window.handler() ) {
+          $timeout( function() {
+            $scope.chart.redraw();
+          });
+        }
+      });
+      $scope.deregisters.push(redrawUnbind);
+    }
+
+    function setState() {
+      var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
+      });
+
+      $scope.deregisters.push(gatherStateUnbind);
+    }
+
+    setResize();
+    setRerender();
+    setRedraw();
+    setState();
+    setResizeElement();
+
+    $scope.$on('$destroy', function() {
+      console.log("destroying histogram for", $scope.window.variables.x);
+      _.each($scope.deregisters, function(unbindFn) {
+        unbindFn();
+      });
+
+      $scope.groupInst.decrement();
+      if($scope.isSpecial()) { 
+        $scope.totalDimensionInst.decrement();
+      }
+      $scope.dimensionInst.decrement();
+    });
+
+    ele.on('$destroy', function() {
+      $scope.$destroy();
+    });
+
+  }
+
+  return {
+    scope: false,
+    restrict: 'C',
+    controller: 'ClassedBarChartPlotController',
+    link: {
+      post: postLink
+    }
+  };
+
+});

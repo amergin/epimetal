@@ -16,8 +16,7 @@ angular.module('plotter.vis.plotting',
   'ext.lodash'
   ])
 
-.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'NotifyService', 'SOMService', '$q', 'RegressionService', 'TabService', 'EXPLORE_DEFAULT_SIZE_X', 'EXPLORE_DEFAULT_SIZE_Y', 'REGRESSION_DEFAULT_X', 'REGRESSION_DEFAULT_Y', '_',
-  function($injector, DimensionService, DatasetFactory, NotifyService, SOMService, $q, RegressionService, TabService, EXPLORE_DEFAULT_SIZE_X, EXPLORE_DEFAULT_SIZE_Y, REGRESSION_DEFAULT_X, REGRESSION_DEFAULT_Y, _) {
+.service('PlotService', function PlotService($injector, DimensionService, DatasetFactory, NotifyService, SOMService, $q, TabService, EXPLORE_DEFAULT_SIZE_X, EXPLORE_DEFAULT_SIZE_Y, REGRESSION_DEFAULT_X, REGRESSION_DEFAULT_Y, _) {
 
     var that = this;
 
@@ -319,5 +318,4 @@ angular.module('plotter.vis.plotting',
       .extra({ source: config.source });
     };
 
-  }
-]);
+});

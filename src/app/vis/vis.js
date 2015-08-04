@@ -1,8 +1,8 @@
-angular.module( 'plotter.vis', [ 
+angular.module('plotter.vis', [
   'ui.router.state',
   'ui.router.util',
   'ct.ui.router.extras',
-  'services.dataset', 
+  'services.dataset',
   'services.notify',
   'services.window',
   'services.urlhandler',
@@ -18,9 +18,9 @@ angular.module( 'plotter.vis', [
   'progressBarInterceptor',
   'angularResizable',
   'ext.lodash'
-  ])
+])
 
-.config(['$stateProvider', '$urlRouterProvider', 'ngProgressProvider', function ($stateProvider, $urlRouterProvider, ngProgressProvider) {
+.config(function visConfig($stateProvider, ngProgressProvider) {
 
   var vis = {
     name: 'vis',
@@ -28,7 +28,9 @@ angular.module( 'plotter.vis', [
     abstract: true,
     // don't reload state when query parameter is modified
     reloadOnSearch: false,
-    data: { pageTitle: 'Visualization' },
+    data: {
+      pageTitle: 'Visualization'
+    },
     params: {
       state: undefined
     },
@@ -50,23 +52,24 @@ angular.module( 'plotter.vis', [
         var regression = DimensionService.create('vis.regression');
 
         var exploreHandler = WindowHandler.create('vis.explore');
-        exploreHandler.setDimensionService( DimensionService.get('vis.explore') );
+        exploreHandler.setDimensionService(DimensionService.get('vis.explore'));
 
         var somBottomHandler = WindowHandler.create('vis.som.plane');
-        somBottomHandler.setDimensionService( somDim );
+        somBottomHandler.setDimensionService(somDim);
 
         var somContentHandler = WindowHandler.create('vis.som.content');
-        somContentHandler.setDimensionService( somDim );
+        somContentHandler.setDimensionService(somDim);
 
         var regressionHandler = WindowHandler.create('vis.regression');
-        regressionHandler.setDimensionService( primaryDim );
+        regressionHandler.setDimensionService(primaryDim);
 
       }],
-      loadState: ['UrlHandler', '$stateParams', '$state', 'variables', 'datasets', 'compatibility', 'dimensionServices', 
-      function(UrlHandler, $stateParams, $state, variables, datasets, compatibility, dimensionServices) {
-        var stateHash = $stateParams.state;
-        return UrlHandler.load(stateHash);
-      }]
+      loadState: ['UrlHandler', '$stateParams', '$state', 'variables', 'datasets', 'compatibility', 'dimensionServices',
+        function(UrlHandler, $stateParams, $state, variables, datasets, compatibility, dimensionServices) {
+          var stateHash = $stateParams.state;
+          return UrlHandler.load(stateHash);
+        }
+      ]
     },
     views: {
       'content@': {
@@ -89,7 +92,9 @@ angular.module( 'plotter.vis', [
     url: 'explore',
     parent: 'vis',
     reloadOnSearch: false,
-    data: { pageTitle: 'Explore datasets and filter | Visualization' },
+    data: {
+      pageTitle: 'Explore datasets and filter | Visualization'
+    },
     resolve: {
       windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
         return WindowHandler.get('vis.explore');
@@ -111,7 +116,9 @@ angular.module( 'plotter.vis', [
     // parent: 'vis',
     // abstract: true,
     reloadOnSearch: false,
-    data: { pageTitle: 'Self-organizing maps | Visualization' },
+    data: {
+      pageTitle: 'Self-organizing maps | Visualization'
+    },
     resolve: {
       // bottom portion of the page only!
       bottomWindowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
@@ -142,7 +149,9 @@ angular.module( 'plotter.vis', [
     url: 'regression',
     // parent: 'vis',
     reloadOnSearch: false,
-    data: { pageTitle: 'Regression analysis | Visualization' },
+    data: {
+      pageTitle: 'Regression analysis | Visualization'
+    },
     views: {
       'regression@vis': {
         templateUrl: 'vis/regression/regression.tpl.html',
@@ -165,308 +174,306 @@ angular.module( 'plotter.vis', [
 
   // progress bar settings
   ngProgressProvider.setHeight('3px');
-}])
+})
 
 
-.controller( 'HeaderCtrl', ['$scope', '$stateParams', '$injector', '$state', 'TabService', 'plSidenav', '_',
-  function ($scope, $stateParams, $injector, $state, TabService, plSidenav, _) {
+.controller('HeaderCtrl', function HeaderCtrl($scope, $state, TabService, plSidenav, _) {
 
-    $scope.tabs = [
-    { 'title': 'Explore and filter', 'name': 'explore' },
-    { 'title': 'Self-organizing maps', 'name': 'som' },
-    { 'title': 'Regression analysis & associations', 'name': 'regression' }
-    ];
+  $scope.tabs = [{
+    'title': 'Explore and filter',
+    'name': 'explore'
+  }, {
+    'title': 'Self-organizing maps',
+    'name': 'som'
+  }, {
+    'title': 'Regression analysis & associations',
+    'name': 'regression'
+  }];
 
-    function getTabInd() {
-      var state = TabService.activeState();
-      if(state.name == 'vis.explore') {
-        return 0;
-      } else if( _.startsWith(state.name, 'vis.som') ) {
-        return 1;
-      } else if( state.name == 'vis.regression' ) {
-        return 2;
-      }
+  function getTabInd() {
+    var state = TabService.activeState();
+    if (state.name == 'vis.explore') {
+      return 0;
+    } else if (_.startsWith(state.name, 'vis.som')) {
+      return 1;
+    } else if (state.name == 'vis.regression') {
+      return 2;
     }
+  }
 
-    $scope.headerTabInd = getTabInd();
+  $scope.headerTabInd = getTabInd();
 
-    // quickfix: http://stackoverflow.com/questions/22054391/angular-ui-router-how-do-i-get-parent-view-to-be-active-when-navigating-to-ne
-    $scope.$state = $state;
+  // quickfix: http://stackoverflow.com/questions/22054391/angular-ui-router-how-do-i-get-parent-view-to-be-active-when-navigating-to-ne
+  $scope.$state = $state;
 
 
-    $scope.toggleSidenav = function() {
-      plSidenav.toggle();
+  $scope.toggleSidenav = function() {
+    plSidenav.toggle();
+  };
+
+  $scope.sideNavOpen = function() {
+    return plSidenav.isOpen();
+  };
+
+  console.log("header ctrl");
+})
+
+.controller('SidenavCtrl', function sidenavCtrl($scope, TabService, $rootScope, NotifyService, WindowHandler, PlotService, RegressionService, plSidenav, SOMService, _) {
+
+  $scope.toggleSidenav = function() {
+    plSidenav.toggle();
+  };
+
+  $scope.openGraphModal = function(ev) {
+    var diagScope = $rootScope.$new(true);
+
+    diagScope.config = {
+      title: 'Create a new graph',
+      template: 'vis/menucomponents/new.graph.tpl.html',
+      actions: {
+        submit: 'Create a graph',
+        cancel: 'Cancel and close'
+      }
     };
 
-    $scope.sideNavOpen = function() {
-      return plSidenav.isOpen();
-    };
+    var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
+      controller: 'ModalCtrl'
+    }, ev);
 
-    console.log("header ctrl");
-  }])
+    promise.then(function(config) {
+      var winHandler = WindowHandler.getVisible()[0];
 
-.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$injector', 'WindowHandler', 'PlotService', 'RegressionService', 'plSidenav', 'SOMService', '_',
-    function ($scope, TabService, $rootScope, NotifyService, $injector, WindowHandler, PlotService, RegressionService, plSidenav, SOMService, _) {
-
-      $scope.toggleSidenav = function() {
-        plSidenav.toggle();
-      };
-
-
-      $scope.openGraphModal = function(ev) {
-        var diagScope = $rootScope.$new(true);
-
-        diagScope.config = {
-          title: 'Create a new graph',
-          template: 'vis/menucomponents/new.graph.tpl.html',
-          actions: {
-            submit: 'Create a graph',
-            cancel: 'Cancel and close'
-          }
-        };
-
-        var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
-          controller: 'ModalCtrl'
-        }, ev);
-
-        promise.then(function(config) {
-          var winHandler = WindowHandler.getVisible()[0];
-
-          function postHistogram(array) {
-            _.each(array, function(variable) {
-              PlotService.drawHistogram({
-                variables: {
-                  x: variable.name
-                }, 
-                pooled: false,
-                somSpecial: false
-              }, winHandler);
-            });
-          }
-
-          function postHeatmap(array) {
-            function processVariables(array) {
-              return _.chain(array)
-              .map(function(v) {
-                return v.name;
-              }).value();
-            }
-
-            PlotService.drawHeatmap({
-              variables: {
-                x: processVariables(array)
-              }, 
-              separate: config.config.separate
-            }, winHandler);
-          }
-
-          function postScatterplot(selection) {
-            PlotService.drawScatter({
-              variables: {
-                x: _.first(selection.x).name,
-                y: _.first(selection.y).name
-              }, 
-              pooled: false
-            }, winHandler);
-          }
-
-          switch(config.type) {
-            case 'histogram':
-              postHistogram(config.selection);
-              break;
-
-            case 'scatterplot':
-              postScatterplot(config.selection);
-              break;
-
-            case 'heatmap':
-              postHeatmap(config.selection);
-              break;
-          }
-
+      function postHistogram(array) {
+        _.each(array, function(variable) {
+          PlotService.drawHistogram({
+            variables: {
+              x: variable.name
+            },
+            pooled: false,
+            somSpecial: false
+          }, winHandler);
         });
-    };
+      }
 
-    $scope.openSOMModal = function(ev) {
-      var diagScope = $rootScope.$new(true);
-
-      diagScope.config = {
-        title: 'Add SOM figures',
-        template: 'vis/menucomponents/som.modal.tpl.html',
-        actions: {
-          submit: 'Create',
-          cancel: 'Cancel and close'
-        }
-      };
-
-      var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
-        controller: 'ModalCtrl'
-      }, ev);
-
-      promise.then(function succFn(variables) {
-
-      }, function errFn() {
-
-      });
-
-    };
-
-    $scope.canOpen = function() {
-      return !TabService.lock();
-    };
-
-    $scope.canOpenSOM = function() {
-      return !SOMService.inProgress();
-    };
-
-    $scope.openSOMInputModal = function(ev) {
-
-      var diagScope = $rootScope.$new(true);
-
-      diagScope.config = {
-        title: 'Select Self-organizing Map input variables',
-        template: 'vis/menucomponents/som.input.tpl.html',
-        actions: {
-          submit: 'Update input variables',
-          cancel: 'Cancel and close'
-        }
-      };
-
-      var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
-        controller: 'ModalCtrl'
-      }, ev);
-
-      promise.then(function succFn(result) {
-      }, function errFn() {
-      });
-
-    };
-
-    $scope.openRegressionModal = function(ev) {
-      var diagScope = $rootScope.$new(true);
-
-      diagScope.config = {
-        title: 'Create a regression view',
-        template: 'vis/menucomponents/new.regression.tpl.html',
-        actions: {
-          submit: 'Compute regression',
-          cancel: 'Cancel and close'
-        }        
-      };
-
-      var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
-        controller: 'ModalCtrl'
-      }, ev);
-
-      promise.then(function(result) {
-        function pickVariables(value) {
-          if( _.isArray(value) ) {
-            return _.map(value, function(d) { return d.name; });
-          } else {
-            return value.name;
-          }
+      function postHeatmap(array) {
+        function processVariables(array) {
+          return _.chain(array)
+            .map(function(v) {
+              return v.name;
+            }).value();
         }
 
-        function getVariablesFormatted(selection) {
-          return _.chain(selection)
-          .map(function(v,k) {
+        PlotService.drawHeatmap({
+          variables: {
+            x: processVariables(array)
+          },
+          separate: config.config.separate
+        }, winHandler);
+      }
+
+      function postScatterplot(selection) {
+        PlotService.drawScatter({
+          variables: {
+            x: _.first(selection.x).name,
+            y: _.first(selection.y).name
+          },
+          pooled: false
+        }, winHandler);
+      }
+
+      switch (config.type) {
+        case 'histogram':
+          postHistogram(config.selection);
+          break;
+
+        case 'scatterplot':
+          postScatterplot(config.selection);
+          break;
+
+        case 'heatmap':
+          postHeatmap(config.selection);
+          break;
+      }
+
+    });
+  };
+
+  $scope.openSOMModal = function(ev) {
+    var diagScope = $rootScope.$new(true);
+
+    diagScope.config = {
+      title: 'Add SOM figures',
+      template: 'vis/menucomponents/som.modal.tpl.html',
+      actions: {
+        submit: 'Create',
+        cancel: 'Cancel and close'
+      }
+    };
+
+    var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
+      controller: 'ModalCtrl'
+    }, ev);
+
+    promise.then(function succFn(variables) {
+
+    }, function errFn() {
+
+    });
+
+  };
+
+  $scope.canOpen = function() {
+    return !TabService.lock();
+  };
+
+  $scope.canOpenSOM = function() {
+    return !SOMService.inProgress();
+  };
+
+  $scope.openSOMInputModal = function(ev) {
+
+    var diagScope = $rootScope.$new(true);
+
+    diagScope.config = {
+      title: 'Select Self-organizing Map input variables',
+      template: 'vis/menucomponents/som.input.tpl.html',
+      actions: {
+        submit: 'Update input variables',
+        cancel: 'Cancel and close'
+      }
+    };
+
+    var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
+      controller: 'ModalCtrl'
+    }, ev);
+
+    promise.then(function succFn(result) {}, function errFn() {});
+
+  };
+
+  $scope.openRegressionModal = function(ev) {
+    var diagScope = $rootScope.$new(true);
+
+    diagScope.config = {
+      title: 'Create a regression view',
+      template: 'vis/menucomponents/new.regression.tpl.html',
+      actions: {
+        submit: 'Compute regression',
+        cancel: 'Cancel and close'
+      }
+    };
+
+    var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
+      controller: 'ModalCtrl'
+    }, ev);
+
+    promise.then(function(result) {
+      function pickVariables(value) {
+        if (_.isArray(value)) {
+          return _.map(value, function(d) {
+            return d.name;
+          });
+        } else {
+          return value.name;
+        }
+      }
+
+      function getVariablesFormatted(selection) {
+        return _.chain(selection)
+          .map(function(v, k) {
             return [k, pickVariables(v)];
           })
           .zipObject()
           .value();
-        }
+      }
 
-        var winHandler = WindowHandler.getVisible()[0],
+      var winHandler = WindowHandler.getVisible()[0],
         config = {
           variables: getVariablesFormatted(result.selection),
           source: result.source
         };
 
-        RegressionService.selectedVariables(result.selection);
-        PlotService.drawRegression(config, winHandler);
-      });      
-    };
+      RegressionService.selectedVariables(result.selection);
+      PlotService.drawRegression(config, winHandler);
+    });
+  };
 
-    $scope.getMenuButtonType = function() {
-      var state = TabService.activeState();
-      switch(state.name) {
-        case 'vis.regression':
+  $scope.getMenuButtonType = function() {
+    var state = TabService.activeState();
+    switch (state.name) {
+      case 'vis.regression':
         return 'regression';
 
-        case 'vis.som':
+      case 'vis.som':
         return 'som';
 
-        default:
+      default:
         return 'default';
+    }
+  };
+
+})
+
+.controller('ModalCtrl', function ModalCtrl($scope, _) {
+
+  $scope.canSubmit = {
+    initial: function() {
+      return _.isNull($scope.canSubmit.inherited) ? true : $scope.canSubmit.inherited();
+    },
+    inherited: null
+  };
+
+  $scope.submit = {
+    initial: function() {
+      var retval = $scope.submit.inherited();
+      if (retval === false) {
+        return;
+      } else {
+        $scope.$close(retval);
       }
-    };
+    },
+    inherited: null
+  };
 
+  $scope.cancel = {
+    initial: function() {
+      $scope.$dismiss(!$scope.cancel.inherited ? {} : $scope.cancel.inherited());
+    },
+    inherited: null
+  };
 
-}])
+})
 
-.controller( 'ModalCtrl', ['$scope', '$modal', 'DatasetFactory', '_',
-  function ($scope, $modal, DatasetFactory, _) {
+.controller('VisCtrl', function VisCtrl($scope, $rootScope, DimensionService, variables, datasets, TabService, NotifyService, plSidenav, $state, _) {
+  console.log("viscontroller");
 
-    $scope.canSubmit = {
-      initial: function() {
-        return _.isNull($scope.canSubmit.inherited) ? true : $scope.canSubmit.inherited();
-      },
-      inherited: null
-    };
-
-    $scope.submit = {
-      initial: function() {
-        var retval = $scope.submit.inherited();
-        if(retval === false) { return; }
-        else {
-          $scope.$close(retval);
-        }
-      },
-      inherited: null
-    };
-
-    $scope.cancel = {
-      initial: function() {
-        $scope.$dismiss( !$scope.cancel.inherited ? {} : $scope.cancel.inherited() );
-      },
-      inherited: null
-    };
-
-}])
-
-.controller( 'VisCtrl', ['$scope', 'DimensionService', 'DatasetFactory', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets', '$q', 'SOMService', 'TabService', 'NotifyService', 'plSidenav', '$state', '_',
-  function VisController( $scope, DimensionService, DatasetFactory, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets, $q, SOMService, TabService, NotifyService, plSidenav, $state, _) {
-    console.log("viscontroller");
-
-    var $rootScope = $injector.get('$rootScope');
-
-    $rootScope.tabChangeEnabled = function(tab) {
-      var locked = !TabService.lock(),
+  $rootScope.tabChangeEnabled = function(tab) {
+    var locked = !TabService.lock(),
       canChange = TabService.canChangeTo('vis.' + tab.name);
 
-      if(!locked) { 
-        NotifyService.addTransient(
-          'Please wait until the computation has been completed', 
-          'Tabs cannot be switched during computational tasks.', 'warn');
-      } else if(!canChange) {
-        NotifyService.addTransient(
-          'Please navigate between the tabs in consecutive order', 
-          'Please navigate between the tabs in consecutive order.', 'warn');        
-      }
-      return locked && canChange;
-    };
+    if (!locked) {
+      NotifyService.addTransient(
+        'Please wait until the computation has been completed',
+        'Tabs cannot be switched during computational tasks.', 'warn');
+    } else if (!canChange) {
+      NotifyService.addTransient(
+        'Please navigate between the tabs in consecutive order',
+        'Please navigate between the tabs in consecutive order.', 'warn');
+    }
+    return locked && canChange;
+  };
 
-    $scope.menuDatasets = datasets;
-    $scope.menuVariables = variables;
+  $scope.menuDatasets = datasets;
+  $scope.menuVariables = variables;
 
-    $scope.dimensionService = DimensionService.getPrimary();
+  $scope.dimensionService = DimensionService.getPrimary();
 
-    $rootScope.sideMenuVisible = function() {
-      return plSidenav.isOpen();
-    };
+  $rootScope.sideMenuVisible = function() {
+    return plSidenav.isOpen();
+  };
 
-    $rootScope.showBottomContainer = function() {
-      return _.startsWith($state.current.name, 'vis.som');
-    };
+  $rootScope.showBottomContainer = function() {
+    return _.startsWith($state.current.name, 'vis.som');
+  };
 
-}]);
+});

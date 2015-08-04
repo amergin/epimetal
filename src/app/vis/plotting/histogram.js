@@ -15,8 +15,7 @@ angular.module('plotter.vis.plotting.histogram',
 .constant('HISTOGRAM_POOLING_COLOR', '#000000')
 .constant('HISTOGRAM_SOM_TOTAL_COLOR', '#00b300')
 
-.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR', 'GRID_WINDOW_PADDING', 'd3', 'dc', '_',
-  function HistogramPlotController($scope, $rootScope, DatasetFactory, constants, $state, $injector, $timeout, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, GRID_WINDOW_PADDING, d3, dc, _) {
+.controller('HistogramPlotController', function HistogramPlotController($scope, DatasetFactory, constants, $state, $injector, $timeout, HISTOGRAM_POOLING_COLOR, GRID_WINDOW_PADDING, d3, dc, _) {
 
     $scope.isSpecial = function() {
       return $scope.window.extra().somSpecial || false;
@@ -214,11 +213,9 @@ angular.module('plotter.vis.plotting.histogram',
       return _.max([ele.width(), 150]);
     };
 
-  }
-  ])
+})
 
-.directive('plHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR', 'HISTOGRAM_SOM_TOTAL_COLOR', 'GRID_WINDOW_PADDING', '_', 'dc',
-  function(constants, $timeout, $rootScope, $injector, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, HISTOGRAM_SOM_TOTAL_COLOR, GRID_WINDOW_PADDING, _, dc) {
+.directive('plHistogram', function plHistogram(constants, $timeout, $rootScope, $injector, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, HISTOGRAM_SOM_TOTAL_COLOR, _, dc) {
 
     var createSVG = function($scope, config) {
       var _xBarWidth = 50;
@@ -653,4 +650,4 @@ angular.module('plotter.vis.plotting.histogram',
       }
     };
 
-}]);
+});

@@ -1,7 +1,7 @@
 angular.module('plotter.vis.menucomponents.sidenav', 
 [])
 
-.service('plSidenav', ['$injector', function($injector) {
+.service('plSidenav', function($injector) {
     var that = this,
     values = {
         open: true
@@ -24,4 +24,4 @@ angular.module('plotter.vis.menucomponents.sidenav',
         return values.open;
     };
 
-}]);
+});
