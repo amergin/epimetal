@@ -1,4 +1,9 @@
-angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dataset', 'angularSpinner'])
+angular.module('plotter.vis.plotting.som', [
+  'services.dimensions', 
+  'services.dataset', 
+  'angularSpinner',
+  'ext.d3'  
+  ])
 
 .constant('SOM_PLANE_MARGINS', {
   top: 20,
@@ -7,8 +12,8 @@ angular.module('plotter.vis.plotting.som', ['services.dimensions', 'services.dat
   left: 30
 })
 
-.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'FilterService', 'GRID_WINDOW_PADDING', 'SOM_PLANE_MARGINS',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, FilterService, GRID_WINDOW_PADDING, SOM_PLANE_MARGINS) {
+.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'FilterService', 'GRID_WINDOW_PADDING', 'SOM_PLANE_MARGINS', 'd3',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, FilterService, GRID_WINDOW_PADDING, SOM_PLANE_MARGINS, d3) {
 
     $scope.getHeight = function(ele) {
       return ele.height();

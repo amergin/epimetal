@@ -4,7 +4,8 @@ angular.module('plotter.vis.plotting.histogram',
   'services.dimensions',
   'services.dataset',
   'services.som',
-  'services.window'
+  'services.window',
+  'ext.d3'  
   ])
 
 .constant('HISTOGRAM_WIDTH', 450)
@@ -12,8 +13,8 @@ angular.module('plotter.vis.plotting.histogram',
 .constant('HISTOGRAM_POOLING_COLOR', '#000000')
 .constant('HISTOGRAM_SOM_TOTAL_COLOR', '#00b300')
 
-.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR', 'GRID_WINDOW_PADDING',
-  function HistogramPlotController($scope, $rootScope, DatasetFactory, constants, $state, $injector, $timeout, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, GRID_WINDOW_PADDING) {
+.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR', 'GRID_WINDOW_PADDING', 'd3',
+  function HistogramPlotController($scope, $rootScope, DatasetFactory, constants, $state, $injector, $timeout, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, GRID_WINDOW_PADDING, d3) {
 
     $scope.isSpecial = function() {
       return $scope.window.extra().somSpecial || false;

@@ -1,4 +1,10 @@
-angular.module('services.som', ['services.dataset', 'services.dimensions', 'services.notify', 'services.tab'])
+angular.module('services.som', [
+  'services.dataset', 
+  'services.dimensions', 
+  'services.notify', 
+  'services.tab',
+  'ext.d3'  
+  ])
 
 .constant('SOM_PLANE_SIZE', { x: 9, y: 7 })
 .constant('SOM_MIN_SAMPLE_COUNT', 10)
@@ -11,8 +17,8 @@ angular.module('services.som', ['services.dataset', 'services.dimensions', 'serv
     'HDL-C', 'LDL-C', 'Glc', 'Cit', 'Phe', 'Gp', 'Tyr', 
     'FAw3toFA', 'FAw6toFA', 'SFAtoFA'])
 
-.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', 'NotifyService', '$q', 'DatasetFactory', 'TabService', 'SOM_PLANE_SIZE', 'SOM_DEFAULT_PLANES', 'SOM_DEFAULT_TESTVARS', 'SOM_MIN_SAMPLE_COUNT',
-  function ($injector, $timeout, constants, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_PLANE_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT) {
+.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', 'NotifyService', '$q', 'DatasetFactory', 'TabService', 'SOM_PLANE_SIZE', 'SOM_DEFAULT_PLANES', 'SOM_DEFAULT_TESTVARS', 'SOM_MIN_SAMPLE_COUNT', 'd3',
+  function ($injector, $timeout, constants, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_PLANE_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT, d3) {
 
     var that = this;
 
