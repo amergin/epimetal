@@ -1,5 +1,6 @@
 angular.module('plotter.vis.menucomponents.dataset', 
   [
+  'ext.lodash'
   ])
 
 // directive for displaying the dataset table on sidebar
@@ -14,8 +15,8 @@ angular.module('plotter.vis.menucomponents.dataset',
 })
 
 // dataset table controller
-.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService', 'constants', '$location', 'UrlHandler', 'WindowHandler', 'FilterService', 'TabService',
-  function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService, constants, $location, UrlHandler, WindowHandler, FilterService, TabService) {
+.controller('DatasetTableController', ['$scope', '$rootScope', 'DatasetFactory', 'DimensionService', 'NotifyService', 'constants', '$location', 'UrlHandler', 'WindowHandler', 'FilterService', 'TabService', '_',
+  function DatasetTableController($scope, $rootScope, DatasetFactory, DimensionService, NotifyService, constants, $location, UrlHandler, WindowHandler, FilterService, TabService, _) {
 
     $scope.$watch(function() {
       return DatasetFactory.getSets();

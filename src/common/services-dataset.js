@@ -1,11 +1,12 @@
 angular.module('services.dataset', 
   ['services.notify', 
   'ui.router.state',
-  'ext.d3'  
+  'ext.d3',
+  'ext.lodash'
   ])
 
-.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootScope', 'NotifyService', 'd3',
-  function($http, $q, $injector, constants, $rootScope, NotifyService, d3) {
+.factory('DatasetFactory', ['$http', '$q', '$injector', 'constants', '$rootScope', 'NotifyService', 'd3', '_',
+  function($http, $q, $injector, constants, $rootScope, NotifyService, d3, _) {
 
     // privates
     var that = this;

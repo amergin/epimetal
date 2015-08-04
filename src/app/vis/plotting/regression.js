@@ -4,15 +4,16 @@ angular.module('plotter.vis.plotting.regression',
   'services.dataset',
   'services.window',
   'services.notify',
-  'services.regression.ww'
+  'services.regression.ww',
+  'ext.lodash'
   ])
 
 .constant('REGRESSION_WIDTH', 450)
 .constant('REGRESSION_DEFAULT_X', 9)
 .constant('REGRESSION_DEFAULT_Y', 4)
 
-.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'REGRESSION_WIN_X_PX', 'REGRESSION_WIN_Y_PX', 'REGRESSION_WIDTH', 'FilterService',
-  function RegressionPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH, FilterService) {
+.controller('RegressionPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'REGRESSION_WIN_X_PX', 'REGRESSION_WIN_Y_PX', 'REGRESSION_WIDTH', 'FilterService', '_',
+  function RegressionPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH, FilterService, _) {
     console.log("regression plot");
 
     function windowSize(width, height) {

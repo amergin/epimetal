@@ -16,7 +16,8 @@ angular.module( 'plotter.vis', [
   'services.task-handler',
   'ngProgress',
   'progressBarInterceptor',
-  'angularResizable'
+  'angularResizable',
+  'ext.lodash'
   ])
 
 .config(['$stateProvider', '$urlRouterProvider', 'ngProgressProvider', function ($stateProvider, $urlRouterProvider, ngProgressProvider) {
@@ -167,8 +168,8 @@ angular.module( 'plotter.vis', [
 }])
 
 
-.controller( 'HeaderCtrl', ['$scope', '$stateParams', '$injector', '$state', 'TabService', 'plSidenav',
-  function ($scope, $stateParams, $injector, $state, TabService, plSidenav) {
+.controller( 'HeaderCtrl', ['$scope', '$stateParams', '$injector', '$state', 'TabService', 'plSidenav', '_',
+  function ($scope, $stateParams, $injector, $state, TabService, plSidenav, _) {
 
     $scope.tabs = [
     { 'title': 'Explore and filter', 'name': 'explore' },
@@ -204,8 +205,8 @@ angular.module( 'plotter.vis', [
     console.log("header ctrl");
   }])
 
-.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$injector', 'WindowHandler', 'PlotService', 'RegressionService', 'plSidenav', 'SOMService',
-    function ($scope, TabService, $rootScope, NotifyService, $injector, WindowHandler, PlotService, RegressionService, plSidenav, SOMService) {
+.controller('SidenavCtrl', ['$scope', 'TabService', '$rootScope', 'NotifyService', '$injector', 'WindowHandler', 'PlotService', 'RegressionService', 'plSidenav', 'SOMService', '_',
+    function ($scope, TabService, $rootScope, NotifyService, $injector, WindowHandler, PlotService, RegressionService, plSidenav, SOMService, _) {
 
       $scope.toggleSidenav = function() {
         plSidenav.toggle();
@@ -403,8 +404,8 @@ angular.module( 'plotter.vis', [
 
 }])
 
-.controller( 'ModalCtrl', ['$scope', '$modal', 'DatasetFactory',
-  function ($scope, $modal, DatasetFactory) {
+.controller( 'ModalCtrl', ['$scope', '$modal', 'DatasetFactory', '_',
+  function ($scope, $modal, DatasetFactory, _) {
 
     $scope.canSubmit = {
       initial: function() {
@@ -433,8 +434,8 @@ angular.module( 'plotter.vis', [
 
 }])
 
-.controller( 'VisCtrl', ['$scope', 'DimensionService', 'DatasetFactory', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets', '$q', 'SOMService', 'TabService', 'NotifyService', 'plSidenav', '$state',
-  function VisController( $scope, DimensionService, DatasetFactory, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets, $q, SOMService, TabService, NotifyService, plSidenav, $state) {
+.controller( 'VisCtrl', ['$scope', 'DimensionService', 'DatasetFactory', '$stateParams', 'PlotService', 'UrlHandler', '$injector', 'WindowHandler', 'variables', 'datasets', '$q', 'SOMService', 'TabService', 'NotifyService', 'plSidenav', '$state', '_',
+  function VisController( $scope, DimensionService, DatasetFactory, $stateParams, PlotService, UrlHandler, $injector, WindowHandler, variables, datasets, $q, SOMService, TabService, NotifyService, plSidenav, $state, _) {
     console.log("viscontroller");
 
     var $rootScope = $injector.get('$rootScope');

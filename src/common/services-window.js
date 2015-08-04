@@ -1,7 +1,11 @@
-angular.module('services.window', ['angularSpinner', 'ui.router.state'])
+angular.module('services.window', [
+  'angularSpinner', 
+  'ui.router.state',
+  'ext.lodash'
+  ])
 
-.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout', 'usSpinnerService', '$state', 'EXPORT_FILENAME_MAX_LENGTH', 'DatasetFactory',
-  function ($injector, constants, $rootScope, $timeout, usSpinnerService, $state, EXPORT_FILENAME_MAX_LENGTH, DatasetFactory, name) { // notice 'name'
+.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout', 'usSpinnerService', '$state', 'EXPORT_FILENAME_MAX_LENGTH', 'DatasetFactory', '_',
+  function ($injector, constants, $rootScope, $timeout, usSpinnerService, $state, EXPORT_FILENAME_MAX_LENGTH, DatasetFactory, _) {
 
     function GridWindow(injector) {
       var obj = {},

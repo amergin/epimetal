@@ -1,10 +1,14 @@
-angular.module('services.urlhandler', ['services.dataset', 'ui.router'])
+angular.module('services.urlhandler', [
+  'services.dataset', 
+  'ui.router',
+  'ext.lodash'
+  ])
 
 .constant('API_URL_STATE', '/API/state')
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory', 'DimensionService', '$rootScope', '$state', 'SOMService', 'API_URL_STATE', '$q', '$http',
-  function($injector, $timeout, $location, DatasetFactory, DimensionService, $rootScope, $state, SOMService, API_URL_STATE, $q, $http) {
+.factory('UrlHandler', ['$injector', '$timeout', '$location', 'DatasetFactory', 'DimensionService', '$rootScope', '$state', 'SOMService', 'API_URL_STATE', '$q', '$http', '_',
+  function($injector, $timeout, $location, DatasetFactory, DimensionService, $rootScope, $state, SOMService, API_URL_STATE, $q, $http, _) {
 
     var _service = {},
     _loaded = false; // only do state loading once per page load

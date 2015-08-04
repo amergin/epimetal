@@ -5,7 +5,8 @@ angular.module('plotter.vis.plotting.profile-histogram',
   'services.dataset',
   'services.som',
   'services.window',
-  'ext.d3'  
+  'ext.d3',
+  'ext.lodash'
   ])
 
 .constant('PROFILE_HISTOGRAM_SIZE', {
@@ -14,8 +15,8 @@ angular.module('plotter.vis.plotting.profile-histogram',
   aspectRatio: 'preserve'
 })
 
-.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'FilterService',
-  function ProfileHistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, FilterService) {
+.controller('ProfileHistogramPlotController', ['$scope', '$rootScope', 'DimensionService', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'FilterService', '_',
+  function ProfileHistogramPlotController($scope, $rootScope, DimensionService, DatasetFactory, constants, $state, $injector, $timeout, FilterService, _) {
 
     $scope.window.headerText(['Profile histogram for ', $scope.window.extra().name]);
 
@@ -121,8 +122,8 @@ angular.module('plotter.vis.plotting.profile-histogram',
 
 }])
 
-.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'PROFILE_HISTOGRAM_SIZE', 'd3',
-  function(constants, $timeout, $rootScope, $injector, PROFILE_HISTOGRAM_SIZE, d3) {
+.directive('plProfileHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'PROFILE_HISTOGRAM_SIZE', 'd3', '_',
+  function(constants, $timeout, $rootScope, $injector, PROFILE_HISTOGRAM_SIZE, d3, _) {
 
     var PlotService = $injector.get('PlotService');
 

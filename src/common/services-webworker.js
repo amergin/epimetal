@@ -1,4 +1,6 @@
-angular.module('services.webworker', ['ext.lodash'])
+angular.module('services.webworker', [
+  'ext.lodash'
+  ])
 
 .constant('WORKER_TEMPLATE', 'web-worker.tpl.html')
 

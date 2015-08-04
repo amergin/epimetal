@@ -1,8 +1,10 @@
 angular.module('plotter.vis.menucomponents.som-inputmenu', 
-  [])
+  [
+  'ext.lodash'
+  ])
 
-.controller('SOMInputMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService',
-  function SOMInputMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService) {
+.controller('SOMInputMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService', '_',
+  function SOMInputMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService, _) {
 
     $scope.selection = [];
 

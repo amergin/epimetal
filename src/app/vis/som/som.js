@@ -5,15 +5,16 @@ angular.module('plotter.vis.som',
     'services.dataset',
     'services.notify',
     'services.som',
-    'ext.dc'
+    'ext.dc',
+    'ext.lodash'
     ])
 
 .constant('SOM_DEFAULT_SIZE_X', 3)
 .constant('SOM_DEFAULT_SIZE_Y', 3)
 .constant('SOM_DEFAULT_PLANES', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'])
 
-.controller('SOMContentCtrl', ['$scope', '$rootScope', 'NotifyService', 'contentWindowHandler', 'SOM_DEFAULT_SIZE_X', 'SOM_DEFAULT_SIZE_Y', 'dc',
-  function SOMContentCtrl($scope, $rootScope, NotifyService, contentWindowHandler, SOM_DEFAULT_SIZE_X, SOM_DEFAULT_SIZE_Y, dc) {
+.controller('SOMContentCtrl', ['$scope', '$rootScope', 'NotifyService', 'contentWindowHandler', 'SOM_DEFAULT_SIZE_X', 'SOM_DEFAULT_SIZE_Y', 'dc', '_',
+  function SOMContentCtrl($scope, $rootScope, NotifyService, contentWindowHandler, SOM_DEFAULT_SIZE_X, SOM_DEFAULT_SIZE_Y, dc, _) {
 
     $scope.windowHandler = contentWindowHandler;
     $scope.windows = $scope.windowHandler.get();
@@ -70,8 +71,8 @@ angular.module('plotter.vis.som',
   }
 ])
 
-.controller('SOMBottomContentCtrl', ['$scope', '$injector', '$timeout', '$rootScope', 'bottomWindowHandler', 'DatasetFactory', 'DimensionService', 'SOMService', 'PlotService', 'NotifyService', 'SOM_DEFAULT_PLANES',
-  function SOMBottomContentCtrl($scope, $injector, $timeout, $rootScope, bottomWindowHandler, DatasetFactory, DimensionService, SOMService, PlotService, NotifyService, SOM_DEFAULT_PLANES) {
+.controller('SOMBottomContentCtrl', ['$scope', '$injector', '$timeout', '$rootScope', 'bottomWindowHandler', 'DatasetFactory', 'DimensionService', 'SOMService', 'PlotService', 'NotifyService', 'SOM_DEFAULT_PLANES', '_',
+  function SOMBottomContentCtrl($scope, $injector, $timeout, $rootScope, bottomWindowHandler, DatasetFactory, DimensionService, SOMService, PlotService, NotifyService, SOM_DEFAULT_PLANES, _) {
     $scope.windowHandler = bottomWindowHandler;
     $scope.windows = $scope.windowHandler.get();
 

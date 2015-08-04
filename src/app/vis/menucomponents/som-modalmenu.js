@@ -1,10 +1,12 @@
 angular.module('plotter.vis.menucomponents.som-modalmenu', 
-[])
+[
+'ext.lodash'
+])
 
 .constant('MAX_PLANE_VARS', 25)
 
-.controller('SOMModalMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService', 'WindowHandler', 'PlotService', 'MAX_PLANE_VARS', 'DimensionService',
-  function SOMModalMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService, WindowHandler, PlotService, MAX_PLANE_VARS, DimensionService) {
+.controller('SOMModalMenuCtrl', ['$scope', 'DatasetFactory', 'RegressionService', 'NotifyService', 'SOMService', 'WindowHandler', 'PlotService', 'MAX_PLANE_VARS', 'DimensionService', '_',
+  function SOMModalMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, SOMService, WindowHandler, PlotService, MAX_PLANE_VARS, DimensionService, _) {
 
     $scope.selection = {
       planes: [],

@@ -1,11 +1,15 @@
-angular.module('services.correlation', ['services.dataset', 'services.notify'])
+angular.module('services.correlation', [
+  'services.dataset', 
+  'services.notify',
+  'ext.lodash'
+  ])
 
 .constant('CORRELATION_SPLIT_MAX', 10)
 .constant('CORRELATION_SPLIT_MIN', 4)
 .constant('CORRELATION_VAR_THRESHOLD', 40)
 
-.factory('CorrelationService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'NotifyService', 'CORRELATION_SPLIT_MAX', 'CORRELATION_SPLIT_MIN', 'CORRELATION_VAR_THRESHOLD',
-  function CorrelationService($injector, $q, $rootScope, DatasetFactory, NotifyService, CORRELATION_SPLIT_MAX, CORRELATION_SPLIT_MIN, CORRELATION_VAR_THRESHOLD) {
+.factory('CorrelationService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'NotifyService', 'CORRELATION_SPLIT_MAX', 'CORRELATION_SPLIT_MIN', 'CORRELATION_VAR_THRESHOLD', '_',
+  function CorrelationService($injector, $q, $rootScope, DatasetFactory, NotifyService, CORRELATION_SPLIT_MAX, CORRELATION_SPLIT_MIN, CORRELATION_VAR_THRESHOLD, _) {
     var that = this;
     var service = {};
 

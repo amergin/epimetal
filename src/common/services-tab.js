@@ -1,7 +1,10 @@
-angular.module('services.tab', [])
+angular.module('services.tab', [
+  'services.notify',
+  'ext.lodash'
+  ])
 
-.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '$state', 'WindowHandler', 'DimensionService', 'NotifyService',
-  function ($injector, $timeout, constants, $rootScope, $state, WindowHandler, DimensionService, NotifyService) {
+.factory('TabService', ['$injector', '$timeout', 'constants', '$rootScope', '$state', 'WindowHandler', 'DimensionService', 'NotifyService', '_',
+  function ($injector, $timeout, constants, $rootScope, $state, WindowHandler, DimensionService, NotifyService, _) {
 
     var _service = {},
     _locked = false,

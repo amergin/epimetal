@@ -4,7 +4,8 @@ angular.module('plotter.vis.windowing',
   'mgcrea.ngStrap.dropdown', 
   'mgcrea.ngStrap.tooltip', 
   'angularSpinner',
-  'angular-svg-round-progress'  
+  'angular-svg-round-progress',
+  'ext.lodash'
   ])
 
 .constant('EXPORT_CONFIG', {
@@ -71,8 +72,8 @@ angular.module('plotter.vis.windowing',
   };
 })
 
-.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EXPORT_PNG_BACKGROUND_COLOR', '$q',
-  function($scope, DatasetFactory, EXPORT_CONFIG, EXPORT_PNG_BACKGROUND_COLOR, $q) {
+.controller('PlExportCtrl', ['$scope', 'DatasetFactory', 'EXPORT_CONFIG', 'EXPORT_PNG_BACKGROUND_COLOR', '$q', '_',
+  function($scope, DatasetFactory, EXPORT_CONFIG, EXPORT_PNG_BACKGROUND_COLOR, $q, _) {
 
     function removeDirective() {
       console.log("destroying export instance");

@@ -6,7 +6,8 @@ angular.module('plotter.vis.plotting.classedbarchart',
   'services.som',
   'services.window',
   'ext.d3',
-  'ext.dc'  
+  'ext.dc',
+  'ext.lodash'
   ])
 
 .constant('CLASSED_BARCHART_SIZE', {
@@ -15,8 +16,8 @@ angular.module('plotter.vis.plotting.classedbarchart',
   aspectRatio: 'stretch'
 })
 
-.controller('ClassedBarChartPlotController', ['$scope', 'DimensionService', 'DatasetFactory', 'constants', '$injector', '$timeout', 'FilterService', 'GRID_WINDOW_PADDING', 'd3', 'dc',
-  function ClassedBarChartPlotController($scope, DimensionService, DatasetFactory, constants, $injector, $timeout, FilterService, GRID_WINDOW_PADDING, d3, dc) {
+.controller('ClassedBarChartPlotController', ['$scope', 'DimensionService', 'DatasetFactory', 'constants', '$injector', '$timeout', 'FilterService', 'GRID_WINDOW_PADDING', 'd3', 'dc', '_',
+  function ClassedBarChartPlotController($scope, DimensionService, DatasetFactory, constants, $injector, $timeout, FilterService, GRID_WINDOW_PADDING, d3, dc, _) {
 
     $scope.dimensionService = $scope.window.handler().getDimensionService();
 
@@ -367,9 +368,8 @@ angular.module('plotter.vis.plotting.classedbarchart',
 
 }])
 
-.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$injector', 'CLASSED_BARCHART_SIZE', 'GRID_WINDOW_PADDING',
-
-  function(constants, $timeout, $rootScope, $injector, CLASSED_BARCHART_SIZE, GRID_WINDOW_PADDING) {
+.directive('plClassedBarChart', ['constants', '$timeout', '$rootScope', '$injector', 'CLASSED_BARCHART_SIZE', 'GRID_WINDOW_PADDING', '_',
+  function(constants, $timeout, $rootScope, $injector, CLASSED_BARCHART_SIZE, GRID_WINDOW_PADDING, _) {
     function postLink($scope, ele, attrs, ctrl) {
 
       function initDropdown() {

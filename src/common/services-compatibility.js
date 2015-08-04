@@ -1,7 +1,9 @@
-angular.module('services.compatibility', [])
+angular.module('services.compatibility', [
+  'ext.lodash'
+  ])
 
-.service('CompatibilityService', ['$q', '$timeout', '$modal', '$rootScope',
-  function CompatibilityService($q, $timeout, $modal, $rootScope) {
+.service('CompatibilityService', ['$q', '$timeout', '$modal', '$rootScope', '_',
+  function CompatibilityService($q, $timeout, $modal, $rootScope, _) {
 
     var that = this;
 

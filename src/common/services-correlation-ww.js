@@ -1,12 +1,20 @@
-angular.module('services.correlation.ww', ['services.dataset', 'services.notify', 'services.webworker', 'ext.lodash', 'utilities.math', 'services.tab', 'ext.core-estimator'])
+angular.module('services.correlation.ww', [
+  'services.dataset', 
+  'services.notify', 
+  'services.webworker',
+  'ext.lodash', 
+  'utilities.math', 
+  'services.tab', 
+  'ext.core-estimator'
+  ])
 
 .constant('CORRELATION_SPLIT_MAX', 10)
 .constant('CORRELATION_SPLIT_MIN', 4)
 .constant('CORRELATION_VAR_THRESHOLD', 10)
 .constant('CORRELATION_THREADS', 3)
 
-.factory('CorrelationService', ['$q', 'DatasetFactory', 'NotifyService', 'CORRELATION_SPLIT_MAX', 'CORRELATION_SPLIT_MIN', 'CORRELATION_VAR_THRESHOLD', 'CORRELATION_THREADS', 'WebWorkerService', 'TabService', 'coreEstimator', '$timeout',
-  function CorrelationServiceWW($q, DatasetFactory, NotifyService, CORRELATION_SPLIT_MAX, CORRELATION_SPLIT_MIN, CORRELATION_VAR_THRESHOLD, CORRELATION_THREADS, WebWorkerService, TabService, coreEstimator, $timeout) {
+.factory('CorrelationService', ['$q', 'DatasetFactory', 'NotifyService', 'CORRELATION_SPLIT_MAX', 'CORRELATION_SPLIT_MIN', 'CORRELATION_VAR_THRESHOLD', 'CORRELATION_THREADS', 'WebWorkerService', 'TabService', 'coreEstimator', '$timeout', '_',
+  function CorrelationServiceWW($q, DatasetFactory, NotifyService, CORRELATION_SPLIT_MAX, CORRELATION_SPLIT_MIN, CORRELATION_VAR_THRESHOLD, CORRELATION_THREADS, WebWorkerService, TabService, coreEstimator, $timeout, _) {
     var that = this;
     var service = {};
 

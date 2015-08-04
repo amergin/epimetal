@@ -1,7 +1,12 @@
-angular.module('services.regression', ['services.dataset', 'services.filter', 'services.tab'])
+angular.module('services.regression', [
+  'services.dataset', 
+  'services.filter', 
+  'services.tab',
+  'ext.lodash'
+  ])
 
-.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'TabService',
-  function RegressionService($injector, $q, $rootScope, DatasetFactory, TabService) {
+.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'TabService', '_',
+  function RegressionService($injector, $q, $rootScope, DatasetFactory, TabService, _) {
     var that = this;
     var service = {};
     var FilterService = $injector.get('FilterService');

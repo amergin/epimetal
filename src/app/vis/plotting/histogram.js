@@ -6,7 +6,8 @@ angular.module('plotter.vis.plotting.histogram',
   'services.som',
   'services.window',
   'ext.d3',
-  'ext.dc'  
+  'ext.dc',
+  'ext.lodash'
   ])
 
 .constant('HISTOGRAM_WIDTH', 450)
@@ -14,8 +15,8 @@ angular.module('plotter.vis.plotting.histogram',
 .constant('HISTOGRAM_POOLING_COLOR', '#000000')
 .constant('HISTOGRAM_SOM_TOTAL_COLOR', '#00b300')
 
-.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR', 'GRID_WINDOW_PADDING', 'd3', 'dc',
-  function HistogramPlotController($scope, $rootScope, DatasetFactory, constants, $state, $injector, $timeout, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, GRID_WINDOW_PADDING, d3, dc) {
+.controller('HistogramPlotController', ['$scope', '$rootScope', 'DatasetFactory', 'constants', '$state', '$injector', '$timeout', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR', 'GRID_WINDOW_PADDING', 'd3', 'dc', '_',
+  function HistogramPlotController($scope, $rootScope, DatasetFactory, constants, $state, $injector, $timeout, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, GRID_WINDOW_PADDING, d3, dc, _) {
 
     $scope.isSpecial = function() {
       return $scope.window.extra().somSpecial || false;
@@ -216,9 +217,8 @@ angular.module('plotter.vis.plotting.histogram',
   }
   ])
 
-.directive('plHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR', 'HISTOGRAM_SOM_TOTAL_COLOR', 'GRID_WINDOW_PADDING',
-
-  function(constants, $timeout, $rootScope, $injector, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, HISTOGRAM_SOM_TOTAL_COLOR, GRID_WINDOW_PADDING) {
+.directive('plHistogram', ['constants', '$timeout', '$rootScope', '$injector', 'HISTOGRAM_WIDTH', 'HISTOGRAM_HEIGHT', 'HISTOGRAM_POOLING_COLOR', 'HISTOGRAM_SOM_TOTAL_COLOR', 'GRID_WINDOW_PADDING', '_', 'dc',
+  function(constants, $timeout, $rootScope, $injector, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, HISTOGRAM_SOM_TOTAL_COLOR, GRID_WINDOW_PADDING, _, dc) {
 
     var createSVG = function($scope, config) {
       var _xBarWidth = 50;

@@ -1,8 +1,11 @@
 angular.module('plotter.vis.menucomponents.multiple-variable-selection', 
-  ['ngTagsInput'])
+  [
+  'ngTagsInput',
+  'ext.lodash'
+  ])
 
-.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory',
-  function MultipleVariableSelectionCtrl($scope, DatasetFactory) {
+.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory', '_',
+  function MultipleVariableSelectionCtrl($scope, DatasetFactory, _) {
 
     // the results go here
     // $scope.payload = [];

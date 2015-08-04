@@ -12,11 +12,12 @@ angular.module('plotter.vis.plotting',
   'services.dataset', 
   'services.window',
   'services.som',
-  'services.tab'
+  'services.tab',
+  'ext.lodash'
   ])
 
-.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'NotifyService', 'SOMService', '$q', 'RegressionService', 'TabService', 'EXPLORE_DEFAULT_SIZE_X', 'EXPLORE_DEFAULT_SIZE_Y', 'REGRESSION_DEFAULT_X', 'REGRESSION_DEFAULT_Y',
-  function($injector, DimensionService, DatasetFactory, NotifyService, SOMService, $q, RegressionService, TabService, EXPLORE_DEFAULT_SIZE_X, EXPLORE_DEFAULT_SIZE_Y, REGRESSION_DEFAULT_X, REGRESSION_DEFAULT_Y) {
+.service('PlotService', ['$injector', 'DimensionService', 'DatasetFactory', 'NotifyService', 'SOMService', '$q', 'RegressionService', 'TabService', 'EXPLORE_DEFAULT_SIZE_X', 'EXPLORE_DEFAULT_SIZE_Y', 'REGRESSION_DEFAULT_X', 'REGRESSION_DEFAULT_Y', '_',
+  function($injector, DimensionService, DatasetFactory, NotifyService, SOMService, $q, RegressionService, TabService, EXPLORE_DEFAULT_SIZE_X, EXPLORE_DEFAULT_SIZE_Y, REGRESSION_DEFAULT_X, REGRESSION_DEFAULT_Y, _) {
 
     var that = this;
 
@@ -316,25 +317,6 @@ angular.module('plotter.vis.plotting',
       .variables(config.variables)
       .size({ x: REGRESSION_DEFAULT_X, y: REGRESSION_DEFAULT_Y })
       .extra({ source: config.source });
-
-      // var defer = $q.defer();
-      // NotifyService.addTransient('Regression analysis started', 'Regression analysis computation started.', 'info');
-      // RegressionService.compute(config, windowHandler).then( function succFn(result) {
-      //   NotifyService.addTransient('Regression analysis completed', 'Regression computation ready.', 'success');
-      //   var gridWindow = windowHandler.add();
-      //   gridWindow
-      //   .figure('pl-regression')
-      //   .variables(config.variables)
-      //   .extra({ computation: result, source: config.source });
-
-      //   defer.resolve();        
-      // }, function errFn(result) {
-      //   var message = result.result[0].result.reason;
-      //   NotifyService.addSticky('Regression analysis failed', message, 'error');
-      //   defer.reject();
-      // });
-
-      // return defer.promise;
     };
 
   }

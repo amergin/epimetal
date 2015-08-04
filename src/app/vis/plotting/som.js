@@ -2,7 +2,8 @@ angular.module('plotter.vis.plotting.som', [
   'services.dimensions', 
   'services.dataset', 
   'angularSpinner',
-  'ext.d3'  
+  'ext.d3',
+  'ext.lodash'
   ])
 
 .constant('SOM_PLANE_MARGINS', {
@@ -12,8 +13,8 @@ angular.module('plotter.vis.plotting.som', [
   left: 30
 })
 
-.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'FilterService', 'GRID_WINDOW_PADDING', 'SOM_PLANE_MARGINS', 'd3',
-  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, FilterService, GRID_WINDOW_PADDING, SOM_PLANE_MARGINS, d3) {
+.controller('SOMController', ['$scope', 'DatasetFactory', 'DimensionService', 'constants', '$injector', '$timeout', '$rootScope', 'FilterService', 'GRID_WINDOW_PADDING', 'SOM_PLANE_MARGINS', 'd3', '_',
+  function($scope, DatasetFactory, DimensionService, constants, $injector, $timeout, $rootScope, FilterService, GRID_WINDOW_PADDING, SOM_PLANE_MARGINS, d3, _) {
 
     $scope.getHeight = function(ele) {
       return ele.height();
@@ -420,9 +421,9 @@ angular.module('plotter.vis.plotting.som', [
     };
   }])
 
-.directive('plSomplane', [ '$rootScope', 'SOMService', 'NotifyService', '$timeout', 'SOM_PLANE_MARGINS',
+.directive('plSomplane', [ '$rootScope', 'SOMService', 'NotifyService', '$timeout', 'SOM_PLANE_MARGINS', '_',
 
-  function($rootScope, SOMService, NotifyService, $timeout, SOM_PLANE_MARGINS) {
+  function($rootScope, SOMService, NotifyService, $timeout, SOM_PLANE_MARGINS, _) {
 
     var linkFn = function($scope, ele, iAttrs) {
 

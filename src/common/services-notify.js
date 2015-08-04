@@ -2,7 +2,8 @@ angular.module('services.notify', [
 'mgcrea.ngStrap.alert', 
 'mgcrea.ngStrap.popover',
 'ui.bootstrap',
-'angular-growl'
+'angular-growl',
+'ext.lodash'
 ])
 
 .config(['growlProvider', function(growlProvider) {
@@ -11,8 +12,8 @@ angular.module('services.notify', [
     growlProvider.globalPosition('bottom-right');
 }])
 
-.factory('NotifyService', ['$injector', '$timeout', 'growl',
-  function NotifyService($injector, $timeout, growl) {
+.factory('NotifyService', ['$injector', '$timeout', 'growl', '_',
+  function NotifyService($injector, $timeout, growl, _) {
 
     var _modalInstanceRef = null,
     _disabled = false;

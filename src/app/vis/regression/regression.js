@@ -5,14 +5,15 @@ angular.module('plotter.vis.regression',
   'services.window',
   'services.notify', 
   'services.dimensions', 
-  'services.urlhandler'
+  'services.urlhandler',
+  'ext.lodash'
   ])
 
 .constant('REGRESSION_WIN_X_PX', 40)
 .constant('REGRESSION_WIN_Y_PX', 100)
 
-.controller('RegressionController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants', 'variables', 'windowHandler', 'REGRESSION_WIN_X_PX', 'REGRESSION_WIN_Y_PX',
-  function RegressionController($scope, $templateCache, DimensionService, $rootScope, constants, variables, windowHandler, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX) {
+.controller('RegressionController', ['$scope', '$templateCache', 'DimensionService', '$rootScope', 'constants', 'variables', 'windowHandler', 'REGRESSION_WIN_X_PX', 'REGRESSION_WIN_Y_PX', '_',
+  function RegressionController($scope, $templateCache, DimensionService, $rootScope, constants, variables, windowHandler, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, _) {
     $scope.handler = windowHandler;
     $scope.windows = windowHandler.get();
     console.log("regression ctrl");

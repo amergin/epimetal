@@ -1,11 +1,18 @@
-angular.module('services.regression.ww', ['services.dataset', 'services.filter', 'services.tab', 'services.webworker', 'ext.core-estimator'])
+angular.module('services.regression.ww', [
+  'services.dataset', 
+  'services.filter', 
+  'services.tab', 
+  'services.webworker', 
+  'ext.core-estimator',
+  'ext.lodash'
+  ])
 
 .constant('DEFAULT_REGRESSION_THREADS', 3)
 .constant('MAX_REGRESSION_THREADS', 4)
 .constant('REGRESSION_VAR_THRESHOLD', 4)
 
-.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'TabService', 'WebWorkerService', 'DEFAULT_REGRESSION_THREADS', 'coreEstimator', 'MAX_REGRESSION_THREADS', 'REGRESSION_VAR_THRESHOLD',
-  function RegressionServiceWW($injector, $q, $rootScope, DatasetFactory, TabService, WebWorkerService, DEFAULT_REGRESSION_THREADS, coreEstimator, MAX_REGRESSION_THREADS, REGRESSION_VAR_THRESHOLD) {
+.factory('RegressionService', ['$injector', '$q', '$rootScope', 'DatasetFactory', 'TabService', 'WebWorkerService', 'DEFAULT_REGRESSION_THREADS', 'coreEstimator', 'MAX_REGRESSION_THREADS', 'REGRESSION_VAR_THRESHOLD', '_',
+  function RegressionServiceWW($injector, $q, $rootScope, DatasetFactory, TabService, WebWorkerService, DEFAULT_REGRESSION_THREADS, coreEstimator, MAX_REGRESSION_THREADS, REGRESSION_VAR_THRESHOLD, _) {
     var that = this;
     var service = {};
     var FilterService = $injector.get('FilterService');

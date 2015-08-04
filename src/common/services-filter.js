@@ -2,12 +2,13 @@ angular.module('services.filter',
   [
   'services.dimensions', 
   'services.window',
-  'ext.d3'  
+  'ext.d3',
+  'ext.lodash' 
   ])
 
 .constant('SOM_MAX_FILTERS', 5)
-.factory('FilterService', ['$injector', '$rootScope', 'WindowHandler', 'SOM_MAX_FILTERS', 'd3',
-  function ($injector, $rootScope, WindowHandler, SOM_MAX_FILTERS, d3) {
+.factory('FilterService', ['$injector', '$rootScope', 'WindowHandler', 'SOM_MAX_FILTERS', 'd3', '_',
+  function ($injector, $rootScope, WindowHandler, SOM_MAX_FILTERS, d3, _) {
 
     var DimensionService = $injector.get('DimensionService');
     var _activeDimensionService = DimensionService.getPrimary();
