@@ -130,7 +130,14 @@ angular.module('services.som', [
           columns: new Array(variables.length)
         };
 
-      _.each(that.sampleDimension.top(Infinity), function(obj, ind) {
+      var deDuplicated = _.unique(that.sampleDimension.top(Infinity), false, function(d) { 
+        var arr = [];
+        if(d.originalDataset) { arr = [d.originalDataset, d.sampleid]; }
+        else { arr = [d.dataset, d.sampleid]; }
+        return arr.join("|");
+      });
+
+      _.each(deDuplicated, function(obj, ind) {
         var sampValues = _.chain(obj.variables)
           .pick(variables)
           .map(function(val, key) {
@@ -245,7 +252,15 @@ angular.module('services.som', [
         data: [],
         variable: variable
       };
-      _.each(that.sampleDimension.top(Infinity), function(obj, ind) {
+
+      var deDuplicated = _.unique(that.sampleDimension.top(Infinity), false, function(d) { 
+        var arr = [];
+        if(d.originalDataset) { arr = [d.originalDataset, d.sampleid]; }
+        else { arr = [d.dataset, d.sampleid]; }
+        return arr.join("|");
+      });
+
+      _.each(deDuplicated, function(obj, ind) {
         var sampValue = +obj.variables[variable],
           isNaN = _.isNaN(sampValue),
           sampleid;
