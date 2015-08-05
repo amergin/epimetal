@@ -236,7 +236,7 @@ angular.module('plotter.vis.plotting.histogram',
       };
 
       var dcGroup = $scope.isSpecial() ? constants.groups.histogram.nonInteractive : constants.groups.histogram.interactive,
-      xUnitsScale = d3.scale.linear().domain([250, 900]).range([config.noBins-5, 15]).clamp(true);
+      xUnitsScale = d3.scale.linear().domain([250, 900]).range([config.noBins-5, 18]).clamp(true);
 
       // 1. create composite chart
       $scope.histogram = dc.compositeChart(config.element[0], dcGroup)
@@ -259,7 +259,7 @@ angular.module('plotter.vis.plotting.histogram',
       .x(d3.scale.linear().domain(config.extent).range([0, config.noBins]))
       .xUnits(function(low, high) {
         var width = $scope.getWidth($scope.element);
-        return Math.floor(xUnitsScale(width));
+        return Math.round(xUnitsScale(width));
       })
       .margins({
         top: 15,
