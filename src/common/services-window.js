@@ -1,75 +1,88 @@
 angular.module('services.window', [
-  'angularSpinner', 
+  'angularSpinner',
   'ui.router.state',
   'ext.lodash'
-  ])
+])
 
-.factory('WindowHandler', ['$injector', 'constants', '$rootScope', '$timeout', 'usSpinnerService', '$state', 'EXPORT_FILENAME_MAX_LENGTH', 'DatasetFactory', '_',
-  function ($injector, constants, $rootScope, $timeout, usSpinnerService, $state, EXPORT_FILENAME_MAX_LENGTH, DatasetFactory, _) {
+.factory('WindowHandler', function WindowHandlerFn($injector, $rootScope, $timeout, usSpinnerService, $state, EXPORT_FILENAME_MAX_LENGTH, DatasetFactory, _) {
 
-    function GridWindow(injector) {
+  function GridWindow(injector) {
       var obj = {},
-      $injector = injector,
-      $timeout = $injector.get('$timeout'),
-      priv = {
-        reference: null,
-        type: null,
-        privFn: null,
-        id: null,
-        variables: null,
-        pooled: false,
-        headerText: [],
-        dropdown: [],
-        resetButton: false,
-        resetFn: null,
-        circleSpin: {
-          spinning: false,
-          maxValue: 100,
-          value: 0
-        },
-        extra: {}
-      };
+        $injector = injector,
+        $timeout = $injector.get('$timeout'),
+        priv = {
+          reference: null,
+          type: null,
+          privFn: null,
+          id: null,
+          variables: null,
+          pooled: false,
+          headerText: [],
+          dropdown: [],
+          resetButton: false,
+          resetFn: null,
+          circleSpin: {
+            spinning: false,
+            maxValue: 100,
+            value: 0
+          },
+          extra: {}
+        };
 
       function initGrid() {
         _.defaults(priv.reference, {
           grid: {
-            position: { row: null, col: null },
-            size: { x: 0, y: 0 }
+            position: {
+              row: null,
+              col: null
+            },
+            size: {
+              x: 0,
+              y: 0
+            }
           }
         });
       }
 
       obj.reference = function(x) {
-        if(!arguments.length) { return priv.reference; }
+        if (!arguments.length) {
+          return priv.reference;
+        }
         priv.reference = x;
         initGrid();
         return obj;
       };
 
       obj.circleSpin = function(x) {
-        if(!arguments.length) { return priv.circleSpin.spinning; }
+        if (!arguments.length) {
+          return priv.circleSpin.spinning;
+        }
         priv.circleSpin.spinning = x;
         return obj;
       };
 
       obj.circleSpinMax = function(x) {
-        if(!arguments.length) { return priv.circleSpin.maxValue; }
+        if (!arguments.length) {
+          return priv.circleSpin.maxValue;
+        }
         priv.circleSpin.maxValue = x;
         return obj;
       };
 
       obj.circleSpinValue = function(x) {
-        if(!arguments.length) { return priv.circleSpin.value; }
-          if(x > priv.circleSpin.maxValue) {
-            x = priv.circleSpin.maxValue;
-          }
-          priv.circleSpin.value = x;
+        if (!arguments.length) {
+          return priv.circleSpin.value;
+        }
+        if (x > priv.circleSpin.maxValue) {
+          x = priv.circleSpin.maxValue;
+        }
+        priv.circleSpin.value = x;
         return obj;
       };
 
       obj.spin = function(x) {
-        if(!arguments.length || x === true ) { 
-          $injector.get('usSpinnerService').spin(obj.id()); 
+        if (!arguments.length || x === true) {
+          $injector.get('usSpinnerService').spin(obj.id());
         } else {
           $injector.get('usSpinnerService').stop(obj.id());
         }
@@ -81,25 +94,35 @@ angular.module('services.window', [
       };
 
       obj.resetButton = function(x) {
-        if(!arguments.length) { return priv.resetButton; }
+        if (!arguments.length) {
+          return priv.resetButton;
+        }
         priv.resetButton = x;
         return obj;
       };
 
       obj.resetFn = function(x) {
-        if(!arguments.length) { priv.resetFn(); return obj; }
+        if (!arguments.length) {
+          priv.resetFn();
+          return obj;
+        }
         priv.resetFn = x;
         return obj;
       };
 
       obj.remove = function(x) {
-        if(!arguments.length) { priv.removeFn(obj); return obj; }
+        if (!arguments.length) {
+          priv.removeFn(obj);
+          return obj;
+        }
         priv.removeFn = x;
         return obj;
       };
 
       obj.size = function(x) {
-        if(!arguments.length) { return priv.reference.grid.size; }
+        if (!arguments.length) {
+          return priv.reference.grid.size;
+        }
         priv.reference.grid.size = x;
         return obj;
       };
@@ -107,29 +130,45 @@ angular.module('services.window', [
       function getFileName(windowInst) {
         function getVariables(variables) {
           var hasX = !_.isUndefined(variables.x),
-          hasY = !_.isUndefined(variables.y),
-          hasTarget = !_.isUndefined(variables.target);
+            hasY = !_.isUndefined(variables.y),
+            hasTarget = !_.isUndefined(variables.target);
 
-          if(hasX && hasY) {
-            return _.template('X_<%= x %>_Y_<%= y %>')({ x: variables.x, y: variables.y });
+          if (hasX && hasY) {
+            return _.template('X_<%= x %>_Y_<%= y %>')({
+              x: variables.x,
+              y: variables.y
+            });
           }
-          if(hasX) {
-            if(_.isArray(variables.x)) {
-              return _.map(variables.x, function(v) { return v; }).join("_");
-            }
-            else {
-              return _.template('X_<%= x %>')({ x: variables.x });
+          if (hasX) {
+            if (_.isArray(variables.x)) {
+              return _.map(variables.x, function(v) {
+                return v;
+              }).join("_");
+            } else {
+              return _.template('X_<%= x %>')({
+                x: variables.x
+              });
             }
           }
-          if(hasTarget) {
+          if (hasTarget) {
             var template = _.template('target_<%= target %>_association_<%= assoc %>_vars_adjusted_<%= adjust %>_vars');
-            return template({ target: variables.target, assoc: variables.association.length, adjust: variables.adjust.length });
+            return template({
+              target: variables.target,
+              assoc: variables.association.length,
+              adjust: variables.adjust.length
+            });
           }
         }
-        var setNames = _.map(DatasetFactory.activeSets(), 
-          function(set) { return set.name(); }).join("_"),
-        template = _.template('<%= type %>_of_<%= variable %>_on_<%= datasets %>'),
-        fullLength = template({ type: windowInst.figure(), variable: getVariables(windowInst.variables()), datasets: setNames });
+        var setNames = _.map(DatasetFactory.activeSets(),
+            function(set) {
+              return set.name();
+            }).join("_"),
+          template = _.template('<%= type %>_of_<%= variable %>_on_<%= datasets %>'),
+          fullLength = template({
+            type: windowInst.figure(),
+            variable: getVariables(windowInst.variables()),
+            datasets: setNames
+          });
 
         return _.trunc(fullLength, {
           'length': EXPORT_FILENAME_MAX_LENGTH,
@@ -164,7 +203,7 @@ angular.module('services.window', [
       }
 
       function togglePooling(window) {
-        window.pooled( !window.pooled() );
+        window.pooled(!window.pooled());
       }
 
       function toggleCorrelation(window) {
@@ -220,40 +259,48 @@ angular.module('services.window', [
             'type': cfg.type
           };
         }
-        switch(cfg.type) {
+        switch (cfg.type) {
           case 'export:svg':
-          return getSVG(cfg);
+            return getSVG(cfg);
 
           case 'export:png':
-          return getPNG(cfg);
+            return getPNG(cfg);
 
           case 'correlation':
-          return getCorrelation(cfg);
+            return getCorrelation(cfg);
 
           case 'colorscale':
-          return getColorScale(cfg);
+            return getColorScale(cfg);
 
           case 'pooling':
-          return getPooling(cfg);
+            return getPooling(cfg);
         }
       }
 
       obj.getDropdown = function(type) {
-        if(!arguments.length) { throw new Error("no parameter"); }
+        if (!arguments.length) {
+          throw new Error("no parameter");
+        }
         return _.chain(priv.dropdown)
-        .filter(function(d) { return d['type'] == type; })
-        .first()
-        .value();
+          .filter(function(d) {
+            return d['type'] == type;
+          })
+          .first()
+          .value();
       };
 
       obj.addDropdown = function(x) {
-        if(!arguments.length) { throw new Error("no parameter"); }
+        if (!arguments.length) {
+          throw new Error("no parameter");
+        }
         priv.dropdown.push(getDropdown(x));
         return obj;
       };
 
       obj.removeDropdown = function(x) {
-        if(!arguments.length) { throw new Error("no parameter"); }
+        if (!arguments.length) {
+          throw new Error("no parameter");
+        }
         _.remove(priv.dropdown, function(drop) {
           return drop.type == x;
         });
@@ -261,13 +308,15 @@ angular.module('services.window', [
       };
 
       obj.modifyDropdown = function(type, key, val, text) {
-        if(!arguments.length) { throw new Error("no parameter"); }
+        if (!arguments.length) {
+          throw new Error("no parameter");
+        }
         var found = _.chain(priv.dropdown)
-        .filter(function(drop) {
-          return drop['type'] == type;
-        })
-        .first()
-        .value();
+          .filter(function(drop) {
+            return drop['type'] == type;
+          })
+          .first()
+          .value();
 
         found[key] = val;
         found['text'] = getCorrelationText(text);
@@ -275,49 +324,65 @@ angular.module('services.window', [
       };
 
       obj.dropdown = function(x) {
-        if(!arguments.length) { return priv.dropdown; }
+        if (!arguments.length) {
+          return priv.dropdown;
+        }
         priv.dropdown = x;
         return obj;
       };
 
       obj.position = function(x) {
-        if(!arguments.length) { return priv.reference.grid.position; }
+        if (!arguments.length) {
+          return priv.reference.grid.position;
+        }
         priv.reference.grid.position = x;
         return obj;
       };
 
       obj.headerText = function(x) {
-        if(!arguments.length) { return priv.headerText; }
+        if (!arguments.length) {
+          return priv.headerText;
+        }
         priv.headerText = x;
         return obj;
       };
 
       obj.id = function(x) {
-        if(!arguments.length) { return priv.id; }
+        if (!arguments.length) {
+          return priv.id;
+        }
         priv.id = x;
         return obj;
       };
 
       obj.pooled = function(x) {
-        if(!arguments.length) { return priv.pooled; }
+        if (!arguments.length) {
+          return priv.pooled;
+        }
         priv.pooled = x;
         return obj;
       };
 
       obj.variables = function(x) {
-        if(!arguments.length) { return priv.variables; }
+        if (!arguments.length) {
+          return priv.variables;
+        }
         priv.variables = x;
         return obj;
       };
 
       obj.extra = function(x) {
-        if(!arguments.length) { return priv.extra; }
+        if (!arguments.length) {
+          return priv.extra;
+        }
         priv.extra = x;
         return obj;
-      };      
+      };
 
       obj.figure = function(x) {
-        if(!arguments.length) { return priv.type; }
+        if (!arguments.length) {
+          return priv.type;
+        }
         priv.type = x;
         return obj;
       };
@@ -325,9 +390,9 @@ angular.module('services.window', [
       return obj;
     } // GridWindow
 
-    var _handlers = {};
+  var _handlers = {};
 
-    function WindowHandler(name) {
+  function WindowHandler(name) {
       var windows = [];
       var _name = name;
       var that = this;
@@ -339,7 +404,9 @@ angular.module('services.window', [
       };
 
       this.ignoreRedraws = function(set) {
-        if(!arguments.length) { return _ignoreRedraws; }
+        if (!arguments.length) {
+          return _ignoreRedraws;
+        }
         _ignoreRedraws = set;
       };
 
@@ -352,29 +419,36 @@ angular.module('services.window', [
       };
 
       this.rerenderAll = function(config) {
-        if( that.ignoreRedraws() ) { return; }
+        if (that.ignoreRedraws()) {
+          return;
+        }
         $rootScope.$emit('window-handler.rerender', that, config || {});
       };
 
       this.redrawAll = function() {
-        if( that.ignoreRedraws() ) { return; }
-         $rootScope.$emit('window-handler.redraw', that);
+        if (that.ignoreRedraws()) {
+          return;
+        }
+        $rootScope.$emit('window-handler.redraw', that);
       };
 
       this.add = function(config) {
         function removeFn(object) {
-          _.remove(windows, function(win) { 
+          _.remove(windows, function(win) {
             return win.object === object;
           });
         }
 
         var gridWindow = new GridWindow($injector)
-        .id( _.uniqueId("win_") ),
-        reference = { 'handler': that, 'object': gridWindow };
+          .id(_.uniqueId("win_")),
+          reference = {
+            'handler': that,
+            'object': gridWindow
+          };
         windows.push(reference);
 
         gridWindow.reference(reference)
-        .remove(removeFn);
+          .remove(removeFn);
 
         return gridWindow;
       };
@@ -412,7 +486,9 @@ angular.module('services.window', [
           return win.type() == type;
         });
 
-        if( ind == -1 ) { return; }
+        if (ind == -1) {
+          return;
+        }
 
         win.remove();
         return that;
@@ -420,10 +496,9 @@ angular.module('services.window', [
 
       this.remove = function(id) {
         throw new Error("remove");
-      }; 
-
-      this.getId = function(key,val) {
       };
+
+      this.getId = function(key, val) {};
 
       this.get = function() {
         return windows;
@@ -434,74 +509,79 @@ angular.module('services.window', [
       };
     } // function
 
-    return  {
-      create: function(name) {
-        if(_.isUndefined(_handlers[name])) {
-          var handler = new WindowHandler(name);
-          _handlers[name] = handler;
-        }
-        return _handlers[name];
-      },
-      get: function(name) {
-        return _handlers[name];
-      },
-      getPrimary: function(name) {
-        var DimensionService = $injector.get('DimensionService');
-        return _.chain(_handlers).values().find( function(h) {
-          return h.getDimensionService() == DimensionService.getPrimary();
-        }).value();
-      },
-      getSecondary: function() {
-        return this.get('vis.som.plane');
-      },
-      getAll: function() {
-        return _handlers;
-      },
-      // redraws all visible handlers
-      reRenderVisible: _.debounce(function(config) {
-        var visibles = this.getVisible();
-        _.each(visibles, function(hand) {
-          hand.rerenderAll(config);
-        });
-      }, 300, { leading: false, trailing: true }),
-
-      redrawVisible: _.debounce(function() {
-        var visibles = this.getVisible();
-        _.each( visibles, function(hand) {
-          hand.redrawAll();
-        });
-      }, 300, { leading: false, trailing: true }),
-      
-      getVisible: function() {
-        var res = [];
-        var re = /((?:\w+).(?:\w+))(?:.\w+)?/i;
-        var current = $state.current.name;
-        var parent = _.last( re.exec(current) );
-        _.each( _handlers, function(hand) {
-          var name = _.chain( re.exec( hand.getName() ) ).last().value();
-          if( name == parent ) {
-            res.push(hand);
-          }
-        });    
-        return res;    
-      },
-      spinAllVisible: function() {
-        _.each(this.getVisible(), function(handler) {
-          handler.spinAll();
-        });
-      },
-      stopAllSpins: function() {
-        _.each(this.getVisible(), function(handler) {
-          handler.stopAllSpins();
-        });
-      },
-      removeAllVisible: function() {
-        _.each(this.getVisible(), function(handler) {
-          // empty the window array, that'll remove all
-          handler.get().splice(0);
-        });
+  return {
+    create: function(name) {
+      if (_.isUndefined(_handlers[name])) {
+        var handler = new WindowHandler(name);
+        _handlers[name] = handler;
       }
-    };
+      return _handlers[name];
+    },
+    get: function(name) {
+      return _handlers[name];
+    },
+    getPrimary: function(name) {
+      var DimensionService = $injector.get('DimensionService');
+      return _.chain(_handlers).values().find(function(h) {
+        return h.getDimensionService() == DimensionService.getPrimary();
+      }).value();
+    },
+    getSecondary: function() {
+      return this.get('vis.som.plane');
+    },
+    getAll: function() {
+      return _handlers;
+    },
+    // redraws all visible handlers
+    reRenderVisible: _.debounce(function(config) {
+      var visibles = this.getVisible();
+      _.each(visibles, function(hand) {
+        hand.rerenderAll(config);
+      });
+    }, 300, {
+      leading: false,
+      trailing: true
+    }),
 
-  }
-]);
+    redrawVisible: _.debounce(function() {
+      var visibles = this.getVisible();
+      _.each(visibles, function(hand) {
+        hand.redrawAll();
+      });
+    }, 300, {
+      leading: false,
+      trailing: true
+    }),
+
+    getVisible: function() {
+      var res = [];
+      var re = /((?:\w+).(?:\w+))(?:.\w+)?/i;
+      var current = $state.current.name;
+      var parent = _.last(re.exec(current));
+      _.each(_handlers, function(hand) {
+        var name = _.chain(re.exec(hand.getName())).last().value();
+        if (name == parent) {
+          res.push(hand);
+        }
+      });
+      return res;
+    },
+    spinAllVisible: function() {
+      _.each(this.getVisible(), function(handler) {
+        handler.spinAll();
+      });
+    },
+    stopAllSpins: function() {
+      _.each(this.getVisible(), function(handler) {
+        handler.stopAllSpins();
+      });
+    },
+    removeAllVisible: function() {
+      _.each(this.getVisible(), function(handler) {
+        // empty the window array, that'll remove all
+        handler.get().splice(0);
+      });
+    }
+  };
+
+});

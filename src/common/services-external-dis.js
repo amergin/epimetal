@@ -1,21 +1,21 @@
-angular.module('ext.lodash', []).factory('_', function() {
+angular.module('ext.lodash', []).factory('_', function lodash() {
     return window._;
 });
 
-angular.module('ext.d3', []).factory('d3', function() {
+angular.module('ext.d3', []).factory('d3', function d3() {
     return window.d3;
 });
 
-angular.module('ext.dc', []).factory('dc', function() {
+angular.module('ext.dc', []).factory('dc', function dc() {
     return window.dc;
 });
 
-angular.module('utilities.math', []).factory('mathUtils', function() {
+angular.module('utilities.math', []).factory('mathUtils', function mathUtils() {
     return window.mathUtils;
 });
 
 angular.module('ext.core-estimator', [])
-.factory('coreEstimator', function($q, $timeout) {
+.factory('coreEstimator', function coreEstimator($q, $timeout) {
   var _cores = null;
 
   var service = {

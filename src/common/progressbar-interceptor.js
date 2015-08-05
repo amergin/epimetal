@@ -1,11 +1,11 @@
 angular.module('progressBarInterceptor', ['ngProgress'])
 
-.factory('progressBarInterceptor', ['$injector', '$q', function($injector, $q) {  
+.factory('progressBarInterceptor', function progressBarInterceptorFn($injector, $q) {
   var progressBarInterceptor = {
     request: function(config) {
       $injector.invoke(function(ngProgress, $templateCache) {
         // don't use on template get requests, those are actually local
-        if( $templateCache.get(config.url) === undefined ) {
+        if ($templateCache.get(config.url) === undefined) {
           ngProgress.start();
         }
       });
@@ -19,7 +19,7 @@ angular.module('progressBarInterceptor', ['ngProgress'])
     },
     response: function(response) {
       $injector.invoke(function(ngProgress, $templateCache) {
-        if( $templateCache.get(response.config.url) === undefined ) {
+        if ($templateCache.get(response.config.url) === undefined) {
           ngProgress.complete();
         }
       });
@@ -34,10 +34,10 @@ angular.module('progressBarInterceptor', ['ngProgress'])
 
   };
   return progressBarInterceptor;
-}])
+})
 
-.config(['$injector', function($injector) {
+.config(function progressBarConfig($injector) {
   $injector.invoke(function($httpProvider) {
     $httpProvider.interceptors.push('progressBarInterceptor');
   });
-}]);
+});

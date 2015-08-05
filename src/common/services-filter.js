@@ -1,20 +1,17 @@
-angular.module('services.filter', 
-  [
-  'services.dimensions', 
+angular.module('services.filter', [
+  'services.dimensions',
   'services.window',
   'ext.d3',
-  'ext.lodash' 
-  ])
+  'ext.lodash'
+])
 
 .constant('SOM_MAX_FILTERS', 5)
-.factory('FilterService', ['$injector', '$rootScope', 'WindowHandler', 'SOM_MAX_FILTERS', 'd3', '_',
-  function ($injector, $rootScope, WindowHandler, SOM_MAX_FILTERS, d3, _) {
+  .factory('FilterService', function FilterService($injector, $rootScope, WindowHandler, SOM_MAX_FILTERS, d3, _) {
 
     var DimensionService = $injector.get('DimensionService');
     var _activeDimensionService = DimensionService.getPrimary();
     var _colors = d3.scale.category10();
-    var _filters = [
-    ];
+    var _filters = [];
     var _disabled = false;
 
     var _somDimensionInst = _activeDimensionService.getSOMDimension();
@@ -27,15 +24,18 @@ angular.module('services.filter',
       service.createCircleFilter('B');
     }
 
-    function getCircleCounts(array) {     
+    function getCircleCounts(array) {
       return _.chain(array)
-      .filter(function(f) {
-        return f.type() == 'circle';
-      })
-      .map(function(filt) {
-        return _.defaults(filt, { circle: filt, count: 0 });
-      })
-      .value();
+        .filter(function(f) {
+          return f.type() == 'circle';
+        })
+        .map(function(filt) {
+          return _.defaults(filt, {
+            circle: filt,
+            count: 0
+          });
+        })
+        .value();
     }
 
     var service = {};
@@ -59,21 +59,21 @@ angular.module('services.filter',
     };
 
     service.createCircleFilter = function(name) {
-      var nameTaken = _.any(_filters, function(filt) { 
-        return filt.type() == 'circle' && filt.name() == name; 
+      var nameTaken = _.any(_filters, function(filt) {
+        return filt.type() == 'circle' && filt.name() == name;
       });
-      if(nameTaken) {
+      if (nameTaken) {
         throw new Error('The supplied circle name is already in use');
       }
-      if( service.getSOMFilters().length >= SOM_MAX_FILTERS ) {
+      if (service.getSOMFilters().length >= SOM_MAX_FILTERS) {
         throw new Error('Maximum amount of circle filters reached.');
       }
 
       var id = _.uniqueId('circle');
       var circle = new CircleFilter($injector)
-      .name(name)
-      .id(id)
-      .color(_colors(id));
+        .name(name)
+        .id(id)
+        .color(_colors(id));
       _filters.push(circle);
       updateCircleFilterHandler();
       $rootScope.$emit('som:circle:add', circle);
@@ -81,7 +81,9 @@ angular.module('services.filter',
     };
 
     service.disabled = function(x) {
-      if(!arguments.length) { return _disabled; }
+      if (!arguments.length) {
+        return _disabled;
+      }
       _disabled = x;
       return service;
     };
@@ -116,73 +118,90 @@ angular.module('services.filter',
     };
 
     service.addFilter = function(filter) {
-      if(service.disabled()) { return; }
+      if (service.disabled()) {
+        return;
+      }
       _filters.push(filter);
     };
 
     service.removeFilter = function(filter) {
-      if(service.disabled()) { return; }
+      if (service.disabled()) {
+        return;
+      }
       var removed = _.chain(_filters)
-      .remove(function(inst) {
-        return inst.is(filter);
-      })
-      .first()
-      .value();
+        .remove(function(inst) {
+          return inst.is(filter);
+        })
+        .first()
+        .value();
 
-      if(removed) {
+      if (removed) {
         removed.remove();
         var TabService = $injector.get('TabService');
-        TabService.check({ force: true, origin: 'filter' });
+        TabService.check({
+          force: true,
+          origin: 'filter'
+        });
       }
     };
 
     service.resetFilters = function(config) {
       service.disabled(true);
       var removed = _.chain(_filters)
-      .filter(function(f) {
-        if(config.spareSOM) {
-          return f.type() !== 'circle'; 
-        } else {
-          return true;
-        }
-      })
-      .each(function(f) {
-        f.remove();
-      })
-      .value();
+        .filter(function(f) {
+          if (config.spareSOM) {
+            return f.type() !== 'circle';
+          } else {
+            return true;
+          }
+        })
+        .each(function(f) {
+          f.remove();
+        })
+        .value();
 
-      _.remove(_filters, function(d) { 
+      _.remove(_filters, function(d) {
         return _.includes(removed, d);
       });
 
       var TabService = $injector.get('TabService');
-      TabService.check({ force: config.force || false, origin: 'filter' });
+      TabService.check({
+        force: config.force || false,
+        origin: 'filter'
+      });
       service.disabled(false);
     };
 
     service.removeFilterByPayload = function(filter) {
-      if(service.disabled()) { return; }      
+      if (service.disabled()) {
+        return;
+      }
       var found;
       _.some(_filters, function(instance) {
-        if(instance.isPayload(filter)) {
+        if (instance.isPayload(filter)) {
           found = instance;
           return true;
         }
         return false;
       });
-      if(found) {
+      if (found) {
         // found.remove();
         _.remove(_filters, found);
         var TabService = $injector.get('TabService');
-        TabService.check({ force: true, origin: 'filter' });
+        TabService.check({
+          force: true,
+          origin: 'filter'
+        });
       }
     };
 
     var getUniqueHexagons = function(current, added) {
       return _.chain(current)
-      .union(added)
-      .uniq( function(d) { return d.i + "|" + d.j; } )
-      .value();
+        .union(added)
+        .uniq(function(d) {
+          return d.i + "|" + d.j;
+        })
+        .value();
     };
 
     service.getFilters = function() {
@@ -197,9 +216,9 @@ angular.module('services.filter',
 
     service.getActiveFilters = function() {
       var state = $injector.get('TabService').activeState(),
-      isSom = _.startsWith(state.name, 'vis.som');
+        isSom = _.startsWith(state.name, 'vis.som');
       return _.filter(_filters, function(filt) {
-        if(isSom) {
+        if (isSom) {
           return filt.type() == 'circle';
         } else {
           return filt.type() != 'circle';
@@ -221,9 +240,9 @@ angular.module('services.filter',
         // should usually be just one name, but it's possible that in several
         var names = [];
 
-        _.each( service.getSOMFilters(), function(circle) {
-          if( circle.contains(bmu) ) {
-            names.push( circle.id() );
+        _.each(service.getSOMFilters(), function(circle) {
+          if (circle.contains(bmu)) {
+            names.push(circle.id());
           }
         });
         return names;
@@ -234,16 +253,19 @@ angular.module('services.filter',
         var groupedBMUs = _somDimension.group();
         // var groupedBMUs = _activeDimensionService.getSOMDimension().group();
         var counts = {};
-        _.each( groupedBMUs.all(), function(group) {
+        _.each(groupedBMUs.all(), function(group) {
           var inGroups = inWhatCircles(group.key);
-          _bmusLookup[bmuStrId(group.key)] = { bmu: group.key, circles: inGroups };
-          _.each( inGroups, function(name) {
+          _bmusLookup[bmuStrId(group.key)] = {
+            bmu: group.key,
+            circles: inGroups
+          };
+          _.each(inGroups, function(name) {
             counts[name] = counts[name] ? (counts[name] + group.value) : group.value;
           });
         });
 
-        _.each( service.getSOMFilters(), function(circle) {
-          circle.count( counts[circle.id()] || 0 );
+        _.each(service.getSOMFilters(), function(circle) {
+          circle.count(counts[circle.id()] || 0);
         });
 
         // return handle;
@@ -255,14 +277,13 @@ angular.module('services.filter',
     initCircleFilters();
 
     return service;
-  }
-  ]);
+
+  });
 
 
 function BaseFilter() {
-  var priv = this.privates = {
-  },
-  filter = this.filter = {};
+  var priv = this.privates = {},
+    filter = this.filter = {};
 
   filter.type = function() {
     throw new Error("not implemented");
@@ -292,17 +313,20 @@ function CircleFilter($injector) {
   BaseFilter.call(this);
 
   var priv = _.extend(this.privates, {
-    name: undefined,
-    id: undefined,
-    color: undefined,
-    hexagons: [],
-    injector: null,
-    radius: undefined,
-    count: 0,
-    position: undefined,
-    origin: { x: 0, y: 0 }
-  }),
-  filter = this.filter;
+      name: undefined,
+      id: undefined,
+      color: undefined,
+      hexagons: [],
+      injector: null,
+      radius: undefined,
+      count: 0,
+      position: undefined,
+      origin: {
+        x: 0,
+        y: 0
+      }
+    }),
+    filter = this.filter;
   priv.injector = $injector;
 
   function initOrigin() {
@@ -318,7 +342,9 @@ function CircleFilter($injector) {
   };
 
   filter.name = function(name) {
-    if(!arguments.length) { return priv.name; }
+    if (!arguments.length) {
+      return priv.name;
+    }
     priv.name = name;
     return filter;
   };
@@ -332,13 +358,17 @@ function CircleFilter($injector) {
   };
 
   filter.id = function(x) {
-    if(!arguments.length) { return priv.id; }
+    if (!arguments.length) {
+      return priv.id;
+    }
     priv.id = x;
     return filter;
   };
 
   filter.origin = function(x) {
-    if(!arguments.length) { return priv.origin; }
+    if (!arguments.length) {
+      return priv.origin;
+    }
     priv.origin = x;
     return filter;
   };
@@ -350,7 +380,9 @@ function CircleFilter($injector) {
   // };
 
   filter.hexagons = function(hexagons) {
-    if(!arguments.length) { return priv.hexagons; }
+    if (!arguments.length) {
+      return priv.hexagons;
+    }
     priv.hexagons = hexagons;
     priv.injector.get('DimensionService').get('vis.som').updateSOMFilter(filter.id(), priv.hexagons);
     priv.injector.get('WindowHandler').redrawVisible();
@@ -358,19 +390,25 @@ function CircleFilter($injector) {
   };
 
   filter.radius = function(radius) {
-    if(!arguments.length) { return priv.radius; }
+    if (!arguments.length) {
+      return priv.radius;
+    }
     priv.radius = radius;
     return filter;
   };
 
   filter.count = function(x) {
-    if(!arguments.length) { return priv.count; }
+    if (!arguments.length) {
+      return priv.count;
+    }
     priv.count = x;
     return filter;
-  };  
+  };
 
   filter.position = function(position) {
-    if(!arguments.length) { return priv.position; }
+    if (!arguments.length) {
+      return priv.position;
+    }
     priv.position = _.pick(position, 'x', 'y');
     return filter;
   };
@@ -383,7 +421,9 @@ function CircleFilter($injector) {
   };
 
   filter.color = function(color) {
-    if(!arguments.length) { return priv.color; }
+    if (!arguments.length) {
+      return priv.color;
+    }
     priv.color = color;
     return filter;
   };
@@ -405,27 +445,33 @@ function BaseFigureFilter() {
   BaseFilter.call(this);
 
   var priv = _.extend(this.privates, {
-    variable: undefined,
-    chart: null,
-    windowid: undefined,
-    payload: undefined
-  }),
-  filter = this.filter;
+      variable: undefined,
+      chart: null,
+      windowid: undefined,
+      payload: undefined
+    }),
+    filter = this.filter;
 
   filter.variable = function(x) {
-    if(!arguments.length) { return priv.variable; }
+    if (!arguments.length) {
+      return priv.variable;
+    }
     priv.variable = x;
     return filter;
   };
 
   filter.chart = function(x) {
-    if(!arguments.length) { return priv.chart; }
+    if (!arguments.length) {
+      return priv.chart;
+    }
     priv.chart = x;
     return filter;
   };
 
   filter.payload = function(x) {
-    if(!arguments.length) { return priv.payload; }
+    if (!arguments.length) {
+      return priv.payload;
+    }
     priv.payload = x;
     return filter;
   };
@@ -435,7 +481,9 @@ function BaseFigureFilter() {
   };
 
   filter.windowid = function(x) {
-    if(!arguments.length) { return priv.windowid; }
+    if (!arguments.length) {
+      return priv.windowid;
+    }
     priv.windowid = x;
     return filter;
   };
@@ -456,7 +504,7 @@ function HistogramFilter() {
   BaseFigureFilter.call(this);
 
   var priv = this.privates,
-  filter = this.filter;
+    filter = this.filter;
 
   filter.type = function() {
     return 'range';
@@ -480,7 +528,7 @@ function ClassedBarChartFilter() {
   BaseFigureFilter.call(this);
 
   var priv = this.privates,
-  filter = this.filter;
+    filter = this.filter;
 
   filter.type = function() {
     return 'classed';
@@ -488,7 +536,7 @@ function ClassedBarChartFilter() {
 
   filter.remove = function() {
     var filters = priv.chart.filters(),
-    removeIndex = _.indexOf(filters, priv.payload);
+      removeIndex = _.indexOf(filters, priv.payload);
 
     // 1. clear all current filters
     priv.chart.filter(null);

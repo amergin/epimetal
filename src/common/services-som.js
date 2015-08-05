@@ -1,171 +1,183 @@
 angular.module('services.som', [
-  'services.dataset', 
-  'services.dimensions', 
-  'services.notify', 
+  'services.dataset',
+  'services.dimensions',
+  'services.notify',
   'services.tab',
   'ext.d3',
   'ext.lodash'
-  ])
+])
 
-.constant('SOM_PLANE_SIZE', { x: 9, y: 7 })
+.constant('SOM_PLANE_SIZE', {
+    x: 9,
+    y: 7
+})
 .constant('SOM_MIN_SAMPLE_COUNT', 10)
 .constant('SOM_DEFAULT_PLANES', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'])
-.constant('SOM_DEFAULT_TESTVARS', 
-  ['XXL-VLDL-L', 'XL-VLDL-L', 'L-VLDL-L', 'M-VLDL-L', 
-    'S-VLDL-L', 'XS-VLDL-L', 'IDL-L', 'L-LDL-L',
-    'M-LDL-L', 'S-LDL-L', 'XL-HDL-L', 'L-HDL-L', 
-    'M-HDL-L', 'S-HDL-L', 'Serum-C', 'Serum-TG', 
-    'HDL-C', 'LDL-C', 'Glc', 'Cit', 'Phe', 'Gp', 'Tyr', 
-    'FAw3toFA', 'FAw6toFA', 'SFAtoFA'])
+.constant('SOM_DEFAULT_TESTVARS', ['XXL-VLDL-L', 'XL-VLDL-L', 'L-VLDL-L', 'M-VLDL-L',
+  'S-VLDL-L', 'XS-VLDL-L', 'IDL-L', 'L-LDL-L',
+  'M-LDL-L', 'S-LDL-L', 'XL-HDL-L', 'L-HDL-L',
+  'M-HDL-L', 'S-HDL-L', 'Serum-C', 'Serum-TG',
+  'HDL-C', 'LDL-C', 'Glc', 'Cit', 'Phe', 'Gp', 'Tyr',
+  'FAw3toFA', 'FAw6toFA', 'SFAtoFA'
+])
 
-.factory('SOMService', ['$injector', '$timeout', 'constants', '$rootScope', 'NotifyService', '$q', 'DatasetFactory', 'TabService', 'SOM_PLANE_SIZE', 'SOM_DEFAULT_PLANES', 'SOM_DEFAULT_TESTVARS', 'SOM_MIN_SAMPLE_COUNT', 'd3', '_',
-  function ($injector, $timeout, constants, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_PLANE_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT, d3, _) {
+.factory('SOMService', function SOMService(WindowHandler, $timeout, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_PLANE_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT, d3, _) {
 
-    var that = this;
+  var that = this;
 
-    this.som = {};
-    this.bmus = [];
-    this.trainSamples = [];
-    that.inProgress = false;
-    that.somSelection = {
-      variables: SOM_DEFAULT_TESTVARS,
-      samples: undefined
-    };
-    that.dimensionService = undefined;
-    that.sampleDimension = undefined;
+  this.som = {};
+  this.bmus = [];
+  this.trainSamples = [];
+  that.inProgress = false;
+  that.somSelection = {
+    variables: SOM_DEFAULT_TESTVARS,
+    samples: undefined
+  };
+  that.dimensionService = undefined;
+  that.sampleDimension = undefined;
 
-    var _colors = d3.scale.category10();
-    var service = {};
+  var _colors = d3.scale.category10();
+  var service = {};
 
-    service.inProgress = function() {
-      return that.inProgress;
-    };
+  service.inProgress = function() {
+    return that.inProgress;
+  };
 
-    service.empty = function() {
-      return _.isEmpty(that.som);
-    };
+  service.empty = function() {
+    return _.isEmpty(that.som);
+  };
 
-    service.bmus = function(x) {
-      if(!arguments.length) { return that.bmus; }
-      that.bmus = x;
-      return service;
-    };
+  service.bmus = function(x) {
+    if (!arguments.length) {
+      return that.bmus;
+    }
+    that.bmus = x;
+    return service;
+  };
 
-    service.defaultPlanes = function() {
-      return SOM_DEFAULT_PLANES;
-    };
+  service.defaultPlanes = function() {
+    return SOM_DEFAULT_PLANES;
+  };
 
-    // service.planeSize = function() {
-    //   return SOM_PLANE_SIZE;
-    // };
+  // service.planeSize = function() {
+  //   return SOM_PLANE_SIZE;
+  // };
 
-    service.setDimensionService = function(dimensionService) {
-      that.dimensionService = dimensionService;
-      that.sampleDimension = that.dimensionService.getSampleDimension().get();
-      return service;
-    };
+  service.setDimensionService = function(dimensionService) {
+    that.dimensionService = dimensionService;
+    that.sampleDimension = that.dimensionService.getSampleDimension().get();
+    return service;
+  };
 
-    service.getDimensionService = function() {
-      return that.dimensionService;
-    };
+  service.getDimensionService = function() {
+    return that.dimensionService;
+  };
 
-    service.setVariables = function(variables) {
-      function sameVars() {
-        var inter = _.intersection(variables, that.somSelection.variables),
+  service.setVariables = function(variables) {
+    function sameVars() {
+      var inter = _.intersection(variables, that.somSelection.variables),
         diff = _.difference(variables, inter),
         isSubset = variables.length === inter.length;
-        return diff.length === 0 && !isSubset;
+      return diff.length === 0 && !isSubset;
+    }
+    var currEmpty = _.isUndefined(that.somSelection.variables) || that.somSelection.variables.length === 0;
+    // sameVariables = _.difference(that.somSelection.variables, variables).length === 0 && ( _.intersection(
+
+    if (currEmpty || sameVars()) {
+      return;
+    }
+    that.somSelection['variables'] = variables;
+    // recompute
+    var windowHandler = WindowHandler.get('vis.som.plane');
+    service.getSOM(windowHandler);
+  };
+
+  service.getVariables = function() {
+    return angular.copy(that.somSelection.variables);
+  };
+
+  service.getSOM = function(windowHandler) {
+    var defer = $q.defer();
+
+    function computationNeeded() {
+      if (!that.sampleDimension) {
+        // early invoke, even before dimensionservice is initialized
+        return false;
       }
-      var currEmpty = _.isUndefined(that.somSelection.variables) || that.somSelection.variables.length === 0;
-      // sameVariables = _.difference(that.somSelection.variables, variables).length === 0 && ( _.intersection(
-
-      if( currEmpty || sameVars() ) {
-        return;
+      var sampleCount = that.sampleDimension.groupAll().value();
+      if (sampleCount === 0) {
+        // no samples
+        return false;
+      } else if (sampleCount < SOM_MIN_SAMPLE_COUNT) {
+        NotifyService.addSticky('Error', 'Please select at least ' + SOM_MIN_SAMPLE_COUNT + ' samples.', 'error');
+        return false;
+      } else if (service.inProgress()) {
+        return false;
       }
-      that.somSelection['variables'] = variables;
-      // recompute
-      var windowHandler = $injector.get('WindowHandler').get('vis.som.plane');
-      service.getSOM(windowHandler);
-    };
+      return true;
+    }
 
-    service.getVariables = function() {
-      return angular.copy(that.somSelection.variables);
-    };
+    function removePrevious() {
+      // remove previous computation
+      that.som = {};
+      that.bmus = [];
+    }
 
-    service.getSOM = function(windowHandler) {
-      var defer = $q.defer();
-
-      function computationNeeded() {
-        if( !that.sampleDimension ) {
-          // early invoke, even before dimensionservice is initialized
-          return false;
-        }
-        var sampleCount = that.sampleDimension.groupAll().value();        
-        if( sampleCount === 0 ) {
-          // no samples
-          return false;
-        } else if( sampleCount < SOM_MIN_SAMPLE_COUNT) {
-          NotifyService.addSticky('Error', 'Please select at least ' + SOM_MIN_SAMPLE_COUNT + ' samples.', 'error');
-          return false;
-        } else if( service.inProgress() ) {
-          return false;
-        }
-        return true;
-      }
-
-      function removePrevious() {
-        // remove previous computation
-        that.som = {};
-        that.bmus = [];
-      }
-
-      function getData(skipNaNs) {
-        var variables = that.somSelection.variables,
+    function getData(skipNaNs) {
+      var variables = that.somSelection.variables,
         retObj = {
           samples: [],
           columns: new Array(variables.length)
         };
 
-        _.each(that.sampleDimension.top(Infinity), function(obj, ind) {
-          var sampValues = _.chain(obj.variables)
+      _.each(that.sampleDimension.top(Infinity), function(obj, ind) {
+        var sampValues = _.chain(obj.variables)
           .pick(variables)
-          .map(function(val,key) { return [key, val]; })
+          .map(function(val, key) {
+            return [key, val];
+          })
           .sortBy(_.first)
           .map(_.last)
           .value(),
-          containsNaNs = _.some(sampValues, function(d) { return _.isNaN(+d); }),
+          containsNaNs = _.some(sampValues, function(d) {
+            return _.isNaN(+d);
+          }),
           sampleId;
 
-          // don't record this one
-          if(skipNaNs && containsNaNs) { return; }
+        // don't record this one
+        if (skipNaNs && containsNaNs) {
+          return;
+        }
 
-          sampleId = _.pick(obj, 'dataset', 'sampleid');
-          retObj.samples.push(sampleId);
-          _.each(sampValues, function(d,i) {
-            // initialize the array on first time
-            if( _.isUndefined(retObj.columns[i]) ) { retObj.columns[i] = []; }
-            retObj.columns[i].push(sampValues[i]);
-          });
+        sampleId = _.pick(obj, 'dataset', 'sampleid');
+        retObj.samples.push(sampleId);
+        _.each(sampValues, function(d, i) {
+          // initialize the array on first time
+          if (_.isUndefined(retObj.columns[i])) {
+            retObj.columns[i] = [];
+          }
+          retObj.columns[i].push(sampValues[i]);
         });
-        return retObj;
-      }
+      });
+      return retObj;
+    }
 
-      function trainThread(somObject) {
-          SOM.train(somObject);
-          return somObject;
-      }
+    function trainThread(somObject) {
+      SOM.train(somObject);
+      return somObject;
+    }
 
-      function doCall() {
-        NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'info');
-        // var selection = that.somSelection.variables;
-        removePrevious();
+    function doCall() {
+      NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'info');
+      // var selection = that.somSelection.variables;
+      removePrevious();
 
-        var skipNaNs = false;
-        var data = getData(skipNaNs);
-        that.trainSamples = data.samples;
-        that.som = SOM.create(SOM_PLANE_SIZE.y, SOM_PLANE_SIZE.x, data.samples, data.columns);
+      var skipNaNs = false;
+      var data = getData(skipNaNs);
+      that.trainSamples = data.samples;
+      that.som = SOM.create(SOM_PLANE_SIZE.y, SOM_PLANE_SIZE.x, data.samples, data.columns);
 
-        var parallel = new Parallel(that.som, {
+      var parallel = new Parallel(that.som, {
           evalPath: 'assets/eval.js'
         })
         .require('lodash.min.js')
@@ -180,85 +192,91 @@ angular.module('services.som', [
           // this will force existing planes to redraw
           $rootScope.$emit('dataset:SOMUpdated', that.som);
           TabService.lock(false);
-          that.inProgress = false;          
+          that.inProgress = false;
           defer.resolve(that.som);
         }, function errFn(result) {
           var message = '(Message)';
           NotifyService.addTransient('SOM computation failed', message, 'error');
           TabService.lock(false);
-          that.inProgress = false;          
+          that.inProgress = false;
           defer.reject(message);
         });
 
-      }
+    }
 
-      if( !computationNeeded() ) {
-        $timeout(function() {
-          defer.resolve('not_needed');
-        }, 5);
+    if (!computationNeeded()) {
+      $timeout(function() {
+        defer.resolve('not_needed');
+      }, 5);
 
-      } else {
-        TabService.lock(true);
-        that.inProgress = true;
+    } else {
+      TabService.lock(true);
+      that.inProgress = true;
 
-        // important: without clearing filters there's a risk only the sample that
-        // are within the circles get passed
-        windowHandler.getDimensionService().clearFilters();
+      // important: without clearing filters there's a risk only the sample that
+      // are within the circles get passed
+      windowHandler.getDimensionService().clearFilters();
 
-        // prefetch data and store it in the dimensionservice of that particular handler
-        DatasetFactory.getVariableData(that.somSelection.variables, windowHandler)
+      // prefetch data and store it in the dimensionservice of that particular handler
+      DatasetFactory.getVariableData(that.somSelection.variables, windowHandler)
         .then(function succFn(res) {
           doCall();
         });
-      }
-
-      return defer.promise;
-    };
-
-    function somNotComputed() {
-      return _.isEmpty(that.trainSamples) || _.isEmpty(that.som);
     }
 
-    service.getPlane = function(testVar, windowHandler) {
-      function getThreadData(variable, skipNaNs) {
-        function inTrainSamples(sample) {
-          return _.any(that.trainSamples, function(d) { return _.isEqual(d, sample); });
-        }
+    return defer.promise;
+  };
 
-        var retObj = {
-          som: that.som,
-          samples: [],
-          data: [],
-          variable: variable
-        };
-        _.each(that.sampleDimension.top(Infinity), function(obj, ind) {
-          var sampValue = +obj.variables[variable],
+  function somNotComputed() {
+    return _.isEmpty(that.trainSamples) || _.isEmpty(that.som);
+  }
+
+  service.getPlane = function(testVar, windowHandler) {
+    function getThreadData(variable, skipNaNs) {
+      function inTrainSamples(sample) {
+        return _.any(that.trainSamples, function(d) {
+          return _.isEqual(d, sample);
+        });
+      }
+
+      var retObj = {
+        som: that.som,
+        samples: [],
+        data: [],
+        variable: variable
+      };
+      _.each(that.sampleDimension.top(Infinity), function(obj, ind) {
+        var sampValue = +obj.variables[variable],
           isNaN = _.isNaN(sampValue),
           sampleid;
 
-          // don't record this one
-          if(skipNaNs && isNaN) { return; }
+        // don't record this one
+        if (skipNaNs && isNaN) {
+          return;
+        }
 
-          sampleId = _.pick(obj, 'dataset', 'sampleid');
+        sampleId = _.pick(obj, 'dataset', 'sampleid');
 
-          if( !inTrainSamples(sampleId) ) { return; }
+        if (!inTrainSamples(sampleId)) {
+          return;
+        }
 
-          retObj.samples.push(sampleId);
-          retObj.data.push(sampValue);
-        });
-        return [retObj];
-      }
+        retObj.samples.push(sampleId);
+        retObj.data.push(sampValue);
+      });
+      return [retObj];
+    }
 
-      function planeThread(threadData) {
-        return SOM.calculate_component_plane(global.env.som, global.env.sampleids, threadData.data, threadData.variable);
-      }
+    function planeThread(threadData) {
+      return SOM.calculate_component_plane(global.env.som, global.env.sampleids, threadData.data, threadData.variable);
+    }
 
-      function doCall() {
-        var skipNaNs = false;
-        var threadData = getThreadData(testVar, skipNaNs);
-        var parallel = new Parallel(threadData, {
+    function doCall() {
+      var skipNaNs = false;
+      var threadData = getThreadData(testVar, skipNaNs);
+      var parallel = new Parallel(threadData, {
           evalPath: 'assets/eval.js',
-          env : {
+          env: {
             som: that.som,
             sampleids: threadData[0].samples // == that.trainSamples
           }
@@ -278,37 +296,37 @@ angular.module('services.som', [
           that.inProgress = false;
           defer.reject('Plane computation of variable ' + testVar + ' failed');
         });
-      }
+    }
 
-      function startPlaneComputation(testVar) {
-        TabService.lock(true);
-        that.inProgress = true;
+    function startPlaneComputation(testVar) {
+      TabService.lock(true);
+      that.inProgress = true;
 
-        // important: without clearing filters there's a risk only the sample that
-        // are within the circles get passed
-        windowHandler.getDimensionService().clearFilters();
+      // important: without clearing filters there's a risk only the sample that
+      // are within the circles get passed
+      windowHandler.getDimensionService().clearFilters();
 
-        DatasetFactory.getVariableData([testVar], windowHandler)
+      DatasetFactory.getVariableData([testVar], windowHandler)
         .then(function succFn(res) {
           doCall();
         });
-      }
+    }
 
-      var defer = $q.defer();
+    var defer = $q.defer();
 
-      if( somNotComputed() ) {
-        service.getSOM(windowHandler).then(function succFn(res) {
-          startPlaneComputation(testVar);
-        }, function errFn(res) {
-          defer.reject();
-        });
-      } else {
+    if (somNotComputed()) {
+      service.getSOM(windowHandler).then(function succFn(res) {
         startPlaneComputation(testVar);
-      }
+      }, function errFn(res) {
+        defer.reject();
+      });
+    } else {
+      startPlaneComputation(testVar);
+    }
 
-      return defer.promise;
-    };    
+    return defer.promise;
+  };
 
-    return service;
-  }
-]);
+  return service;
+
+});
