@@ -43,7 +43,7 @@ angular.module('services.correlation.ww', [
     };
     var deferred = $q.defer(),
       variables = config.variables,
-      separated = config.separate === true,
+      separated = (config.separate === true),
       raw;
 
     if (separated) {
@@ -53,15 +53,17 @@ angular.module('services.correlation.ww', [
       });
       raw = getRaw(samples);
       deferred.resolve(raw);
-      // config.dataset.getVariables(variables).then(function(data) {
-      //   raw = getRaw(data.samples.all);
-      //   deferred.resolve(raw);
-      // });
     } else {
       DatasetFactory.getVariableData(variables, windowHandler)
         .then(function() {
           that.sampleDimension = windowHandler.getDimensionService().getSampleDimension();
-          var raw = getRaw(that.sampleDimension.get().top(Infinity), variables);
+          var deDuplicated = _.unique(that.sampleDimension.get().top(Infinity), false, function(d) { 
+            var arr = [];
+            if(d.originalDataset) { arr = [d.originalDataset, d.sampleid]; }
+            else { arr = [d.dataset, d.sampleid]; }
+            return arr.join("|");
+          });
+          var raw = getRaw(deDuplicated, variables);
           deferred.resolve(raw);
         });
     }
