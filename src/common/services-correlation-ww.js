@@ -161,9 +161,10 @@ angular.module('services.correlation.ww', [
       output.success(coordinates);
     } catch (e) {
       output.failure(e.message);
+    } finally {
+      console.log("Thread ready");
     }
 
-    console.log("Thread ready");
   }
 
   service.inProgress = function() {
@@ -216,6 +217,7 @@ angular.module('services.correlation.ww', [
 
       getData(config, windowHandler).then(function(data) {
         var workerPromises = [];
+        var perf1 = performance.now();        
         _.each(_workers, function(worker, ind) {
           var coordinates = cellInfo.coordinates[ind];
           // consider the case where there are more workers than variables  to calculate
@@ -240,6 +242,8 @@ angular.module('services.correlation.ww', [
         });
 
         $q.all(workerPromises).then(function succFn(results) {
+            var perf2 = performance.now();
+            console.log("elapsed time = ", Math.ceil((perf2 - perf1)/1000));
             windowObject.circleSpinValue(100);
             var flattened = _.chain(results).values().flatten(true).unique().value(),
               _result = combineResults(flattened, cellInfo.diagonals);

@@ -73,6 +73,10 @@ angular.module('services.webworker', [
         }
       });
 
+      priv.worker.onerror = function(error) {
+        deferred.reject(error.message);
+      };
+
       priv.worker.postMessage(input);
       return deferred.promise;
     };
@@ -112,7 +116,6 @@ angular.module('services.webworker', [
       }
       var blob,
         scriptBody = getScriptBody(),
-        // scriptStr = priv.script.toString(),
         deps = getDependencies();
       try {
         blob = new Blob([deps, scriptBody], {
@@ -126,7 +129,6 @@ angular.module('services.webworker', [
         blob = blob.getBlob();
       }
       priv.worker = new Worker(URL.createObjectURL(blob));
-      //new Worker('src/common/ww.js');//URL.createObjectURL(blob));
     });
 
     console.log("Worker no ", _obj.id(), " initialized");
