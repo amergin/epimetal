@@ -235,14 +235,15 @@ angular.module('plotter.vis.plotting.histogram',
           // don't redraw here, or it will form a feedback loop
       };
 
-      var dcGroup = $scope.isSpecial() ? constants.groups.histogram.nonInteractive : constants.groups.histogram.interactive;
+      var dcGroup = $scope.isSpecial() ? constants.groups.histogram.nonInteractive : constants.groups.histogram.interactive,
+      xUnitsScale = d3.scale.linear().domain([250, 900]).range([config.noBins-5, 15]).clamp(true);
 
       // 1. create composite chart
       $scope.histogram = dc.compositeChart(config.element[0], dcGroup)
       .dimension(config.dimension)
       .width( $scope.getWidth(config.element) )
       .height( $scope.getHeight(config.element) )
-      .transitionDuration(250)
+      // .transitionDuration(250)
       // .width(HISTOGRAM_WIDTH)
       // .height(HISTOGRAM_HEIGHT)
       .shareColors(true)
@@ -257,7 +258,8 @@ angular.module('plotter.vis.plotting.histogram',
       })
       .x(d3.scale.linear().domain(config.extent).range([0, config.noBins]))
       .xUnits(function(low, high) {
-        return 45;
+        var width = $scope.getWidth($scope.element);
+        return Math.floor(xUnitsScale(width));
       })
       .margins({
         top: 15,
@@ -551,7 +553,9 @@ angular.module('plotter.vis.plotting.histogram',
         height = $scope.getHeight($scope.element);
         $scope.histogram.width(width);
         $scope.histogram.height(height);
-        $scope.histogram.render();
+        $scope.histogram.redraw();
+        // $scope.histogram.render();
+        // $scope.histogram.rescale();
         setSize();
       }
 

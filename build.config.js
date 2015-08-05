@@ -81,7 +81,7 @@ module.exports = {
       'vendor/angular-ui-utils/modules/route/route.js',
       'vendor/crossfilter/patched/crossfilter.js',
       'vendor/d3/d3.js',
-      'vendor/dcjs/dc.js',
+      'vendor/dcjs/dc-develop.js',
       'vendor/d3-tip/index.js',
       // Utilities
       'vendor/lodash/lodash.min.js',
