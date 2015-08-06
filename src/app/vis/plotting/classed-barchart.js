@@ -40,20 +40,27 @@ angular.module('plotter.vis.plotting.classedbarchart',
     }
   }, true);
 
+  function getTotalCount() {
+    return _.sum($scope.totalGroup.all(), function(d) { return d.value.n; });
+  }
+
   function initSOMSpecial() {
     $scope.primary = DimensionService.getPrimary();
-    $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables());
+    $scope.totalDimensionInst = $scope.primary.getDerivedDimension();
     $scope.totalDimension = $scope.totalDimensionInst.get();
+    $scope.totalGroupInst = $scope.totalDimensionInst.groupDefault();
+    $scope.totalGroup = $scope.totalGroupInst.get();
+    $scope.dimensionService.getReducedDeduplicated($scope.totalGroupInst);
+
     $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables());
     $scope.dimension = $scope.dimensionInst.get();
     $scope.groupInst = $scope.dimensionInst.groupDefault();
 
     $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables().x);
     $scope.reduced = $scope.groupInst.get();
-      // total will always have largest count
-      $scope.extent = [0, $scope.totalDimensionInst.groupAll().get().reduceCount().value()];
-
-      $scope.colorScale = $injector.get('FilterService').getSOMFilterColors();
+    // total will always have largest count
+    $scope.extent = [0, getTotalCount()];
+    $scope.colorScale = $injector.get('FilterService').getSOMFilterColors();
     }
 
     function initDefault() {
@@ -134,7 +141,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
           },
           value: {
             type: 'total',
-            count: $scope.totalDimension.groupAll().value()
+            count: getTotalCount()
           }
         };
       }

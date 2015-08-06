@@ -62,7 +62,6 @@ angular.module('services.dimensions', [
 
       var getDimensionKey = function(type, variable) {
         return _.toArray(arguments).join("|");
-        // return [type, variable].join("|");
       };
 
       // return one dimension. 
@@ -235,6 +234,23 @@ angular.module('services.dimensions', [
 
         that.getDatasetDimension().filter(filterFunction);
         $rootScope.$emit('dimension:dataset');
+      };
+
+      this.getDerivedDimension = function() {
+        var key = getDimensionKey('normal', null);
+        var creationFn = function(d) {
+          return !_.isUndefined(d.originalDataset);
+        };
+
+        if (dimensions[key]) {
+          //pass
+        } else {
+          var destructFn = _.once(function() {
+            delete dimensions[key];
+          });
+          dimensions[key] = new CrossfilterDimension('normal', null, $injector, crossfilterInst, creationFn, destructFn).sticky(false);
+        }
+        return dimensions[key];
       };
 
       this.getSampleDimension = function() {
@@ -429,6 +445,65 @@ angular.module('services.dimensions', [
         });
         return dimensionGroup;
         // return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
+      };
+
+      this.getReducedDeduplicated = function(dimensionGroup) {
+        var getKey = function(samp) {
+          return [samp.originalDataset || samp.dataset, samp.sampleid].join("|");
+        };
+
+        function hasBeenAdded(key, samp, p) {
+          var value = p.samples[key];
+          return !_.isUndefined(value) && (value === true);
+        }
+
+        function add(key, p) {
+          p.samples[key] = true;
+        }
+
+        function remove(key, p) {
+          p.samples[key] = false;
+        }
+
+        // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Decremental_algorithm
+        var reduceAdd = function(p, v) {
+          var key = getKey(v),
+          added = hasBeenAdded(key, v, p);
+          if (added) {
+            //pass
+          } else {
+            p.n = p.n + 1;
+            add(key, p);
+          }
+          return p;
+        };
+
+        var reduceRemove = function(p, v) {
+          var key = getKey(v),
+          added = hasBeenAdded(key, v, p);
+          if (!added) {
+            //pass
+          } else {
+            p.n = p.n - 1;
+            remove(key, p);
+          }
+          return p;
+        };
+
+        var reduceInitial = function() {
+          var p = {
+            samples: {},
+            n: 0
+          };
+          return p;
+        };
+
+        dimensionGroup.reduce({
+          add: reduceAdd,
+          remove: reduceRemove,
+          initial: reduceInitial
+        });
+        return dimensionGroup;
       };
 
       this.getReducedSTD = function(dimensionGroup, variable) {
