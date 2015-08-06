@@ -480,8 +480,8 @@ angular.module('services.dimensions', [
         var reduceRemove = function(p, v) {
           var key = getKey(v);
           remove(key, p);
-          var added = hasBeenAdded(key, v, p);
-          if(!added) {
+          var sampsLeft = hasBeenAdded(key, v, p);
+          if(!sampsLeft) {
             // there are no datasets left that hold this sample ->
             // decrease total count
             p.dedupCount -= 1;
@@ -508,10 +508,6 @@ angular.module('services.dimensions', [
         return dimensionGroup;
       };
 
-      var testThr = _.throttle(function(d) {
-        console.log("Triggered: ", arguments);
-      }, 10);
-
       this.getReducedSTD = function(dimensionGroup, variable) {
         var getKey = function(samp) {
           return [samp.originalDataset || samp.dataset, samp.sampleid].join("|");
@@ -519,15 +515,16 @@ angular.module('services.dimensions', [
 
         function hasBeenAdded(key, samp, p) {
           var value = p.samples[key];
-          return !_.isUndefined(value) && (value === true);
+          return !_.isUndefined(value) && (value > 0);
         }
 
         function add(key, p) {
-          p.samples[key] = true;
+          var val = p.samples[key];
+          p.samples[key] = _.isUndefined(val) ? 1 : ++val;
         }
 
         function remove(key, p) {
-          p.samples[key] = false;
+          p.samples[key] -= 1;
         }
 
         // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Decremental_algorithm
@@ -536,11 +533,8 @@ angular.module('services.dimensions', [
           value = +v.variables[variable],
           key = getKey(v),
           added = hasBeenAdded(key, v, p);
-          // console.log("")
-          // testThr("add", added, p);
-          console.log("add", added);
+          add(key, p);
           if (_.isNaN(value) || added) {
-            console.log("add pass");
             //pass
           } else {
             obj.n = obj.n + 1;
@@ -555,19 +549,16 @@ angular.module('services.dimensions', [
         var reduceRemove = function(p, v) {
           var obj = p,
           value = +v.variables[variable],
-          key = getKey(v),
-          added = hasBeenAdded(key, v, p);
-          console.log("remove", added, p);
-          // testThr("remove", added, p);
-          if (_.isNaN(value) || obj.n < 2 || !added) {
+          key = getKey(v);
+          remove(key, p);
+          var sampsLeft = hasBeenAdded(key, v, p);
+          if (_.isNaN(value) || obj.n < 2 || sampsLeft) {
             //pass
-            console.log("remove pass");
           } else {
             obj.n = obj.n - 1;
             var delta = value - obj.mean;
             obj.mean = obj.mean - delta / obj.n;
             obj.M2 = obj.M2 - delta * (value - obj.mean);
-            remove(key, p);
           }
           return p;
         };
