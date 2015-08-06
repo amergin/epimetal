@@ -412,7 +412,7 @@ angular.module('plotter.vis.plotting.heatmap',
 
         $scope.heatmap.width($scope.getWidth($scope.element));
         $scope.heatmap.height($scope.getHeight($scope.element));
-        $scope.heatmap.render();
+        $scope.heatmap.redraw();
         setSize();
       }
 

@@ -460,7 +460,8 @@ angular.module('plotter.vis.plotting.classedbarchart',
 
       $scope.chart.width(width);
       $scope.chart.height(height);
-      $scope.chart.render();
+      $scope.chart.redraw();
+      // $scope.chart.render();
 
       setSize();
     }
