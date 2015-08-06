@@ -432,37 +432,62 @@ angular.module('services.dimensions', [
       };
 
       this.getReducedSTD = function(dimensionGroup, variable) {
+        var getKey = function(samp) {
+          return samp.dataset + "|" + samp.sampleid;
+        };
+
+        function hasBeenAdded(key, samp, p) {
+          var value = p.samples[key];
+          return !_.isUndefined(value) && (value === true);
+        }
+
+        function add(key, p) {
+          p.samples[key] = true;
+        }
+
+        function remove(key, p) {
+          p.samples[key] = false;
+        }
+
         // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Decremental_algorithm
         var reduceAdd = function(p, v) {
-          var obj = p;
-          var value = +v.variables[variable];
-          if (_.isNaN(value)) {
+          var obj = p,
+          value = +v.variables[variable],
+          key = getKey(v),
+          added = hasBeenAdded(key, v, p);
+          if (_.isNaN(value) || added) {
             //pass
           } else {
             obj.n = obj.n + 1;
             var delta = value - obj.mean;
             obj.mean = obj.mean + delta / obj.n;
             obj.M2 = obj.M2 + delta * (value - obj.mean);
+            add(key, p);
           }
           return p;
         };
 
         var reduceRemove = function(p, v) {
-          var obj = p;
-          var value = +v.variables[variable];
-          if (_.isNaN(value) || obj.n < 2) {
+          var obj = p,
+          value = +v.variables[variable],
+          key = getKey(v),
+          added = hasBeenAdded(key, v, p);
+          if (_.isNaN(value) || obj.n < 2 || !added) {
             //pass
           } else {
             obj.n = obj.n - 1;
             var delta = value - obj.mean;
             obj.mean = obj.mean - delta / obj.n;
             obj.M2 = obj.M2 - delta * (value - obj.mean);
+            remove(key, p);
           }
           return p;
         };
 
         var reduceInitial = function() {
-          var p = {};
+          var p = {
+            samples: {}
+          };
           var obj = p;
           obj.n = 0;
           obj.mean = 0;
