@@ -508,7 +508,8 @@ angular.module('services.dimensions', [
 
       this.getReducedSTD = function(dimensionGroup, variable) {
         var getKey = function(samp) {
-          return samp.dataset + "|" + samp.sampleid;
+          return [samp.originalDataset || samp.dataset, samp.sampleid].join("|");
+          // return samp.dataset + "|" + samp.sampleid;
         };
 
         function hasBeenAdded(key, samp, p) {
