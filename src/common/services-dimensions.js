@@ -444,7 +444,6 @@ angular.module('services.dimensions', [
           initial: reduceInitial
         });
         return dimensionGroup;
-        // return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
       };
 
       this.getReducedDeduplicated = function(dimensionGroup) {
@@ -454,38 +453,38 @@ angular.module('services.dimensions', [
 
         function hasBeenAdded(key, samp, p) {
           var value = p.samples[key];
-          return !_.isUndefined(value) && (value === true);
+          return !_.isUndefined(value) && (value > 0);
         }
 
         function add(key, p) {
-          p.samples[key] = true;
+          var val = p.samples[key];
+          p.samples[key] = _.isUndefined(val) ? 1 : ++val;
         }
 
         function remove(key, p) {
-          p.samples[key] = false;
+          p.samples[key] -= 1;
         }
 
-        // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Decremental_algorithm
         var reduceAdd = function(p, v) {
           var key = getKey(v),
           added = hasBeenAdded(key, v, p);
+          add(key, p);
           if (added) {
             //pass
           } else {
-            p.n = p.n + 1;
-            add(key, p);
+            p.dedupCount += 1;
           }
           return p;
         };
 
         var reduceRemove = function(p, v) {
-          var key = getKey(v),
-          added = hasBeenAdded(key, v, p);
-          if (!added) {
-            //pass
-          } else {
-            p.n = p.n - 1;
-            remove(key, p);
+          var key = getKey(v);
+          remove(key, p);
+          var added = hasBeenAdded(key, v, p);
+          if(!added) {
+            // there are no datasets left that hold this sample ->
+            // decrease total count
+            p.dedupCount -= 1;
           }
           return p;
         };
@@ -493,7 +492,10 @@ angular.module('services.dimensions', [
         var reduceInitial = function() {
           var p = {
             samples: {},
-            n: 0
+            dedupCount: 0,
+            valueOf: function() {
+              return p.dedupCount;
+            }
           };
           return p;
         };
@@ -505,6 +507,10 @@ angular.module('services.dimensions', [
         });
         return dimensionGroup;
       };
+
+      var testThr = _.throttle(function(d) {
+        console.log("Triggered: ", arguments);
+      }, 10);
 
       this.getReducedSTD = function(dimensionGroup, variable) {
         var getKey = function(samp) {
@@ -530,7 +536,11 @@ angular.module('services.dimensions', [
           value = +v.variables[variable],
           key = getKey(v),
           added = hasBeenAdded(key, v, p);
+          // console.log("")
+          // testThr("add", added, p);
+          console.log("add", added);
           if (_.isNaN(value) || added) {
+            console.log("add pass");
             //pass
           } else {
             obj.n = obj.n + 1;
@@ -547,8 +557,11 @@ angular.module('services.dimensions', [
           value = +v.variables[variable],
           key = getKey(v),
           added = hasBeenAdded(key, v, p);
+          console.log("remove", added, p);
+          // testThr("remove", added, p);
           if (_.isNaN(value) || obj.n < 2 || !added) {
             //pass
+            console.log("remove pass");
           } else {
             obj.n = obj.n - 1;
             var delta = value - obj.mean;
@@ -576,6 +589,7 @@ angular.module('services.dimensions', [
               mean: obj.mean
             };
           };
+          console.log("initial");
           return p;
         };
 

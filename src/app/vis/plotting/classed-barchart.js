@@ -41,7 +41,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
   }, true);
 
   function getTotalCount() {
-    return _.sum($scope.totalGroup.all(), function(d) { return d.value.n; });
+    return _.sum($scope.totalGroup.all(), function(d) { return d.value.valueOf(); });
   }
 
   function initSOMSpecial() {
