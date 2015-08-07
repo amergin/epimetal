@@ -361,17 +361,46 @@ angular.module('services.dimensions', [
         // return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
       };
 
-      this.getReducedGroupHisto = function(dimensionGroup, variable) {
+      this.getReducedGroupHisto = function(dimensionGroup, variable, somSpecial) {
+        var getKey = function(samp) {
+          return [samp.originalDataset || samp.dataset, samp.sampleid].join("|");
+        };
+
+        function hasBeenAdded(key, samp, p) {
+          var value = p.samples[key];
+          return !_.isUndefined(value) && (value > 0);
+        }
+
+        function add(key, p) {
+          var val = p.samples[key];
+          p.samples[key] = _.isUndefined(val) ? 1 : ++val;
+        }
+
+        function remove(key, p) {
+          p.samples[key] -= 1;
+        }
 
         var reduceAdd = function(p, v) {
           p.counts[v.dataset] = p.counts[v.dataset] + 1;
-          p.counts.total = p.counts.total + 1;
+
+          var key = getKey(v),
+          added = hasBeenAdded(key, v, p);
+          add(key, p);
+          if(!added) {
+            p.counts.total = p.counts.total + 1;
+          }
           return p;
         };
 
         var reduceRemove = function(p, v) {
           p.counts[v.dataset] = p.counts[v.dataset] - 1;
-          p.counts.total = p.counts.total - 1;
+
+          var key = getKey(v);
+          remove(key, p);
+          var sampsLeft = hasBeenAdded(key, v, p);
+          if(!sampsLeft) {
+            p.counts.total = p.counts.total - 1;
+          }
           return p;
         };
 
@@ -379,7 +408,8 @@ angular.module('services.dimensions', [
           var DatasetFactory = $injector.get('DatasetFactory');
           var setNames = DatasetFactory.getSetNames();
           var p = {
-            counts: {}
+            counts: {},
+            samples: {}
           };
 
           _.each(setNames, function(name) {
@@ -394,7 +424,6 @@ angular.module('services.dimensions', [
           initial: reduceInitial
         });
         return dimensionGroup;
-        // return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
       };
 
       this.getReducedMean = function(dimensionGroup, variable) {
