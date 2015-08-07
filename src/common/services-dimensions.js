@@ -398,13 +398,35 @@ angular.module('services.dimensions', [
       };
 
       this.getReducedMean = function(dimensionGroup, variable) {
+        var getKey = function(samp) {
+          return [samp.originalDataset || samp.dataset, samp.sampleid].join("|");
+        };
+
+        function hasBeenAdded(key, samp, p) {
+          var value = p.samples[key];
+          return !_.isUndefined(value) && (value > 0);
+        }
+
+        function add(key, p) {
+          var val = p.samples[key];
+          p.samples[key] = _.isUndefined(val) ? 1 : ++val;
+        }
+
+        function remove(key, p) {
+          p.samples[key] -= 1;
+        }
+
         // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Decremental_algorithm
         var reduceAdd = function(p, v) {
           p.n = p.n + 1;
           var varValue = +v.variables[variable];
           if (!_.isNaN(varValue)) {
+            var key = getKey(v),
+            added = hasBeenAdded(key, v, p);
+            add(key, p);
+
             var delta = varValue - p.mean;
-            if (delta === 0 || p.n === 0) {
+            if (delta === 0 || p.n === 0 || added) {
               return p;
             }
             p.mean = p.mean + delta / p.n;
@@ -417,7 +439,12 @@ angular.module('services.dimensions', [
           var varValue = +v.variables[variable];
           if (!_.isNaN(varValue)) { //_.isNumber(varValue) ) {
             var delta = varValue - p.mean;
-            if (delta === 0 || p.n === 0) {
+
+            var key = getKey(v);
+            remove(key, p);
+            var sampsLeft = hasBeenAdded(key, v, p);
+
+            if (delta === 0 || p.n === 0 || sampsLeft) {
               return p;
             }
             p.mean = p.mean - delta / p.n;
@@ -427,6 +454,7 @@ angular.module('services.dimensions', [
 
         var reduceInitial = function() {
           var p = {
+            samples: {},
             n: 0,
             mean: 0,
             valueOf: function() {
