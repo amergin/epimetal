@@ -593,6 +593,23 @@ angular.module('services.dimensions', [
       };
 
       this.getReducedGroupHistoDistributions = function(dimensionGroup, variable) {
+        var getKey = function(samp) {
+          return [samp.originalDataset || samp.dataset, samp.sampleid].join("|");
+        };
+
+        function hasBeenAdded(key, samp, p) {
+          var value = p.samples[key];
+          return !_.isUndefined(value) && (value > 0);
+        }
+
+        function add(key, p) {
+          var val = p.samples[key];
+          p.samples[key] = _.isUndefined(val) ? 1 : ++val;
+        }
+
+        function remove(key, p) {
+          p.samples[key] -= 1;
+        }
 
         var bmuStrId = function(bmu) {
           if (!bmu || !bmu.x || !bmu.y) {
@@ -616,9 +633,16 @@ angular.module('services.dimensions', [
                 count: 0
               };
             }
-            p.counts[bmuId].count = p.counts[bmuId].count + 1;
+            var key = getKey(v),
+            added = hasBeenAdded(key, v, p);
+            add(key, p);
+            if (added) {
+              //pass
+            } else {
+              p.counts[bmuId].count = p.counts[bmuId].count + 1;
+            }
           }
-          p.counts.total = p.counts.total + 1;
+          // p.counts.total = p.counts.total + 1;
           return p;
         };
 
@@ -633,19 +657,23 @@ angular.module('services.dimensions', [
             // pass
           } else {
             var bmuId = bmuStrId(v.bmus);
-            if (!_.isUndefined(p.counts[bmuId])) {
+            var key = getKey(v);
+            remove(key, p);
+            var sampsLeft = hasBeenAdded(key, v, p);
+            if (!_.isUndefined(p.counts[bmuId]) && !sampsLeft) {
               p.counts[bmuId].count = p.counts[bmuId].count - 1;
             }
           }
-          p.counts.total = p.counts.total - 1;
+          // p.counts.total = p.counts.total - 1;
           return p;
         };
 
         var reduceInitial = function() {
           var p = {
             counts: {
-              total: 0
-            }
+              // total: 0
+            },
+            samples: {}
           };
           return p;
         };
