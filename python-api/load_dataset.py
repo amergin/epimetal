@@ -166,8 +166,9 @@ def main():
 	configFile = 'setup.config'
 	tsvFile = None
 
-	if( len(sys.argv) < 2 ):
-		print "[Error] TSV file not provided. EXIT"
+	if( len(sys.argv) < 2 or len(sys.argv) > 3):
+		print "[Error] Invalid parameters provided."
+		print "Valid parameters: script.py filename.tsv [setup.config]"
 		sys.exit(-1)
 
 	elif( len( sys.argv ) is 2 ):
@@ -177,10 +178,6 @@ def main():
 	elif( len( sys.argv) is 3):
 		tsvFile = sys.argv[1]
 		configFile = sys.argv[2]
-	else:
-		print "[Error] Invalid parameters provided."
-		print "Valid parameters: script.py filename.tsv [setup.config]"
-		sys.exit(-1)
 
 	if not tsvFile or not os.access( tsvFile, os.R_OK ):
 		print "[Error] could not read TSV file. EXIT"
