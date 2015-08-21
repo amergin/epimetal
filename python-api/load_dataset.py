@@ -74,6 +74,9 @@ class DataLoader( object ):
 
 
 			fileName = self.cfg.getDataLoaderVar('header_file')
+			headerDict = dict()
+
+			# 1. read all metadata from file and form a dictionary from those details
 			# assume header contains: [name, desc, unit, group]
 			with open( fileName, 'r' ) as tsv:
 				header = []
@@ -82,24 +85,29 @@ class DataLoader( object ):
 						header = line
 						continue
 					rowDict = dict(zip(header, line))
+					headerDict[rowDict.get('name')] = rowDict
+					# rewrite variable name: might contain escaped chars
 					rowDict['name'] = _getEscapedVar( rowDict.get('name') )
 
-					group, created = _getGroup( rowDict.get('group') )
-					samp = _getSample(rowDict.get('name'))
-					if not samp:
-						payload = rowDict
-						if _isClassVariable(payload):
-							payload['classed'] = True
-							payload['unit'] = getSplitClassVariable(payload)
+			#2. Add only variables that are actually loaded into the database from the TSV file
+			for variable in headerList:
+				rowDict = headerDict.get(variable)
+				group, created = _getGroup( rowDict.get('group') )
+				samp = _getSample(rowDict.get('name'))
+				if not samp:
+					payload = rowDict
+					if _isClassVariable(payload):
+						payload['classed'] = True
+						payload['unit'] = getSplitClassVariable(payload)
 
-						payload['group'] = group
-						samp = HeaderSample(**payload)
-						samp.save()
-						group.variables.append(samp)
-						group.save()
-					else:
-						# header already exists, do nothing
-						pass
+					payload['group'] = group
+					samp = HeaderSample(**payload)
+					samp.save()
+					group.variables.append(samp)
+					group.save()
+				else:
+					# header already exists, do nothing
+					pass
 
 		# omit sampleid & dataset
 		datasetKey = self.cfg.getDataLoaderVar('dataset_identifier')
@@ -157,7 +165,7 @@ class DataLoader( object ):
 						continue
 					# print "ffloat call = ", valuesDict[key]
 					variables[key.encode('ascii')] = ffloat( float(valuesDict[key]) )
-				sample = Sample( dataset=dataset, sampleid=valuesDict[sampleidKey], variables=variables)
+				sample = Sample(dataset=dataset, sampleid=valuesDict[sampleidKey], variables=variables)
 				sample.save()
 
 
@@ -168,7 +176,7 @@ def main():
 
 	if( len(sys.argv) < 2 or len(sys.argv) > 3):
 		print "[Error] Invalid parameters provided."
-		print "Valid parameters: script.py filename.tsv [setup.config]"
+		print "Valid parameters: script.py samples.tsv [setup.config]"
 		sys.exit(-1)
 
 	elif( len( sys.argv ) is 2 ):
