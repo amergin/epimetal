@@ -280,7 +280,7 @@ function RegressionChart() {
   }
 
   function getBoxRowHeight(groupInd) {
-    var amount = _groupedData[groupInd].values[0].payload.length,
+    var amount = _.chain(_groupedData[groupInd].values).map(function(v) { return v.payload.length; }).max().value(),
     boxHeights = amount * _boxPlotHeight,
     paddings  = _boxPlotPadding * (amount-1);
     return  boxHeights + paddings;
@@ -396,6 +396,9 @@ function RegressionChart() {
         d.charts = [];
 
         _.each(d.payload, function(pay, index) {
+          if(pay.result.success === false) {
+            return;
+          }
           var colorFn = pay.type === 'som' ? _circleColors : _datasetColors,
           boxChart = new HorizontalBoxPlot()
           .element(el)

@@ -321,7 +321,9 @@ angular.module('services.regression.ww', [
           return numericJs();
         } catch(error) {
           // Variable with same values encountered -> omit from results and continue
-          return getError('Constant encountered');
+          return {
+            result: getError('Constant encountered')
+          };
         }
 
       }; // end compute 
@@ -365,13 +367,12 @@ angular.module('services.regression.ww', [
                 type: 'warning',
                 message: 'Variable ' + varData.variable + ' on dataset ' + obj.name + ' has constant values and will be omitted from results'
               });
-            } else {
-              result = _.chain(obj)
-              .omit('samples')
-              .extend(computation)
-              .value();
-              retObj.payload.push(result);
-            }
+            } 
+            var result = _.chain(obj)
+            .omit('samples')
+            .extend(computation)
+            .value();
+            retObj.payload.push(result);
 
             // notify
             var percentage = ((ind + 1) / arr.length) * (1 / noVars) + (varInd / noVars);
