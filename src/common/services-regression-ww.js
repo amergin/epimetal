@@ -11,7 +11,7 @@ angular.module('services.regression.ww', [
 .constant('MAX_REGRESSION_THREADS', 4)
 .constant('REGRESSION_VAR_THRESHOLD', 4)
 
-.factory('RegressionService', function RegressionServiceWW(FilterService, DimensionService, $q, DatasetFactory, TabService, WebWorkerService, DEFAULT_REGRESSION_THREADS, coreEstimator, MAX_REGRESSION_THREADS, REGRESSION_VAR_THRESHOLD, _) {
+.factory('RegressionService', function RegressionServiceWW(NotifyService, FilterService, DimensionService, $q, DatasetFactory, TabService, WebWorkerService, DEFAULT_REGRESSION_THREADS, coreEstimator, MAX_REGRESSION_THREADS, REGRESSION_VAR_THRESHOLD, _) {
   var that = this;
   var service = {};
 
@@ -273,6 +273,7 @@ angular.module('services.regression.ww', [
           // Compute beta = (X^T X)^{-1} X^T y 
           var dotProduct = numeric.dot(xMatrixTransp, xMatrix);
           var inverse = numeric.inv(dotProduct);
+
           dotProduct = null;
           var multi2 = numeric.dot(inverse, xMatrixTransp);
           var betas = numeric.dot(multi2, normalTargetData);
@@ -304,21 +305,25 @@ angular.module('services.regression.ww', [
           targetData = config.target,
           adjustData = config.adjustData;
 
-        var threadNaNs = regressionUtils.getNaNIndices(assocData),
-          allNaNIndices = _.union(threadNaNs, nanIndices),
-          normalAssocData = regressionUtils.getNormalizedData(regressionUtils.stripNaNs(assocData, allNaNIndices)),
-          onesArray = _.times(normalAssocData.length, function(d) {
-            return 1;
-          }),
-          normalTargetData = regressionUtils.getNormalizedData(regressionUtils.stripNaNs(targetData, allNaNIndices)),
-          normalAdjustData = regressionUtils.getNormalizedData(regressionUtils.getStrippedAdjust(adjustData, allNaNIndices));
+        try {
+          var threadNaNs = regressionUtils.getNaNIndices(assocData),
+            allNaNIndices = _.union(threadNaNs, nanIndices),
+            normalAssocData = regressionUtils.getNormalizedData(regressionUtils.stripNaNs(assocData, allNaNIndices)),
+            onesArray = _.times(normalAssocData.length, function(d) { return 1; }),
+            normalTargetData = regressionUtils.getNormalizedData(regressionUtils.stripNaNs(targetData, allNaNIndices)),
+            normalAdjustData = regressionUtils.getNormalizedData(regressionUtils.getStrippedAdjust(adjustData, allNaNIndices));
 
-        var xMatrixTransp = [onesArray, normalAssocData].concat(normalAdjustData);
-        // var xMatrix = numeric.transpose(xMatrixTransp);
+          var xMatrixTransp = [onesArray, normalAssocData].concat(normalAdjustData);
+          // var xMatrix = numeric.transpose(xMatrixTransp);
 
-        // change this if you want to try it out
-        // return mathJs();
-        return numericJs();
+          // change this if you want to try it out
+          // return mathJs();
+          return numericJs();
+        } catch(error) {
+          // Variable with same values encountered -> omit from results and continue
+          return getError('Constant encountered');
+        }
+
       }; // end compute 
 
       function getError(message) {
@@ -353,17 +358,25 @@ angular.module('services.regression.ww', [
                 adjustData: _.find(globals.adjustData, function(d) {
                   return d.name == obj.name;
                 }).samples
-              }),
+              });
+            if(computation.success === false) {
+              // pass, don't include in results
+              output.notify({
+                type: 'warning',
+                message: 'Variable ' + varData.variable + ' on dataset ' + obj.name + ' has constant values and will be omitted from results'
+              });
+            } else {
               result = _.chain(obj)
               .omit('samples')
               .extend(computation)
               .value();
-
-            retObj.payload.push(result);
+              retObj.payload.push(result);
+            }
 
             // notify
             var percentage = ((ind + 1) / arr.length) * (1 / noVars) + (varInd / noVars);
             output.notify({
+              type: 'progress',
               progress: percentage,
               thread: input.workerId
             });
@@ -371,6 +384,7 @@ angular.module('services.regression.ww', [
           });
         } catch (errorObject) {
           console.log("Regression throws error: ", errorObject.message);
+          console.log(errorObject.stack);
           retObj['result'] = getError('Something went wrong while computing the regression. Please check and adjust sample selections as needed.');
         } finally {
           return retObj;
@@ -518,11 +532,15 @@ angular.module('services.regression.ww', [
                 data: splitThreadData[ind],
                 globals: globals
               });
-            promise.then(null, null, function notifyFn(data) {
-              percentProgress[data.thread] = data.progress;
-              var workerCount = workerPromises.length;
-              var totalProgress = Math.ceil(_.chain(percentProgress).values().sum().value() / workerCount * 100);
-              windowObject.circleSpinValue(totalProgress);
+            promise.then(null, null, function notifyFn(notify) {
+              if(notify.type == 'warning') {
+                NotifyService.addSticky('Warning', notify.message, 'warn');
+              } else if(notify.type == 'progress') {
+                percentProgress[notify.thread] = notify.progress;
+                var workerCount = workerPromises.length;
+                var totalProgress = Math.ceil(_.chain(percentProgress).values().sum().value() / workerCount * 100);
+                windowObject.circleSpinValue(totalProgress);
+              }
             });
             workerPromises.push(promise);
           }

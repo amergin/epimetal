@@ -16,7 +16,18 @@
       count += dev[j] || 0;
     }
 
-    return Math.sqrt(count / (array.length - 1));
+    var retval = Math.sqrt(count / (array.length - 1));
+    return retval;
+    // if(retval === 0) {
+    //   // all sample values are the same, constant variable -> error
+    //   throw new Error('Constant variable');
+    // }
+    // return retval;
+    // console.log("before", count, array.length - 1);
+    // var retval = Math.sqrt(count / (array.length - 1));
+    // retval = (retval === 0) ? 1 : retval;
+    // console.log("returns = ", retval);
+    // return retval;
   };
 
   root.mean = function(arr, variable) {

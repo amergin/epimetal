@@ -1,6 +1,13 @@
 (function(context) {
   var root = {};
 
+  root.dispSize = function(title, matrix) {
+    var isArray = function(d) {
+      return _.isArray(d);
+    };
+    console.log(title + ": ", isArray(matrix) ? _.size(matrix) : 1, " x ", isArray(matrix[0]) ? _.size(matrix[0]) : 1);
+  };
+
   root.getNaNIndices = function(data) {
     var nans = [],
       val;
@@ -36,7 +43,6 @@
     .multiply(dotInverse)
     .multiply(xMatrixTransposed)
     .done();
-
     xMatrix = null;
 
     var hMatrixSize = math.size(hMatrix).subset(math.index(0));
@@ -123,13 +129,6 @@
     };
   };
 
-  root.dispSize = function(title, matrix) {
-    var isArray = function(d) {
-      return _.isArray(d);
-    };
-    console.log(title + ": ", isArray(matrix) ? _.size(matrix) : 1, " x ", isArray(matrix[0]) ? _.size(matrix[0]) : 1);
-  };
-
   root.mean = function(arr) {
     var num = arr.length, sum = 0;
     for(var i = 0; i < arr.length; i++) {
@@ -141,9 +140,15 @@
 
   root.getNormalizedData = function(data) {
     var process = function(array) {
+      if(array.length === 0) { return []; }
+
       var ret = [],
       avg = regressionUtils.mean(array),
       stDev = mathUtils.stDeviation(array, avg, function(d) { return +d; });
+      if(stDev === 0) {
+        // all sample values are the same, constant variable -> error
+        throw new Error('Constant variable');
+      }
       for(var i = 0; i < array.length; ++i) {
         ret.push( (+array[i] - avg)/stDev );
       }
