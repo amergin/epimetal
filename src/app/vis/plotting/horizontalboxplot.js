@@ -19,12 +19,13 @@ function HorizontalBoxPlot() {
       _transform,
       _bodyG,
       _xScale,
-      _tooltipFormat = d3.format(".3f"),
+      _tooltipPvalueFormat = d3.format('.2e'),
+      _tooltipFormat = d3.format('.2f'),
       _tooltipAccessor = function(obj) {
         var difference = _tooltipFormat(obj.quartiles[1] - obj.quartiles[0]);
         return [
         "<strong>ß = </strong> <span style='color: red'>" + _tooltipFormat(obj.quartiles[1]) + " ± " + difference + "</span>",
-        "<span style='color: red'>(</span>" + "<strong>p = </strong>" + "<span style='color: red'>" + _tooltipFormat(obj.pvalue) + ")</span>"
+        "<span style='color: red'>(</span>" + "<strong>p = </strong>" + "<span style='color: red'>" + _tooltipPvalueFormat(obj.pvalue) + ")</span>"
         ].join('<br>');
       },
       _tooltip = d3.tip()

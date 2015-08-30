@@ -554,8 +554,8 @@ angular.module('plotter.vis.plotting.histogram',
         height = $scope.getHeight($scope.element);
         $scope.histogram.width(width);
         $scope.histogram.height(height);
-        $scope.histogram.redraw();
-        // $scope.histogram.render();
+        // $scope.histogram.redraw();
+        $scope.histogram.render();
         // $scope.histogram.rescale();
         setSize();
       }

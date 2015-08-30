@@ -18,22 +18,12 @@
 
     var retval = Math.sqrt(count / (array.length - 1));
     return retval;
-    // if(retval === 0) {
-    //   // all sample values are the same, constant variable -> error
-    //   throw new Error('Constant variable');
-    // }
-    // return retval;
-    // console.log("before", count, array.length - 1);
-    // var retval = Math.sqrt(count / (array.length - 1));
-    // retval = (retval === 0) ? 1 : retval;
-    // console.log("returns = ", retval);
-    // return retval;
   };
 
   root.mean = function(arr, variable) {
     var num = arr.length, sum = 0;
     for(var i = 0; i < arr.length; i++) {
-      var val = +arr[i][variable];
+      var val = (variable === undefined) ? +arr[i] : +arr[i][variable];
       if( _.isNaN(val) ) {
         --num;
       } else {

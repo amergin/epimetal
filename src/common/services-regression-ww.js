@@ -8,8 +8,8 @@ angular.module('services.regression.ww', [
 ])
 
 .constant('DEFAULT_REGRESSION_THREADS', 3)
-.constant('MAX_REGRESSION_THREADS', 4)
-.constant('REGRESSION_VAR_THRESHOLD', 4)
+  .constant('MAX_REGRESSION_THREADS', 4)
+  .constant('REGRESSION_VAR_THRESHOLD', 4)
 
 .factory('RegressionService', function RegressionServiceWW(NotifyService, FilterService, DimensionService, $q, DatasetFactory, TabService, WebWorkerService, DEFAULT_REGRESSION_THREADS, coreEstimator, MAX_REGRESSION_THREADS, REGRESSION_VAR_THRESHOLD, _) {
   var that = this;
@@ -227,79 +227,6 @@ angular.module('services.regression.ww', [
   // this is called on each thread execution
   function threadFunction(input, output) {
       var compute = function(config) {
-
-        function mathJs() {
-          // see https://en.wikipedia.org/wiki/Ordinary_least_squares#Estimation
-          // beta = (X^T X)^{-1} X^T y 
-          var _xMatrixTransp = math.matrix(xMatrixTransp, 'dense', 'number');
-          var _xMatrix = math.transpose(xMatrixTransp);
-          var _normalTargetData = math.matrix(normalTargetData, 'dense', 'number');
-
-          // console.log("_xMatrixTransp size = ", String(_xMatrixTransp.size()));
-          // console.log("_xMatrix size = ", _.size(_xMatrix));
-          // console.log("_normalTargetData size = ", String(_normalTargetData.size()));
-
-          // Compute beta = (X^T X)^{-1} X^T y 
-          var dotProduct = math.multiply(_xMatrixTransp, _xMatrix);
-          var inverse = math.inv(dotProduct);
-          var multi2 = math.multiply(inverse, _xMatrixTransp);
-          var betas = math.multiply(multi2, normalTargetData);
-
-          // console.log("mathjs betas=", String(betas));
-
-          var n = math.size(_xMatrix)[0];
-          var k = math.size(_xMatrix)[1];
-          var beta = betas.subset(math.index(1));
-
-          var _yMatrixTransp = math.matrix([normalTargetData], 'dense', 'number');
-
-          // get confidence interval and p-value
-          var ciAndPvalue = regressionUtils.getCIAndPvalueMathjs(inverse, _xMatrix, _xMatrixTransp, _yMatrixTransp, n, k, beta);
-
-          return {
-            result: {
-              success: true
-            },
-            ci: ciAndPvalue.ci,
-            pvalue: ciAndPvalue.pvalue,
-            betas: betas.valueOf()
-          };
-
-        }
-
-        function numericJs() {
-          var xMatrix = numeric.transpose(xMatrixTransp);
-          // see https://en.wikipedia.org/wiki/Ordinary_least_squares#Estimation
-          // Compute beta = (X^T X)^{-1} X^T y 
-          var dotProduct = numeric.dot(xMatrixTransp, xMatrix);
-          var inverse = numeric.inv(dotProduct);
-
-          dotProduct = null;
-          var multi2 = numeric.dot(inverse, xMatrixTransp);
-          var betas = numeric.dot(multi2, normalTargetData);
-          multi2 = null;
-
-          // console.log("numericjs betas", betas);
-
-          var n = _.size(xMatrix),
-            k = _.size(xMatrix[0]),
-            beta = betas[1];
-
-          // console.log("n, k", n, k);
-
-          // get confidence interval and p-value
-          var ciAndPvalue = regressionUtils.getCIAndPvalueNumericjs(inverse, xMatrix, xMatrixTransp, [normalTargetData], n, k, beta);
-
-          return {
-            result: {
-              success: true
-            },
-            ci: ciAndPvalue.ci,
-            pvalue: ciAndPvalue.pvalue,
-            betas: betas
-          };
-
-        }
         var assocData = config.association,
           nanIndices = config.nans,
           targetData = config.target,
@@ -308,18 +235,23 @@ angular.module('services.regression.ww', [
         try {
           var threadNaNs = regressionUtils.getNaNIndices(assocData),
             allNaNIndices = _.union(threadNaNs, nanIndices),
-            normalAssocData = regressionUtils.getNormalizedData(regressionUtils.stripNaNs(assocData, allNaNIndices)),
-            onesArray = _.times(normalAssocData.length, function(d) { return 1; }),
-            normalTargetData = regressionUtils.getNormalizedData(regressionUtils.stripNaNs(targetData, allNaNIndices)),
-            normalAdjustData = regressionUtils.getNormalizedData(regressionUtils.getStrippedAdjust(adjustData, allNaNIndices));
 
-          var xMatrixTransp = [onesArray, normalAssocData].concat(normalAdjustData);
-          // var xMatrix = numeric.transpose(xMatrixTransp);
+            strippedAssoc = regressionUtils.stripNaNs(assocData, allNaNIndices),
+            strippedAdjust = regressionUtils.getStrippedAdjust(adjustData, allNaNIndices),
+            strippedTarget = regressionUtils.stripNaNs(targetData, allNaNIndices),
+            xColumns = [strippedAssoc].concat(strippedAdjust);
 
-          // change this if you want to try it out
-          // return mathJs();
-          return numericJs();
-        } catch(error) {
+          var res = regressionUtils.regress(xColumns, strippedTarget, 0.05, true, true);
+          return {
+            result: {
+              success: true
+            },
+            betas: res.beta,
+            ci: [res.beta[1] - res.ci[0][1], res.beta[1] + res.ci[0][1]],
+            pvalue: res.pvalue[1]
+          };
+        } catch (error) {
+          console.log(error.stack);
           // Variable with same values encountered -> omit from results and continue
           return {
             result: getError('Constant encountered')
@@ -350,28 +282,30 @@ angular.module('services.regression.ww', [
           // for each dataset / som input
           _.each(varData.data, function(obj, ind, arr) {
             var computation = compute({
-                association: obj.samples,
-                nans: _.find(globals.nanIndices, function(d) {
-                  return d.name == obj.name;
-                }).nans,
-                target: _.find(globals.targetData, function(d) {
-                  return d.name == obj.name;
-                }).samples,
-                adjustData: _.find(globals.adjustData, function(d) {
-                  return d.name == obj.name;
-                }).samples
-              });
-            if(computation.success === false) {
+              association: obj.samples,
+              nans: _.find(globals.nanIndices, function(d) {
+                return d.name == obj.name;
+              }).nans,
+              target: _.find(globals.targetData, function(d) {
+                return d.name == obj.name;
+              }).samples,
+              adjustData: _.find(globals.adjustData, function(d) {
+                return d.name == obj.name;
+              }).samples
+            });
+
+            console.log("computation=", computation);
+            if (computation.result.success === false) {
               // pass, don't include in results
               output.notify({
                 type: 'warning',
                 message: 'Variable ' + varData.variable + ' on dataset ' + obj.name + ' has constant values and will be omitted from results'
               });
-            } 
+            }
             var result = _.chain(obj)
-            .omit('samples')
-            .extend(computation)
-            .value();
+              .omit('samples')
+              .extend(computation)
+              .value();
             retObj.payload.push(result);
 
             // notify
@@ -534,9 +468,9 @@ angular.module('services.regression.ww', [
                 globals: globals
               });
             promise.then(null, null, function notifyFn(notify) {
-              if(notify.type == 'warning') {
-                NotifyService.addSticky('Warning', notify.message, 'warn');
-              } else if(notify.type == 'progress') {
+              if (notify.type == 'warning') {
+                NotifyService.addTransient('Warning', notify.message, 'warn');
+              } else if (notify.type == 'progress') {
                 percentProgress[notify.thread] = notify.progress;
                 var workerCount = workerPromises.length;
                 var totalProgress = Math.ceil(_.chain(percentProgress).values().sum().value() / workerCount * 100);
