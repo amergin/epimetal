@@ -3,17 +3,19 @@ function RegressionChart() {
 
   var _margins = {
       top: 30,
-      right: 5,
+      right: 40,
       bottom: 0,
-      left: 0
+      left: 25
     },
     _element,
     // _callback,
     _width,
+    _starColumnWidth = 15,
     _indent = 15,
     _axis,
     _data,
     _header,
+    _pValueThreshold = 0.05,
     _headerVarRowCount = 2,
     _headerHeight = null,
     _headerSpacing = 30,
@@ -56,7 +58,7 @@ function RegressionChart() {
       .append('svg')
       .attr('class', 'regression')
       .attr('height', _chart.estimatedHeight() + _margins.top + _margins.bottom)
-      .attr('width', _width + _margins.left + _margins.right);
+      .attr('width', _width);// + _margins.left + _margins.right);
 
       // exit
       _svg.exit().remove();
@@ -267,7 +269,7 @@ function RegressionChart() {
   function getChartMeasurements() {
     var rawWidth = _width - _margins.left - _margins.right,
     boxLabelXOffset = Math.floor(_boxLabelPercentage* rawWidth),
-    boxWidth = rawWidth - boxLabelXOffset;
+    boxWidth = rawWidth - boxLabelXOffset - _starColumnWidth;
     return {
       xOffset: boxLabelXOffset,
       width: boxWidth
@@ -329,7 +331,7 @@ function RegressionChart() {
         return 'translate(' + x + "," + y + ")";
       })
       .attr('class', 'box-row box-axis')
-      .attr('width', chartMeasurements.width + _boxPlotMargins.right + _boxPlotMargins.left)
+      .attr('width', chartMeasurements.width - _starColumnWidth)// + _boxPlotMargins.right + _boxPlotMargins.left)
       .attr('height', _axisHeight)
       .attr('class', 'x axis')
       .call(_axis);
@@ -404,6 +406,7 @@ function RegressionChart() {
           .element(el)
           .width(chartMeasurements.width)
           .height(_boxPlotHeight)
+          .threshold(0.05)
           .transform({ 'x': 0, 'y': getChartOffset(index) })
           .domain(_domain)
           .margins(_boxPlotMargins)
@@ -450,6 +453,7 @@ function RegressionChart() {
         var offset = getBoxRowY(groupInd, elInd);
         return "translate(0," + offset.start + ")";
       });
+
       return boxRow;
     }
 
@@ -467,6 +471,39 @@ function RegressionChart() {
 
     }
 
+    function starColumn(boxRow) {
+      boxRow
+      .append('g')
+      .attr('class', 'significance-star')
+      .attr('transform', function(d, elInd, groupInd) {
+        var offsetX = getDrawWidth();
+        return "translate(" + offsetX + "," + 15 + ")";
+      })
+      .each(function(d, i, j) {
+        var el = this;
+
+        _.each(d.payload, function(pay, index) {
+          d3.select(el)
+          .append('text')
+          // .attr("dominant-baseline", "central")
+          .attr('x', _indent)
+          .attr('y', 0)
+          .attr('transform', function(d) {
+            var offsetX = 0,
+            offsetY = getChartOffset(index);
+            return "translate(" + offsetX + "," + offsetY + ")";
+          })
+          .text(function(d) { 
+            console.log(i, j, index);
+            console.log("payload", d.payload);
+            var isSignificant = d.payload[index].pvalue < (0.05 / _data.length);
+            return isSignificant ? "*" : "";
+          });
+        });
+
+      });
+    }
+
     var variableGroups = varGroups();
     var groupLabelYOffset = 40;
     var groupLabels = varGroupLabels(variableGroups);
@@ -475,6 +512,7 @@ function RegressionChart() {
     bgRects(boxRow);
     boxLabel(boxRow);
     boxChart(boxRow);
+    starColumn(boxRow);
 
     // last row is axis on each column
     axis();
@@ -500,8 +538,8 @@ function RegressionChart() {
   };
 
   _chart.threshold = function(d) {
-    if(!arguments.length) { return _splitThreshold; }
-    _splitThreshold = d;
+    if(!arguments.length) { return _pValueThreshold; }
+    _pValueThreshold = d;
     return _chart;
   };
 

@@ -1,6 +1,7 @@
 function HorizontalBoxPlot() {
   var _chart = {},
       _element,
+      _threshold = 0.05, // p value threshold
       _width,
       _height,
       _margins = {
@@ -45,6 +46,10 @@ function HorizontalBoxPlot() {
       })
       .attr('y', function(d) {
         return _transform.y + _margins.top;
+      })
+      .style('opacity', function(d) {
+        var isSignificant = _pvalue < _threshold;
+        return isSignificant ? 1 : 0.25;
       });
     }
 
@@ -240,6 +245,14 @@ function HorizontalBoxPlot() {
           return _variable;
       }
       _variable = x;
+      return _chart;
+  };
+
+  _chart.threshold = function(x) {
+      if (!arguments.length) {
+          return _threshold;
+      }
+      _threshold = x;
       return _chart;
   };
 
