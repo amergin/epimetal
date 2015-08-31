@@ -494,8 +494,6 @@ function RegressionChart() {
             return "translate(" + offsetX + "," + offsetY + ")";
           })
           .text(function(d) { 
-            console.log(i, j, index);
-            console.log("payload", d.payload);
             var isSignificant = d.payload[index].pvalue < (0.05 / _data.length);
             return isSignificant ? "*" : "";
           });
