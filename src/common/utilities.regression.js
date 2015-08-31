@@ -557,7 +557,7 @@
 
     var sigma2 = root.matrixMultiply(residuals,1,nsamples,residuals,nsamples,1);
 
-    var degrees =  nsamples - (nvars +1);
+    var degrees =  nsamples - nvars;
 
     sigma2[0] = sigma2[0] / degrees;
 
@@ -582,7 +582,7 @@
 
         var beta = betas[var_num];
 
-        var t = beta / _sqrt;
+        var t = Math.abs(beta / _sqrt);
         var pvalue = statDist.tprob(degrees, t) * 2;
 
         resobj.pvalue.push(pvalue);

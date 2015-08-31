@@ -294,7 +294,6 @@ angular.module('services.regression.ww', [
               }).samples
             });
 
-            console.log("computation=", computation);
             if (computation.result.success === false) {
               // pass, don't include in results
               output.notify({
