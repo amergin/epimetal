@@ -214,8 +214,7 @@ angular.module('services.som', [
         // do training
         SOMComputeService.train(that.som).then(function succFn(somObject) {
           NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
-          // that.som = somObject;
-          that.bmus = SOMComputeService.get_formatter_bmus(somObject);
+          that.bmus = SOMComputeService.get_formatter_bmus(that.som);
           that.dimensionService.addBMUs(that.bmus);
 
           // this will force existing planes to redraw
