@@ -49,7 +49,9 @@ angular.module('plotter.vis.plotting.som', [
 
   function initHeader() {
     var pvalFormat = d3.format('.2e');
-    $scope.window.headerText(['Self-organizing map of', $scope.window.extra().plane.variable, "(P = " + pvalFormat($scope.window.extra().plane.pvalue) + ")"]);
+    if($scope.window.extra() && $scope.window.extra().plane) {
+      $scope.window.headerText(['Self-organizing map of', $scope.window.extra().plane.variable, "(P = " + pvalFormat($scope.window.extra().plane.pvalue) + ")"]);
+    }
   }
 
   initHeader();
@@ -547,6 +549,30 @@ angular.module('plotter.vis.plotting.som', [
 
     }
 
+    function init() {
+      NotifyService.addTransient('Starting plane computation', 'The computation may take a while.', 'info');
+      $scope.window.circleSpin(true);
+      SOMService.getPlane($scope.window.variables().x, $scope.window, notify).then(
+        function succFn(res) {
+          NotifyService.addTransient('Plane computation ready', 'The requested new plane has now been drawn.', 'success');
+          $scope.window.extra({ plane: res.plane });
+          $scope.draw();
+          initDropdown();
+        },
+        function errFn(res) {
+          NotifyService.addTransient('Plane computation failed', res, 'error');
+        }, 
+        notify)
+        .finally(function () {
+          $scope.window.circleSpin(false);
+          $scope.window.circleSpinValue(0);
+        });
+    }
+
+    function notify(progress) {
+      $scope.window.circleSpinValue(progress);
+    }
+
     $scope.element = ele;
 
     $scope.width = $scope.getWidth($scope.element);
@@ -555,20 +581,21 @@ angular.module('plotter.vis.plotting.som', [
     $scope.deregisters = [];
 
     var somUpdatedUnbind = $rootScope.$on('dataset:SOMUpdated', function(event, som) {
-      $scope.window.spin(true);
-
-      SOMService.getPlane($scope.window.extra().plane.variable, $scope.window.handler()).then(
+      $scope.window.circleSpin(true);
+      SOMService.getPlane($scope.window.extra().plane.variable, $scope.window, notify).then(
           function succFn(res) {
-            _.extend($scope.window.extra(), res);
+            $scope.window.extra({ plane: res.plane });
             // angular.extend($scope.window, res); // overrides old values, places new plane info/ids/...
             $scope.redraw();
           },
           function errFn(res) {
             NotifyService.addTransient('Plane computation failed', res, 'danger');
-          })
-        .finally(function() {
-          $scope.window.spin(false);
-        });
+          }, 
+          notify)
+          .finally(function() {
+            $scope.window.circleSpin(false);
+            $scope.window.circleSpinValue(0);
+          });
     });
 
     var gatherStateUnbind = $rootScope.$on('UrlHandler:getState', function(event, callback) {});
@@ -587,8 +614,9 @@ angular.module('plotter.vis.plotting.som', [
 
     $scope.element.ready(function() {
       $timeout(function() {
-        $scope.draw();
-        initDropdown();
+        init();
+        // $scope.draw();
+        // initDropdown();
       });
     });
 

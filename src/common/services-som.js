@@ -263,7 +263,7 @@ angular.module('services.som', [
     return _.isEmpty(that.trainSamples) || _.isEmpty(that.som);
   }
 
-  service.getPlane = function(testVar, windowHandler) {
+  service.getPlane = function(testVar, windowObject, notifyFunction) {
     function getThreadData(variable, skipNaNs) {
       function inTrainSamples(sample) {
         return _.any(that.trainSamples, function(d) {
@@ -311,7 +311,7 @@ angular.module('services.som', [
       // return [retObj];
     }
 
-    function doCall() {
+    function doCall(notifyFunction) {
       var skipNaNs = false;
       var threadData = getThreadData(testVar, skipNaNs);
 
@@ -326,7 +326,7 @@ angular.module('services.som', [
         that.inProgress = false;
         defer.reject('Plane computation of variable ' + testVar + ' failed');
       }, function notifyFn(progress) {
-        console.log("Progress: ", progress);
+        notifyFunction(progress);
       })
       .finally(function() {
         TabService.lock(false);
@@ -335,7 +335,7 @@ angular.module('services.som', [
 
     }
 
-    function startPlaneComputation(testVar) {
+    function startPlaneComputation(testVar, notifyFunction) {
       TabService.lock(true);
       that.inProgress = true;
 
@@ -344,19 +344,22 @@ angular.module('services.som', [
       windowHandler.getDimensionService().clearFilters();
 
       DatasetFactory.getVariableData([testVar], windowHandler)
-      .then(doCall);
+      .then(function(res) {
+        doCall(notifyFunction);
+      });
     }
 
-    var defer = $q.defer();
+    var defer = $q.defer(),
+    windowHandler = windowObject.handler();
 
     if (somNotComputed()) {
       service.getSOM(windowHandler).then(function succFn(res) {
-        startPlaneComputation(testVar);
+        startPlaneComputation(testVar, notifyFunction);
       }, function errFn(res) {
         defer.reject();
       });
     } else {
-      startPlaneComputation(testVar);
+      startPlaneComputation(testVar, notifyFunction);
     }
 
     return defer.promise;

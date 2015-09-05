@@ -35,8 +35,8 @@ angular.module('services.regression.ww', [
       worker
         .script(threadFunction)
         .addDependency(absUrl + 'assets/lodash.min.js')
-        .addDependency(absUrl + 'assets/numeric.min.js')
-        .addDependency(absUrl + 'assets/math.min.js')
+        // .addDependency(absUrl + 'assets/numeric.min.js')
+        // .addDependency(absUrl + 'assets/math.min.js')
         .addDependency(absUrl + 'assets/statistics-distributions-packaged.js')
         .addDependency(absUrl + 'assets/utilities.regression.js')
         .addDependency(absUrl + 'assets/utilities.math.js');
