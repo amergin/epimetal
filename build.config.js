@@ -96,10 +96,10 @@ module.exports = {
       'vendor/angular-spinner/angular-spinner.min.js',
       // customize this for release:
       'vendor/angular-bootstrap/custom-build/ui-bootstrap-custom-tpls-0.13.0.js',
-      'vendor/paralleljs/lib/parallel.js',
       'vendor/angular-growl-2/build/angular-growl.js',
       'vendor/statistics-distributions-js/statistics-distributions-packaged.js',
-      'vendor/SOM.js/SOM.js',
+      'vendor/SOM.js/src/services-compute-som.js',
+      'vendor/SOM.js/src/utilities.som.js',
       'vendor/ngprogress/build/ngProgress.js',
       'vendor/ng-clip/dest/ng-clip.min.js',
       'vendor/zeroclipboard/dist/ZeroClipboard.js',
@@ -129,12 +129,11 @@ module.exports = {
       'vendor/zeroclipboard/dist/ZeroClipboard.swf',
       'src/common/utilities.math.js',
       'src/common/utilities.regression.js',
-      'vendor/SOM.js/SOM.js',
+      'vendor/SOM.js/src/utilities.som.js',
       'vendor/lodash/lodash.min.js',
       'vendor/numericjs/lib/numeric.min.js',
       'vendor/mathjs/dist/math.min.js',
-      'vendor/statistics-distributions-js/statistics-distributions-packaged.js',
-      'vendor/paralleljs/lib/eval.js'
+      'vendor/statistics-distributions-js/statistics-distributions-packaged.js'
     ]
   },
 };

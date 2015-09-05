@@ -1,10 +1,12 @@
 angular.module('services.som', [
+  'akangas.services.som',
   'services.dataset',
   'services.dimensions',
   'services.notify',
   'services.tab',
   'ext.d3',
-  'ext.lodash'
+  'ext.lodash',
+  'ext.core-estimator'
 ])
 
 .constant('SOM_PLANE_SIZE', {
@@ -12,6 +14,7 @@ angular.module('services.som', [
     y: 7
 })
 .constant('SOM_MIN_SAMPLE_COUNT', 10)
+.constant('SOM_DEFAULT_THREADS', 4)
 .constant('SOM_DEFAULT_PLANES', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'])
 .constant('SOM_DEFAULT_TESTVARS', ['XXL-VLDL-L', 'XL-VLDL-L', 'L-VLDL-L', 'M-VLDL-L',
   'S-VLDL-L', 'XS-VLDL-L', 'IDL-L', 'L-LDL-L',
@@ -21,7 +24,28 @@ angular.module('services.som', [
   'FAw3toFA', 'FAw6toFA', 'SFAtoFA'
 ])
 
-.factory('SOMService', function SOMService(WindowHandler, $timeout, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_PLANE_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT, d3, _) {
+.run(function(SOMComputeService, coreEstimator, SOM_DEFAULT_THREADS) {
+  var _availableCores;
+
+  coreEstimator.get().then(function succFn(cores) {
+    _availableCores = cores;
+    }, function errFn() {
+      _availableCores = SOM_DEFAULT_THREADS;
+    })
+    .finally(function() {
+      var absUrl = window.location.protocol + '//' + window.location.host + window.location.pathname,
+      dependencies = [
+        absUrl + 'assets/lodash.min.js',
+        absUrl + 'assets/utilities.som.js'
+      ];
+
+      SOMComputeService.noWorkers(4)
+      .dependencies(dependencies);
+    });
+
+})
+
+.factory('SOMService', function SOMService(SOMComputeService, WindowHandler, $timeout, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_PLANE_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT, d3, _) {
 
   var that = this;
 
@@ -169,9 +193,8 @@ angular.module('services.som', [
       return retObj;
     }
 
-    function trainThread(somObject) {
-      SOM.train(somObject);
-      return somObject;
+    function report_progress(progress) {
+      console.log("progress = ", progress);
     }
 
     function doCall() {
@@ -182,18 +205,17 @@ angular.module('services.som', [
       var skipNaNs = false;
       var data = getData(skipNaNs);
       that.trainSamples = data.samples;
-      that.som = SOM.create(SOM_PLANE_SIZE.y, SOM_PLANE_SIZE.x, data.samples, data.columns);
 
-      var parallel = new Parallel(that.som, {
-          evalPath: 'assets/eval.js'
-        })
-        .require('lodash.min.js')
-        .require('SOM.js')
-        .map(trainThread)
-        .then(function succFn(somObject) {
+      // start by creating the object
+      SOMComputeService.create(SOM_PLANE_SIZE.y, SOM_PLANE_SIZE.x, data.samples, data.columns)
+      .then(function succFn(result) {
+        that.som = result.som;
+
+        // do training
+        SOMComputeService.train(that.som).then(function succFn(somObject) {
           NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
-          that.som = somObject;
-          that.bmus = SOM.get_formatter_bmus(somObject);
+          // that.som = somObject;
+          that.bmus = SOMComputeService.get_formatter_bmus(somObject);
           that.dimensionService.addBMUs(that.bmus);
 
           // this will force existing planes to redraw
@@ -207,7 +229,11 @@ angular.module('services.som', [
           TabService.lock(false);
           that.inProgress = false;
           defer.reject(message);
+        }, function notifyFn(progress) {
+          report_progress(progress);
         });
+
+      });
 
     }
 
@@ -246,12 +272,14 @@ angular.module('services.som', [
         });
       }
 
-      var retObj = {
-        som: that.som,
-        samples: [],
-        data: [],
-        variable: variable
-      };
+      // var retObj = {
+      //   som: that.som,
+      //   samples: [],
+      //   data: [],
+      //   variable: variable
+      // };
+
+      var data = [];
 
       var deDuplicated = _.unique(that.sampleDimension.top(Infinity), false, function(d) { 
         var arr = [];
@@ -276,41 +304,36 @@ angular.module('services.som', [
           return;
         }
 
-        retObj.samples.push(sampleId);
-        retObj.data.push(sampValue);
+        // retObj.samples.push(sampleId);
+        // retObj.data.push(sampValue);
+        data.push(sampValue);
       });
-      return [retObj];
-    }
-
-    function planeThread(threadData) {
-      return SOM.calculate_component_plane(global.env.som, global.env.sampleids, threadData.data, threadData.variable);
+      return data;
+      // return [retObj];
     }
 
     function doCall() {
       var skipNaNs = false;
       var threadData = getThreadData(testVar, skipNaNs);
-      var parallel = new Parallel(threadData, {
-          evalPath: 'assets/eval.js',
-          env: {
-            som: that.som,
-            sampleids: threadData[0].samples // == that.trainSamples
-          }
-        })
-        .require('lodash.min.js')
-        .require('SOM.js')
-        .map(planeThread)
-        .then(function succFn(result) {
-          TabService.lock(false);
-          that.inProgress = false;
-          defer.resolve({
-            variable: testVar,
-            plane: result[0]
-          });
-        }, function errFn(result) {
-          TabService.lock(false);
-          that.inProgress = false;
-          defer.reject('Plane computation of variable ' + testVar + ' failed');
+
+      SOMComputeService.calculate_component_plane(that.som, that.trainSamples, threadData, testVar)
+      .then(function succFn(result) {
+        defer.resolve({
+          variable: threadData.variable,
+          plane: result.plane
         });
+      }, function errFn(result) {
+        TabService.lock(false);
+        that.inProgress = false;
+        defer.reject('Plane computation of variable ' + testVar + ' failed');
+      }, function notifyFn(progress) {
+        console.log("Progress: ", progress);
+      })
+      .finally(function() {
+        TabService.lock(false);
+        that.inProgress = false;
+      });
+
     }
 
     function startPlaneComputation(testVar) {
@@ -322,9 +345,7 @@ angular.module('services.som', [
       windowHandler.getDimensionService().clearFilters();
 
       DatasetFactory.getVariableData([testVar], windowHandler)
-        .then(function succFn(res) {
-          doCall();
-        });
+      .then(doCall);
     }
 
     var defer = $q.defer();

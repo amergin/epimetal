@@ -42,7 +42,7 @@ angular.module('services.webworker', [
       return priv.busy;
     };
 
-    _obj.run = function(input) {
+    _obj.run = function(input, transferable) {
       init();
       var deferred = $q.defer();
       priv.busy = true;
@@ -77,7 +77,7 @@ angular.module('services.webworker', [
         deferred.reject(error.message);
       };
 
-      priv.worker.postMessage(input);
+      priv.worker.postMessage(input, transferable);
       return deferred.promise;
     };
 

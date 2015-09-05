@@ -15,8 +15,6 @@ angular.module('services.regression.ww', [
   var that = this;
   var service = {};
 
-  var _inProgress = false;
-  // var _result = {};
   // sample count before 
   var _sampleCount = {};
   var _variables = {
