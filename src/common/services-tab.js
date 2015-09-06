@@ -106,7 +106,7 @@ angular.module('services.tab', [
       var SOMService = $injector.get('SOMService'),
         somPlaneHandler = WindowHandler.get('vis.som.plane');
 
-      WindowHandler.spinAllVisible();
+      // WindowHandler.spinAllVisible();
       SOMService.getSOM(somPlaneHandler).then(function succFn() {
           checkDefaultPlanes();
           $timeout(function() {

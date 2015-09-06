@@ -157,8 +157,6 @@ angular.module('services.som', [
   }
 
   service.getSOM = function(windowHandler) {
-    var defer = $q.defer();
-
     function computationNeeded() {
       if (!that.sampleDimension) {
         // early invoke, even before dimensionservice is initialized
@@ -176,8 +174,6 @@ angular.module('services.som', [
       }
       return true;
     }
-
-
 
     function getData(skipNaNs) {
       var variables = that.somSelection.variables,
@@ -270,6 +266,8 @@ angular.module('services.som', [
 
     }
 
+    var defer = $q.defer();
+
     if (!computationNeeded()) {
       $timeout(function() {
         defer.resolve('not_needed');
@@ -305,44 +303,20 @@ angular.module('services.som', [
         });
       }
 
-      // var retObj = {
-      //   som: that.som,
-      //   samples: [],
-      //   data: [],
-      //   variable: variable
-      // };
-
-      var data = [];
-
+      var data = [], sampValue, notNumber, sampleid;
       var deDuplicated = _.unique(that.sampleDimension.top(Infinity), false, function(d) { 
-        var arr = [];
-        if(d.originalDataset) { arr = [d.originalDataset, d.sampleid]; }
-        else { arr = [d.dataset, d.sampleid]; }
-        return arr.join("|");
+        return [d.originalDataset || d.dataset, d.sampleid].join("|");
       });
 
       _.each(deDuplicated, function(obj, ind) {
-        var sampValue = +obj.variables[variable],
-          isNaN = _.isNaN(sampValue),
-          sampleid;
+        sampValue = +obj.variables[variable];
+        notNumber = isNaN(sampValue);
 
-        // don't record this one
-        if (skipNaNs && isNaN) {
-          return;
-        }
+        if(skipNaNs && notNumber) { return; }
 
-        sampleId = _.pick(obj, 'dataset', 'sampleid');
-
-        if (!inTrainSamples(sampleId)) {
-          return;
-        }
-
-        // retObj.samples.push(sampleId);
-        // retObj.data.push(sampValue);
         data.push(sampValue);
       });
       return data;
-      // return [retObj];
     }
 
     function doCall() {
