@@ -143,9 +143,11 @@ angular.module('services.tab', [
     var primary = DimensionService.getPrimary(),
       current = DimensionService.get('vis.som'),
       forced = !_.isUndefined(cfg) && _.isEqual(cfg.force, true),
+      cancelled = $injector.get('SOMService').cancelled(),
       notForced = !_.isUndefined(cfg) && _.isEqual(cfg.force, false);
 
-    if (forced) {
+    if (forced || cancelled) {
+      $injector.get('SOMService').cancelled(false);
       restart();
     } else if (notForced) {
       return;

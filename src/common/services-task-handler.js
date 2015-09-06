@@ -6,7 +6,7 @@ angular.module('services.task-handler', ['services.correlation.ww', 'services.re
 
   service.cancelAll = function() {
     if (SOMService.inProgress()) {
-      // todo
+      SOMService.cancel();
     }
     if (RegressionService.inProgress()) {
       RegressionService.cancel();

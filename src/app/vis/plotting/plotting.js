@@ -292,22 +292,6 @@ angular.module('plotter.vis.plotting',
       };
 
       draw(config, windowHandler);
-
-      // var defer = $q.defer();
-
-      // NotifyService.addTransient('Starting plane computation', 'The computation may take a while.', 'info');
-      // SOMService.getPlane(config.variables.x, windowHandler).then(
-      //   function succFn(res) {
-      //     NotifyService.addTransient('Plane computation ready', 'The requested new plane has now been drawn.', 'success');
-      //     config['plane'] = res.plane;
-      //     draw(config, windowHandler);
-      //     defer.resolve();
-      //   },
-      //   function errFn(res) {
-      //     NotifyService.addTransient('Plane computation failed', res, 'error');
-      //     defer.reject();
-      //   });
-      // return defer.promise;
     };
 
     // this should only be called once, otherwise duplicate charts will appear on the handler

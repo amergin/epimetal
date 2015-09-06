@@ -32,8 +32,10 @@ angular.module('services.webworker', [
     };
 
     _obj.terminate = function() {
-      priv.worker.terminate();
-      priv.busy = false;
+      if(priv.worker) {
+        priv.worker.terminate();
+        priv.busy = false;
+      }
       priv.onTerminate();
       return _obj;
     };

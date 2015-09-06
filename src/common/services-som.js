@@ -61,6 +61,8 @@ angular.module('services.som', [
   that.sampleDimension = undefined;
 
   var _colors = d3.scale.category10();
+  var _queueWindows = [];
+  var _cancelled = false;
   var service = {};
 
   service.inProgress = function() {
@@ -83,6 +85,12 @@ angular.module('services.som', [
     return SOM_DEFAULT_PLANES;
   };
 
+  service.cancelled = function(x) {
+    if(!arguments.length) { return _cancelled; }
+    _cancelled = x;
+    return service;
+  };
+
   // service.planeSize = function() {
   //   return SOM_PLANE_SIZE;
   // };
@@ -95,6 +103,27 @@ angular.module('services.som', [
 
   service.getDimensionService = function() {
     return that.dimensionService;
+  };
+
+  service.cancel = function() {
+    function removeQueueWindows() {
+      _.each(_queueWindows, function(win) {
+        win.remove();
+      });
+      _queueWindows = [];
+    }
+    function removeExistingWindows() {
+      WindowHandler.removeAllVisible();
+    }
+    SOMComputeService.cancel();
+    TabService.lock(false);
+    removePrevious();
+    removeQueueWindows();
+    removeExistingWindows();
+
+    that.inProgress = false;
+    _cancelled = true;
+    return service;
   };
 
   service.setVariables = function(variables) {
@@ -120,6 +149,12 @@ angular.module('services.som', [
     return angular.copy(that.somSelection.variables);
   };
 
+  function removePrevious() {
+    // remove previous computation
+    that.som = {};
+    that.bmus = [];
+  }
+
   service.getSOM = function(windowHandler) {
     var defer = $q.defer();
 
@@ -141,11 +176,7 @@ angular.module('services.som', [
       return true;
     }
 
-    function removePrevious() {
-      // remove previous computation
-      that.som = {};
-      that.bmus = [];
-    }
+
 
     function getData(skipNaNs) {
       var variables = that.somSelection.variables,
@@ -311,8 +342,9 @@ angular.module('services.som', [
       // return [retObj];
     }
 
-    function doCall(notifyFunction) {
+    function doCall() {
       var skipNaNs = false;
+      _queueWindows.push(windowObject);
       var threadData = getThreadData(testVar, skipNaNs);
 
       SOMComputeService.calculate_component_plane(that.som, that.trainSamples, threadData, testVar)
@@ -329,13 +361,14 @@ angular.module('services.som', [
         notifyFunction(progress);
       })
       .finally(function() {
+        _.remove(_queueWindows, function(win) { return win == windowObject; }); 
         TabService.lock(false);
         that.inProgress = false;
       });
 
     }
 
-    function startPlaneComputation(testVar, notifyFunction) {
+    function startPlaneComputation() {
       TabService.lock(true);
       that.inProgress = true;
 
@@ -345,7 +378,7 @@ angular.module('services.som', [
 
       DatasetFactory.getVariableData([testVar], windowHandler)
       .then(function(res) {
-        doCall(notifyFunction);
+        doCall();
       });
     }
 
@@ -354,12 +387,12 @@ angular.module('services.som', [
 
     if (somNotComputed()) {
       service.getSOM(windowHandler).then(function succFn(res) {
-        startPlaneComputation(testVar, notifyFunction);
+        startPlaneComputation();
       }, function errFn(res) {
         defer.reject();
       });
     } else {
-      startPlaneComputation(testVar, notifyFunction);
+      startPlaneComputation();
     }
 
     return defer.promise;
