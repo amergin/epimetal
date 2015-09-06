@@ -17,13 +17,12 @@ angular.module('plotter.vis', [
   'services.tab',
   'services.notify',
   'services.task-handler',
-  'ngProgress',
   'progressBarInterceptor',
   'angularResizable',
   'ext.lodash'
 ])
 
-.config(function visConfig($stateProvider, ngProgressProvider) {
+.config(function visConfig($stateProvider) {
 
   var vis = {
     name: 'vis',
@@ -175,8 +174,6 @@ angular.module('plotter.vis', [
   $stateProvider.state(som);
   $stateProvider.state(regression);
 
-  // progress bar settings
-  ngProgressProvider.setHeight('3px');
 })
 
 

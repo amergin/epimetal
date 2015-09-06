@@ -100,7 +100,7 @@ module.exports = {
       'vendor/statistics-distributions-js/statistics-distributions-packaged.js',
       'vendor/SOM.js/src/services-compute-som.js',
       'vendor/SOM.js/src/utilities.som.js',
-      'vendor/ngprogress/build/ngProgress.js',
+      'vendor/ngprogress/build/ngprogress.js',
       'vendor/ng-clip/dest/ng-clip.min.js',
       'vendor/zeroclipboard/dist/ZeroClipboard.js',
       'vendor/angular-resizable/angular-resizable.min.js',
