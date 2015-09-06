@@ -1,1 +1,19 @@
-<button type="button" class="btn btn-danger" ng-show="visible()" ng-click="cancel()">Cancel computation tasks {{test()}}</button>
+<div>
+	<div
+		ng-show="circleSpin()"
+	    round-progress
+	    max="circleSpinMax()"
+	    current="circleSpinValue()"
+	    color="#45ccce"
+	    bgcolor="#eaeaea"
+	    radius="20"
+	    ng-style="getCircleInlineCSS(20)"
+	    stroke="7"
+	    semi="false"
+	    rounded="true"
+	    clockwise="true"
+	    iterations="100"
+	    animation="easeInOutQuart">
+	</div>
+	<button type="button" class="btn btn-danger" ng-show="visible()" ng-click="cancel()">Cancel computation tasks {{test()}}</button>
+</div>

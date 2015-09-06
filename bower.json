@@ -22,7 +22,7 @@
     "d3-tip": "master",
     "mathjs": "2.0.1",
     "numericjs": "~1.2.6",
-    "angular-growl-2": "~0.7.3",
+    "angular-growl-2": "~0.7.5",
     "statistics-distributions-js": "svn+http://statistics-distributions-js.googlecode.com/svn/",
     "lodash": "~3.10.0",
     "ngprogress": "~1.0.7",

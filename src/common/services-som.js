@@ -4,6 +4,7 @@ angular.module('services.som', [
   'services.dimensions',
   'services.notify',
   'services.tab',
+  'services.task-handler',
   'ext.d3',
   'ext.lodash',
   'ext.core-estimator'
@@ -45,7 +46,7 @@ angular.module('services.som', [
 
 })
 
-.factory('SOMService', function SOMService(SOMComputeService, WindowHandler, $timeout, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_PLANE_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT, d3, _) {
+.factory('SOMService', function SOMService(SOMComputeService, WindowHandler, $timeout, $injector, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_PLANE_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT, d3, _) {
 
   var that = this;
 
@@ -224,10 +225,6 @@ angular.module('services.som', [
       return retObj;
     }
 
-    function report_progress(progress) {
-      console.log("progress = ", progress);
-    }
-
     function doCall() {
       NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'info');
       // var selection = that.somSelection.variables;
@@ -238,6 +235,8 @@ angular.module('services.som', [
       that.trainSamples = data.samples;
 
       // start by creating the object
+      var TaskHandlerService = $injector.get('TaskHandlerService');
+      TaskHandlerService.circleSpin(true);
       SOMComputeService.create(SOM_PLANE_SIZE.y, SOM_PLANE_SIZE.x, data.samples, data.columns)
       .then(function succFn(result) {
         that.som = result.som;
@@ -260,7 +259,11 @@ angular.module('services.som', [
           that.inProgress = false;
           defer.reject(message);
         }, function notifyFn(progress) {
-          report_progress(progress);
+          TaskHandlerService.circleSpinValue(progress);
+        })
+        .finally(function() {
+          TaskHandlerService.circleSpin(false);
+          TaskHandlerService.circleSpinValue(0);
         });
 
       });
