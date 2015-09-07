@@ -681,7 +681,7 @@ angular.module('services.dataset', ['services.notify',
     });
   };
 
-  service.createDerived = function(config) { //name) {
+  service.createDerived = function(config) {
     function deselectOthers() {
       _.each(service.getSets(), function(set) {
         set.active(false);
@@ -739,10 +739,10 @@ angular.module('services.dataset', ['services.notify',
         .size(samples.length)
         .color(that.colors(name))
         .samples(samples)
-        .active(true);
+        .active(config.setActive);
 
       if (circles) {
-        deselectOthers();
+        // deselectOthers();
         that.sets[name] = derived;
         service.updateDataset();
       } else {
@@ -751,12 +751,6 @@ angular.module('services.dataset', ['services.notify',
         removeFilters();
         service.updateDataset();
       }
-
-      // deselectOthers();
-      // that.sets[name] = derived;
-      // removeFilters();
-      // service.updateDataset();
-
 
       // add to dimension service
       dataWasAdded = primary.addVariableData({
@@ -800,7 +794,6 @@ angular.module('services.dataset', ['services.notify',
 
   service.updateDataset = function(set) {
     $injector.get('DimensionService').getPrimary().updateDatasetDimension();
-    // that.dimensionService.updateDatasetDimension();
   };
 
   service.activeSets = function() {

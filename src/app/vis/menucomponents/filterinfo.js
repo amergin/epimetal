@@ -136,11 +136,12 @@ angular.module('plotter.vis.menucomponents.filterinfo',
       }
 
       try {
-        DatasetFactory.createDerived({
+        var config = {
           name: modified,
           circles: circles || undefined
-        });
-
+        };
+        config.setActive = circles ? false : true;
+        DatasetFactory.createDerived(config);
         TabService.check();
       }
       catch(err) {
