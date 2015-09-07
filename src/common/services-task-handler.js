@@ -1,6 +1,6 @@
-angular.module('services.task-handler', ['services.correlation.ww', 'services.regression.ww', 'services.som'])
+angular.module('services.task-handler', ['services.correlation.ww', 'services.regression.ww', 'services.som', 'services.notify'])
 
-.factory('TaskHandlerService', function TaskHandlerService(RegressionService, CorrelationService, $injector) {
+.factory('TaskHandlerService', function TaskHandlerService(RegressionService, NotifyService, CorrelationService, $injector) {
 
   var service = {},
   _circleSpin = false,
@@ -10,6 +10,8 @@ angular.module('services.task-handler', ['services.correlation.ww', 'services.re
   service.cancelAll = function() {
     var SOMService = $injector.get('SOMService');
     if (SOMService.inProgress()) {
+      service.circleSpin(false);
+      service.circleSpinValue(0);
       SOMService.cancel();
     }
     if (RegressionService.inProgress()) {
@@ -18,6 +20,7 @@ angular.module('services.task-handler', ['services.correlation.ww', 'services.re
     if (CorrelationService.inProgress()) {
       CorrelationService.cancel();
     }
+    NotifyService.addTransient('Calculation cancelled', 'User cancelled all computations.', 'warn');
 
     return service;
   };
