@@ -326,10 +326,7 @@ angular.module('services.som', [
 
       SOMComputeService.calculate_component_plane(that.som, that.trainSamples, threadData, testVar)
       .then(function succFn(result) {
-        defer.resolve({
-          variable: threadData.variable,
-          plane: result.plane
-        });
+        defer.resolve(result.plane);
       }, function errFn(result) {
         TabService.lock(false);
         that.inProgress = false;
