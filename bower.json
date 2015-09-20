@@ -29,7 +29,8 @@
     "SOM.js": "https://github.com/anttikan/SOM.js.git",
     "ng-tags-input": "~3.0.0",
     "angular-svg-round-progressbar": "~0.2.10",
-    "core-estimator": "https://github.com/oftn/core-estimator.git"
+    "core-estimator": "https://github.com/oftn/core-estimator.git",
+    "SparkMD5": "~1.0.0"
   },
   "dependencies": {},
   "resolutions": {

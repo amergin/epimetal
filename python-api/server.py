@@ -5,11 +5,13 @@ import flask
 from flask import Flask, Request, request, Response, abort
 
 from mongoengine import register_connection
+from mongoengine.queryset import DoesNotExist
+from mongoengine.errors import NotUniqueError
 from flask.ext.mongoengine import MongoEngine
 
 import json
 
-from orm_models import Sample, HeaderSample, HeaderGroup, BrowsingState
+from orm_models import Sample, HeaderSample, HeaderGroup, BrowsingState, SOMTrain, SOMPlane
 from flask_sockets import Sockets
 
 from pymongo import ReadPreference
@@ -37,6 +39,12 @@ app.config['MONGODB_SETTINGS'] = {
 register_connection(
 	'samples', 
 	name=config.getMongoVar('db'),
+	host=config.getMongoVar('host'),
+	port=int( config.getMongoVar('port') ) )
+
+register_connection(
+	'som', 
+	name=config.getMongoVar('somdb'),
 	host=config.getMongoVar('host'),
 	port=int( config.getMongoVar('port') ) )
 
@@ -109,6 +117,269 @@ def headers():
 		response.status_code = 200
 		return response
 
+@app.route( config.getFlaskVar('prefix') + 'som/plane/<somId>/<variable>', methods=['GET'] )
+def getPlane(somId, variable):
+	try:
+		doc = SOMPlane.objects.get(som=somId, variable=variable)
+		# found it
+		resp = flask.jsonify({
+			'success': 'true',
+			'query': request.path,
+			'result': { 
+				'data': json.loads(doc.to_json())
+			}
+		})
+		resp.status_code = 200 # OK
+		return resp
+
+	except DoesNotExist, e:
+		resp = flask.jsonify({
+		'success': 'true',
+		'query': request.path,
+		'result': { 'message': 'Hash not found.' }
+		})
+		resp.status_code = 204 # No content
+		return resp
+
+@app.route( config.getFlaskVar('prefix') + 'som/plane', methods=['POST'] )
+def createPlane():
+
+	def getError():
+		resp = flask.jsonify({
+		'success': 'false',
+		'query': request.path,
+		'result': { 'error': 'Incorrect payload posted.' }
+		})
+		resp.status_code = 400
+		return resp
+
+	def doesNotExist():
+		resp = flask.jsonify({
+		'success': 'true',
+		'query': request.path,
+		'result': { 'message': 'SOM found.' }
+		})
+		resp.status_code = 204 # No content
+		return resp
+
+	def legalVariable(var):
+		return (isinstance(var, str) or isinstance(var, unicode)) and len(var) > 0
+
+	def legalPlane(var):
+		def legalPvalue(var):
+			p = var.get('pvalue')
+			return p is not None and \
+			0 <= p <= 1
+
+		def legalLabels(var):
+			labels = var.get('labels')
+			return labels is not None and \
+			isinstance(labels, list) and \
+			len(labels) > 0
+
+		def legalSize(var):
+			size = var.get('size')
+			return size is not None and \
+			isinstance(size, dict) and \
+			len(size) is 2
+
+		def legalCells(var):
+			cells = var.get('cells')
+			size = var.get('size').get('m') * var.get('size').get('n')
+			return cells is not None and \
+			isinstance(cells, list) and \
+			len(cells) is size and \
+			all([isinstance(i, dict) for i in cells])
+
+		return isinstance(var, dict) and bool(var) and \
+		legalPvalue(var) and \
+		legalLabels(var) and \
+		legalSize(var) and \
+		legalCells(var)
+
+	def legalSOM(var):
+		if (isinstance(var, str) or isinstance(var, unicode)) and len(var) > 0:
+			try: 
+				return SOMTrain.objects.get(id=var.encode('utf8')) is not None
+			except DoesNotExist, e:
+				return False
+		else:
+			return False
+
+	try:
+		payload = request.get_json()
+		variable = payload.get('variable', '')
+		plane = payload.get('plane', None)
+		som = payload.get('som', '')
+
+		if legalVariable(variable) and \
+		legalPlane(plane) and \
+		legalSOM(som):
+			somDoc = SOMTrain.objects.get(id=som.encode('utf8'))
+			try:
+				existingDoc = SOMPlane.objects.get(som=somDoc, variable=variable.encode('utf8'))
+				# already created, do nothing
+				resp = flask.jsonify({
+					'success': 'true',
+					'query': request.path,
+					'result': { 
+						'id': str(existingDoc.id)
+					}
+				})
+				resp.status_code = 200 # OK
+				return resp
+			except DoesNotExist, e:
+				# not created, so create now
+				doc = SOMPlane(som=somDoc, variable=variable.encode('utf8'), plane=plane)
+				doc.save()
+				resp = flask.jsonify({
+					'success': 'true',
+					'query': request.path,
+					'result': { 
+						'id': str(doc.id)
+					}
+				})
+				resp.status_code = 201 # Created
+				return resp
+		else:
+			return getError()
+
+	except Exception, e:
+		print "exception occured", e
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+		print(exc_type, fname, exc_tb.tb_lineno)
+		return getError()
+
+@app.route( config.getFlaskVar('prefix') + 'som/<somHash>', methods=['GET'] )
+def getSOMTrain(somHash):
+	try:
+		# print type(somHash), "=", somHash
+		doc = SOMTrain.objects.get(somHash=somHash)
+		resp = flask.jsonify({
+			'success': 'true',
+			'query': request.path,
+			'result': { 
+				'id': str(doc.id),
+				'data': json.loads(doc.to_json())
+			}
+		})
+		resp.status_code = 200 # OK
+		return resp
+
+	except DoesNotExist, e:
+		resp = flask.jsonify({
+		'success': 'true',
+		'query': request.path,
+		'result': { 'message': 'Hash not found.' }
+		})
+		resp.status_code = 204 # No content
+		return resp
+
+# stores a new set of som training information to db
+@app.route( config.getFlaskVar('prefix') + 'som', methods=['POST'] )
+def createSOMTrain():
+	def getError():
+		resp = flask.jsonify({
+		'success': 'false',
+		'query': request.path,
+		'result': { 'error': 'Incorrect payload posted.' }
+		})
+		resp.status_code = 400
+		return resp
+
+	def legalVariables(array):
+		variables = Sample.objects.first().variables
+		for variable in array:
+			if not variables.get(variable):
+				return False
+		return True
+
+	def legalString(var):
+		return (isinstance(var, unicode) or isinstance(var, str)) and len(var) > 0
+
+	def legalArray(var):
+		def isArray(variable):
+			return isinstance(variable, list)
+
+		def isNotEmpty(array):
+			return len(array) > 0
+
+		return isArray(var) and isNotEmpty(var)
+
+	def legalDistance(var):
+		return isinstance(var, float) and (0 < var < 10)
+
+	def legalEpoch(var):
+		return isinstance(var, int) and (var > 0)
+
+	def getFloatArray(array):
+		return [float(i) for i in array]
+
+	try:
+		payload = request.get_json()
+
+		bmus = payload.get('bmus', [])
+		weights = payload.get('weights', [])
+		codebook = payload.get('codebook', [])
+		variables = payload.get('variables', [])
+		neighdist = payload.get('neighdist', -1)
+		distances = payload.get('distances', [])
+		somHash = payload.get('hash', '')
+		epoch = payload.get('epoch', -1)
+
+		somDocId = None
+
+		if legalDistance(neighdist) and \
+		legalString(somHash) and \
+		legalEpoch(epoch) and \
+		legalArray(bmus) and \
+		legalArray(weights) and \
+		legalArray(codebook) and \
+		legalArray(variables) and \
+		legalVariables(variables) and \
+		legalArray(distances):
+			somHash = somHash.encode('utf8')
+			# see if it already exists
+			try:
+				somDoc = SOMTrain.objects.get(somHash=somHash)
+				# exists:
+				somDocId = str(somDoc.id)
+				response = flask.jsonify({
+					'success': 'true',
+					'query': request.path,
+					'result': {
+						'id': somDocId
+					}
+				})
+				response.status_code = 200
+			except:
+				# not found, create from scratch
+				somDoc = SOMTrain(somHash=somHash, bmus=bmus, weights=getFloatArray(weights), codebook=getFloatArray(codebook), variables=variables, \
+					distances=getFloatArray(distances), 
+					neighdist=neighdist, epoch=epoch)
+				somDoc.save()
+				somDocId = str(somDoc.id)
+				response = flask.jsonify({
+					'success': 'true',
+					'query': request.path,
+					'result': {
+						'id': somDocId
+					}
+				})
+				response.status_code = 201
+			return response
+
+		else:
+			print "epoch", legalEpoch(epoch), "=", type(epoch), "=",
+			return getError()
+
+	except Exception, e:
+		print "exception occured", e
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+		print(exc_type, fname, exc_tb.tb_lineno)
+		return getError()
 
 @app.route( config.getFlaskVar('prefix') + 'state/<hashId>', methods=['GET'] )
 def state(hashId):
@@ -330,46 +601,46 @@ def getBulk():
 		print e
 		return getError()
 
-@app.route( config.getFlaskVar('prefix') + 'list/<variable>/in/<dataset>', methods=['GET'] )
-def variable(variable, dataset):
-	if not Header.objects.first().variables.get(variable):
-		response = flask.jsonify({
-			'success': 'false',
-			'query': request.path,
-			'result': { 'error': 'No such sample.' }
-		})
-		response.status_code = 400
-		return response
+# @app.route( config.getFlaskVar('prefix') + 'list/<variable>/in/<dataset>', methods=['GET'] )
+# def variable(variable, dataset):
+# 	if not Header.objects.first().variables.get(variable):
+# 		response = flask.jsonify({
+# 			'success': 'false',
+# 			'query': request.path,
+# 			'result': { 'error': 'No such sample.' }
+# 		})
+# 		response.status_code = 400
+# 		return response
 
-	results = Sample.objects.filter(dataset=dataset).only('sampleid', 'variables.'+variable)
-	if not results.count():
-		response = flask.jsonify({
-			'success': 'false',
-			'query': request.path,
-			'result': { 'error': 'No such dataset.' }
-		})
-		response.status_code = 400
-		return response
+# 	results = Sample.objects.filter(dataset=dataset).only('sampleid', 'variables.'+variable)
+# 	if not results.count():
+# 		response = flask.jsonify({
+# 			'success': 'false',
+# 			'query': request.path,
+# 			'result': { 'error': 'No such dataset.' }
+# 		})
+# 		response.status_code = 400
+# 		return response
 
-	d = dict()
-	try:
-		for res in results:
-			d[res.sampleid] = res.variables[variable]
-		response = flask.jsonify({
-			'success': 'true',
-			'query': request.path,
-			'result': { 'values': d }
-		})
-		response.status_code = 200
-		return response
-	except:
-		response = flask.jsonify({
-			'success': 'false',
-			'query': request.path,
-			'result': { 'error': 'Unexpected error.' }
-		})
-		response.status_code = 400
-		return response
+# 	d = dict()
+# 	try:
+# 		for res in results:
+# 			d[res.sampleid] = res.variables[variable]
+# 		response = flask.jsonify({
+# 			'success': 'true',
+# 			'query': request.path,
+# 			'result': { 'values': d }
+# 		})
+# 		response.status_code = 200
+# 		return response
+# 	except:
+# 		response = flask.jsonify({
+# 			'success': 'false',
+# 			'query': request.path,
+# 			'result': { 'error': 'Unexpected error.' }
+# 		})
+# 		response.status_code = 400
+# 		return response
 
 if __name__ == '__main__':
 	config = Config('setup.config')

@@ -24,6 +24,10 @@ angular.module('services.som', [
   'HDL-C', 'LDL-C', 'Glc', 'Cit', 'Phe', 'Gp', 'Tyr',
   'FAw3toFA', 'FAw6toFA', 'SFAtoFA'
 ])
+.constant('SOM_TRAIN_GET_URL', '/API/som/<%= hash %>')
+.constant('SOM_TRAIN_POST_URL', '/API/som')
+.constant('SOM_PLANE_GET_URL', '/API/som/plane/<%= somHash %>/<%= variable %>')
+.constant('SOM_PLANE_POST_URL', '/API/som/plane')
 
 .run(function(SOMComputeService, coreEstimator, SOM_DEFAULT_THREADS) {
   var _availableCores;
@@ -46,7 +50,10 @@ angular.module('services.som', [
 
 })
 
-.factory('SOMService', function SOMService(SOMComputeService, WindowHandler, $timeout, $injector, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_PLANE_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT, d3, _) {
+.factory('SOMService', function SOMService(SOMComputeService, WindowHandler, $timeout, 
+  $injector, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_PLANE_SIZE, 
+  SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT, d3, _, $http, $log,
+  SOM_TRAIN_GET_URL, SOM_TRAIN_POST_URL, SOM_PLANE_GET_URL, SOM_PLANE_POST_URL) {
 
   var that = this;
 
@@ -65,6 +72,7 @@ angular.module('services.som', [
   var _queueWindows = [];
   var _cancelled = false;
   var service = {};
+  var _dbId = null;
 
   service.inProgress = function() {
     return that.inProgress;
@@ -91,10 +99,6 @@ angular.module('services.som', [
     _cancelled = x;
     return service;
   };
-
-  // service.planeSize = function() {
-  //   return SOM_PLANE_SIZE;
-  // };
 
   service.setDimensionService = function(dimensionService) {
     that.dimensionService = dimensionService;
@@ -135,7 +139,6 @@ angular.module('services.som', [
       return diff.length === 0 && !isSubset;
     }
     var currEmpty = _.isUndefined(that.somSelection.variables) || that.somSelection.variables.length === 0;
-    // sameVariables = _.difference(that.somSelection.variables, variables).length === 0 && ( _.intersection(
 
     if (currEmpty || sameVars()) {
       return;
@@ -208,7 +211,11 @@ angular.module('services.som', [
           return;
         }
 
-        sampleId = _.pick(obj, 'dataset', 'sampleid');
+        sampleId = { 
+          'sampleid': obj.sampleid, 
+          'dataset': obj.originalDataset ? obj.originalDataset : obj.dataset
+        };
+
         retObj.samples.push(sampleId);
         _.each(sampValues, function(d, i) {
           // initialize the array on first time
@@ -222,8 +229,101 @@ angular.module('services.som', [
     }
 
     function doCall() {
-      NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'info');
-      // var selection = that.somSelection.variables;
+      function getHash(samples, variables) {
+        var p1 = performance.now();
+        var spark = new SparkMD5();
+        for(var i = 0; i < samples.length; ++i) {
+          spark.append(samples[i].dataset + "|" + samples[i].sampleid);
+        }
+        spark.append( _.sortBy(variables) );
+        var p2 = performance.now();
+        console.log("hash creation took = ", p2-p1);
+        return spark.end();
+      }
+
+      function sendNewTrain(somObject) {
+        $http.post(SOM_TRAIN_POST_URL, {
+          bmus: Array.prototype.slice.call(somObject.bmus),
+          weights: Array.prototype.slice.call(somObject.weights),
+          codebook: Array.prototype.slice.call(somObject.codebook),
+          variables: that.somSelection.variables,
+          distances: Array.prototype.slice.call(somObject.distances),
+          neighdist: somObject.neighdist,
+          epoch: somObject.epoch,
+          hash: getHash(data.samples, that.somSelection.variables)
+        }, { cache: true })
+        .then(function succFn(response) {
+          that._dbId = response.data.result.id;
+          $log.info("Sending new train object succeeded");
+        }, function errFn(response) {
+          $log.error("Sending new train object FAILED.");
+        });
+      }
+
+      function doTrain(data) {
+        NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'info');
+        SOMComputeService.create(SOM_PLANE_SIZE.y, SOM_PLANE_SIZE.x, data.samples, data.columns)
+        .then(function succFn(result) {
+          that.som = result.som;
+
+          // do training
+          SOMComputeService.train(that.som).then(function succFn(somObject) {
+            NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
+            that.bmus = SOMComputeService.get_formatter_bmus(that.som);
+            that.dimensionService.addBMUs(that.bmus);
+            sendNewTrain(that.som, data.samples);
+
+            // this will force existing planes to redraw
+            $rootScope.$emit('dataset:SOMUpdated', that.som);
+            TabService.lock(false);
+            that.inProgress = false;
+            defer.resolve(that.som);
+          }, function errFn(result) {
+            var message = '(Message)';
+            NotifyService.addTransient('SOM computation failed', message, 'error');
+            TabService.lock(false);
+            that.inProgress = false;
+            defer.reject();
+          }, function notifyFn(progress) {
+            TaskHandlerService.circleSpinValue(progress);
+          })
+          .finally(function() {
+            TaskHandlerService.circleSpin(false);
+            TaskHandlerService.circleSpinValue(0);
+          });
+
+        });
+      }
+
+      function populateFromDb(result, data) {
+        var id = result.id,
+        dbObject = result.data;
+        SOMComputeService.create(SOM_PLANE_SIZE.y, SOM_PLANE_SIZE.x, data.samples, data.columns)
+        .then(function succFn(result) {
+          that.som = result.som;
+          that._dbId = id;
+          that.som.bmus = dbObject.bmus;
+          that.som.codebook = dbObject.codebook;
+          that.som.distances = dbObject.distances;
+          that.som.neighdist = dbObject.neighdist;
+          that.som.weights = dbObject.weights;
+          that.bmus = SOMComputeService.get_formatter_bmus(that.som);
+          that.dimensionService.addBMUs(that.bmus);
+          // this will force existing planes to redraw
+          $rootScope.$emit('dataset:SOMUpdated', that.som);
+          TabService.lock(false);
+          that.inProgress = false;
+          defer.resolve(that.som);
+        }, function errFn(result) {
+          $log.error('Creating SOM object FAILED.');
+          defer.reject();
+        })
+        .finally(function() {
+          TaskHandlerService.circleSpin(false);
+          TaskHandlerService.circleSpinValue(0);
+        });
+      }
+
       removePrevious();
 
       var skipNaNs = false;
@@ -233,35 +333,26 @@ angular.module('services.som', [
       // start by creating the object
       var TaskHandlerService = $injector.get('TaskHandlerService');
       TaskHandlerService.circleSpin(true);
-      SOMComputeService.create(SOM_PLANE_SIZE.y, SOM_PLANE_SIZE.x, data.samples, data.columns)
-      .then(function succFn(result) {
-        that.som = result.som;
 
-        // do training
-        SOMComputeService.train(that.som).then(function succFn(somObject) {
-          NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
-          that.bmus = SOMComputeService.get_formatter_bmus(that.som);
-          that.dimensionService.addBMUs(that.bmus);
+      // ask from the server if the train result is already stored in the DB
+      var sampleAndVariableHash = getHash(data.samples, that.somSelection.variables);
+      $http.get( _.template(SOM_TRAIN_GET_URL)({ hash: sampleAndVariableHash }), 
+        // don't cache: otherwise it'll store the first 'not found' reply and
+        // will result in subsequent calls to be always re-calculated
+        { cache: false }
+      )
+      .then(function succFn(response) {
+        if(response.status == 200) {
+          // object found from DB
+          populateFromDb(response.data.result, data);
+        } else if(response.status == 204) {
+          // not found, compute afresh
+          doTrain(data);
+        }
+      }, function errFn(response) {
 
-          // this will force existing planes to redraw
-          $rootScope.$emit('dataset:SOMUpdated', that.som);
-          TabService.lock(false);
-          that.inProgress = false;
-          defer.resolve(that.som);
-        }, function errFn(result) {
-          var message = '(Message)';
-          NotifyService.addTransient('SOM computation failed', message, 'error');
-          TabService.lock(false);
-          that.inProgress = false;
-          defer.reject(message);
-        }, function notifyFn(progress) {
-          TaskHandlerService.circleSpinValue(progress);
-        })
-        .finally(function() {
-          TaskHandlerService.circleSpin(false);
-          TaskHandlerService.circleSpinValue(0);
-        });
-
+      }, function notifyFn(msg) {
+        console.log("notify", msg);
       });
 
     }
@@ -320,25 +411,65 @@ angular.module('services.som', [
     }
 
     function doCall() {
-      var skipNaNs = false;
-      _queueWindows.push(windowObject);
-      var threadData = getThreadData(testVar, skipNaNs);
+      function sendNewPlane(plane) {
+        $http.post(SOM_PLANE_POST_URL, {
+          variable: testVar,
+          plane: plane,
+          som: that._dbId
+        }, { cache: false })
+        .then(function succFn(response) {
+          $log.info("Sending new plane object succeeded");
+        }, function errFn(response) {
+          $log.error("Sending new plane object FAILED.");
+        });
+      }
 
-      SOMComputeService.calculate_component_plane(that.som, that.trainSamples, threadData, testVar)
-      .then(function succFn(result) {
-        defer.resolve(result.plane);
-      }, function errFn(result) {
+      function populateFromDb(data) {
         TabService.lock(false);
         that.inProgress = false;
-        defer.reject('Plane computation of variable ' + testVar + ' failed');
-      }, function notifyFn(progress) {
-        notifyFunction(progress);
-      })
-      .finally(function() {
-        _.remove(_queueWindows, function(win) { return win == windowObject; }); 
-        TabService.lock(false);
-        that.inProgress = false;
-      });
+        defer.resolve(data.plane);
+      }
+
+      function doPlane() {
+        var skipNaNs = false;
+        _queueWindows.push(windowObject);
+        var threadData = getThreadData(testVar, skipNaNs);
+
+        SOMComputeService.calculate_component_plane(that.som, that.trainSamples, threadData, testVar)
+        .then(function succFn(result) {
+          sendNewPlane(result.plane);
+          defer.resolve(result.plane);
+        }, function errFn(result) {
+          TabService.lock(false);
+          that.inProgress = false;
+          $log.error('Plane computation of variable ' + testVar + ' failed');
+          defer.reject('Plane computation of variable ' + testVar + ' failed');
+        }, function notifyFn(progress) {
+          notifyFunction(progress);
+        })
+        .finally(function() {
+          _.remove(_queueWindows, function(win) { return win == windowObject; }); 
+          TabService.lock(false);
+          that.inProgress = false;
+        });
+      }
+
+      $http.get( _.template(SOM_PLANE_GET_URL)({ somHash: that._dbId, variable: testVar }), 
+        { cache: false }
+      )
+      .then(function succFn(response) {
+        if(response.status == 200) {
+          // object found from DB
+          populateFromDb(response.data.result.data);
+        } else if(response.status == 204) {
+          // not found, compute afresh
+          doPlane();
+        }
+      }, function errFn(response) {
+
+      }, function notifyFn(msg) {
+        console.log("notify", msg);
+      });      
 
     }
 

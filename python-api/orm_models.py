@@ -1,5 +1,5 @@
 from mongoengine import Document, DynamicDocument, CASCADE
-from mongoengine.fields import StringField, ListField, DictField, IntField, ReferenceField, GenericReferenceField, DynamicField, BooleanField
+from mongoengine.fields import StringField, ListField, SortedListField, FloatField, IntField, DictField, IntField, ReferenceField, GenericReferenceField, DynamicField, BooleanField
 
 class Sample(DynamicDocument):
 	dataset = StringField(required=True, unique=False)
@@ -43,6 +43,36 @@ class HeaderSample(Document):
 		{'fields': ['name'], 'unique': True }
 		],
 	'db_alias': 'samples'		
+	}
+
+class SOMTrain(Document):
+	bmus = ListField(FloatField(min_value=0), required=True)
+	weights = ListField(FloatField(), required=True)
+	codebook = ListField(FloatField(), required=True)
+	variables = SortedListField(StringField(max_length=40), required=True)
+	distances = ListField(FloatField(), required=True)
+	neighdist = FloatField(required=True)
+	somHash = StringField(required=True, unique=True, max_length=60)
+	epoch = IntField(required=True, min_value=1)
+
+	meta = {
+		'indexes': [
+			{'fields': ['somHash'], 'unique': True }
+		],
+	'db_alias': 'som'
+	}
+
+class SOMPlane(Document):
+	variable  = StringField(required=True, unique=True, unique_with='som')
+	plane = DynamicField(required=True)
+	# delete the plane doc if the original SOM is removed
+	som = ReferenceField('SOMTrain', required=True, reverse_delete_rule=CASCADE)
+
+	meta = {
+	'indexes': [ 
+		{'fields': ('som', 'variable'), 'unique': True}
+	],
+	'db_alias': 'som'
 	}
 
 class BrowsingState(DynamicDocument):
