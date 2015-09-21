@@ -29,7 +29,7 @@ angular.module('services.som', [
 .constant('SOM_PLANE_GET_URL', '/API/som/plane/<%= somHash %>/<%= variable %>')
 .constant('SOM_PLANE_POST_URL', '/API/som/plane')
 
-.run(function(SOMComputeService, coreEstimator, SOM_DEFAULT_THREADS) {
+.run(function(SOMComputeService, coreEstimator, SOM_DEFAULT_THREADS, $log) {
   var _availableCores;
 
   coreEstimator.get().then(function succFn(cores) {
@@ -44,7 +44,9 @@ angular.module('services.som', [
         absUrl + 'assets/utilities.som.js'
       ];
 
-      SOMComputeService.noWorkers(4)
+      $log.info(_availableCores + " cores are estimated for SOM Computation");
+
+      SOMComputeService.noWorkers(_availableCores)
       .dependencies(dependencies);
     });
 
@@ -241,7 +243,7 @@ angular.module('services.som', [
         return spark.end();
       }
 
-      function sendNewTrain(somObject) {
+      function sendNewTrain(somObject, callback) {
         $http.post(SOM_TRAIN_POST_URL, {
           bmus: Array.prototype.slice.call(somObject.bmus),
           weights: Array.prototype.slice.call(somObject.weights),
@@ -251,12 +253,15 @@ angular.module('services.som', [
           neighdist: somObject.neighdist,
           epoch: somObject.epoch,
           hash: getHash(data.samples, that.somSelection.variables)
-        }, { cache: true })
+        }, { cache: false })
         .then(function succFn(response) {
           that._dbId = response.data.result.id;
-          $log.info("Sending new train object succeeded");
+          $log.info("Sending new train object succeeded", that._dbId);
         }, function errFn(response) {
           $log.error("Sending new train object FAILED.");
+        })
+        .finally(function() {
+          callback();
         });
       }
 
@@ -271,13 +276,15 @@ angular.module('services.som', [
             NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
             that.bmus = SOMComputeService.get_formatter_bmus(that.som);
             that.dimensionService.addBMUs(that.bmus);
-            sendNewTrain(that.som, data.samples);
 
-            // this will force existing planes to redraw
-            $rootScope.$emit('dataset:SOMUpdated', that.som);
             TabService.lock(false);
             that.inProgress = false;
-            defer.resolve(that.som);
+            sendNewTrain(that.som, function() {
+              // this will force existing planes to redraw
+              $rootScope.$emit('dataset:SOMUpdated', that.som);
+              defer.resolve(that.som);
+            });
+                      
           }, function errFn(result) {
             var message = '(Message)';
             NotifyService.addTransient('SOM computation failed', message, 'error');
@@ -298,6 +305,7 @@ angular.module('services.som', [
       function populateFromDb(result, data) {
         var id = result.id,
         dbObject = result.data;
+        $log.info("Populating SOM train from DB object", id);
         SOMComputeService.create(SOM_PLANE_SIZE.y, SOM_PLANE_SIZE.x, data.samples, data.columns)
         .then(function succFn(result) {
           that.som = result.som;
