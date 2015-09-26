@@ -52,8 +52,9 @@ angular.module('services.som', [
 })
 
 .factory('SOMService', function SOMService(SOMComputeService, WindowHandler, $timeout, 
-  $injector, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_DEFAULT_SIZE, 
-  SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT, d3, _, $http, $log,
+  $injector, $rootScope, NotifyService, $q, DatasetFactory, TabService,
+  SOM_DEFAULT_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT, 
+  d3, _, $http, $log,
   SOM_TRAIN_GET_URL, SOM_TRAIN_POST_URL, SOM_PLANE_GET_URL, SOM_PLANE_POST_URL) {
 
   var that = this;
@@ -145,13 +146,16 @@ angular.module('services.som', [
     return service;
   };
 
-  service.setVariables = function(variables) {
+  service.inputVariables = function(variables) {
     function sameVars() {
       var inter = _.intersection(variables, that.somSelection.variables),
         diff = _.difference(variables, inter),
         isSubset = variables.length === inter.length;
       return diff.length === 0 && !isSubset;
     }
+
+    if(!arguments.length) { return angular.copy(that.somSelection.variables); }
+
     var currEmpty = _.isUndefined(that.somSelection.variables) || that.somSelection.variables.length === 0;
 
     if (currEmpty || sameVars()) {
@@ -161,10 +165,7 @@ angular.module('services.som', [
     // recompute
     var windowHandler = WindowHandler.get('vis.som.plane');
     service.getSOM(windowHandler);
-  };
-
-  service.getVariables = function() {
-    return angular.copy(that.somSelection.variables);
+    return service;
   };
 
   function removePrevious() {
@@ -282,6 +283,7 @@ angular.module('services.som', [
       }
 
       function doTrain(data) {
+        TaskHandlerService.circleSpin(true);
         NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'info');
         SOMComputeService.create(service.rows(), service.columns(), data.samples, data.columns)
         .then(function succFn(result) {
@@ -356,9 +358,7 @@ angular.module('services.som', [
       var data = getData(skipNaNs);
       that.trainSamples = data.samples;
 
-      // start by creating the object
       var TaskHandlerService = $injector.get('TaskHandlerService');
-      TaskHandlerService.circleSpin(true);
 
       // ask from the server if the train result is already stored in the DB
       var idHash = getHash(data.samples, that.somSelection.variables, service.rows(), service.columns());

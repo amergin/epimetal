@@ -330,15 +330,15 @@ angular.module('plotter.vis', [
     return !SOMService.inProgress();
   };
 
-  $scope.openSOMInputModal = function(ev) {
+  $scope.openSOMSettings = function(ev) {
 
     var diagScope = $rootScope.$new(true);
 
     diagScope.config = {
-      title: 'Select Self-organizing Map input variables',
-      template: 'vis/menucomponents/som.input.tpl.html',
+      title: 'Self-organizing Map settings',
+      template: 'vis/menucomponents/som.settings.tpl.html',
       actions: {
-        submit: 'Update input variables',
+        submit: 'Submit',
         cancel: 'Cancel and close'
       }
     };

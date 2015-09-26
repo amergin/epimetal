@@ -74,7 +74,7 @@ angular.module('plotter.vis.plotting.som', [
       width = config.width - (margin.left + margin.right),
       height = config.height - (margin.top + margin.bottom);
 
-    var labelFormat = d3.format('.2f');
+    var labelFormat = d3.format('.1f');
 
     ///////////////////////////////////////////////////////////////////////////
     ////////////// Initiate SVG and create hexagon centers ////////////////////

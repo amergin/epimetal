@@ -1,0 +1,27 @@
+<div>
+	<tabset>
+		<tab select="selectTab(0)">
+			<tab-heading>Input variables</tab-heading>
+			<h1>Input variables</h1>
+			<div class="multiple-variable-selection" re-selection="selection" re-mode="'multi'"></div>		
+		</tab>
+		<tab select="selectTab(1)">
+			<tab-heading>Size</tab-heading>
+			<h1>SOM Size</h1>
+			<div class="col-sm-6">
+			    <div ng-repeat="size in sizes track by $index" class="input-group">
+			      <span class="input-group-addon">
+			        <input type="radio" name="som-size" value="{{$index}}" ng-model="selectedSize.ind" aria-label="">
+			      </span>
+			      <div class="form-control">
+			      	<b>{{size.rows}}</b> rows,
+			      	<b>{{size.cols}}</b> columns
+			      </div>
+			    </div>
+			</div>
+		</tab>
+	</tabset>
+	<div class="row col-sm-12 text-center">
+		<div growl inline="true" limit-messages="1" reference="sominfo" class="am-fade"></div>
+	</div>
+</div>
