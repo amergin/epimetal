@@ -359,6 +359,7 @@ angular.module('services.som', [
       that.trainSamples = data.samples;
 
       var TaskHandlerService = $injector.get('TaskHandlerService');
+      that.inProgress = true;     
 
       // ask from the server if the train result is already stored in the DB
       var idHash = getHash(data.samples, that.somSelection.variables, service.rows(), service.columns());
@@ -392,7 +393,7 @@ angular.module('services.som', [
 
     } else {
       TabService.lock(true);
-      that.inProgress = true;
+      // that.inProgress = true;
 
       // important: without clearing filters there's a risk only the sample that
       // are within the circles get passed
