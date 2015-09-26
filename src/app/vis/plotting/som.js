@@ -76,26 +76,6 @@ angular.module('plotter.vis.plotting.som', [
 
     var labelFormat = d3.format('.1f');
 
-    ///////////////////////////////////////////////////////////////////////////
-    ////////////// Initiate SVG and create hexagon centers ////////////////////
-    ///////////////////////////////////////////////////////////////////////////
-
-    // //Function to call when you mouseover a node
-    // function mover(d) {
-    //   var el = d3.select(this)
-    //   .transition()
-    //   .duration(10)
-    //   .style("fill-opacity", 0.3);
-    // }
-
-    // //Mouseout function
-    // function mout(d) {
-    //   var el = d3.select(this)
-    //   .transition()
-    //   .duration(500)
-    //   .style("fill-opacity", 1);
-    // }
-
     //The number of columns and rows of the heatmap
     var MapColumns = plane.size.n;
     var MapRows = plane.size.m;
@@ -235,16 +215,16 @@ angular.module('plotter.vis.plotting.som', [
       return hexRadius * y * 1.5;
     };
 
-    var addCircle = function(circle, origin) {
+    var addCircle = function(circle, origin, size) {
 
       var circleId = circle.id();
 
       var _circleConfig = {
         fillOpacity: 0.40,
         radius: {
-          normal: hexRadius * 3,
+          normal: hexRadius * (size.m / 2),
           min: hexRadius * 1.5,
-          max: hexRadius * 6
+          max: hexRadius * (size.m - 1)
         }
       };
 
@@ -304,8 +284,8 @@ angular.module('plotter.vis.plotting.som', [
       });
 
       var innerDragMove = function(d) {
-        var x = Math.max(0, Math.min(width - margin.left - margin.right + d.r, d3.event.x)),
-          y = Math.max(0, Math.min(height - margin.top - margin.bottom, d3.event.y));
+        var x = Math.max(-hexRadius, Math.min(width + margin.left - margin.right, d3.event.x)),
+          y = Math.max(-hexRadius, Math.min(height - margin.top - margin.bottom + hexRadius, d3.event.y));
 
         d.x = x;
         d.y = y;
@@ -494,7 +474,9 @@ angular.module('plotter.vis.plotting.som', [
         addCircle(filter, filter.position() || {
           x: circleX(filter.origin().x),
           y: circleY(filter.origin().y)
-        });
+        },
+        $scope.window.extra().plane.size
+        );
       } else if (newArray.length < oldArray.length) {
         _.chain(oldArray)
           .select(function(item) {
@@ -511,7 +493,9 @@ angular.module('plotter.vis.plotting.som', [
       addCircle(filt, filt.position() || filt.position() || {
         x: circleX(filt.origin().x),
         y: circleY(filt.origin().y)
-      });
+      },
+      $scope.window.extra().plane.size
+      );
     });
 
   };
