@@ -10,9 +10,8 @@ angular.module('services.som', [
   'ext.core-estimator'
 ])
 
-.constant('SOM_PLANE_SIZE', {
-    x: 9,
-    y: 7
+.constant('SOM_DEFAULT_SIZE', {
+  rows: 7, cols: 9
 })
 .constant('SOM_MIN_SAMPLE_COUNT', 10)
 .constant('SOM_DEFAULT_THREADS', 4)
@@ -53,7 +52,7 @@ angular.module('services.som', [
 })
 
 .factory('SOMService', function SOMService(SOMComputeService, WindowHandler, $timeout, 
-  $injector, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_PLANE_SIZE, 
+  $injector, $rootScope, NotifyService, $q, DatasetFactory, TabService, SOM_DEFAULT_SIZE, 
   SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT, d3, _, $http, $log,
   SOM_TRAIN_GET_URL, SOM_TRAIN_POST_URL, SOM_PLANE_GET_URL, SOM_PLANE_POST_URL) {
 
@@ -75,6 +74,7 @@ angular.module('services.som', [
   var _cancelled = false;
   var service = {};
   var _dbId = null;
+  var _size = SOM_DEFAULT_SIZE;
 
   service.inProgress = function() {
     return that.inProgress;
@@ -82,6 +82,18 @@ angular.module('services.som', [
 
   service.empty = function() {
     return _.isEmpty(that.som);
+  };
+
+  service.rows = function(x) {
+    if (!arguments.length) { return _size.rows; }
+    _size.rows = x;
+    return service;
+  };
+
+  service.columns = function(x) {
+    if (!arguments.length) { return _size.cols; }
+    _size.cols = x;
+    return service;
   };
 
   service.bmus = function(x) {
@@ -231,15 +243,17 @@ angular.module('services.som', [
     }
 
     function doCall() {
-      function getHash(samples, variables) {
-        var p1 = performance.now();
+      function getHash(samples, variables, rows, cols) {
+        // var p1 = performance.now();
         var spark = new SparkMD5();
         for(var i = 0; i < samples.length; ++i) {
           spark.append(samples[i].dataset + "|" + samples[i].sampleid);
         }
         spark.append( _.sortBy(variables) );
-        var p2 = performance.now();
-        console.log("hash creation took = ", p2-p1);
+        spark.append(rows);
+        spark.append(cols);
+        // var p2 = performance.now();
+        // console.log("hash creation took = ", p2-p1);
         return spark.end();
       }
 
@@ -252,7 +266,9 @@ angular.module('services.som', [
           distances: Array.prototype.slice.call(somObject.distances),
           neighdist: somObject.neighdist,
           epoch: somObject.epoch,
-          hash: getHash(data.samples, that.somSelection.variables)
+          rows: somObject.rows,
+          cols: somObject.cols,
+          hash: getHash(data.samples, that.somSelection.variables, somObject.rows, somObject.cols)
         }, { cache: false })
         .then(function succFn(response) {
           that._dbId = response.data.result.id;
@@ -267,7 +283,7 @@ angular.module('services.som', [
 
       function doTrain(data) {
         NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'info');
-        SOMComputeService.create(SOM_PLANE_SIZE.y, SOM_PLANE_SIZE.x, data.samples, data.columns)
+        SOMComputeService.create(service.rows(), service.columns(), data.samples, data.columns)
         .then(function succFn(result) {
           that.som = result.som;
 
@@ -279,7 +295,7 @@ angular.module('services.som', [
 
             TabService.lock(false);
             that.inProgress = false;
-            sendNewTrain(that.som, function() {
+            sendNewTrain(that.som, function callback() {
               // this will force existing planes to redraw
               $rootScope.$emit('dataset:SOMUpdated', that.som);
               defer.resolve(that.som);
@@ -306,7 +322,7 @@ angular.module('services.som', [
         var id = result.id,
         dbObject = result.data;
         $log.info("Populating SOM train from DB object", id);
-        SOMComputeService.create(SOM_PLANE_SIZE.y, SOM_PLANE_SIZE.x, data.samples, data.columns)
+        SOMComputeService.create(dbObject.rows, dbObject.cols, data.samples, data.columns)
         .then(function succFn(result) {
           that.som = result.som;
           that._dbId = id;
@@ -315,6 +331,8 @@ angular.module('services.som', [
           that.som.distances = dbObject.distances;
           that.som.neighdist = dbObject.neighdist;
           that.som.weights = dbObject.weights;
+          that.som.rows = dbObject.rows;
+          that.som.cols = dbObject.cols;
           that.bmus = SOMComputeService.get_formatter_bmus(that.som);
           that.dimensionService.addBMUs(that.bmus);
           // this will force existing planes to redraw
@@ -343,8 +361,8 @@ angular.module('services.som', [
       TaskHandlerService.circleSpin(true);
 
       // ask from the server if the train result is already stored in the DB
-      var sampleAndVariableHash = getHash(data.samples, that.somSelection.variables);
-      $http.get( _.template(SOM_TRAIN_GET_URL)({ hash: sampleAndVariableHash }), 
+      var idHash = getHash(data.samples, that.somSelection.variables, service.rows(), service.columns());
+      $http.get( _.template(SOM_TRAIN_GET_URL)({ hash: idHash }), 
         // don't cache: otherwise it'll store the first 'not found' reply and
         // will result in subsequent calls to be always re-calculated
         { cache: false }

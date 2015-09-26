@@ -310,11 +310,12 @@ def createSOMTrain():
 	def legalDistance(var):
 		return isinstance(var, float) and (0 < var < 10)
 
-	def legalEpoch(var):
+	def legalNumber(var):
 		return isinstance(var, int) and (var > 0)
 
 	def getFloatArray(array):
 		return [float(i) for i in array]
+
 
 	try:
 		payload = request.get_json()
@@ -326,13 +327,17 @@ def createSOMTrain():
 		neighdist = payload.get('neighdist', -1)
 		distances = payload.get('distances', [])
 		somHash = payload.get('hash', '')
+		rows = payload.get('rows', -1)
+		cols = payload.get('cols', -1)
 		epoch = payload.get('epoch', -1)
 
 		somDocId = None
 
 		if legalDistance(neighdist) and \
 		legalString(somHash) and \
-		legalEpoch(epoch) and \
+		legalNumber(epoch) and \
+		legalNumber(rows) and \
+		legalNumber(cols) and \
 		legalArray(bmus) and \
 		legalArray(weights) and \
 		legalArray(codebook) and \
@@ -357,7 +362,7 @@ def createSOMTrain():
 				# not found, create from scratch
 				somDoc = SOMTrain(somHash=somHash, bmus=bmus, weights=getFloatArray(weights), codebook=getFloatArray(codebook), variables=variables, \
 					distances=getFloatArray(distances), 
-					neighdist=neighdist, epoch=epoch)
+					neighdist=neighdist, epoch=epoch, rows=rows, cols=cols)
 				somDoc.save()
 				somDocId = str(somDoc.id)
 				response = flask.jsonify({
@@ -371,7 +376,6 @@ def createSOMTrain():
 			return response
 
 		else:
-			print "epoch", legalEpoch(epoch), "=", type(epoch), "=",
 			return getError()
 
 	except Exception, e:

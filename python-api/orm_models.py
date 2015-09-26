@@ -54,6 +54,8 @@ class SOMTrain(Document):
 	neighdist = FloatField(required=True)
 	somHash = StringField(required=True, unique=True, max_length=60)
 	epoch = IntField(required=True, min_value=1)
+	rows = IntField(required=True, min_value=1)
+	cols = IntField(required=True, min_value=1)
 
 	meta = {
 		'indexes': [

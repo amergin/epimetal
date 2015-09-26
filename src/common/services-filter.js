@@ -330,9 +330,9 @@ function CircleFilter($injector) {
   priv.injector = $injector;
 
   function initOrigin() {
-    var SOM_PLANE_SIZE = priv.injector.get('SOM_PLANE_SIZE');
-    priv.origin.x = _.random(1, SOM_PLANE_SIZE.x - 1);
-    priv.origin.y = _.random(1, SOM_PLANE_SIZE.y - 1);
+    var SOMService = priv.injector.get('SOMService');
+    priv.origin.x = _.random(1, SOMService.columns() - 1);
+    priv.origin.y = _.random(1, SOMService.rows() - 1);
   }
 
   initOrigin();
