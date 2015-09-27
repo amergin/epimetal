@@ -324,32 +324,46 @@ angular.module('services.som', [
         var id = result.id,
         dbObject = result.data;
         $log.info("Populating SOM train from DB object", id);
-        SOMComputeService.create(dbObject.rows, dbObject.cols, data.samples, data.columns)
-        .then(function succFn(result) {
-          that.som = result.som;
-          that._dbId = id;
-          that.som.bmus = dbObject.bmus;
-          that.som.codebook = dbObject.codebook;
-          that.som.distances = dbObject.distances;
-          that.som.neighdist = dbObject.neighdist;
-          that.som.weights = dbObject.weights;
-          that.som.rows = dbObject.rows;
-          that.som.cols = dbObject.cols;
-          that.bmus = SOMComputeService.get_formatter_bmus(that.som);
-          that.dimensionService.addBMUs(that.bmus);
-          // this will force existing planes to redraw
-          $rootScope.$emit('dataset:SOMUpdated', that.som);
-          TabService.lock(false);
-          that.inProgress = false;
-          defer.resolve(that.som);
-        }, function errFn(result) {
-          $log.error('Creating SOM object FAILED.');
-          defer.reject();
-        })
-        .finally(function() {
-          TaskHandlerService.circleSpin(false);
-          TaskHandlerService.circleSpinValue(0);
-        });
+        that.som = SOMComputeService.init(dbObject.rows, dbObject.cols, data.samples,
+          dbObject.bmus, dbObject.codebook, dbObject.distances, dbObject.weights);
+        that._dbId = id;
+        that.bmus = SOMComputeService.get_formatter_bmus(that.som);
+        that.dimensionService.addBMUs(that.bmus);
+        $rootScope.$emit('dataset:SOMUpdated', that.som);
+
+        TabService.lock(false);
+        that.inProgress = false;
+        TaskHandlerService.circleSpin(false);
+        TaskHandlerService.circleSpinValue(0);
+
+        defer.resolve(that.som);
+
+        // SOMComputeService.create(dbObject.rows, dbObject.cols, data.samples, data.columns)
+        // .then(function succFn(result) {
+        //   that.som = result.som;
+        //   that._dbId = id;
+        //   that.som.bmus = dbObject.bmus;
+        //   that.som.codebook = dbObject.codebook;
+        //   that.som.distances = dbObject.distances;
+        //   that.som.neighdist = dbObject.neighdist;
+        //   that.som.weights = dbObject.weights;
+        //   that.som.rows = dbObject.rows;
+        //   that.som.cols = dbObject.cols;
+        //   that.bmus = SOMComputeService.get_formatter_bmus(that.som);
+        //   that.dimensionService.addBMUs(that.bmus);
+        //   // this will force existing planes to redraw
+        //   $rootScope.$emit('dataset:SOMUpdated', that.som);
+        //   TabService.lock(false);
+        //   that.inProgress = false;
+        //   defer.resolve(that.som);
+        // }, function errFn(result) {
+        //   $log.error('Creating SOM object FAILED.');
+        //   defer.reject();
+        // })
+        // .finally(function() {
+        //   TaskHandlerService.circleSpin(false);
+        //   TaskHandlerService.circleSpinValue(0);
+        // });
       }
 
       removePrevious();
@@ -462,7 +476,7 @@ angular.module('services.som', [
         _queueWindows.push(windowObject);
         var threadData = getThreadData(testVar, skipNaNs);
 
-        SOMComputeService.calculate_component_plane(that.som, that.trainSamples, threadData, testVar)
+        SOMComputeService.calculate_component_plane(that.som, threadData, testVar)
         .then(function succFn(result) {
           sendNewPlane(result.plane);
           defer.resolve(result.plane);
