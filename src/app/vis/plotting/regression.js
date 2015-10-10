@@ -56,7 +56,7 @@ angular.module('plotter.vis.plotting.regression',
 
 })
 
-.directive('plRegression', function plRegression($timeout, $rootScope, DatasetFactory, RegressionService, NotifyService) {
+.directive('plRegression', function plRegression($timeout, $rootScope, DatasetFactory, RegressionService, NotifyService, VariableService) {
 
   function postLink($scope, ele, attrs, ctrl) {
     function initDropdown() {
