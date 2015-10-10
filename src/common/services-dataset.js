@@ -4,18 +4,16 @@ angular.module('services.dataset', ['services.notify',
   'ext.lodash'
 ])
 
-.factory('DatasetFactory', function DatasetFactory($http, $q, $injector, $rootScope, NotifyService, d3, _) {
+.constant('DATASET_URL_FETCH_DATASETS', '/API/datasets')
+.constant('DATASET_URL_FETCH_MULTIPLE_VARS', '/API/list/')
+
+.factory('DatasetFactory', function DatasetFactory($http, $q, $injector, $rootScope, NotifyService, d3, _,
+  DATASET_URL_FETCH_DATASETS, DATASET_URL_FETCH_MULTIPLE_VARS) {
 
   // privates
   var that = this;
   that.sets = {};
   that.variables = [];
-  that.config = {
-    datasetsURL: '/API/datasets',
-    // variablesURL: '/API/headers/NMR_results',
-    variableURLPrefix: '/API/list/',
-    multipleVariablesURL: '/API/list/'
-  };
   that.colors = d3.scale.category20();
   that.classedVariables = {};
   that.variableCache = {};
@@ -23,34 +21,10 @@ angular.module('services.dataset', ['services.notify',
   // primary from dimension service
   that.dimensionService = null;
 
-  // var initVariables = _.once(function() {
-  //   var defer = $q.defer();
-  //   $http.get(that.config.variablesURL, {
-  //       cache: true
-  //     })
-  //     .success(function(response) {
-  //       console.log("Load variable list");
-  //       _.each(response.result, function(variable) {
-  //         if (variable.classed) {
-  //           that.classedVariables[variable.name] = variable;
-  //         }
-  //         that.variableCache[variable.name] = variable;
-  //       });
-  //       that.variables = response.result;
-  //       defer.resolve(that.variables);
-  //     })
-  //     .error(function() {
-  //       that.variables = angular.copy([]);
-  //       NotifyService.addSticky('Error', 'Something went wrong while fetching variables. Please reload the page.', 'error');
-  //       defer.reject('Something went wrong while fetching variables. Please reload the page');
-  //     });
-  //   return defer.promise;
-  // });
-
   var initDatasets = _.once(function() {
     var deferred = $q.defer();
     var res = {};
-    $http.get(that.config.datasetsURL, {
+    $http.get(DATASET_URL_FETCH_DATASETS, {
         cache: true
       })
       .success(function(response) {
@@ -204,7 +178,7 @@ angular.module('services.dataset', ['services.notify',
         }
 
         var performPost = function(vars, config, defer, datasetName, processFn) {
-          $http.post(that.config.multipleVariablesURL, {
+          $http.post(DATASET_URL_FETCH_MULTIPLE_VARS, {
               variables: vars,
               dataset: datasetName
             }, {
