@@ -12,7 +12,7 @@ angular.module('services.dataset', ['services.notify',
   that.variables = [];
   that.config = {
     datasetsURL: '/API/datasets',
-    variablesURL: '/API/headers/NMR_results',
+    // variablesURL: '/API/headers/NMR_results',
     variableURLPrefix: '/API/list/',
     multipleVariablesURL: '/API/list/'
   };
@@ -23,29 +23,29 @@ angular.module('services.dataset', ['services.notify',
   // primary from dimension service
   that.dimensionService = null;
 
-  var initVariables = _.once(function() {
-    var defer = $q.defer();
-    $http.get(that.config.variablesURL, {
-        cache: true
-      })
-      .success(function(response) {
-        console.log("Load variable list");
-        _.each(response.result, function(variable) {
-          if (variable.classed) {
-            that.classedVariables[variable.name] = variable;
-          }
-          that.variableCache[variable.name] = variable;
-        });
-        that.variables = response.result;
-        defer.resolve(that.variables);
-      })
-      .error(function() {
-        that.variables = angular.copy([]);
-        NotifyService.addSticky('Error', 'Something went wrong while fetching variables. Please reload the page.', 'error');
-        defer.reject('Something went wrong while fetching variables. Please reload the page');
-      });
-    return defer.promise;
-  });
+  // var initVariables = _.once(function() {
+  //   var defer = $q.defer();
+  //   $http.get(that.config.variablesURL, {
+  //       cache: true
+  //     })
+  //     .success(function(response) {
+  //       console.log("Load variable list");
+  //       _.each(response.result, function(variable) {
+  //         if (variable.classed) {
+  //           that.classedVariables[variable.name] = variable;
+  //         }
+  //         that.variableCache[variable.name] = variable;
+  //       });
+  //       that.variables = response.result;
+  //       defer.resolve(that.variables);
+  //     })
+  //     .error(function() {
+  //       that.variables = angular.copy([]);
+  //       NotifyService.addSticky('Error', 'Something went wrong while fetching variables. Please reload the page.', 'error');
+  //       defer.reject('Something went wrong while fetching variables. Please reload the page');
+  //     });
+  //   return defer.promise;
+  // });
 
   var initDatasets = _.once(function() {
     var deferred = $q.defer();
@@ -442,77 +442,12 @@ angular.module('services.dataset', ['services.notify',
 
   var service = {};
 
-  service.isClassVariable = function(v) {
-    return !_.isUndefined(that.classedVariables[v]);
-  };
-
-  service.getVariable = function(v) {
-    return that.variableCache[v];
-  };
-
   service.getColorScale = function() {
     return that.colors;
   };
 
-  service.getVariables = function() {
-    return initVariables();
-  };
-
   service.getDatasets = function() {
     return initDatasets();
-  };
-
-  var getProfiles = _.once(function() {
-    var getSorted = function() {
-      return _.chain(that.variables)
-        .sortBy(function(v) {
-          return v.name_order;
-        })
-        .sortBy(function(v) {
-          return v.group.order;
-        })
-        .value();
-    };
-    var getTotalLipids = function(sorted) {
-      // get variables ending with '-L'
-      var re = /^((?:[a-z|-]+)-L)$/i;
-      return _.filter(sorted, function(d) {
-        return re.test(d.name);
-      });
-    };
-    var getFattyAcids = function(sorted) {
-      var names = ['TotFA', 'UnSat', 'DHA', 'LA', 'FAw3', 'FAw6', 'PUFA', 'MUFA', 'SFA', 'DHAtoFA', 'LAtoFA', 'FAw3toFA', 'FAw6toFA', 'PUFAtoFA', 'MUFAtoFA', 'SFAtoFA'];
-      return _.filter(sorted, function(v) {
-        return _.some(names, function(n) {
-          return v.name == n;
-        });
-      });
-    };
-
-    var getSmallMolecules = function(sorted) {
-      var names = ['Glc', 'Lac', 'Pyr', 'Cit', 'Glol', 'Ala', 'Gln', 'His', 'Ile', 'Leu', 'Val', 'Phe', 'Tyr', 'Ace', 'AcAce', 'bOHBut', 'Crea', 'Alb', 'Gp'];
-      return _.filter(sorted, function(v) {
-        return _.some(names, function(n) {
-          return v.name == n;
-        });
-      });
-    };
-
-    var sorted = getSorted();
-    return [{
-      name: 'Total lipids',
-      variables: getTotalLipids(sorted)
-    }, {
-      name: 'Fatty acids',
-      variables: getFattyAcids(sorted)
-    }, {
-      name: 'Small molecules',
-      variables: getSmallMolecules(sorted)
-    }];
-  });
-
-  service.getProfiles = function() {
-    return getProfiles();
   };
 
   // this function checks if new variables need to be fetched

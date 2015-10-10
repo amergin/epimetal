@@ -9,14 +9,15 @@ angular.module('plotter.vis.plotting',
   'plotter.vis.plotting.regression',
   'plotter.vis.plotting.classedbarchart',
   'services.dimensions', 
-  'services.dataset', 
+  'services.dataset',
+  'services.variable',
   'services.window',
   'services.som',
   'services.tab',
   'ext.lodash'
   ])
 
-.service('PlotService', function PlotService($injector, DimensionService, DatasetFactory, NotifyService, SOMService, $q, TabService, EXPLORE_DEFAULT_SIZE_X, EXPLORE_DEFAULT_SIZE_Y, REGRESSION_DEFAULT_X, REGRESSION_DEFAULT_Y, _) {
+.service('PlotService', function PlotService($injector, DimensionService, DatasetFactory, VariableService, NotifyService, SOMService, $q, TabService, EXPLORE_DEFAULT_SIZE_X, EXPLORE_DEFAULT_SIZE_Y, REGRESSION_DEFAULT_X, REGRESSION_DEFAULT_Y, _) {
 
     var that = this;
 
@@ -92,7 +93,7 @@ angular.module('plotter.vis.plotting',
       var draw = function(config, windowHandler) {
         var type;
 
-        if( DatasetFactory.isClassVariable(config.variables.x) ) {
+        if( VariableService.isClassVariable(config.variables.x) ) {
           type = 'classed-bar-chart';
         } else {
           type = 'histogram';

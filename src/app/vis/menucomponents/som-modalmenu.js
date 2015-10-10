@@ -5,11 +5,11 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
 
 .constant('MAX_PLANE_VARS', 25)
 
-.controller('SOMModalMenuCtrl', function SOMModalMenuCtrl($scope, DatasetFactory, NotifyService, WindowHandler, PlotService, MAX_PLANE_VARS, DimensionService, _) {
+.controller('SOMModalMenuCtrl', function SOMModalMenuCtrl($scope, VariableService, NotifyService, WindowHandler, PlotService, MAX_PLANE_VARS, DimensionService, _) {
 
     $scope.selection = {
       planes: [],
-      profiles: angular.copy(DatasetFactory.getProfiles()),
+      profiles: angular.copy(VariableService.getProfiles()),
       distributions: []
     };
 

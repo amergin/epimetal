@@ -1,11 +1,13 @@
 angular.module('plotter.vis.menucomponents.new-regressionmenu', 
   [
-  'ext.lodash'
+  'ext.lodash',
+  'services.dataset',
+  'services.variable'
   ])
 
 .constant('REGRESSION_MAX_VARIABLES', 60)
 
-.controller('RegressionMenuCtrl', function RegressionMenuCtrl($scope, DatasetFactory, RegressionService, NotifyService, REGRESSION_MAX_VARIABLES, _) {
+.controller('RegressionMenuCtrl', function RegressionMenuCtrl($scope, DatasetFactory, VariableService, RegressionService, NotifyService, REGRESSION_MAX_VARIABLES, _) {
 
     function initVariables() {
       function doDefault() {
@@ -22,7 +24,7 @@ angular.module('plotter.vis.menucomponents.new-regressionmenu',
       }
     }
 
-    DatasetFactory.getVariables().then(function(res) {
+    VariableService.getVariables().then(function(res) {
       $scope.variables = angular.copy(res);
     });
 

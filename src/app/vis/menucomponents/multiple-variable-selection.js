@@ -1,11 +1,13 @@
 angular.module('plotter.vis.menucomponents.multiple-variable-selection', 
   [
   'ngTagsInput',
-  'ext.lodash'
+  'ext.lodash',
+  'services.variable', 
+  'services.dataset'
   ])
 
-.controller('MultipleVariableSelectionCtrl', ['$scope', 'DatasetFactory', '_',
-  function MultipleVariableSelectionCtrl($scope, DatasetFactory, _) {
+.controller('MultipleVariableSelectionCtrl', 
+  function MultipleVariableSelectionCtrl($scope, DatasetFactory, VariableService, _) {
 
     // the results go here
     // $scope.payload = [];
@@ -293,7 +295,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       return copy;
     }
 
-    DatasetFactory.getVariables().then(function(res) {
+    VariableService.getVariables().then(function(res) {
       $scope.variables = getPrepopulate(res);
       $scope.nested = getNestedNavigation($scope.variables);
     });
@@ -623,7 +625,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     };
 
   }
-])
+)
 
 .directive('multipleVariableSelection', function () {
   return {

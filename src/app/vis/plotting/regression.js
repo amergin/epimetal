@@ -2,6 +2,7 @@ angular.module('plotter.vis.plotting.regression',
   [
   'services.dimensions',
   'services.dataset',
+  'services.variable',
   'services.window',
   'services.notify',
   'services.regression.ww',
@@ -12,7 +13,7 @@ angular.module('plotter.vis.plotting.regression',
 .constant('REGRESSION_DEFAULT_X', 9)
 .constant('REGRESSION_DEFAULT_Y', 4)
 
-.controller('RegressionPlotController', function RegressionPlotController($scope, DatasetFactory, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH, FilterService, _) {
+.controller('RegressionPlotController', function RegressionPlotController($scope, DatasetFactory, VariableService, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH, FilterService, _) {
   function windowSize(width, height) {
     $scope.window.size({
       x: Math.round(width/REGRESSION_WIN_X_PX) + 1,
@@ -97,7 +98,7 @@ angular.module('plotter.vis.plotting.regression',
 
     $scope.element = ele;
 
-    DatasetFactory.getVariables().then(function(variables) {
+    VariableService.getVariables().then(function(variables) {
       RegressionService.compute({ variables: $scope.window.variables(), source: $scope.window.extra().source }, $scope.window)
       .then(function succFn(result) {
         $scope.window.extra()['computation'] = result;

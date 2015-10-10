@@ -2,6 +2,7 @@ angular.module('plotter.vis.plotting.heatmap',
   [
   'ui.router',
   'services.dimensions',
+  'services.variable',
   'services.correlation.ww',
   'services.tab',
   'ext.d3',
@@ -327,7 +328,7 @@ angular.module('plotter.vis.plotting.heatmap',
 
   })
 
-.directive('plHeatmap', function($injector, $rootScope, $timeout, DatasetFactory, HEATMAP_MARGINS, HEATMAP_COLORBAR_WIDTH, _) {
+.directive('plHeatmap', function($injector, $rootScope, $timeout, DatasetFactory, VariableService, HEATMAP_MARGINS, HEATMAP_COLORBAR_WIDTH, _) {
 
   var linkFn = function($scope, ele, iAttrs) {
 
@@ -395,7 +396,7 @@ angular.module('plotter.vis.plotting.heatmap',
     }
 
       // do init if not done
-      DatasetFactory.getVariables().then(function(variables) {
+      VariableService.getVariables().then(function(variables) {
         doLookup(variables);
         $scope.computeVariables(function() {
           draw();

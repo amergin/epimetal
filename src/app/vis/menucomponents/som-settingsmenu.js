@@ -1,6 +1,8 @@
 angular.module('plotter.vis.menucomponents.som-settingsmenu', 
   [
-  'ext.lodash'
+  'ext.lodash',
+  'services.variable',
+  'services.dataset'
   ])
 
 .constant('SOM_SETTINGS_AVAILABLE_SIZES', [
@@ -9,12 +11,12 @@ angular.module('plotter.vis.menucomponents.som-settingsmenu',
   { rows: 9, cols: 13 }
 ])
 .controller('SOMSettingsMenuCtrl', 
-  function SOMInputMenuCtrl($scope, DatasetFactory, SOMService, _, SOM_SETTINGS_AVAILABLE_SIZES) {
+  function SOMInputMenuCtrl($scope, DatasetFactory, VariableService, SOMService, _, SOM_SETTINGS_AVAILABLE_SIZES) {
 
   $scope.selection = [];
 
   function setVariables() {
-    DatasetFactory.getVariables().then(function(variables) {
+    VariableService.getVariables().then(function(variables) {
       $scope.selection = _.map(SOMService.inputVariables(), function(somv) {
         return _.find(variables, function(v) { return v.name == somv; });
       });

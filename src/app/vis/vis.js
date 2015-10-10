@@ -1,11 +1,10 @@
 angular.module('plotter.vis', [
   'ui.router.state',
-  // 'ui.router.util',
-  // 'ct.ui.router.extras',
   'ct.ui.router.extras.core',
   'ct.ui.router.extras.dsr',
   'ct.ui.router.extras.sticky',
   'services.dataset',
+  'services.variable',
   'services.notify',
   'services.window',
   'services.urlhandler',
@@ -37,16 +36,16 @@ angular.module('plotter.vis', [
       state: undefined
     },
     resolve: {
-      variables: ['DatasetFactory', function(DatasetFactory) {
-        return DatasetFactory.getVariables();
-      }],
-      datasets: ['DatasetFactory', '$stateParams', '$state', function(DatasetFactory, $stateParams, $state) {
+      variables: function(VariableService) {
+        return VariableService.getVariables();
+      },
+      datasets: function(DatasetFactory, $stateParams, $state) {
         return DatasetFactory.getDatasets();
-      }],
-      compatibility: ['CompatibilityService', function(CompatibilityService) {
+      },
+      compatibility: function(CompatibilityService) {
         return CompatibilityService.browserCompatibility();
-      }],
-      dimensionServices: ['DimensionService', 'DatasetFactory', 'SOMService', 'WindowHandler', function(DimensionService, DatasetFactory, SOMService, WindowHandler) {
+      },
+      dimensionServices: function(DimensionService, DatasetFactory, SOMService, WindowHandler) {
         var primaryDim = DimensionService.create('vis.explore', true);
         DatasetFactory.setDimensionService(primaryDim);
         var somDim = DimensionService.create('vis.som');
@@ -65,13 +64,11 @@ angular.module('plotter.vis', [
         var regressionHandler = WindowHandler.create('vis.regression');
         regressionHandler.setDimensionService(primaryDim);
 
-      }],
-      loadState: ['UrlHandler', '$stateParams', '$state', 'variables', 'datasets', 'compatibility', 'dimensionServices',
-        function(UrlHandler, $stateParams, $state, variables, datasets, compatibility, dimensionServices) {
-          var stateHash = $stateParams.state;
-          return UrlHandler.load(stateHash);
-        }
-      ]
+      },
+      loadState: function(UrlHandler, $stateParams, $state, variables, datasets, compatibility, dimensionServices) {
+        var stateHash = $stateParams.state;
+        return UrlHandler.load(stateHash);
+      }
     },
     views: {
       'content@': {
@@ -98,9 +95,9 @@ angular.module('plotter.vis', [
       pageTitle: 'Explore datasets and filter | Visualization'
     },
     resolve: {
-      windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
+      windowHandler: function(WindowHandler, DimensionService) {
         return WindowHandler.get('vis.explore');
-      }]
+      }
     },
     views: {
       'explore@vis': {
@@ -123,13 +120,13 @@ angular.module('plotter.vis', [
     },
     resolve: {
       // bottom portion of the page only!
-      bottomWindowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
+      bottomWindowHandler: function(WindowHandler, DimensionService) {
         return WindowHandler.get('vis.som.plane');
-      }],
+      },
 
-      contentWindowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
+      contentWindowHandler: function(WindowHandler, DimensionService) {
         return WindowHandler.get('vis.som.content');
-      }]
+      }
     },
     views: {
       'som@vis': {
@@ -161,9 +158,9 @@ angular.module('plotter.vis', [
       }
     },
     resolve: {
-      windowHandler: ['WindowHandler', 'DimensionService', function(WindowHandler, DimensionService) {
+      windowHandler: function(WindowHandler, DimensionService) {
         return WindowHandler.get('vis.regression');
-      }]
+      }
     },
     sticky: true,
     deepStateRedirect: true
