@@ -6,8 +6,21 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
   'services.dataset'
   ])
 
+.constant('MENU_USER_DEFINED_VARS_CATEGORY', 'User defined variables')
+
 .controller('MultipleVariableSelectionCtrl', 
-  function MultipleVariableSelectionCtrl($scope, DatasetFactory, VariableService, _) {
+  function MultipleVariableSelectionCtrl($scope, DatasetFactory, 
+    VariableService, _, MENU_USER_DEFINED_VARS_CATEGORY) {
+
+
+    // custom dialog stuff
+    $scope.customDialogOpen = false;
+    $scope.customCreateDialog = function(val) {
+      if(!arguments.length) { return $scope.customDialogOpen; }
+      $scope.customDialogOpen = val;
+    };
+
+
 
     $scope.lengthLegal = function() {
       var payload = getPayloadField();
@@ -298,6 +311,18 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 
     // For group navigation
     function getNestedNavigation(variables) {
+      function checkCustomVarCategory(second) {
+        var ind = _.findIndex(second, function(d) { return _.keys(d)[0] == MENU_USER_DEFINED_VARS_CATEGORY; });
+
+        if(ind == -1) {
+          // no custom vars yet, add the category
+          var obj = {};
+          obj[MENU_USER_DEFINED_VARS_CATEGORY] = [];
+          second.push(obj);
+        }
+      }
+
+
       // do top-level grouping
       var topLevelGrp = _.chain(variables)
       .groupBy(function(v) {
@@ -325,6 +350,8 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       })
       .map(function(array) { return _.zipObject([array]); })
       .value();
+
+      checkCustomVarCategory(second);
 
       return second;
     }
@@ -439,6 +466,11 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     $scope.selectGroup = function(group, level) {
       if( $scope.getType(group) == 'terminates' ) { return; }
       $scope.selected[level] = getGroupSelection(group, level);
+
+      // hide custom var dialog
+      if( _.keys(group)[0] !== MENU_USER_DEFINED_VARS_CATEGORY ) {
+        $scope.customCreateDialog(false);
+      }
       clearNextSelections(level);
     };
 

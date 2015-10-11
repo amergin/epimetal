@@ -145,6 +145,32 @@
 						<strong>Select all</strong>
 					</div>
 				</div>
+
+				<!-- custom variable listing -->
+				<div ng-show="selected.first && !selected.first.length">
+					<div class="list-group-item am-fade">
+						<p class="text-muted">No custom variables.</p>
+					</div>
+
+					<div class="list-group-item am-fade ctrl text-primary" ng-class="{ 'active': customCreateDialog() }" ng-click="customCreateDialog(true)">
+						<strong>Create a new variable</strong>
+					</div>
+				</div>
+
+			</div>
+
+			<div ng-class="{ 'list-group pl-nav-double-column': customCreateDialog() }" ng-show="customDialogOpen">
+				<form>
+				  <div class="form-group">
+				    <label for="exampleInputEmail1">Variable name</label>
+				    <input type="text" class="form-control" id="custom-var-name" placeholder="Custom variable 1">
+				  </div>
+				  <div class="form-group">
+				    <label for="custom-var-expression">Expression</label>
+					<textarea rows="4" class="form-control" id="custom-var-expression" placeholder="Mathematical expression, search variables with :prefix"></textarea>
+				  </div>
+				  <button type="submit" class="btn btn-secondary pull-right">Create</button>
+				</form>
 			</div>
 
 			<div class="list-group pl-nav-column">
@@ -176,7 +202,7 @@
 				</div>
 			</div>
 
-	</div>
+		</div>
 
 	</div>
 </div>
