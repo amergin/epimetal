@@ -412,11 +412,12 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 
     $scope.majoritySelected = function(selection) {
       var noVars = 0,
+      cache = getCacheField(),
       counts = _.countBy(selection, function(v) { 
         var type = $scope.getType(v);
         if(type == 'terminates') {
           ++noVars;
-          return _selectedCache[v.id] && _selectedCache[v.id].selected === true;
+          return cache[v.id] && cache[v.id].selected === true;
         }
         return false;
       });

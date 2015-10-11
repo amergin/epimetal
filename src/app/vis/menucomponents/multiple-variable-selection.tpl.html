@@ -91,8 +91,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				{{sortType}}, {{sortReverse}}
-				<tr ng-repeat="variable in filtered = (variables | filter:tableFilter) | orderBy:sortType:sortReverse | limitTo: pageSize track by variable.id" ng-click="updateSelection(variable)">
+				<tr ng-repeat="variable in filtered = (variables | filter:tableFilter) | orderBy:sortType:sortReverse | limitTo: pageSize track by $index" ng-click="updateSelection(variable)">
 					<td><input type="checkbox" ng-checked="variableIsSelected(variable)" ng-click="updateSelection(variable)" noclick></td>
 					<td>{{variable.name()}}</td>
 					<td>{{variable.description()}}</td>
