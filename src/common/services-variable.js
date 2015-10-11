@@ -42,6 +42,7 @@ angular.module('services.variable', ['services.notify'])
     return defer.promise;
   });
 
+  initVariables();
 
   service.isClassVariable = function(v) {
     return !_.isUndefined(_classedVariables[v]);
@@ -56,13 +57,25 @@ angular.module('services.variable', ['services.notify'])
   };
 
   service.getVariables = function(list) {
-    if(!arguments.length) { return initVariables(); }
-    else {
-      return _.map(list, function(v) {
-        return _variableCache[v];
+    var defer = $q.defer();
+    if(!arguments.length) { 
+      initVariables().then(function(res) {
+        defer.resolve(res);
+      }, function errFn() {
+        defer.reject();
       });
     }
-    
+    else {
+      initVariables().then(function(res) {
+        var mapped = _.map(list, function(v) {
+          return _variableCache[v];
+        });
+        defer.resolve(mapped);
+      }, function errFn() {
+        defer.reject();
+      });
+    }
+    return defer.promise;
   };
 
   var getProfiles = _.once(function() {

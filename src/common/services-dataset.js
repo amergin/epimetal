@@ -177,13 +177,9 @@ angular.module('services.dataset', ['services.notify',
           });
         }
 
-        function variableNames(vars) {
-          return _.map(vars, function(v) { return v.name(); });
-        }
-
         var performPost = function(vars, config, defer, datasetName, processFn) {
           $http.post(DATASET_URL_FETCH_MULTIPLE_VARS, {
-              variables: variableNames(vars),
+              variables: Utils.pickVariableNames(vars),
               dataset: datasetName
             }, {
               cache: true

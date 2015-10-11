@@ -1,6 +1,7 @@
 angular.module('services.som', [
   'akangas.services.som',
   'services.dataset',
+  'services.variable',
   'services.dimensions',
   'services.notify',
   'services.tab',
@@ -16,7 +17,7 @@ angular.module('services.som', [
 .constant('SOM_MIN_SAMPLE_COUNT', 10)
 .constant('SOM_DEFAULT_THREADS', 4)
 .constant('SOM_DEFAULT_PLANES', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'])
-.constant('SOM_DEFAULT_TESTVARS', ['XXL-VLDL-L', 'XL-VLDL-L', 'L-VLDL-L', 'M-VLDL-L',
+.constant('SOM_DEFAULT_TRAIN_VARS', ['XXL-VLDL-L', 'XL-VLDL-L', 'L-VLDL-L', 'M-VLDL-L',
   'S-VLDL-L', 'XS-VLDL-L', 'IDL-L', 'L-LDL-L',
   'M-LDL-L', 'S-LDL-L', 'XL-HDL-L', 'L-HDL-L',
   'M-HDL-L', 'S-HDL-L', 'Serum-C', 'Serum-TG',
@@ -51,10 +52,10 @@ angular.module('services.som', [
 
 })
 
-.factory('SOMService', function SOMService(SOMComputeService, WindowHandler, $timeout, 
+.factory('SOMService', function SOMService(SOMComputeService, VariableService, WindowHandler, $timeout, 
   $injector, $rootScope, NotifyService, $q, DatasetFactory, TabService,
-  SOM_DEFAULT_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TESTVARS, SOM_MIN_SAMPLE_COUNT, 
   d3, _, $http, $log,
+  SOM_DEFAULT_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TRAIN_VARS, SOM_MIN_SAMPLE_COUNT, 
   SOM_TRAIN_GET_URL, SOM_TRAIN_POST_URL, SOM_PLANE_GET_URL, SOM_PLANE_POST_URL) {
 
   var that = this;
@@ -63,10 +64,10 @@ angular.module('services.som', [
   this.bmus = [];
   this.trainSamples = [];
   that.inProgress = false;
-  that.somSelection = {
-    variables: SOM_DEFAULT_TESTVARS,
-    samples: undefined
-  };
+  
+  VariableService.getVariables(SOM_DEFAULT_TRAIN_VARS).then(function(vars) {
+    that.trainVariables = vars;
+  });
   that.dimensionService = undefined;
   that.sampleDimension = undefined;
 
@@ -146,22 +147,22 @@ angular.module('services.som', [
     return service;
   };
 
-  service.inputVariables = function(variables) {
+  service.trainVariables = function(variables) {
     function sameVars() {
-      var inter = _.intersection(variables, that.somSelection.variables),
+      var inter = _.intersection(variables, that.trainVariables),
         diff = _.difference(variables, inter),
         isSubset = variables.length === inter.length;
       return diff.length === 0 && !isSubset;
     }
 
-    if(!arguments.length) { return angular.copy(that.somSelection.variables); }
+    if(!arguments.length) { return angular.copy(that.trainVariables); }
 
-    var currEmpty = _.isUndefined(that.somSelection.variables) || that.somSelection.variables.length === 0;
+    var currEmpty = _.isUndefined(that.trainVariables) || that.trainVariables.length === 0;
 
     if (currEmpty || sameVars()) {
       return;
     }
-    that.somSelection['variables'] = variables;
+    that.trainVariables = variables;
     // recompute
     var windowHandler = WindowHandler.get('vis.som.plane');
     service.getSOM(windowHandler);
@@ -194,7 +195,7 @@ angular.module('services.som', [
     }
 
     function getData(skipNaNs) {
-      var variables = that.somSelection.variables,
+      var variables = that.trainVariables,
         retObj = {
           samples: [],
           columns: new Array(variables.length)
@@ -259,17 +260,18 @@ angular.module('services.som', [
       }
 
       function sendNewTrain(somObject, callback) {
+        var rawTrainVarNames = Utils.pickVariableNames(that.trainVariables);
         $http.post(SOM_TRAIN_POST_URL, {
           bmus: Array.prototype.slice.call(somObject.bmus),
           weights: Array.prototype.slice.call(somObject.weights),
           codebook: Array.prototype.slice.call(somObject.codebook),
-          variables: that.somSelection.variables,
+          variables: rawTrainVarNames,
           distances: Array.prototype.slice.call(somObject.distances),
           neighdist: somObject.neighdist,
           epoch: somObject.epoch,
           rows: somObject.rows,
           cols: somObject.cols,
-          hash: getHash(data.samples, that.somSelection.variables, somObject.rows, somObject.cols)
+          hash: getHash(data.samples, rawTrainVarNames, somObject.rows, somObject.cols)
         }, { cache: false })
         .then(function succFn(response) {
           that._dbId = response.data.result.id;
@@ -349,7 +351,7 @@ angular.module('services.som', [
       that.inProgress = true;     
 
       // ask from the server if the train result is already stored in the DB
-      var idHash = getHash(data.samples, that.somSelection.variables, service.rows(), service.columns());
+      var idHash = getHash(data.samples, Utils.pickVariableNames(that.trainVariables), service.rows(), service.columns());
       $http.get( _.template(SOM_TRAIN_GET_URL)({ hash: idHash }), 
         // don't cache: otherwise it'll store the first 'not found' reply and
         // will result in subsequent calls to be always re-calculated
@@ -387,7 +389,7 @@ angular.module('services.som', [
       windowHandler.getDimensionService().clearFilters();
 
       // prefetch data and store it in the dimensionservice of that particular handler
-      DatasetFactory.getVariableData(that.somSelection.variables, windowHandler)
+      DatasetFactory.getVariableData(that.trainVariables, windowHandler)
         .then(function succFn(res) {
           doCall();
         });
@@ -441,6 +443,8 @@ angular.module('services.som', [
       function populateFromDb(data) {
         TabService.lock(false);
         that.inProgress = false;
+        // transform to a var meta object
+        _.assign(data.plane, { variable: VariableService.getVariable(data.plane.variable) });
         defer.resolve(data.plane);
       }
 

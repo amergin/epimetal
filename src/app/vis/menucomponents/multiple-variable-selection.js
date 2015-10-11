@@ -9,68 +9,6 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 .controller('MultipleVariableSelectionCtrl', 
   function MultipleVariableSelectionCtrl($scope, DatasetFactory, VariableService, _) {
 
-    var _selectedCache;
-
-    function initCache() {
-      function multi() {
-        _selectedCache = {};
-      }
-
-      function scatterplot() {
-        _selectedCache = {
-          x: {},
-          y: {}
-        };
-      }
-
-      function regression() {
-        _selectedCache = {
-          adjust: {},
-          target: {},
-          association: {}
-        };
-      }
-      if($scope.mode == 'multi') { multi($scope.payload); }
-      else if($scope.mode == 'scatterplot') { scatterplot(); }
-      else if($scope.mode == 'regression') { regression(); }
-    }
-
-    initCache();
-
-    function initPayload() {
-      function multi() {
-        if(!$scope.payload) {
-          $scope.payload = [];
-        }
-      }
-
-      function scatterplot() {
-        $scope.payload = {
-          x: [],
-          y: []
-        };
-      }
-
-      function regression() {
-        if(!$scope.payload) {
-          $scope.payload = {
-            target: [],
-            adjust: [],
-            association: []
-          };
-        }
-      }
-      // shallow copy so that the selection is not altered even when modifications are made 
-      // and the cancelled
-      $scope.payload = angular.copy($scope.payload);
-
-      if($scope.mode == 'multi') { multi($scope.payload); }
-      else if($scope.mode == 'scatterplot') { scatterplot(); }
-      else if($scope.mode == 'regression') { regression(); }      
-    }
-
-    initPayload();
-
     $scope.lengthLegal = function() {
       var payload = getPayloadField();
 
@@ -119,7 +57,6 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 
       function setSelected(variable) {
         addVariableToCache(variable);
-        // variable.selected = true;
       }
 
       var added = getAdded(),
@@ -127,22 +64,13 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       removeText(payload);
       setSelected(added);
       payload.push(added);
-      // $scope.updateSelection(added, true);
     };
 
     $scope.tagRemoved = function(variable) {
       removeVariableFromCache(variable);
-      // variable.selected = false;
-      // $scope.updateSelection(variable, true);
     };
 
     //$scope.mode is from directive init
-
-    // $scope.toggleVariable = function(variable) {
-    //   var notDefined = _.isUndefined(variable.selected) || _.isNull(variable.selected);
-    //   if(notDefined) { variable.selected = true; }
-    //   else { variable.selected = !variable.selected; }
-    // };
 
     $scope.variableIsSelected = function(v) {
       var cache = getCacheField();
@@ -157,7 +85,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 
     function removeVariable(variable) {
       var payload = getPayloadField();
-      var ind = _.indexOf(payload, variable);
+      var ind = _.findIndex(payload, variable);
       payload.splice(ind, 1);
       removeVariableFromCache(variable);
     }
@@ -166,7 +94,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 
       // can hold multiple selections
       function multipleSelections(payload, cache) {
-        var ind = _.indexOf(payload, variable);
+        var ind = _.findIndex(payload, variable);
 
         if(ind < 0) {
           // not currently on the list
@@ -179,7 +107,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 
       // only one selection at a time
       function singleSelection(payload, cache) {
-        var ind = _.indexOf(payload, variable);
+        var ind = _.findIndex(payload, variable);
 
         if(ind < 0) {
           setPayload([]);
@@ -675,8 +603,89 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       $scope.sortReverse = !$scope.sortReverse;
     };
 
-  }
-)
+    var _selectedCache;
+
+    function initPayload() {
+      function multi() {
+        // don't replace existing, if any
+        if(!$scope.payload) {
+          $scope.payload = [];
+        }
+      }
+
+      function scatterplot() {
+        $scope.payload = {
+          x: [],
+          y: []
+        };
+      }
+
+      function regression() {
+        // don't replace existing
+        if(!$scope.payload) {
+          $scope.payload = {
+            target: [],
+            adjust: [],
+            association: []
+          };
+        }
+      }
+      // shallow copy so that the selection is not altered even when modifications are made 
+      // and the cancelled
+      $scope.payload = angular.copy($scope.payload);
+
+      if($scope.mode == 'multi') { multi($scope.payload); }
+      else if($scope.mode == 'scatterplot') { scatterplot(); }
+      else if($scope.mode == 'regression') { regression(); }      
+    }
+
+    initPayload();
+
+    function initCache() {
+      function multi() {
+        _selectedCache = {};
+        _.each($scope.payload, function(variable) {
+          addVariableToCache(variable);
+        });
+      }
+
+      function scatterplot() {
+        _selectedCache = {
+          x: {},
+          y: {}
+        };
+      }
+
+      function regression() {
+        _selectedCache = {
+          adjust: {},
+          target: {},
+          association: {}
+        };
+        _.each($scope.payload.target, function(v) {
+          _selectedCache.target[v.id] = {
+            selected: true
+          };
+        });
+        _.each($scope.payload.adjust, function(v) {
+          _selectedCache.adjust[v.id] = {
+            selected: true
+          };
+        });
+        _.each($scope.payload.association, function(v) {
+          _selectedCache.association[v.id] = {
+            selected: true
+          };
+        });
+      }
+      if($scope.mode == 'multi') { multi($scope.payload); }
+      else if($scope.mode == 'scatterplot') { scatterplot(); }
+      else if($scope.mode == 'regression') { regression(); }
+    }
+
+    initCache();
+
+})
 
 .directive('multipleVariableSelection', function () {
   return {

@@ -50,7 +50,7 @@ angular.module('plotter.vis.plotting.som', [
   function initHeader() {
     var pvalFormat = d3.format('.2e');
     if($scope.window.extra() && $scope.window.extra().plane) {
-      $scope.window.headerText(['Self-organizing map of', $scope.window.extra().plane.variable, "(P = " + pvalFormat($scope.window.extra().plane.pvalue) + ")"]);
+      $scope.window.headerText(['Self-organizing map of', $scope.window.extra().plane.variable.name(), "(P = " + pvalFormat($scope.window.extra().plane.pvalue) + ")"]);
     }
   }
 

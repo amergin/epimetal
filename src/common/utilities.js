@@ -152,6 +152,10 @@ String.prototype.hashCode = function() {
   return hash;
 };
 
+Utils.pickVariableNames = function(vars) {
+  return _.map(vars, function(v) { return v.name(); });
+};
+
 Utils.subarrays = function(array, n) {
   var len = array.length, out = [], i = 0;
  
