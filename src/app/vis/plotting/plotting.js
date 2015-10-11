@@ -256,10 +256,10 @@ angular.module('plotter.vis.plotting',
       var defer = $q.defer();
 
       // will need the data for the SOM dimensionservice 
-      var promiseSOM = DatasetFactory.getVariableData(config.variables.x, windowHandler);
+      var promiseSOM = DatasetFactory.getVariableData(config.variables, windowHandler);
       // also for primary, for computing std etc. values
       var primaryHandler = windowHandler.getService().getPrimary();
-      var promisePrimary = DatasetFactory.getVariableData(config.variables.x, primaryHandler);
+      var promisePrimary = DatasetFactory.getVariableData(config.variables, primaryHandler);
 
       $q.all([promiseSOM, promisePrimary]).then(function successFn(res) {
           // draw the figure
@@ -290,7 +290,6 @@ angular.module('plotter.vis.plotting',
         gridWindow
         .figure('pl-somplane')
         .variables(config.variable);
-        //.extra({ plane: config.plane });
       };
 
       draw(config, windowHandler);
