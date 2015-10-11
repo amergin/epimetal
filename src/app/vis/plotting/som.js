@@ -536,7 +536,7 @@ angular.module('plotter.vis.plotting.som', [
     function init() {
       NotifyService.addTransient('Starting plane computation', 'The computation may take a while.', 'info');
       $scope.window.circleSpin(true);
-      SOMService.getPlane($scope.window.variables().x, $scope.window, notify).then(
+      SOMService.getPlane($scope.window.variables(), $scope.window, notify).then(
         function succFn(plane) {
           NotifyService.addTransient('Plane computation ready', 'The requested new plane has now been drawn.', 'success');
           $scope.window.extra({ plane: plane });
@@ -566,7 +566,7 @@ angular.module('plotter.vis.plotting.som', [
 
     var somUpdatedUnbind = $rootScope.$on('dataset:SOMUpdated', function(event, som) {
       $scope.window.circleSpin(true);
-      SOMService.getPlane($scope.window.variables().x, $scope.window, notify).then(
+      SOMService.getPlane($scope.window.variables(), $scope.window, notify).then(
           function succFn(plane) {
             $scope.window.extra({ plane: plane });
             $scope.redraw();

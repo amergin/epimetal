@@ -67,12 +67,6 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
         return error;
       }
 
-      function justNames(variables) {
-        return _.map(variables, function(v) {
-          return v.name;
-        });
-      }
-
       if(hasError()) {
         return false;
       }
@@ -82,22 +76,22 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
       lookup = {
         'planes': {
           getData: function() {
-            return justNames($scope.selection.planes);
+            return $scope.selection.planes;
           },
           action: function(variables) {
             _.each(variables, function(variable) {
-                PlotService.drawSOM({ variables: { x: variable } }, planeHandler);
+                PlotService.drawSOM({ variable: variable }, planeHandler);
             });
           } 
         },
 
         'distributions': {
           getData: function() {
-            return justNames($scope.selection.distributions);
+            return $scope.selection.distributions;
           },
           action: function(variables) {
             _.each(variables, function(variable) {
-              PlotService.drawHistogram({ variables: { x: variable }, somSpecial: true, filterEnabled: false }, contentHandler);
+              PlotService.drawHistogram({ variable: variable, somSpecial: true, filterEnabled: false }, contentHandler);
             });
           }
         },
@@ -111,7 +105,7 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
           },
           action: function(profiles) {
             _.each(profiles, function(prof) {
-              PlotService.drawProfileHistogram({ name: prof.name, variables: { x: justNames(prof.variables) } }, contentHandler);
+              PlotService.drawProfileHistogram({ name: prof.name, variables: prof.variables }, contentHandler);
             });
           }
         }

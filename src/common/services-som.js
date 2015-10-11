@@ -428,9 +428,10 @@ angular.module('services.som', [
 
     function doCall() {
       function sendNewPlane(plane) {
+        plane = _.clone(plane);
         $http.post(SOM_PLANE_POST_URL, {
-          variable: testVar,
-          plane: plane,
+          variable: testVar.name(),
+          plane: _.assign(plane, { variable: plane.variable.name() }),
           som: that._dbId
         }, { cache: false })
         .then(function succFn(response) {
@@ -451,7 +452,7 @@ angular.module('services.som', [
       function doPlane() {
         var skipNaNs = false;
         _queueWindows.push(windowObject);
-        var threadData = getThreadData(testVar, skipNaNs);
+        var threadData = getThreadData(testVar.name(), skipNaNs);
 
         SOMComputeService.calculate_component_plane(that.som, that.trainSamples, threadData, testVar)
         .then(function succFn(result) {
@@ -472,7 +473,7 @@ angular.module('services.som', [
         });
       }
 
-      $http.get( _.template(SOM_PLANE_GET_URL)({ somHash: that._dbId, variable: testVar }), 
+      $http.get( _.template(SOM_PLANE_GET_URL)({ somHash: that._dbId, variable: testVar.name() }), 
         { cache: false }
       )
       .then(function succFn(response) {

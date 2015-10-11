@@ -289,7 +289,7 @@ angular.module('plotter.vis.plotting',
 
         gridWindow
         .figure('pl-somplane')
-        .variables(config.variables);
+        .variables(config.variable);
         //.extra({ plane: config.plane });
       };
 

@@ -1,9 +1,10 @@
 angular.module('services.tab', [
   'services.notify',
+  'services.variable',
   'ext.lodash'
 ])
 
-.factory('TabService', function TabService($injector, $timeout, $rootScope, $state, WindowHandler, DimensionService, _) {
+.factory('TabService', function TabService(VariableService, $injector, $timeout, $rootScope, $state, WindowHandler, DimensionService, _) {
 
   var _service = {},
     _locked = false,
@@ -53,19 +54,18 @@ angular.module('services.tab', [
   function checkDefaultPlanes() {
     var SOMService = $injector.get('SOMService'),
       PlotService = $injector.get('PlotService'),
-      defaultPlanes = SOMService.defaultPlanes(),
       planeHandler = WindowHandler.get('vis.som.plane');
 
-    if (planeHandler.get().length === 0) {
-      // no planes
-      _.each(defaultPlanes, function(variable) {
-        PlotService.drawSOM({
-          variables: {
-            x: variable
-          }
-        }, planeHandler);
+      VariableService.getVariables(SOMService.defaultPlanes()).then(function(planeVars) {
+        if (planeHandler.get().length === 0) {
+          // no planes
+          _.each(planeVars, function(variable) {
+            PlotService.drawSOM({
+              variable: variable
+            }, planeHandler);
+          });
+        }
       });
-    }
   }
 
   _service.check = function(cfg) {

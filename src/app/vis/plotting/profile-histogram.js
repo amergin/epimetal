@@ -31,7 +31,7 @@ angular.module('plotter.vis.plotting.profile-histogram',
     $scope.totalReduced = {};
     $scope.totalReducedInst = {};
 
-    _.each( $scope.window.variables().x, function(variable) {
+    _.each( $scope.window.variables(), function(variable) {
 
       var groupInst = $scope.dimensionInst.group( function(d) {
         return {
@@ -42,11 +42,11 @@ angular.module('plotter.vis.plotting.profile-histogram',
           }
         };
       }, true );
-      $scope.groupsInst[variable] = groupInst;
-      $scope.groups[variable] = $scope.dimensionService.getReducedMean(groupInst, variable).get();
+      $scope.groupsInst[variable.name()] = groupInst;
+      $scope.groups[variable.name()] = $scope.dimensionService.getReducedMean(groupInst, variable.name()).get();
       var groupAll = $scope.totalDimensionInst.groupAll();
-      $scope.totalReducedInst[variable] = groupAll;
-      $scope.totalReduced[variable] = DimensionService.getPrimary().getReducedSTD( groupAll, variable ).get();
+      $scope.totalReducedInst[variable.name()] = groupAll;
+      $scope.totalReduced[variable.name()] = DimensionService.getPrimary().getReducedSTD( groupAll, variable.name() ).get();
     });
 
     $scope.filterOnSet = function(group, variable, totalReduced) {
@@ -145,7 +145,7 @@ angular.module('plotter.vis.plotting.profile-histogram',
       })
       .onClick(function(d) {
         var config = {
-          variables: { x: d.custom.variable },
+          variables: d.custom.variable,
           pooled: false,
           somSpecial: true,
           filterEnabled: false

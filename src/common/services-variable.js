@@ -2,7 +2,25 @@ angular.module('services.variable', ['services.notify'])
 
 .constant('VARIABLE_GET_URL', '/API/headers/NMR_results')
 
-.factory('VariableService', function VariablesService(NotifyService, $q, $http, VARIABLE_GET_URL) {
+.constant('SOM_DEFAULT_PROFILES', [
+  { 
+    'name': 'Total lipids',
+    'variables': [],
+    // variables ending with '-L'
+    'regex': /^((?:[a-z|-]+)-L)$/i
+  },
+  {
+    'name': 'Fatty acids',
+    'variables': ['TotFA', 'UnSat', 'DHA', 'LA', 'FAw3', 'FAw6', 'PUFA', 'MUFA', 'SFA', 'DHAtoFA', 'LAtoFA', 'FAw3toFA', 'FAw6toFA', 'PUFAtoFA', 'MUFAtoFA', 'SFAtoFA']
+  },
+  {
+    'name': 'Small molecules',
+    'variables': ['Glc', 'Lac', 'Pyr', 'Cit', 'Glol', 'Ala', 'Gln', 'His', 'Ile', 'Leu', 'Val', 'Phe', 'Tyr', 'Ace', 'AcAce', 'bOHBut', 'Crea', 'Alb', 'Gp']
+  }
+])
+
+.factory('VariableService', function VariablesService(NotifyService, $q, $http, 
+  VARIABLE_GET_URL, SOM_DEFAULT_PROFILES) {
 
   var service = {};
 
@@ -78,58 +96,32 @@ angular.module('services.variable', ['services.notify'])
     return defer.promise;
   };
 
-  var getProfiles = _.once(function() {
-    var getSorted = function() {
-      return _.chain(_variables)
-        .sortBy(function(v) {
-          return v.name_order;
-        })
-        .sortBy(function(v) {
-          return v.group.order;
-        })
-        .value();
-    };
-    var getTotalLipids = function(sorted) {
-      // get variables ending with '-L'
-      var re = /^((?:[a-z|-]+)-L)$/i;
-      return _.filter(sorted, function(d) {
-        return re.test(d.name);
+  service.getProfiles = _.once(function() {
+    function pickVariables(list) {
+      return _.map(list, function(v) {
+        return _variableCache[v];
       });
-    };
-    var getFattyAcids = function(sorted) {
-      var names = ['TotFA', 'UnSat', 'DHA', 'LA', 'FAw3', 'FAw6', 'PUFA', 'MUFA', 'SFA', 'DHAtoFA', 'LAtoFA', 'FAw3toFA', 'FAw6toFA', 'PUFAtoFA', 'MUFAtoFA', 'SFAtoFA'];
-      return _.filter(sorted, function(v) {
-        return _.some(names, function(n) {
-          return v.name == n;
+    }
+    var variables = _.values(_variableCache),
+    profiles = _.map(SOM_DEFAULT_PROFILES, function(profile) {
+      if(profile.regex) {
+        return _.assign(profile, {
+          'variables': _.filter(variables, function(d) {
+            return profile.regex.test(d.name());
+          })
         });
-      });
-    };
-
-    var getSmallMolecules = function(sorted) {
-      var names = ['Glc', 'Lac', 'Pyr', 'Cit', 'Glol', 'Ala', 'Gln', 'His', 'Ile', 'Leu', 'Val', 'Phe', 'Tyr', 'Ace', 'AcAce', 'bOHBut', 'Crea', 'Alb', 'Gp'];
-      return _.filter(sorted, function(v) {
-        return _.some(names, function(n) {
-          return v.name == n;
+      } else {
+        return _.assign(profile, {
+          'variables': pickVariables(profile.variables)
         });
-      });
-    };
-
-    var sorted = getSorted();
-    return [{
-      name: 'Total lipids',
-      variables: getTotalLipids(sorted)
-    }, {
-      name: 'Fatty acids',
-      variables: getFattyAcids(sorted)
-    }, {
-      name: 'Small molecules',
-      variables: getSmallMolecules(sorted)
-    }];
+      }
+    });
+    return profiles;
   });
 
-  service.getProfiles = function() {
-    return getProfiles();
-  };
+  // service.getProfiles = function() {
+  //   return getProfiles();
+  // };
 
   return service;
 
