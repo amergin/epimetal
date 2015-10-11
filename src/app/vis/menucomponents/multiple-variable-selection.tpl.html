@@ -57,8 +57,11 @@
 		<table class="table table-striped">
 			<thead>
 				<tr>
-					<th class="ctrl">
-						<a ng-click="toggleGroup(filtered)">Select</a>
+					<th class="ctrl" ng-switch="canSelectMultiple()">
+						<span ng-switch-when="false">
+							Select
+						</span>
+						<a ng-switch-when="true" ng-click="toggleGroup(filtered)">Select</a>
 					</th>
 					<th class="ctrl">
 						<a ng-click="setSortType('name'); toggleSortReverse()">
