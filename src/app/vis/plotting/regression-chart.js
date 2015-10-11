@@ -28,10 +28,9 @@ function RegressionChart() {
     _domain = [],
     _domainAdjust = 0.10,
     _zeroPoint = 0,
-    _variables,
-    _variablesLookup,
+    _variablesLookupCallbackFn,
+    _groupsLookupCallbackFn,
     _boxLabelPercentage = 0.4,
-    _groupsLookup,
     _boxPlotHeight = 15,
     _boxPlotPadding = 4,
     _boxPlotMargins = {
@@ -362,7 +361,7 @@ function RegressionChart() {
     function varGroupLabels(variableGroups) {
       var groupLabels = variableGroups.selectAll('g.group-label')
       .data(function(d) {
-        return [_groupsLookup[+d.key]];
+        return [_groupsLookupCallbackFn(+d.key)];
       });
 
       // enter
@@ -433,7 +432,7 @@ function RegressionChart() {
         return "translate(0," + offset.middle + ")";
       })
 
-      .text(function(d) { return d.variable; });
+      .text(function(d) { return d.variable.name(); });
     }
 
     function rows() {
@@ -558,11 +557,9 @@ function RegressionChart() {
     remSVG();
   };
 
-  _chart.variables = function(x) {
-    if(!arguments.length) { return _variables; }
-    _variables = x;
-    _variablesLookup = _.chain(_variables).map(function(d) { return [d.name, d]; }).object().value();
-    _groupsLookup = _.chain(_variables).map(function(d) { return [d.group.order, d.group]; }).object().value();
+  _chart.groupLookupCallback = function(x) {
+    if(!arguments.length) { return _groupsLookupCallbackFn; }
+    _groupsLookupCallbackFn = x;
 
     sortData();
     return _chart;
@@ -639,8 +636,8 @@ function RegressionChart() {
   }
 
   function sortValues(a,b) {
-    var aOrder = _variablesLookup[a.variable].name_order,
-    bOrder = _variablesLookup[b.variable].name_order;
+    var aOrder = a.variable.nameOrder(),
+    bOrder = b.variable.nameOrder();
 
     if(aOrder < bOrder) { return -1; }
     if(aOrder > bOrder) { return 1; }
@@ -649,7 +646,7 @@ function RegressionChart() {
 
   function sortData() {
     var groupedData = d3.nest().key(function(d) { 
-      return _variablesLookup[d.variable].group.order;
+      return d.variable.group().order;
     })
     .sortKeys(d3.ascending)
     .sortValues(sortValues)

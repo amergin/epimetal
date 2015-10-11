@@ -8,7 +8,7 @@ angular.module('services.variable', ['services.notify'])
 
   var _classedVariables = {},
   _variableCache = {},
-  _variables;
+  _groupCache = {};
 
   var initVariables = _.once(function() {
     var defer = $q.defer();
@@ -17,17 +17,25 @@ angular.module('services.variable', ['services.notify'])
       })
       .success(function(response) {
         console.log("Load variable list");
+        var varInstance;
         _.each(response.result, function(variable) {
-          if (variable.classed) {
-            _classedVariables[variable.name] = variable;
+          varInstance = new PlDatabaseVariable()
+          .classed(variable.classed === true)
+          .description(variable.desc)
+          .group(variable.group)
+          .name(variable.name)
+          .nameOrder(variable.name_order)
+          .unit(variable.unit);
+
+          if(varInstance.classed()) {
+            _classedVariables[varInstance.name()] = varInstance;
           }
-          _variableCache[variable.name] = variable;
+          _variableCache[varInstance.name()] = varInstance;
+          _groupCache[varInstance.group().order] = varInstance.group();
         });
-        _variables = response.result;
-        defer.resolve(_variables);
+        defer.resolve( _.values(_variableCache) );
       })
       .error(function() {
-        _variables = angular.copy([]);
         NotifyService.addSticky('Error', 'Something went wrong while fetching variables. Please reload the page.', 'error');
         defer.reject('Something went wrong while fetching variables. Please reload the page');
       });
@@ -43,8 +51,18 @@ angular.module('services.variable', ['services.notify'])
     return _variableCache[v];
   };
 
-  service.getVariables = function() {
-    return initVariables();
+  service.getGroup = function(order) {
+    return _groupCache[order];
+  };
+
+  service.getVariables = function(list) {
+    if(!arguments.length) { return initVariables(); }
+    else {
+      return _.map(list, function(v) {
+        return _variableCache[v];
+      });
+    }
+    
   };
 
   var getProfiles = _.once(function() {

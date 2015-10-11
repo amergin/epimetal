@@ -70,7 +70,8 @@ angular.module('plotter.vis.plotting',
 
       var defer = $q.defer();
 
-      var plottingDataPromise = DatasetFactory.getVariableData([config.variables.x, config.variables.y], windowHandler);
+      var plottingDataPromise = DatasetFactory.getVariableData(
+        [config.variables.x, config.variables.y], windowHandler);
       plottingDataPromise.then(function successFn(res) {
           // draw the figure
           draw(config, windowHandler);
@@ -93,7 +94,7 @@ angular.module('plotter.vis.plotting',
       var draw = function(config, windowHandler) {
         var type;
 
-        if( VariableService.isClassVariable(config.variables.x) ) {
+        if( config.variable.classed() ) {
           type = 'classed-bar-chart';
         } else {
           type = 'histogram';
@@ -104,7 +105,7 @@ angular.module('plotter.vis.plotting',
 
         gridWindow
         .figure('pl-' + type)
-        .variables(config.variables)
+        .variables(config.variable)
         .pooled(config.pooled)
         .extra({ somSpecial: config.somSpecial, filterEnabled: canFilter });
       };
@@ -112,13 +113,13 @@ angular.module('plotter.vis.plotting',
       var defer = $q.defer();
 
       var promises = [];
-      var plottingDataPromise = DatasetFactory.getVariableData([config.variables.x], windowHandler);
+      var plottingDataPromise = DatasetFactory.getVariableData([config.variable], windowHandler);
       promises.push(plottingDataPromise);
 
       if( config.somSpecial ) {
         // need from primary as well
         var primaryHandler = windowHandler.getService().getPrimary();
-        var primaryPromise = DatasetFactory.getVariableData([config.variables.x], primaryHandler);
+        var primaryPromise = DatasetFactory.getVariableData([config.variable], primaryHandler);
         promises.push(primaryPromise);
       }
 
@@ -167,7 +168,7 @@ angular.module('plotter.vis.plotting',
         gridWindow
         .figure('pl-heatmap')
         .variables(cfg.variables)
-        .size(getScale(cfg.variables.x.length))
+        .size(getScale(cfg.variables.length))
         .pooled(false)
         .extra({ separate: cfg.separate, dataset: cfg.dataset });
 
@@ -189,7 +190,7 @@ angular.module('plotter.vis.plotting',
           copyConfig = angular.copy(config);
           copyConfig.dataset = set;
           configs.push(copyConfig);
-          var promise = DatasetFactory.getVariableData(config.variables.x, windowHandler, 
+          var promise = DatasetFactory.getVariableData(config.variables, windowHandler, 
           { getRawData: true, singleDataset: true, dataset: set });
           promises.push(promise);
         });
@@ -212,7 +213,7 @@ angular.module('plotter.vis.plotting',
       }
 
       function combinedMap() {
-        var plottingDataPromise = DatasetFactory.getVariableData(config.variables.x, windowHandler);
+        var plottingDataPromise = DatasetFactory.getVariableData(config.variables, windowHandler);
         plottingDataPromise.then(function successFn(res) {
             draw(config, windowHandler);
             defer.resolve();
@@ -295,7 +296,6 @@ angular.module('plotter.vis.plotting',
       draw(config, windowHandler);
     };
 
-    // this should only be called once, otherwise duplicate charts will appear on the handler
     this.drawRegression = function(config, windowHandler) {
       var gridWindow = windowHandler.add();
       gridWindow

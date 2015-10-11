@@ -10,7 +10,8 @@ angular.module('plotter.vis.plotting.scatterplot', [
 .controller('ScatterPlotController', function ScatterPlotController($scope, DatasetFactory, DimensionService, constants, SCATTERPLOT_POOLING_COLOR, GRID_WINDOW_PADDING, d3, _) {
 
   $scope.dimensionService = $scope.window.handler().getDimensionService();
-  $scope.dimensionInst = $scope.dimensionService.getXYDimension($scope.window.variables());
+  $scope.dimensionInst = $scope.dimensionService.getXYDimension(
+    $scope.window.variables().x.name(), $scope.window.variables().y.name());
   $scope.dimension = $scope.dimensionInst.get();
 
   $scope.initGroup = function() {
@@ -23,7 +24,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
   $scope.initGroup();
 
-  $scope.window.headerText(['Scatter plot of', $scope.window.variables().x + ", " + $scope.window.variables().y]);
+  $scope.window.headerText(['Scatter plot of', $scope.window.variables().x.name() + ", " + $scope.window.variables().y.name()]);
   $scope.window.resetButton(false);
 
   $scope._calcCanvasAttributes = function() {
@@ -58,8 +59,8 @@ angular.module('plotter.vis.plotting.scatterplot', [
       $scope.xRange,
       $scope.yRange,
       zIndex,
-      $scope.window.variables.x,
-      $scope.window.variables.y,
+      $scope.window.variables().x.name(),
+      $scope.window.variables().y.name(),
       data,
       name,
       color
@@ -111,8 +112,8 @@ angular.module('plotter.vis.plotting.scatterplot', [
       $scope.xRange,
       $scope.yRange,
       100,
-      $scope.window.variables().x,
-      $scope.window.variables().y
+      $scope.window.variables().x.name(),
+      $scope.window.variables().y.name()
     );
     $scope.canvases['axes'] = {
       'zindex': 100,
@@ -409,7 +410,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
     });
 
     NotifyService.addTransient('Scatter plot added',
-      'Scatter plot for ' + '(' + $scope.window.variables().x + ", " + $scope.window.variables().y + ') has been added',
+      'Scatter plot for ' + '(' + $scope.window.variables().x.name() + ", " + $scope.window.variables().y.name() + ') has been added',
       'success');
 
     $scope.deregisters = [];

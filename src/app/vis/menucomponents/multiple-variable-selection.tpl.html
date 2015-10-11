@@ -5,7 +5,7 @@
 				<div class="panel-body">
 					<div class="input-group">
 					    <span class="input-group-addon">Selected variables</span>
-					    <tags-input ng-model="payload" key-property="name" text="filter.input" template="vis/menucomponents/tag.tpl.html" placeholder="Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)"></tags-input>
+					    <tags-input ng-model="payload" key-property="id" text="filter.input" template="vis/menucomponents/tag.tpl.html" placeholder="Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)"></tags-input>
 					</div>
 				</div>
 			</div>
@@ -16,7 +16,7 @@
 		 		<div class="panel-body">
 					<div class="input-group">
 					    <span class="input-group-addon">Variable X</span>
-					    <tags-input ng-model="payloadX" key-property="name" text="filter.x" ng-focus="setFocus('x')" template="vis/menucomponents/tag.tpl.html" placeholder="Variable X - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)" max-tags="1"></tags-input>
+					    <tags-input ng-model="payload.x" key-property="id" text="filter.x" ng-focus="setFocus('x')" template="vis/menucomponents/tag.tpl.html" placeholder="Variable X - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)" max-tags="1"></tags-input>
 					</div>
 		 		</div>
 			</div>
@@ -24,7 +24,7 @@
 				<div class="panel-body">
 					<div class="input-group">
 					    <span class="input-group-addon">Variable Y</span>
-					    <tags-input ng-model="payloadY" key-property="name" text="filter.y" ng-focus="setFocus('y')" template="vis/menucomponents/tag.tpl.html" placeholder="Variable Y - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)" max-tags="1"></tags-input>
+					    <tags-input ng-model="payload.y" key-property="id" text="filter.y" ng-focus="setFocus('y')" template="vis/menucomponents/tag.tpl.html" placeholder="Variable Y - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)" max-tags="1"></tags-input>
 					</div>
 				</div>
 			</div>
@@ -35,15 +35,15 @@
 		 		<div class="panel-body">
 					<div class="input-group">
 					    <span class="input-group-addon">Target variable</span>
-					    <tags-input ng-model="payloadTarget" key-property="name" text="filter.target" ng-focus="setFocus('target')" template="vis/menucomponents/tag.tpl.html" placeholder="Target variable - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)" max-tags="1"></tags-input>
+					    <tags-input ng-model="payload.target" key-property="id" text="filter.target" ng-focus="setFocus('target')" template="vis/menucomponents/tag.tpl.html" placeholder="Target variable - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)" max-tags="1"></tags-input>
 					</div>
 					<div class="input-group">
 					    <span class="input-group-addon">Association variables</span>
-					    <tags-input ng-model="payloadAssociation" key-property="name" text="filter.association" ng-focus="setFocus('association')" template="vis/menucomponents/tag.tpl.html" placeholder="Association variables - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)"></tags-input>
+					    <tags-input ng-model="payload.association" key-property="id" text="filter.association" ng-focus="setFocus('association')" template="vis/menucomponents/tag.tpl.html" placeholder="Association variables - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)"></tags-input>
 					</div>
 					<div class="input-group">
 					    <span class="input-group-addon">Adjust variables</span>
-					    <tags-input ng-model="payloadAdjust" key-property="name" text="filter.adjust" ng-focus="setFocus('adjust')" template="vis/menucomponents/tag.tpl.html" placeholder="Adjust variables - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)"></tags-input>
+					    <tags-input ng-model="payload.adjust" key-property="id" text="filter.adjust" ng-focus="setFocus('adjust')" template="vis/menucomponents/tag.tpl.html" placeholder="Adjust variables - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)"></tags-input>
 					</div>					
 		 		</div>
 		 	</div>
@@ -91,12 +91,13 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr ng-repeat="variable in filtered = (variables | filter:tableFilter) | orderBy:sortType:sortReverse | limitTo: pageSize track by variable.name" ng-click="toggleVariable(variable); updateSelection(variable, $event)">
-					<td><input type="checkbox" ng-change="updateSelection(variable, $event)" ng-model="variable.selected" noclick></td>
-					<td>{{variable.name}}</td>
-					<td>{{variable.desc}}</td>
-					<td>{{variable.group.name}}</td>
-					<td>{{variable.unit}}</td>
+				{{sortType}}, {{sortReverse}}
+				<tr ng-repeat="variable in filtered = (variables | filter:tableFilter) | orderBy:sortType:sortReverse | limitTo: pageSize track by variable.id" ng-click="updateSelection(variable)">
+					<td><input type="checkbox" ng-checked="variableIsSelected(variable)" ng-click="updateSelection(variable)" noclick></td>
+					<td>{{variable.name()}}</td>
+					<td>{{variable.description()}}</td>
+					<td>{{variable.group().name}}</td>
+					<td>{{variable.unit()}}</td>
 				</tr>
 			</tbody>
 		</table>
@@ -116,7 +117,7 @@
 				<div class="list-group-item ctrl am-fade" ng-repeat="group in nested | orderBy:orderGroup track by $index" ng-click="selectGroup(group, 'first')" ng-class="{ 'active': isSelected(group, 'first') }">
 					{{getGroupName(group)}}
 					<span class="badge pull-right">{{groupSelectedCount(group)}}</span>
-				</div>			
+				</div>
 			</div>
 
 			<div class="list-group pl-nav-column">
@@ -127,8 +128,8 @@
 					</div>
 					<div ng-switch-when="terminates" class="checkbox">
 						<label>
-							<input type="checkbox" ng-model="item.selected" ng-change="updateSelection(item)" noclick>
-							{{item.name}}
+							<input type="checkbox" ng-checked="variableIsSelected(item)" ng-click="updateSelection(item)" noclick>
+							{{item.name()}}
 						</label>
 						<i class="fa fa-info-circle ctrl pull-right text-muted" ng-click="selectInfo(item)"></i>
 					</div>
@@ -148,8 +149,8 @@
 				<div class="list-group-item am-fade" ng-repeat="item in selected.second | orderBy:orderGroup track by $index">
 					<div class="checkbox">
 						<label>
-							<input type="checkbox" ng-model="item.selected" ng-change="updateSelection(item)">
-							{{item.name}}
+							<input type="checkbox" ng-checked="variableIsSelected(item)" ng-click="updateSelection(item)">
+							{{item.name()}}
 						</label>
 						<i class="fa fa-info-circle ctrl pull-right text-muted" ng-click="selectInfo(item)"></i>
 					</div>
@@ -167,9 +168,9 @@
 
 			<div class="list-group pl-nav-column am-fade" ng-show="selected.third">
 				<div class="list-group-item well well-small">
-					<h3>{{selected.third.desc}}</h3>
-					<em>{{selected.third.name}}</em>
-					<p>{{selected.third.unit}}</p>
+					<h3>{{selected.third.description()}}</h3>
+					<em>{{selected.third.name()}}</em>
+					<p>{{selected.third.unit()}}</p>
 				</div>
 			</div>
 

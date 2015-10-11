@@ -21,7 +21,7 @@ angular.module('plotter.vis.plotting.heatmap',
   left: 80
 })
 
-.controller('HeatmapController', function($scope, constants, $injector, $timeout, CorrelationService, HEATMAP_UNDEFINED_COLOR, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH, d3, dc, _) {
+.controller('HeatmapController', function($scope, constants, $injector, $timeout, CorrelationService, VariableService, HEATMAP_UNDEFINED_COLOR, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH, d3, dc, _) {
 
   $scope.resetFilter = function() {
     $scope.heatmap.filterAll();
@@ -32,9 +32,9 @@ angular.module('plotter.vis.plotting.heatmap',
     var text;
 
     if($scope.window.extra().separate === true) {
-      text = ['Correlation heatmap of', $scope.window.variables().x.length + " variables", "(" + $scope.window.extra().dataset.name() + ")"];
+      text = ['Correlation heatmap of', $scope.window.variables().length + " variables", "(" + $scope.window.extra().dataset.name() + ")"];
     } else {
-      text = ['Correlation heatmap of', $scope.window.variables().x.length + " variables"];
+      text = ['Correlation heatmap of', $scope.window.variables().length + " variables"];
     }
     $scope.window.headerText(text);
   }
@@ -112,7 +112,7 @@ angular.module('plotter.vis.plotting.heatmap',
       }
     });
 
-    $scope.variablesLookup = {};
+    // $scope.variablesLookup = {};
 
     $scope.updateHeader = function() {
       var header = $scope.window.headerText(),
@@ -127,6 +127,14 @@ angular.module('plotter.vis.plotting.heatmap',
       }
       $scope.window.headerText(header);
     };
+
+    function getVarGroupOrder(name) {
+      return VariableService.getVariable(name).group().order;
+    }
+
+    function getVarNameOrder(name) {
+      return VariableService.getVariable(name).nameOrder();
+    }
 
     $scope.drawHeatmap = function(element, baseElement, dimension, group, margins, colorBarWidth) {
 
@@ -161,10 +169,10 @@ angular.module('plotter.vis.plotting.heatmap',
       height = $scope.getHeight(baseElement);
 
       function labelOrdering(a, b) {
-        var grpA = $scope.variablesLookup[a].group.order,
-        grpB = $scope.variablesLookup[b].group.order,
-        varA = $scope.variablesLookup[a].name_order,
-        varB = $scope.variablesLookup[b].name_order;
+        var grpA = getVarGroupOrder(a),
+        grpB = getVarGroupOrder(b),
+        varA = getVarNameOrder(a),
+        varB = getVarNameOrder(b);
         return d3.descending( grpA * 10 + varA, grpB * 10 + varB);
       }
 
@@ -187,17 +195,17 @@ angular.module('plotter.vis.plotting.heatmap',
         return d.key.y;
       })
       .rowOrdering(function(a,b) {
-        var grpA = $scope.variablesLookup[a].group.order,
-        grpB = $scope.variablesLookup[b].group.order,
-        varA = $scope.variablesLookup[a].name_order,
-        varB = $scope.variablesLookup[b].name_order;
+        var grpA = getVarGroupOrder(a),
+        grpB = getVarGroupOrder(b),
+        varA = getVarNameOrder(a),
+        varB = getVarNameOrder(b);
         return d3.descending( grpA * 10 + varA, grpB * 10 + varB);
       })
       .colOrdering(function(a,b) {
-        var grpA = $scope.variablesLookup[a].group.order,
-        grpB = $scope.variablesLookup[b].group.order,
-        varA = $scope.variablesLookup[a].name_order,
-        varB = $scope.variablesLookup[b].name_order;
+        var grpA = getVarGroupOrder(a),
+        grpB = getVarGroupOrder(b),
+        varA = getVarNameOrder(a),
+        varB = getVarNameOrder(b);
         return d3.ascending( grpA * 10 + varA, grpB * 10 + varB);
       })
       .title(function(d) {
@@ -236,8 +244,8 @@ angular.module('plotter.vis.plotting.heatmap',
         $timeout( function() {
           $injector.get('PlotService').drawScatter({
             variables: {
-              x: cell.key.x,
-              y: cell.key.y
+              x: VariableService.getVariable(cell.key.x),
+              y: VariableService.getVariable(cell.key.y)
             }
           }, $scope.window.handler() );
         });
@@ -252,7 +260,7 @@ angular.module('plotter.vis.plotting.heatmap',
     };
 
     $scope.computeVariables = function(callback) {
-      var variables = $scope.window.variables().x;
+      var variables = _.map($scope.window.variables(), function(v) { return v.name(); });
       // $scope.window.spin(true);
 
       // get coordinates in a separate worker
@@ -391,13 +399,13 @@ angular.module('plotter.vis.plotting.heatmap',
         );
     }
 
-    function doLookup(variables) {
-      $scope.variablesLookup = _.chain(variables).map(function(d) { return [d.name, d]; }).object().value();  
-    }
+    // function doLookup(variables) {
+    //   $scope.variablesLookup = _.chain(variables).map(function(d) { return [d.name, d]; }).object().value();  
+    // }
 
       // do init if not done
       VariableService.getVariables().then(function(variables) {
-        doLookup(variables);
+        // doLookup(variables);
         $scope.computeVariables(function() {
           draw();
           initDropdown();

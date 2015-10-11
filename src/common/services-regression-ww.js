@@ -1,5 +1,6 @@
 angular.module('services.regression.ww', [
   'services.dataset',
+  'services.variable',
   'services.filter',
   'services.tab',
   'services.webworker',
@@ -11,7 +12,7 @@ angular.module('services.regression.ww', [
   .constant('MAX_REGRESSION_THREADS', 4)
   .constant('REGRESSION_VAR_THRESHOLD', 4)
 
-.factory('RegressionService', function RegressionServiceWW(NotifyService, FilterService, DimensionService, $q, DatasetFactory, TabService, WebWorkerService, DEFAULT_REGRESSION_THREADS, coreEstimator, MAX_REGRESSION_THREADS, REGRESSION_VAR_THRESHOLD, _) {
+.factory('RegressionService', function RegressionServiceWW(VariableService, NotifyService, FilterService, DimensionService, $q, DatasetFactory, TabService, WebWorkerService, DEFAULT_REGRESSION_THREADS, coreEstimator, MAX_REGRESSION_THREADS, REGRESSION_VAR_THRESHOLD, _) {
   var that = this;
   var service = {};
 
@@ -72,7 +73,7 @@ angular.module('services.regression.ww', [
 
     var def = $q.defer();
     DatasetFactory.getVariableData(variables, windowHandler)
-      .then(function() {
+      .then(function succFn() {
         var sampleDimension = windowHandler.getDimensionService().getSampleDimension(),
           samples = sampleDimension.get().top(Infinity),
           filtered = getFilteredByDataset(samples);
@@ -202,12 +203,6 @@ angular.module('services.regression.ww', [
     return nans;
   }
 
-  // function stripNaNs(data, indices) {
-  //   return _.filter(data, function(d, ind) {
-  //     return !_.contains(indices, ind);
-  //   });
-  // }
-
   var getAdjustData = function(data, variables) {
     var pluckVariables = function(data, variables) {
       return _.map(variables, function(v) {
@@ -224,130 +219,130 @@ angular.module('services.regression.ww', [
 
   // this is called on each thread execution
   function threadFunction(input, output) {
-      var compute = function(config) {
-        var assocData = config.association,
-          nanIndices = config.nans,
-          targetData = config.target,
-          adjustData = config.adjustData;
+    var compute = function(config) {
+      var assocData = config.association,
+        nanIndices = config.nans,
+        targetData = config.target,
+        adjustData = config.adjustData;
 
-        try {
-          var threadNaNs = regressionUtils.getNaNIndices(assocData),
-            allNaNIndices = _.union(threadNaNs, nanIndices),
+      try {
+        var threadNaNs = regressionUtils.getNaNIndices(assocData),
+          allNaNIndices = _.union(threadNaNs, nanIndices),
 
-            strippedAssoc = regressionUtils.stripNaNs(assocData, allNaNIndices),
-            strippedAdjust = regressionUtils.getStrippedAdjust(adjustData, allNaNIndices),
-            strippedTarget = regressionUtils.stripNaNs(targetData, allNaNIndices),
-            xColumns = [strippedAssoc].concat(strippedAdjust);
+          strippedAssoc = regressionUtils.stripNaNs(assocData, allNaNIndices),
+          strippedAdjust = regressionUtils.getStrippedAdjust(adjustData, allNaNIndices),
+          strippedTarget = regressionUtils.stripNaNs(targetData, allNaNIndices),
+          xColumns = [strippedAssoc].concat(strippedAdjust);
 
-          var res = regressionUtils.regress(xColumns, strippedTarget, 0.05, true, true);
-          return {
-            result: {
-              success: true
-            },
-            betas: res.beta,
-            ci: [res.beta[1] - res.ci[0][1], res.beta[1] + res.ci[0][1]],
-            pvalue: res.pvalue[1]
-          };
-        } catch (error) {
-          console.log(error.stack);
-          // Variable with same values encountered -> omit from results and continue
-          return {
-            result: getError('Constant encountered')
-          };
-        }
-
-      }; // end compute 
-
-      function getError(message) {
+        var res = regressionUtils.regress(xColumns, strippedTarget, 0.05, true, true);
         return {
-          success: false,
-          reason: message
-        };
-      }
-
-      function processOneVariable(varData, globals, varInd, noVars) {
-        var retObj = {
           result: {
-            'success': true
+            success: true
           },
-          payload: [],
-          variable: varData.variable
+          betas: res.beta,
+          ci: [res.beta[1] - res.ci[0][1], res.beta[1] + res.ci[0][1]],
+          pvalue: res.pvalue[1]
         };
+      } catch (error) {
+        console.log(error.stack);
+        // Variable with same values encountered -> omit from results and continue
+        return {
+          result: getError('Constant encountered')
+        };
+      }
 
-        // process total
-        try {
+    }; // end compute 
 
-          // for each dataset / som input
-          _.each(varData.data, function(obj, ind, arr) {
-            var computation = compute({
-              association: obj.samples,
-              nans: _.find(globals.nanIndices, function(d) {
-                return d.name == obj.name;
-              }).nans,
-              target: _.find(globals.targetData, function(d) {
-                return d.name == obj.name;
-              }).samples,
-              adjustData: _.find(globals.adjustData, function(d) {
-                return d.name == obj.name;
-              }).samples
-            });
+    function getError(message) {
+      return {
+        success: false,
+        reason: message
+      };
+    }
 
-            if (computation.result.success === false) {
-              // pass, don't include in results
-              output.notify({
-                type: 'warning',
-                message: 'Variable ' + varData.variable + ' on dataset ' + obj.name + ' has constant values and will be omitted from results'
-              });
-            }
-            var result = _.chain(obj)
-              .omit('samples')
-              .extend(computation)
-              .value();
-            retObj.payload.push(result);
+    function processOneVariable(varData, globals, varInd, noVars) {
+      var retObj = {
+        result: {
+          'success': true
+        },
+        payload: [],
+        variable: varData.variable
+      };
 
-            // notify
-            var percentage = ((ind + 1) / arr.length) * (1 / noVars) + (varInd / noVars);
-            output.notify({
-              type: 'progress',
-              progress: percentage,
-              thread: input.workerId
-            });
+      // process total
+      try {
 
+        // for each dataset / som input
+        _.each(varData.data, function(obj, ind, arr) {
+          var computation = compute({
+            association: obj.samples,
+            nans: _.find(globals.nanIndices, function(d) {
+              return d.name == obj.name;
+            }).nans,
+            target: _.find(globals.targetData, function(d) {
+              return d.name == obj.name;
+            }).samples,
+            adjustData: _.find(globals.adjustData, function(d) {
+              return d.name == obj.name;
+            }).samples
           });
-        } catch (errorObject) {
-          console.log("Regression throws error: ", errorObject.message);
-          console.log(errorObject.stack);
-          retObj['result'] = getError('Something went wrong while computing the regression. Please check and adjust sample selections as needed.');
-        } finally {
-          return retObj;
-        }
-      }
 
-      // avoid minification issues of renaming lodash
-      var _ = self["_"];
+          if (computation.result.success === false) {
+            // pass, don't include in results
+            output.notify({
+              type: 'warning',
+              message: 'Variable ' + varData.variable + ' on dataset ' + obj.name + ' has constant values and will be omitted from results'
+            });
+          }
+          var result = _.chain(obj)
+            .omit('samples')
+            .extend(computation)
+            .value();
+          retObj.payload.push(result);
 
-      console.log("Thread started");
+          // notify
+          var percentage = ((ind + 1) / arr.length) * (1 / noVars) + (varInd / noVars);
+          output.notify({
+            type: 'progress',
+            progress: percentage,
+            thread: input.workerId
+          });
 
-      var results = _.map(input.data, function(varData, ind, arr) {
-        var res = processOneVariable(varData, input.globals, ind, arr.length);
-        return res;
-      });
-
-      var succeeded = !_.chain(results).find(function(v) {
-        return v.result.success === false;
-      }).isNull().value();
-
-      if (succeeded) {
-        output.notify({
-          progress: 1.1,
-          thread: input.workerId
         });
-        output.success(results);
-      } else {
-        output.failure(results);
+      } catch (errorObject) {
+        console.log("Regression throws error: ", errorObject.message);
+        console.log(errorObject.stack);
+        retObj['result'] = getError('Something went wrong while computing the regression. Please check and adjust sample selections as needed.');
+      } finally {
+        return retObj;
       }
+    }
 
-    } // threadFunction
+    // avoid minification issues of renaming lodash
+    var _ = self["_"];
+
+    console.log("Thread started");
+
+    var results = _.map(input.data, function(varData, ind, arr) {
+      var res = processOneVariable(varData, input.globals, ind, arr.length);
+      return res;
+    });
+
+    var succeeded = !_.chain(results).find(function(v) {
+      return v.result.success === false;
+    }).isNull().value();
+
+    if (succeeded) {
+      output.notify({
+        progress: 1.1,
+        thread: input.workerId
+      });
+      output.success(results);
+    } else {
+      output.failure(results);
+    }
+
+  } // threadFunction
 
   var getNaNs = function(targetData, targetVar, adjustData, adjustVars) {
     var indices = [];
@@ -434,9 +429,9 @@ angular.module('services.regression.ww', [
       getData(variables, windowHandler, config.source).then(function(data) {
         var workerPromises = [];
 
-        var targetVar = config.variables.target,
-          assocVars = config.variables.association,
-          adjustVars = config.variables.adjust;
+        var targetVar = config.variables.target[0].name(),
+          assocVars = _.map(config.variables.association, function(v) { return v.name(); }),
+          adjustVars = _.map(config.variables.adjust, function(v) { return v.name(); });
 
         var subArrayCount = (assocVars.length <= REGRESSION_VAR_THRESHOLD) ? 1 : _availableCores;
 
@@ -487,19 +482,23 @@ angular.module('services.regression.ww', [
               // computation failed
               deferred.reject({
                 input: config.variables,
-                result: results
+                result: _.map(results, function(res) { 
+                  return _.assign(res, { 'variable': VariableService.getVariable(res.variable) }); })
               });
             } else {
               console.log("resolve", results);
               deferred.resolve({
                 input: config.variables,
-                result: results
+                // map var name back to header object
+                result: _.map(results, function(res) { 
+                  return _.assign(res, { 'variable': VariableService.getVariable(res.variable) }); })
               });
             }
           }, function errFn(reasons) {
             deferred.reject({
               input: config.variables,
-              result: result
+              result: _.map(results, function(res) { 
+                return _.assign(res, { 'variable': VariableService.getVariable(res.variable) }); })
             });
 
             console.log("error", reasons);

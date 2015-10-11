@@ -52,11 +52,11 @@ angular.module('plotter.vis.plotting.classedbarchart',
     $scope.totalGroup = $scope.totalGroupInst.get();
     $scope.dimensionService.getReducedDeduplicated($scope.totalGroupInst);
 
-    $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables());
+    $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables().name());
     $scope.dimension = $scope.dimensionInst.get();
     $scope.groupInst = $scope.dimensionInst.groupDefault();
 
-    $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables().x);
+    $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables().name());
     $scope.reduced = $scope.groupInst.get();
     // total will always have largest count
     $scope.extent = [0, getTotalCount()];
@@ -64,10 +64,10 @@ angular.module('plotter.vis.plotting.classedbarchart',
     }
 
     function initDefault() {
-      $scope.dimensionInst = $scope.dimensionService.classHistogramDimension($scope.window.variables().x);
+      $scope.dimensionInst = $scope.dimensionService.classHistogramDimension($scope.window.variables().name());
       $scope.dimension = $scope.dimensionInst.get();
       $scope.groupInst = $scope.dimensionInst.groupDefault();
-      $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables().x);
+      $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables().name());
       $scope.reduced = $scope.groupInst.get();
       $scope.extent = [0, d3.max($scope.dimension.group().all(), function(d) { return d.value; } )];
 
@@ -87,14 +87,15 @@ angular.module('plotter.vis.plotting.classedbarchart',
     });
 
     // share information with the plot window
-    $scope.window.headerText(['Histogram of', $scope.window.variables().x, '']);
+    $scope.window.headerText(['Histogram of', $scope.window.variables().name(), '']);
     $scope.filterButton(false);
 
     // see https://github.com/dc-js/dc.js/wiki/FAQ#filter-the-data-before-its-charted
     // this used to filter to only the one set & limit out NaN's
     $scope.filterSOMSpecial = function(group) {
       var FilterService = $injector.get('FilterService'),
-      info = DatasetFactory.getVariable($scope.window.variables().x);
+      unit = $scope.window.variables().unit();
+      // info = DatasetFactory.getVariable($scope.window.variables().name());
 
       function getCircleLookup(grp) {
         var lookup = {};
@@ -123,7 +124,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
         return {
           key: {
             classed: group.key,
-            name: info.unit[Number(group.key).toString()]
+            name: unit[Number(group.key).toString()]
           }, 
           value: {
             type: 'circle',
@@ -174,12 +175,12 @@ angular.module('plotter.vis.plotting.classedbarchart',
           var legalGroups = group.all().filter(function(d) {
             return (d.value.counts[d.key.dataset] > 0) && (d.key.valueOf() !== constants.nanValue);
           }),
-          info = DatasetFactory.getVariable($scope.window.variables().x),
+          unit = $scope.window.variables().unit();
           ret = [];
 
           _.each(legalGroups, function(group) {
             ret.push({
-              key: _.extend(group.key, { name: info.unit[Number(group.key.classed).toString()] }),
+              key: _.extend(group.key, { name: unit[Number(group.key.classed).toString()] }),
               value: group.value
             });
           });
@@ -320,7 +321,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
             $timeout(function() {
               var instance = new ClassedBarChartFilter()
               .chart($scope.chart)
-              .variable($scope.window.variables().x)
+              .variable($scope.window.variables())
               .windowid($scope.window.id())
               .payload(filter);
 
@@ -412,7 +413,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
         dimension: $scope.dimension,
         reduced: $scope.reduced,
         chartGroup: constants.groups.histogram.nonInteractive,
-        variable: $scope.window.variables().x
+        variable: $scope.window.variables().name()
       };
 
     } else {
@@ -425,7 +426,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
         dimension: $scope.dimension,
         reduced: $scope.reduced,
         chartGroup: constants.groups.histogram.interactive,
-        variable: $scope.window.variables().x
+        variable: $scope.window.variables().name()
       };
       drawFunction = $scope.drawDefault;
     }
@@ -527,7 +528,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
     setResizeElement();
 
     $scope.$on('$destroy', function() {
-      console.log("destroying histogram for", $scope.window.variables.x);
+      console.log("destroying histogram for", $scope.window.variables.name());
       _.each($scope.deregisters, function(unbindFn) {
         unbindFn();
       });

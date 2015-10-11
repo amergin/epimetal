@@ -29,11 +29,15 @@ angular.module('plotter.vis.plotting.regression',
     .element( $scope.element[0] )
     .width(width)
     .data(data)
-    .variables(variables)
+    .groupLookupCallback(function groupLookup(order) {
+      return VariableService.getGroup(order);
+    })
     .header([
-      { 'title': 'Target variable', 'content': $scope.window.extra().computation.input.target },
-      { 'title': 'Adjust variables', 'content': $scope.window.extra().computation.input.adjust }
-      ])
+      { 'title': 'Target variable', 'content': [$scope.window.extra().computation.input.target[0].name()] },
+      { 'title': 'Adjust variables', 'content': _.map($scope.window.extra().computation.input.adjust,
+        function(v) { return v.name(); })
+      }
+    ])
     .circleColors(FilterService.getSOMFilterColors())
     .datasetColors(DatasetFactory.getColorScale());
 

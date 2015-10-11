@@ -65,9 +65,7 @@ angular.module('services.dimensions', [
       };
 
       // return one dimension. 
-      this.getDimension = function(selection) {
-
-        var variable = selection.x;
+      this.getDimension = function(variable) {
         var creationFn = function(d) {
           if (_(d.variables).isUndefined()) {
             return constants.nanValue;
@@ -295,12 +293,12 @@ angular.module('services.dimensions', [
       });
 
       // call this to get combined dimension for x-y scatterplots
-      this.getXYDimension = function(selection) {
-        var key = getDimensionKey('normal', selection.x, selection.y);
+      this.getXYDimension = function(xVariable, yVariable) {
+        var key = getDimensionKey('normal', xVariable, yVariable);
         var creationFn = function(d) {
           return {
-            x: +d.variables[selection.x],
-            y: +d.variables[selection.y],
+            x: +d.variables[xVariable],
+            y: +d.variables[yVariable],
             // override prototype function to ensure the object is naturally ordered
             valueOf: function() {
               // the value is not important, only the resulting ordering is. 
@@ -316,7 +314,7 @@ angular.module('services.dimensions', [
           var destructFn = _.once(function() {
             delete dimensions[key];
           });
-          dimensions[key] = new CrossfilterDimension('normal', [selection.x, selection.y], $injector, crossfilterInst, creationFn, destructFn);
+          dimensions[key] = new CrossfilterDimension('normal', [xVariable, yVariable], $injector, crossfilterInst, creationFn, destructFn);
         }
         return dimensions[key];
       };
@@ -361,7 +359,7 @@ angular.module('services.dimensions', [
         // return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
       };
 
-      this.getReducedGroupHisto = function(dimensionGroup, variable, somSpecial) {
+      this.getReducedGroupHisto = function(dimensionGroup, variable) {
         var getKey = function(samp) {
           return [samp.originalDataset || samp.dataset, samp.sampleid].join("|");
         };

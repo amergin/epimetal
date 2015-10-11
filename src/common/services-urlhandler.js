@@ -1,12 +1,13 @@
 angular.module('services.urlhandler', [
   'services.dataset',
+  'services.variable',
   'ui.router',
   'ext.lodash'
 ])
 
 .constant('API_URL_STATE', '/API/state')
 
-.factory('UrlHandler', function UrlHandler($injector, $timeout, $location, DatasetFactory, DimensionService, $rootScope, $state, SOMService, API_URL_STATE, $q, $http, _) {
+.factory('UrlHandler', function UrlHandler($injector, $timeout, $location, DatasetFactory, VariableService, DimensionService, $rootScope, $state, SOMService, API_URL_STATE, $q, $http, _) {
 
   var _service = {},
     _loaded = false; // only do state loading once per page load
@@ -308,16 +309,15 @@ angular.module('services.urlhandler', [
     function loadDefaultView() {
       var drawExplore = function(defer) {
         var exploreHandler = WindowHandler.get('vis.explore'),
-          defaultHistograms = $injector.get('EXPLORE_DEFAULT_HISTOGRAMS');
+          defaultHistograms = $injector.get('EXPLORE_DEFAULT_HISTOGRAMS'),
+          variables = VariableService.getVariables(defaultHistograms);
 
-        DatasetFactory.getVariableData(defaultHistograms, exploreHandler)
+        DatasetFactory.getVariableData(variables, exploreHandler)
           .then(function succFn(res) {
-            _.each(defaultHistograms, function(variable) {
+            _.each(variables, function(variable) {
               PlotService.drawHistogram({
                 pooled: undefined,
-                variables: {
-                  x: variable
-                }
+                variable: variable
               }, exploreHandler);
             });
             defer.resolve();

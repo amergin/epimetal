@@ -243,37 +243,23 @@ angular.module('plotter.vis', [
       function postHistogram(array) {
         _.each(array, function(variable) {
           PlotService.drawHistogram({
-            variables: {
-              x: variable.name
-            },
+            variable: variable,
             pooled: false,
             somSpecial: false
           }, winHandler);
         });
       }
 
-      function postHeatmap(array) {
-        function processVariables(array) {
-          return _.chain(array)
-            .map(function(v) {
-              return v.name;
-            }).value();
-        }
-
+      function postHeatmap(variables) {
         PlotService.drawHeatmap({
-          variables: {
-            x: processVariables(array)
-          },
+          variables: variables,
           separate: config.config.separate
         }, winHandler);
       }
 
-      function postScatterplot(selection) {
+      function postScatterplot(variables) {
         PlotService.drawScatter({
-          variables: {
-            x: _.first(selection.x).name,
-            y: _.first(selection.y).name
-          },
+          variables: variables,
           pooled: false
         }, winHandler);
       }
@@ -364,31 +350,12 @@ angular.module('plotter.vis', [
       controller: 'ModalCtrl'
     }, ev);
 
-    promise.then(function(result) {
-      function pickVariables(value) {
-        if (_.isArray(value)) {
-          return _.map(value, function(d) {
-            return d.name;
-          });
-        } else {
-          return value.name;
-        }
-      }
-
-      function getVariablesFormatted(selection) {
-        return _.chain(selection)
-          .map(function(v, k) {
-            return [k, pickVariables(v)];
-          })
-          .zipObject()
-          .value();
-      }
-
+    promise.then(function succFn(result) {
       var winHandler = WindowHandler.getVisible()[0],
-        config = {
-          variables: getVariablesFormatted(result.selection),
-          source: result.source
-        };
+      config = {
+        variables: result.selection,
+        source: result.source
+      };
 
       RegressionService.selectedVariables(result.selection);
       PlotService.drawRegression(config, winHandler);

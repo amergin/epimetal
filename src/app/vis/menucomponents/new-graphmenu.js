@@ -25,7 +25,10 @@ angular.module('plotter.vis.menucomponents.new-graphmenu',
         return { 'type': 'histogram', 'data': $scope.histogram.selection };
 
         case 1:
-        return { 'type': 'scatterplot', 'data': $scope.scatterplot };
+        return { 'type': 'scatterplot', 'data': {
+          x: $scope.scatterplot.selection.x[0],
+          y: $scope.scatterplot.selection.y[0]
+        } };
 
         case 2:
         return { 'type': 'heatmap', 'data': $scope.heatmap.selection };
@@ -39,10 +42,14 @@ angular.module('plotter.vis.menucomponents.new-graphmenu',
     $scope.histogram = {
       selection: []
     };
+
     $scope.scatterplot = {
-      x: [],
-      y: []
+      selection: {
+        x: [],
+        y: []
+      }
     };
+
     $scope.heatmap = {
       selection: []
     };

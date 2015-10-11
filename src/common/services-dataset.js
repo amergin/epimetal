@@ -177,24 +177,19 @@ angular.module('services.dataset', ['services.notify',
           });
         }
 
+        function variableNames(vars) {
+          return _.map(vars, function(v) { return v.name(); });
+        }
+
         var performPost = function(vars, config, defer, datasetName, processFn) {
           $http.post(DATASET_URL_FETCH_MULTIPLE_VARS, {
-              variables: vars,
+              variables: variableNames(vars),
               dataset: datasetName
             }, {
               cache: true
             })
             .success(function(response) {
               processFn(response.result.values);
-              // _.each(response.result.values, function(sample) {
-              //   if (_.isUndefined(priv.samples[sample.sampleid])) {
-              //     // previously unknown sample
-              //     priv.samples[sample.sampleid] = sample;
-              //   } else {
-              //     // already present, just extend to include the new variable data
-              //     _.extend(priv.samples[sample.sampleid].variables, sample.variables);
-              //   }
-              // });
               defer.resolve(priv.getResult(variables, vars, config, response.result.values));
             })
             .error(function(response, status, headers, config) {

@@ -43,14 +43,14 @@ angular.module('plotter.vis.plotting.histogram',
 
     function initSOMSpecial() {
       $scope.primary = $injector.get('DimensionService').getPrimary();
-      $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables());
+      $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables().name());
       $scope.totalDimension = $scope.totalDimensionInst.get();
-      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables());
+      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables().name());
       $scope.dimension = $scope.dimensionInst.get();
     }
 
     function initDefault() {
-      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables());
+      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables().name());
       $scope.dimension = $scope.dimensionInst.get();
       $scope.groupInst = null;
       $scope.totalGroupInst = null;
@@ -83,8 +83,7 @@ angular.module('plotter.vis.plotting.histogram',
     };
 
     // share information with the plot window
-    $scope.window.headerText(['Histogram of', $scope.window.variables().x]);
-    // $scope.$parent.headerText = ['Histogram of', $scope.window.variables.x, ''];
+    $scope.window.headerText(['Histogram of', $scope.window.variables().name()]);
 
     $scope.computeExtent = function() {
       // remove older ones
@@ -115,18 +114,18 @@ angular.module('plotter.vis.plotting.histogram',
 
       if( $scope.isSpecial() ) {
         // circle
-        $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables().x);
+        $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables().name());
         $scope.reduced = $scope.groupInst.get();
 
         $scope.totalGroupInst = $scope.totalDimensionInst.group(function(d) {
           return Math.floor(d / $scope.binWidth) * $scope.binWidth;
         });
         // total
-        $scope.primary.getReducedGroupHisto($scope.totalGroupInst, $scope.window.variables().x);
+        $scope.primary.getReducedGroupHisto($scope.totalGroupInst, $scope.window.variables().name());
         $scope.totalReduced = $scope.totalGroupInst.get();
       }
       else {
-        $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables().x);
+        $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables().name());
         $scope.reduced = $scope.groupInst.get();
       }
 
@@ -288,7 +287,7 @@ angular.module('plotter.vis.plotting.histogram',
             // new
             var filt = new HistogramFilter()
             .chart($scope.histogram)
-            .variable($scope.window.variables().x)
+            .variable($scope.window.variables())
             .windowid($scope.window.id())
             .payload(filter);
 
@@ -433,7 +432,7 @@ angular.module('plotter.vis.plotting.histogram',
       var config = {
         dimension: $scope.dimension,
         element: ele,
-        variableX: $scope.window.variables().x,
+        variableX: $scope.window.variables().name(),
         noBins: $scope.noBins,
         extent: $scope.extent,
         binWidth: $scope.binWidth,
@@ -630,7 +629,7 @@ angular.module('plotter.vis.plotting.histogram',
       $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind, derivedAddUnbind, derivedRemoveUnbind, somFilterRemovedUnbind, somFilterAddedUnbind);
 
       $scope.$on('$destroy', function() {
-        console.log("destroying histogram for", $scope.window.variables.x);
+        console.log("destroying histogram for", $scope.window.variables());
         _.each($scope.deregisters, function(unbindFn) {
           unbindFn();
         });

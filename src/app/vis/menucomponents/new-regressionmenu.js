@@ -48,9 +48,9 @@ angular.module('plotter.vis.menucomponents.new-regressionmenu',
       return !_.isNull($scope.selection.target) && $scope.selection.target.length > 0;
     };
 
-    function typeSelected(type) {
-      return $scope.selection[type].length > 0;
-    }
+    // function typeSelected(type) {
+    //   return $scope.selection[type].length > 0;
+    // }
 
     function getEquality() {
       var equalityLodash = _.runInContext();
@@ -101,12 +101,11 @@ angular.module('plotter.vis.menucomponents.new-regressionmenu',
     $scope.canSubmit = function () {
       return $scope.canEdit() && 
       $scope.targetSelected() &&
-      typeSelected('association');
+      $scope.selection.association.length > 0;
     };
 
     $scope.submit = function() {
-      var error = false,
-      selection = {};
+      var error = false;
       if( assocAndAdjustOverlapping() ) {
         NotifyService.addSticky('Incorrect variable combination', 
           'Association variables and adjust variables overlap. Please modify the selection.', 'error',  { referenceId: 'regressioninfo' });
@@ -137,13 +136,9 @@ angular.module('plotter.vis.menucomponents.new-regressionmenu',
         return false;
       }
 
-      selection.target = $scope.selection.target;
-      selection.adjust = $scope.selection.adjust;
-      selection.association = $scope.selection.association;
-
       return {
         type: 'regression',
-        selection: selection,
+        selection: $scope.selection,
         source: 'dataset'
       };
     };
