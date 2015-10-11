@@ -267,7 +267,7 @@ angular.module('plotter.vis.plotting.histogram',
         bottom: 30,
         left: 40
       })
-      .xAxisLabel(config.variableX)
+      .xAxisLabel(config.xLabel)
       .addFilterHandler(function(filters, filter) {
         function defaultFn(filters, filter) {
           filters.push(filter);
@@ -432,7 +432,7 @@ angular.module('plotter.vis.plotting.histogram',
       var config = {
         dimension: $scope.dimension,
         element: ele,
-        variableX: $scope.window.variables().name(),
+        xLabel: $scope.window.variables().name() + " (" + $scope.window.variables().unit() + ")",
         noBins: $scope.noBins,
         extent: $scope.extent,
         binWidth: $scope.binWidth,
