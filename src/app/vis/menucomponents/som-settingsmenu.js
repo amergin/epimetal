@@ -13,7 +13,8 @@ angular.module('plotter.vis.menucomponents.som-settingsmenu',
 .controller('SOMSettingsMenuCtrl', 
   function SOMInputMenuCtrl($scope, DatasetFactory, VariableService, SOMService, _, SOM_SETTINGS_AVAILABLE_SIZES) {
 
-    $scope.selection = SOMService.trainVariables();
+    // make a shallow copy so the unsaved modifications are not propagated via reference
+    $scope.selection = angular.copy(SOMService.trainVariables());
 
     $scope.tabInd = 0;
 
@@ -37,15 +38,8 @@ angular.module('plotter.vis.menucomponents.som-settingsmenu',
     };
 
     $scope.submit = function() {
-      // update input variables
-      SOMService.trainVariables($scope.selection);
-      // update SOM size
-      SOMService
-      .rows($scope.sizes[$scope.selectedSize.ind].rows)
-      .columns($scope.sizes[$scope.selectedSize.ind].cols);
-
       return {
-        input: $scope.selection,
+        variables: $scope.selection,
         size: $scope.sizes[$scope.selectedSize.ind]
       };
     };

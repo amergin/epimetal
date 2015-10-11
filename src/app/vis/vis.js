@@ -330,7 +330,14 @@ angular.module('plotter.vis', [
       controller: 'ModalCtrl'
     }, ev);
 
-    promise.then(function succFn(result) {}, function errFn() {});
+    promise.then(function succFn(selection) {
+      // update input variables
+      SOMService.trainVariables(selection.variables);
+      // update SOM size
+      SOMService
+      .rows(selection.size.rows)
+      .columns(selection.size.cols);
+    });
 
   };
 

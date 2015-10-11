@@ -18,7 +18,7 @@ angular.module('plotter.vis.menucomponents.new-regressionmenu',
         };
       }
 
-      $scope.selection = RegressionService.selectedVariables();
+      $scope.selection = angular.copy(RegressionService.selectedVariables());
       if(!$scope.canSubmit()) {
         doDefault();
       }

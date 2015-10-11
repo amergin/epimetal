@@ -632,7 +632,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       }
       // shallow copy so that the selection is not altered even when modifications are made 
       // and the cancelled
-      $scope.payload = angular.copy($scope.payload);
+      // $scope.payload = angular.copy($scope.payload);
 
       if($scope.mode == 'multi') { multi($scope.payload); }
       else if($scope.mode == 'scatterplot') { scatterplot(); }
