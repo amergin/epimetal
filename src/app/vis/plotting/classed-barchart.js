@@ -528,7 +528,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
     setResizeElement();
 
     $scope.$on('$destroy', function() {
-      console.log("destroying histogram for", $scope.window.variables.name());
+      console.log("destroying histogram for", $scope.window.variables().name());
       _.each($scope.deregisters, function(unbindFn) {
         unbindFn();
       });

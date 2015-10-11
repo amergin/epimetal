@@ -208,9 +208,11 @@ angular.module('services.som', [
         return arr.join("|");
       });
 
+      var variableNames = Utils.pickVariableNames(variables);
+
       _.each(deDuplicated, function(obj, ind) {
         var sampValues = _.chain(obj.variables)
-          .pick(variables)
+          .pick(variableNames)
           .map(function(val, key) {
             return [key, val];
           })
