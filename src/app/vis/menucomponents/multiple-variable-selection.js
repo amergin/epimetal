@@ -4,6 +4,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
   'ext.lodash',
   'services.variable', 
   'services.dataset',
+  'services.notify',
   'mentio'
   ])
 
@@ -11,7 +12,8 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 
 .controller('MultipleVariableSelectionCtrl', 
   function MultipleVariableSelectionCtrl($scope, $q, DatasetFactory, 
-    VariableService, _, MENU_USER_DEFINED_VARS_CATEGORY) {
+    VariableService, _, NotifyService,
+    MENU_USER_DEFINED_VARS_CATEGORY) {
 
     // custom dialog stuff
     $scope.customDialogOpen = false;
@@ -19,6 +21,9 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       if(!arguments.length) { return $scope.customDialogOpen; }
       $scope.customDialogOpen = val;
     };
+
+    $scope.customVariableName = { content: '' };
+    $scope.typedCustomVarExpression = { content: '' };
 
     $scope.customExpressionSearch = function(term) {
       $scope.filteredCustVariables = _.chain($scope.variables)
@@ -33,10 +38,57 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       return $q.when($scope.filteredCustVariables);
     };
 
-    $scope.customExpressionId = _.uniqueId('mentio');
+    $scope.customExpressionFieldId = _.uniqueId('mentio');
 
     $scope.customTagName = function(item) {
       return "[" + item.name() + "]";
+    };
+
+    $scope.customCanSubmit = function() {
+      return $scope.customVariableName.content.length > 0 &&
+      $scope.typedCustomVarExpression.content.length > 0;
+    };
+
+    $scope.customSubmit = function() {
+      function nameHasErrors(name) {
+        var exists = !_.isUndefined(VariableService.getVariable(name)),
+        hasSpace = _.contains(name, ' '),
+        hasNonAlphaNumeric = name.match(/\W+/g) != null,
+        hadErrors = false;
+
+        if(exists) {
+          NotifyService.addTransient(null, 'Variable is already defined', 'error',
+            { referenceId: errorField });
+          hadErrors = true;
+        }
+
+        if(hasSpace) {
+          NotifyService.addTransient(null, 'Variable name has a space', 'error',
+            { referenceId: errorField });
+          hadErrors = true;          
+        }
+
+        if(hasNonAlphaNumeric) {
+          NotifyService.addTransient(null, 'Invalid characters in variable name', 'error',
+            { referenceId: errorField });
+          hadErrors = true;
+        }
+        return hadErrors;
+      }
+
+      function expressionHasErrors(expression) {
+        // todo
+        return true;
+      }
+
+      var errorField = 'cust-var-info-' + $scope.customExpressionFieldId;
+      if( !nameHasErrors($scope.customVariableName.content) ||
+        !expressionHasErrors($scope.typedCustomVarExpression.content) ) {
+        return;
+      }
+
+      // create variable
+
     };
 
     // ------------- Custom var stuff ends -------------------------

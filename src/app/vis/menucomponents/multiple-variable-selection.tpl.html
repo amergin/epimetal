@@ -160,34 +160,32 @@
 			</div>
 
 			<div ng-class="{ 'list-group pl-nav-double-column': customCreateDialog() }" ng-show="customDialogOpen">
+				<div growl inline="true" limit-messages="1" reference="{{'cust-var-info-' + customExpressionFieldId}}" class="am-fade"></div>
 				<form>
 					<div class="form-group">
 						<label for="custom-var-name">Variable name</label>
-						<input type="text" class="form-control" id="custom-var-name" placeholder="Short variable name" length="8">
+						<input type="text" class="form-control" id="custom-var-name" placeholder="Short variable name" maxlength="8" ng-model="customVariableName.content">
 					</div>
 					<div class="form-group">
-						<label for="custom-var-expression">Expression</label>
+						<label for="custom-var-expression">Mathematical expression</label>
 						<textarea mentio
-						mentio-typed-term="typedTerm"
 						mentio-require-leading-space="false"
 						mentio-select-not-found="false"
 						class="editor form-control cust-var"
-						mentio-id="'cust-var'"
-						id="cust-var"
-						ng-model="typedCustVarExpression"
+						mentio-id="customExpressionFieldId"
+						id="{{customExpressionFieldId}}"
+						ng-model="typedCustomVarExpression.content"
 						mentio-trigger-char="':'"
 						mentio-items="filteredCustVariables"
 						mentio-template-url="vis/menucomponents/cust-var-expression.tpl.html"
 						mentio-search="customExpressionSearch(term)"
 						mentio-select="customTagName(item)"
-						rows="4"
+						rows="2"
 						>
 					</textarea>
-					{{typedCustVarExpression}}
-
 
 				</div>
-				<button type="submit" class="btn btn-secondary pull-right">Create</button>
+				<button ng-disabled="!customCanSubmit()" ng-click="customSubmit()" type="submit" class="btn btn-secondary pull-right">Create</button>
 			</form>
 		</div>
 
