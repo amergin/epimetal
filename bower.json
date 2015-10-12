@@ -30,7 +30,8 @@
     "ng-tags-input": "~3.0.0",
     "angular-svg-round-progressbar": "~0.2.10",
     "core-estimator": "https://github.com/oftn/core-estimator.git",
-    "SparkMD5": "~1.0.0"
+    "SparkMD5": "~1.0.0",
+    "ment.io": "~0.9.24"
   },
   "dependencies": {},
   "resolutions": {

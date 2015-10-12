@@ -3,15 +3,15 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
   'ngTagsInput',
   'ext.lodash',
   'services.variable', 
-  'services.dataset'
+  'services.dataset',
+  'mentio'
   ])
 
 .constant('MENU_USER_DEFINED_VARS_CATEGORY', 'User defined variables')
 
 .controller('MultipleVariableSelectionCtrl', 
-  function MultipleVariableSelectionCtrl($scope, DatasetFactory, 
+  function MultipleVariableSelectionCtrl($scope, $q, DatasetFactory, 
     VariableService, _, MENU_USER_DEFINED_VARS_CATEGORY) {
-
 
     // custom dialog stuff
     $scope.customDialogOpen = false;
@@ -20,6 +20,26 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       $scope.customDialogOpen = val;
     };
 
+    $scope.customExpressionSearch = function(term) {
+      $scope.filteredCustVariables = _.chain($scope.variables)
+      .filter(function(variable) {
+        return _.contains(variable.name().toLowerCase(), term) ||
+        _.contains(variable.description().toLowerCase(), term);
+      })
+      .sortBy(function(variable) {
+        return variable.name().toLowerCase();
+      })
+      .value();
+      return $q.when($scope.filteredCustVariables);
+    };
+
+    $scope.customExpressionId = _.uniqueId('mentio');
+
+    $scope.customTagName = function(item) {
+      return "[" + item.name() + "]";
+    };
+
+    // ------------- Custom var stuff ends -------------------------
 
 
     $scope.lengthLegal = function() {
