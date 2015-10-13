@@ -135,28 +135,24 @@ angular.module('services.window', [
 
           if (hasX && hasY) {
             return _.template('X_<%= x %>_Y_<%= y %>')({
-              x: variables.x,
-              y: variables.y
+              x: variables.x.name(),
+              y: variables.y.name()
             });
-          }
-          if (hasX) {
-            if (_.isArray(variables.x)) {
-              return _.map(variables.x, function(v) {
-                return v;
-              }).join("_");
-            } else {
-              return _.template('X_<%= x %>')({
-                x: variables.x
-              });
-            }
           }
           if (hasTarget) {
             var template = _.template('target_<%= target %>_association_<%= assoc %>_vars_adjusted_<%= adjust %>_vars');
             return template({
-              target: variables.target,
+              target: _.first(variables.target).name(),
               assoc: variables.association.length,
               adjust: variables.adjust.length
             });
+          } else {
+            if(_.isArray(variables)) {
+              return _.map(variables, function(v) { return v.name(); })
+              .join("_");
+            } else {
+              return variables.name();
+            }
           }
         }
         var setNames = _.map(DatasetFactory.activeSets(),

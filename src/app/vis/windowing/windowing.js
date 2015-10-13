@@ -198,13 +198,16 @@ angular.module('plotter.vis.windowing', ['services.window',
     function getCombined(element) {
       var combinedEl = document.createElement('canvas'),
         combinedCtx = combinedEl.getContext('2d'),
-        canvases = element.getElementsByTagName('canvas');
+        canvases = element.getElementsByTagName('canvas'),
+        width, height;
 
 
       _.each(canvases, function(canvas, ind) {
         if (ind === 0) {
           combinedEl.setAttribute('width', canvas.width);
           combinedEl.setAttribute('height', canvas.height);
+          width = canvas.width;
+          height = canvas.height;
         }
         if (canvas.style.display !== 'none') {
           // dont draw hidden datasets
@@ -212,7 +215,7 @@ angular.module('plotter.vis.windowing', ['services.window',
         }
       });
 
-      return canvasToBase64(combinedEl, EXPORT_PNG_BACKGROUND_COLOR);
+      return canvasToBase64(combinedEl, EXPORT_PNG_BACKGROUND_COLOR, width, height);
     }
 
     function sourceSVG() {
