@@ -278,7 +278,7 @@ angular.module('plotter.vis.plotting.som', [
 
       };
 
-      var resolveArea = _.debounce(resolveAreaCells, 400, {
+      var resolveArea = _.debounce(resolveAreaCells, 150, {
         leading: false,
         trailing: true
       });

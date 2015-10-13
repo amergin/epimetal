@@ -231,7 +231,7 @@ angular.module('services.som', [
 
         sampleId = { 
           'sampleid': obj.sampleid, 
-          'dataset': obj.originalDataset ? obj.originalDataset : obj.dataset
+          'dataset': obj.dataset //obj.originalDataset ? obj.originalDataset : obj.dataset
         };
 
         retObj.samples.push(sampleId);
@@ -249,9 +249,11 @@ angular.module('services.som', [
     function doCall() {
       function getHash(samples, variables, rows, cols) {
         // var p1 = performance.now();
-        var spark = new SparkMD5();
+        var spark = new SparkMD5(),
+        dataset;
         for(var i = 0; i < samples.length; ++i) {
-          spark.append(samples[i].dataset + "|" + samples[i].sampleid);
+          dataset = samples[i].originalDataset ? samples[i].originalDataset : samples[i].dataset;
+          spark.append(dataset + "|" + samples[i].sampleid);
         }
         spark.append( _.sortBy(variables) );
         spark.append(rows);
@@ -353,7 +355,7 @@ angular.module('services.som', [
       that.inProgress = true;     
 
       // ask from the server if the train result is already stored in the DB
-      var idHash = getHash(data.samples, Utils.pickVariableNames(that.trainVariables), service.rows(), service.columns());
+      var idHash = getHash(that.trainSamples, Utils.pickVariableNames(that.trainVariables), service.rows(), service.columns());
       $http.get( _.template(SOM_TRAIN_GET_URL)({ hash: idHash }), 
         // don't cache: otherwise it'll store the first 'not found' reply and
         // will result in subsequent calls to be always re-calculated

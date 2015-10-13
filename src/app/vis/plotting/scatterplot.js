@@ -371,7 +371,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
 })
 
-.directive('plScatterplot', function plScatterplot($timeout, $rootScope, NotifyService) {
+.directive('plScatterplot', function plScatterplot($timeout, $rootScope, NotifyService, $injector) {
 
   var linkFn = function($scope, ele, iAttrs) {
     $scope.element = ele;

@@ -83,7 +83,15 @@ angular.module('services.dimensions', [
           var destructFn = _.once(function() {
             delete dimensions[key];
           });
-          dimensions[key] = new CrossfilterDimension('normal', variable, $injector, crossfilterInst, creationFn, destructFn);
+          dimensions[key] = 
+          new CrossfilterDimension()
+          .type('normal')
+          .variable(variable)
+          .injector($injector)
+          .instance(crossfilterInst)
+          .creationFunction(creationFn)
+          .destructFunction(destructFn)
+          .create();
         }
         return dimensions[key];
       };
@@ -106,7 +114,15 @@ angular.module('services.dimensions', [
           var destructFn = _.once(function() {
             delete dimensions[key];
           });
-          dimensions[key] = new CrossfilterDimension('normal', classvar, $injector, crossfilterInst, creationFn, destructFn);
+          dimensions[key] = 
+          new CrossfilterDimension()
+          .type('normal')
+          .variable(classvar)
+          .injector($injector)
+          .instance(crossfilterInst)
+          .creationFunction(creationFn)
+          .destructFunction(destructFn)
+          .create();          
         }
         return dimensions[key];
       };
@@ -131,7 +147,15 @@ angular.module('services.dimensions', [
           var destructFn = _.once(function() {
             delete dimensions[key];
           });
-          dimensions[key] = new CrossfilterDimension('bmu', null, $injector, crossfilterInst, creationFn, destructFn);
+          dimensions[key] = 
+          new CrossfilterDimension()
+          .type('bmu')
+          .variable(null)
+          .injector($injector)
+          .instance(crossfilterInst)
+          .creationFunction(creationFn)
+          .destructFunction(destructFn)
+          .create();
         }
         return dimensions[key];
 
@@ -170,7 +194,16 @@ angular.module('services.dimensions', [
           var destructFn = _.once(function() {
             delete dimensions[key];
           });
-          dimensions[key] = new CrossfilterDimension('som', null, $injector, crossfilterInst, creationFn, destructFn).sticky(true);
+          dimensions[key] = 
+          new CrossfilterDimension()
+          .type('som')
+          .variable(null)
+          .injector($injector)
+          .instance(crossfilterInst)
+          .creationFunction(creationFn)
+          .destructFunction(destructFn)
+          .sticky(true)
+          .create();
         }
         return dimensions[key];
 
@@ -215,7 +248,16 @@ angular.module('services.dimensions', [
           var destructFn = _.once(function() {
             delete dimensions[key];
           });
-          dimensions[key] = new CrossfilterDimension('dataset', null, $injector, crossfilterInst, creationFn, destructFn).sticky(true);
+          dimensions[key] = 
+          new CrossfilterDimension()
+          .type('dataset')
+          .variable(null)
+          .injector($injector)
+          .instance(crossfilterInst)
+          .creationFunction(creationFn)
+          .destructFunction(destructFn)
+          .sticky(true)
+          .create();
         }
         return dimensions[key];
       };
@@ -246,7 +288,16 @@ angular.module('services.dimensions', [
           var destructFn = _.once(function() {
             delete dimensions[key];
           });
-          dimensions[key] = new CrossfilterDimension('normal', null, $injector, crossfilterInst, creationFn, destructFn).sticky(false);
+          dimensions[key] = 
+          new CrossfilterDimension()
+          .type('normal')
+          .variable(null)
+          .injector($injector)
+          .instance(crossfilterInst)
+          .creationFunction(creationFn)
+          .destructFunction(destructFn)
+          .sticky(false)
+          .create();
         }
         return dimensions[key];
       };
@@ -263,7 +314,16 @@ angular.module('services.dimensions', [
           var destructFn = _.once(function() {
             delete dimensions[key];
           });
-          dimensions[key] = new CrossfilterDimension('samples', null, $injector, crossfilterInst, creationFn, destructFn).sticky(true);
+          dimensions[key] = 
+          new CrossfilterDimension()
+          .type('samples')
+          .variable(null)
+          .injector($injector)
+          .instance(crossfilterInst)
+          .creationFunction(creationFn)
+          .destructFunction(destructFn)
+          .sticky(false)
+          .create();
         }
         return dimensions[key];
       };
@@ -314,7 +374,18 @@ angular.module('services.dimensions', [
           var destructFn = _.once(function() {
             delete dimensions[key];
           });
-          dimensions[key] = new CrossfilterDimension('normal', [xVariable, yVariable], $injector, crossfilterInst, creationFn, destructFn);
+          dimensions[key] = 
+          new CrossfilterDimension()
+          .type('normal')
+          .variable([xVariable, yVariable])
+          .injector($injector)
+          .instance(crossfilterInst)
+          .creationFunction(creationFn)
+          .destructFunction(destructFn)
+          .sticky(false)
+          .create();
+
+          new CrossfilterDimension('normal', [xVariable, yVariable], $injector, crossfilterInst, creationFn, destructFn);
         }
         return dimensions[key];
       };
@@ -1047,48 +1118,26 @@ angular.module('services.dimensions', [
 
 });
 
-function CrossfilterDimension(type, variable, injector, crossfilterInst, creationFn, destructFn) {
+function CrossfilterDimension() {
 
-  var _type = type,
-    _variable = variable || [],
+  var _type,
+    _variable = null,
     _count = 0,
-    $injector = injector,
+    $injector,
     _groups = {},
     _dimension = null,
-    _instance = crossfilterInst,
-    _destructFn = destructFn,
-    _creationFn = creationFn,
+    _instance,
+    _destructFn,
+    _creationFn,
     _obj = {},
     _filterFn = null,
     _oldFilterFn = null,
     _sticky = false,
     _filters = null; // only for som
 
-  if (type == 'som') {
-    _filters = {};
-
-    _obj.hexagons = function(circleId, hexagons) {
-      if (!arguments.length) {
-        return _filters;
-      }
-      _filters[circleId] = hexagons;
-      if (_.size(_filters) > 0 && _obj.filter()) {
-        _dimension.filterFunction(_obj.filter());
-        $injector.get('$rootScope').$emit('dimension:SOMFilter');
-      }
-    };
-  }
-
   var increment = function() {
     ++_count;
   };
-
-  var create = function() {
-    console.log("Creating dimension for ", _variable, " type ", _type);
-    _dimension = _instance.dimension(_creationFn);
-  };
-
-  create();
 
   var destroy = function() {
     console.log("Destroying dimension ", _type, _variable);
@@ -1106,9 +1155,24 @@ function CrossfilterDimension(type, variable, injector, crossfilterInst, creatio
     var destructFn = _.once(function() {
       delete _groups[id];
     });
-    var group = new CrossfilterGroup(_dimension, func, $injector, _instance, destructFn);
+    //dimension, groupFn, injector, crossfilterInst, destructFn) {
+    var group = 
+    new CrossfilterGroup()
+    .dimension(_dimension)
+    .groupFunction(func)
+    .injector($injector)
+    .instance(_instance)
+    .destructFunction(destructFn)
+    .create();
     _groups[id] = group;
     return _groups[id];
+  };
+
+  // called when necessary details have been filled in
+  _obj.create = function() {
+    console.log("Creating dimension for ", _variable, " type ", _type);
+    _dimension = _instance.dimension(_creationFn);
+    return _obj;
   };
 
   _obj.groupDefault = function() {
@@ -1118,7 +1182,14 @@ function CrossfilterDimension(type, variable, injector, crossfilterInst, creatio
     var destructFn = _.once(function() {
       delete _groups[id];
     });
-    var group = new CrossfilterGroup(_dimension, func, $injector, _instance, destructFn);
+    var group = 
+    new CrossfilterGroup()
+    .dimension(_dimension)
+    .groupFunction(func)
+    .injector($injector)
+    .instance(_instance)
+    .destructFunction(destructFn)
+    .create();
     _groups[id] = group;
     return _groups[id];
   };
@@ -1129,7 +1200,14 @@ function CrossfilterDimension(type, variable, injector, crossfilterInst, creatio
       var destructFn = _.once(function() {
         delete _groups[id];
       });
-      var group = new CrossfilterGroup(_dimension, groupFn, $injector, _instance, destructFn);
+      var group = 
+      new CrossfilterGroup()
+      .dimension(_dimension)
+      .groupFunction(groupFn)
+      .injector($injector)
+      .instance(_instance)
+      .destructFunction(destructFn)
+      .create();
       _groups[id] = group;
     };
 
@@ -1148,8 +1226,48 @@ function CrossfilterDimension(type, variable, injector, crossfilterInst, creatio
     return _groups[id];
   };
 
-  _obj.type = function() {
-    return _type;
+  _obj.type = function(x) {
+    if(!arguments.length) { return _type; }
+    _type = x;
+    if (_type == 'som') {
+      _filters = {};
+
+      _obj.hexagons = function(circleId, hexagons) {
+        if (!arguments.length) {
+          return _filters;
+        }
+        _filters[circleId] = hexagons;
+        if (_.size(_filters) > 0 && _obj.filter()) {
+          _dimension.filterFunction(_obj.filter());
+          $injector.get('$rootScope').$emit('dimension:SOMFilter');
+        }
+      };
+    }
+    return _obj;
+  };
+
+  _obj.injector = function(x) {
+    if(!arguments.length) { return $injector; }
+    $injector = x;
+    return _obj;
+  };
+
+  _obj.creationFunction = function(x) {
+    if(!arguments.length) { return _creationFn; }
+    _creationFn = x;
+    return _obj;
+  }; 
+
+  _obj.destructFunction = function(x) {
+    if(!arguments.length) { return _destructFn; }
+    _destructFn = x;
+    return _obj;
+  };
+
+  _obj.instance = function(x) {
+    if(!arguments.length) { return _instance; }
+    _instance = x;
+    return _obj;
   };
 
   _obj.sticky = function(val) {
@@ -1190,8 +1308,10 @@ function CrossfilterDimension(type, variable, injector, crossfilterInst, creatio
     }
   };
 
-  _obj.variable = function() {
-    return _variable;
+  _obj.variable = function(x) {
+    if(!arguments.length) { _variable = x; }
+    _variable = x;
+    return _obj;
   };
 
   _obj.is = function(type, variable) {
@@ -1206,15 +1326,14 @@ function CrossfilterDimension(type, variable, injector, crossfilterInst, creatio
   return _obj;
 }
 
-function CrossfilterGroup(dimension, groupFn, injector, crossfilterInst, destructFn) {
-
+function CrossfilterGroup() {
   var _count = 0,
-    $injector = injector,
-    _dimension = dimension,
-    _group = null,
-    _groupFn = groupFn,
-    _instance = crossfilterInst,
-    _destructFn = destructFn,
+    $injector,
+    _dimension,
+    _group,
+    _groupFn,
+    _instance,
+    _destructFn,
     _obj = {},
     _functions = {
       add: null,
@@ -1226,9 +1345,35 @@ function CrossfilterGroup(dimension, groupFn, injector, crossfilterInst, destruc
     ++_count;
   };
 
+  _obj.decrement = function() {
+    --_count;
+    if (_count < 1) {
+      destroy();
+    } else {
+      return _obj;
+    }
+  };
 
-  var create = function() {
-    console.log("Creating group ", groupFn);
+  _obj.dimension = function(x) {
+    if(!arguments.length) { return _dimension; }
+    _dimension = x;
+    return _obj;
+  };
+
+  _obj.groupFunction = function(x) {
+    if(!arguments.length) { return _groupFn; }
+    _groupFn = x;
+    return _obj;
+  };
+
+  _obj.instance = function(x) {
+    if(!arguments.length) { return _instance; }
+    _instance = x;
+    return _obj;
+  };
+
+  _obj.create = function(x) {
+    console.log("Creating group ", _groupFn);
     if (_.isString(_groupFn)) {
       switch (_groupFn) {
         case 'all':
@@ -1242,36 +1387,25 @@ function CrossfilterGroup(dimension, groupFn, injector, crossfilterInst, destruc
     } else {
       _group = _dimension.group(_groupFn);
     }
+    return _obj;
   };
 
-  var destroy = function() {
+  _obj.destroy = function() {
     console.log("Destroying group ", _groupFn || 'default');
     _group.dispose();
     destructFn();
   };
 
-  create();
-
-  _obj.destroy = function() {
-    destroy();
+  _obj.injector = function(x) {
+    if(!arguments.length) { return $injector; }
+    $injector = x;
+    return _obj;
   };
 
-  _obj.decrement = function() {
-    --_count;
-    if (_count < 1) {
-      destroy();
-    } else {
-      return _obj;
-    }
-  };
-
-  _obj.dimension = function(dimension) {
-    if (arguments.length) {
-      _dimension = dimension;
-      return _obj;
-    } else {
-      return _dimension;
-    }
+  _obj.destructFunction = function(x) {
+    if(!arguments.length) { return _destructFn; }
+    _destructFn = x;
+    return _obj;
   };
 
   _obj.reduce = function(config) {
