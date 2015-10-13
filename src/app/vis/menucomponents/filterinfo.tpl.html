@@ -19,8 +19,8 @@
             <td  class="col-sm-9" ng-switch="filter.type()">
               <span ng-switch-when="circle">
                 <label for="check{{$index}}">
-                  <span ng-style="{ 'color': filter.color() }">Circle filter {{filter.name()}}</span> 
-                  <span class="badge am-fade">{{filter.count()}} samples</span>
+                  <span ng-style="{ 'color': filter.color() }">Circle {{filter.name()}}</span> 
+                  <span class="badge am-fade pull-right" style="margin-left: 10px;">{{filter.count()}} samples</span>
                 </label>
               </span>
               <span ng-switch-when="range">

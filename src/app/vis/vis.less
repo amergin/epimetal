@@ -84,6 +84,7 @@ body {
 
 .pl-container {
   width: 100%;
+  overflow-y: hidden;
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -105,6 +106,7 @@ body {
       -ms-flex: 0 0 20%;
           flex: 0 0 20%;
   min-width: 300px;
+  overflow-y: auto;
 }
 
 
@@ -142,7 +144,9 @@ body {
 }
 
 .pl-right {
-  overflow: hidden;
+  /*overflow: hidden;*/
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .pl-tab-header {
@@ -162,19 +166,20 @@ body {
 }
 
 .pl-bottom-content {
-  -webkit-box-flex: 2;
-  -webkit-flex: 2 0 auto;
-      -ms-flex: 2 0 auto;
-          flex: 2 0 auto;
+  background-color: #777;
+  -webkit-box-flex: 0;
+  -webkit-flex: 0 0 auto;
+      -ms-flex: 0 0 auto;
+          flex: 0 0 auto;
   min-height: 150px;
   padding: 10px;
   overflow-x: auto;
   overflow-y: hidden;
   white-space: nowrap;
 
-  &.resizable {
+  /*&.resizable {
       flex: 0 0 300px;
-  }
+  }*/
 }
 @spacing: 14px;
 

@@ -43,6 +43,10 @@ angular.module('utilities', [])
           var el = angular.element('<div/>')
           .addClass(scope.name)
           .addClass('figure');
+          var classes = element.attr('class').replace(/\sng[\w|-]+/ig, '');
+          classes.split(" ").forEach(function(cl) {
+            el.addClass(cl);
+          });
           if(attrs['ngHide']) {
             el.attr(attrs.$attr['ngHide'], attrs['ngHide']);
           }
