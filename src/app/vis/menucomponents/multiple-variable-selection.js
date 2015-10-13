@@ -8,10 +8,10 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
   'mentio'
   ])
 
-.constant('MENU_USER_DEFINED_VARS_CATEGORY', 'User defined variables')
+.constant('MENU_USER_DEFINED_VARS_CATEGORY', 'User-defined variables')
 
 .controller('MultipleVariableSelectionCtrl', 
-  function MultipleVariableSelectionCtrl($scope, $q, DatasetFactory, 
+  function MultipleVariableSelectionCtrl($scope, $q, $log, DatasetFactory, 
     VariableService, _, NotifyService,
     MENU_USER_DEFINED_VARS_CATEGORY) {
 
@@ -20,6 +20,15 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     $scope.customCreateDialog = function(val) {
       if(!arguments.length) { return $scope.customDialogOpen; }
       $scope.customDialogOpen = val;
+    };
+
+    $scope.isCustomCreateDialog = function() {
+      return $scope.selected.zeroth && $scope.selected.zeroth == MENU_USER_DEFINED_VARS_CATEGORY;
+    };
+
+    $scope.clearCustomField = function() {
+      $scope.customVariableName.content = '';
+      $scope.typedCustomVarExpression.content = '';
     };
 
     $scope.customVariableName = { content: '' };
@@ -77,17 +86,112 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       }
 
       function expressionHasErrors(expression) {
-        // todo
-        return true;
+        var metaInfo = [],
+        matchVariables = /\[[\w|-]*\]/ig;
+
+
+        function variableNames() {
+          var matchBrackets = /[\[|\]]/ig,
+          variables = expression.match(matchVariables),
+          nameWithoutBrackets,
+          metaData,
+          hadErrors = false;
+
+          _.each(variables, function(v) {
+            nameWithoutBrackets = v.replace(matchBrackets, '');
+            metaData = VariableService.getVariable(nameWithoutBrackets);
+            if(!metaData) {
+              NotifyService.addTransient(null, 'Invalid variable: ' + nameWithoutBrackets, 'error',
+                { referenceId: errorField });
+              hadErrors = true;
+            } else {
+              metaInfo.push(metaData);
+            }
+          });
+          return hadErrors;
+        }
+
+        function tryExpression() {
+          function createVariable() {
+            var variable = new PlCustomVariable()
+            .name($scope.customVariableName.content)
+            .description('Expression: ' + expression)
+            .group({
+              name: MENU_USER_DEFINED_VARS_CATEGORY,
+              order: -1,
+              topgroup: null,
+              type: 'custom'
+            })
+            .originalExpression(expression)
+            .substitutedExpression(expWithSubNames)
+            .substitutedCache(cache)
+            .dependencies(metaInfo);
+
+            VariableService.addCustomVariable(variable);
+          }
+          try {
+            var cache = {};
+            var expWithSubNames = expression.replace(matchVariables, function(d) {
+              var id = _.uniqueId('var');
+              cache[d] = id;
+              return id;
+            });
+            var values = _.chain(cache)
+            .values()
+            .map(function(d) {
+              return [d, _.random(0.5, 10)];
+            })
+            .object()
+            .value();
+
+            // if expression is fine, this should go through
+            /* jshint ignore:start */
+            var result = math.eval(expWithSubNames, values);
+            /* jshint ignore:end */
+            $log.debug('Expression result', result);
+
+            // everything seems fine, create the custom variable
+            createVariable();
+
+            // close menu
+            $scope.customCreateDialog(false);
+            $scope.selected.first = null;
+            $scope.clearCustomField();
+            // refresh variables
+            doNesting(function() {
+              // update the grouping
+              $scope.selected.first = _.chain($scope.nested)
+              .find(function(obj) {
+                return _.keys(obj)[0] == MENU_USER_DEFINED_VARS_CATEGORY;
+              })
+              .values()
+              .first()
+              .value();
+            });
+
+
+            return false;
+            // DatasetFactory.getVariables(metaInfo).then(function() {
+            // });
+          } catch(err) {
+            $log.debug('Expression evaluation failed', err.message);
+            NotifyService.addTransient(null, 'Please check the mathematical expression. ' + err.message, 'error',
+              { referenceId: errorField });
+            return true;
+          }
+        }
+
+        var vars = variableNames(),
+        exp = tryExpression();
+
+        return vars && exp;
       }
 
       var errorField = 'cust-var-info-' + $scope.customExpressionFieldId;
-      if( !nameHasErrors($scope.customVariableName.content) ||
-        !expressionHasErrors($scope.typedCustomVarExpression.content) ) {
+      if( nameHasErrors($scope.customVariableName.content) ||
+        expressionHasErrors($scope.typedCustomVarExpression.content) ) {
         return;
       }
-
-      // create variable
 
     };
 
@@ -376,10 +480,15 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       return !_.isUndefined(input) && !_.isNull(input) && input.length > 0;
     };
 
-    VariableService.getVariables().then(function(res) {
-      $scope.variables = res;
-      $scope.nested = getNestedNavigation($scope.variables);
-    });
+    function doNesting(callback) {
+      VariableService.getVariables().then(function(res) {
+        $scope.variables = res;
+        $scope.nested = getNestedNavigation($scope.variables);
+        if(callback) { callback(); }
+      });
+    }
+
+    doNesting();
 
     // For group navigation
     function getNestedNavigation(variables) {
@@ -476,13 +585,14 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     };
 
     $scope.selected = {
+      zeroth: null,
       first: null,
       second: null,
-      third: null,
-      all: {
-        first: false,
-        second: false
-      }
+      third: null
+      // all: {
+      //   first: false,
+      //   second: false
+      // }
     };
 
     function getKeys(group) {
@@ -536,6 +646,9 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     }
 
     $scope.selectGroup = function(group, level) {
+      if(level == 'first') {
+        $scope.selected['zeroth'] = _.keys(group)[0];
+      }
       if( $scope.getType(group) == 'terminates' ) { return; }
       $scope.selected[level] = getGroupSelection(group, level);
 

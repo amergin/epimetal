@@ -22,11 +22,6 @@ function PlVariable() {
       throw new Error("not implemented");
     };
 
-    // unique identifier
-    obj.id = function(x) {
-      throw new Error("not implemented");
-    };
-
     obj.get = function(x) {
       throw new Error("not implemented");
     };
@@ -115,12 +110,31 @@ function PlCustomVariable() {
     return 'custom';
   };
 
-  obj.id = function() {
-    //todo
-  };  
+  obj.originalExpression = function(x) {
+    if(!arguments.length) { return priv.originalExpression; }
+    priv.originalExpression = x;
+    return obj;
+  };
+
+  obj.substitutedExpression = function(x) {
+    if(!arguments.length) { return priv.substitutedExpression; }
+    priv.substitutedExpression = x;
+    return obj;
+  };
+
+  obj.substitutedCache = function(x) {
+    if(!arguments.length) { return priv.substitutedCache; }
+    priv.substitutedCache = x;
+    return obj;
+  };
+
+  obj.dependencies = function(x) {
+    if(!arguments.length) { return priv.dependencies; }
+    priv.dependencies = x;
+    return obj;
+  };
 
   return obj;
-
 }
 
 PlCustomVariable.prototype = _.create(PlVariable.prototype, {

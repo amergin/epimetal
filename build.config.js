@@ -107,7 +107,7 @@ module.exports = {
       'vendor/ng-tags-input/ng-tags-input.js',
       'vendor/SparkMD5/spark-md5.js',
       'vendor/ment.io/dist/mentio.js',
-      'vendor/mathjs/math.js',
+      'vendor/mathjs/dist/math.js',
       // 'vendor/angular-workers/dist/angular-workers.js',
       'vendor/angular-svg-round-progressbar/build/roundProgress.js',
       // this is a hack to allow the subdirectories to be copied

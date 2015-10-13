@@ -78,7 +78,7 @@ angular.module('services.variable', ['services.notify'])
     var defer = $q.defer();
     if(!arguments.length) { 
       initVariables().then(function(res) {
-        defer.resolve(res);
+        defer.resolve(_.values(_variableCache));
       }, function errFn() {
         defer.reject();
       });
@@ -94,6 +94,16 @@ angular.module('services.variable', ['services.notify'])
       });
     }
     return defer.promise;
+  };
+
+  service.addCustomVariable = function(x) {
+    _variableCache[x.name()] = x;
+    return service;
+  };
+
+  service.removeCustomVariable = function(x) {
+    delete _variableCache[x.name()];
+    return service;
   };
 
   service.getProfiles = _.once(function() {
@@ -118,10 +128,6 @@ angular.module('services.variable', ['services.notify'])
     });
     return profiles;
   });
-
-  // service.getProfiles = function() {
-  //   return getProfiles();
-  // };
 
   return service;
 

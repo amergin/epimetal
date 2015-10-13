@@ -137,6 +137,10 @@
 					</div>
 				</div>
 
+				<div ng-show="selected.first && !selected.first.length" class="list-group-item am-fade">
+					<p class="text-muted">No variables.</p>
+				</div>
+
 				<div ng-switch="majoritySelected(selected.first)" ng-show="canSelectMultiple() && selectedHasVariables(selected.first)">
 					<div class="list-group-item am-fade ctrl text-primary" ng-switch-when="true" ng-click="deselectAll(selected.first)">
 						<strong>Deselect all</strong>
@@ -145,21 +149,14 @@
 						<strong>Select all</strong>
 					</div>
 				</div>
-
+			
 				<!-- custom variable listing -->
-				<div ng-show="selected.first && !selected.first.length">
-					<div class="list-group-item am-fade">
-						<p class="text-muted">No custom variables.</p>
-					</div>
-
-					<div class="list-group-item am-fade ctrl text-primary" ng-class="{ 'active': customCreateDialog() }" ng-click="customCreateDialog(true)">
-						<strong>Create a new variable</strong>
-					</div>
+				<div class="list-group-item am-fade ctrl text-primary" ng-class="{ 'active': customCreateDialog() }" ng-click="customCreateDialog(true)" ng-show="isCustomCreateDialog()">
+					<strong>Create a new variable</strong>
 				</div>
-
 			</div>
 
-			<div ng-class="{ 'list-group pl-nav-double-column': customCreateDialog() }" ng-show="customDialogOpen">
+			<div ng-class="{ 'list-group pl-nav-double-column': customCreateDialog() }" ng-show="customCreateDialog()">
 				<div growl inline="true" limit-messages="1" reference="{{'cust-var-info-' + customExpressionFieldId}}" class="am-fade"></div>
 				<form>
 					<div class="form-group">
@@ -212,8 +209,8 @@
 
 		<div class="list-group pl-nav-column am-fade" ng-show="selected.third">
 			<div class="list-group-item well well-small">
-				<h3>{{selected.third.description()}}</h3>
-				<em>{{selected.third.name()}}</em>
+				<h3>{{selected.third.name()}}</h3>
+				<em>{{selected.third.description()}}</em>
 				<p>{{selected.third.unit()}}</p>
 			</div>
 		</div>
