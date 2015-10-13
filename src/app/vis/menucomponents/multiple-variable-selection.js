@@ -26,6 +26,30 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       return $scope.selected.zeroth && $scope.selected.zeroth == MENU_USER_DEFINED_VARS_CATEGORY;
     };
 
+    function updateCustomMenu() {
+      // close menu
+      $scope.customCreateDialog(false);
+      $scope.selected.first = null;
+      $scope.clearCustomField();
+      // refresh variables
+      doNesting(function() {
+        // update the grouping
+        $scope.selected.first = _.chain($scope.nested)
+        .find(function(obj) {
+          return _.keys(obj)[0] == MENU_USER_DEFINED_VARS_CATEGORY;
+        })
+        .values()
+        .first()
+        .value();
+      });
+    }
+
+    $scope.removeCustomVariable = function(variable) {
+      VariableService.removeCustomVariable(variable);
+      removeVariableFromCache(variable);
+      updateCustomMenu();
+    };
+
     $scope.clearCustomField = function() {
       $scope.customVariableName.content = '';
       $scope.typedCustomVarExpression.content = '';
@@ -153,22 +177,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
             // everything seems fine, create the custom variable
             createVariable();
 
-            // close menu
-            $scope.customCreateDialog(false);
-            $scope.selected.first = null;
-            $scope.clearCustomField();
-            // refresh variables
-            doNesting(function() {
-              // update the grouping
-              $scope.selected.first = _.chain($scope.nested)
-              .find(function(obj) {
-                return _.keys(obj)[0] == MENU_USER_DEFINED_VARS_CATEGORY;
-              })
-              .values()
-              .first()
-              .value();
-            });
-
+            updateCustomMenu();
 
             return false;
             // DatasetFactory.getVariables(metaInfo).then(function() {

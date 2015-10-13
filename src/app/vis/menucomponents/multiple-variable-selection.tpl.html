@@ -133,6 +133,7 @@
 							<input type="checkbox" ng-checked="variableIsSelected(item)" ng-click="updateSelection(item)" noclick>
 							{{item.name()}}
 						</label>
+						<i class="fa fa-times-circle ctrl pull-right text-danger" ng-click="removeCustomVariable(item)" ng-show="isCustomCreateDialog()"></i>
 						<i class="fa fa-info-circle ctrl pull-right text-muted" ng-click="selectInfo(item)"></i>
 					</div>
 				</div>
