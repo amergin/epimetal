@@ -104,7 +104,6 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
     // create the axes last and place them on top of other canvases
     var axesCanvas = $scope.createAxisCanvas(
-      // $scope.element,
       $scope.wrapper,
       $scope.width,
       $scope.height,
@@ -114,8 +113,8 @@ angular.module('plotter.vis.plotting.scatterplot', [
       $scope.xRange,
       $scope.yRange,
       100,
-      $scope.window.variables().x.name(),
-      $scope.window.variables().y.name()
+      $scope.window.variables().x.axisLabel(),
+      $scope.window.variables().y.axisLabel()
     );
     $scope.canvases['axes'] = {
       'zindex': 100,

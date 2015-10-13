@@ -67,6 +67,14 @@ function PlVariable() {
       return obj;
     };
 
+    // utility fn, only get
+    obj.axisLabel = function() {
+      var ret = [];
+      ret.push(obj.name());
+      if(obj.unit()) { ret.push("(" + obj.unit() + ")"); }
+      return ret.join(" ");
+    };
+
     obj.group = function(x) {
       if (!arguments.length) {
         return priv.group;

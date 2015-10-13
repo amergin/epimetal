@@ -432,7 +432,7 @@ angular.module('plotter.vis.plotting.histogram',
       var config = {
         dimension: $scope.dimension,
         element: ele,
-        xLabel: $scope.window.variables().name() + " (" + $scope.window.variables().unit() + ")",
+        xLabel: $scope.window.variables().axisLabel(),
         noBins: $scope.noBins,
         extent: $scope.extent,
         binWidth: $scope.binWidth,
