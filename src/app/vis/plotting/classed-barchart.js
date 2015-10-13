@@ -56,7 +56,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
     $scope.dimension = $scope.dimensionInst.get();
     $scope.groupInst = $scope.dimensionInst.groupDefault();
 
-    $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables().name());
+    $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables());
     $scope.reduced = $scope.groupInst.get();
     // total will always have largest count
     $scope.extent = [0, getTotalCount()];
@@ -67,7 +67,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
       $scope.dimensionInst = $scope.dimensionService.classHistogramDimension($scope.window.variables());
       $scope.dimension = $scope.dimensionInst.get();
       $scope.groupInst = $scope.dimensionInst.groupDefault();
-      $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables().name());
+      $scope.dimensionService.getReducedGroupHisto($scope.groupInst);
       $scope.reduced = $scope.groupInst.get();
       $scope.extent = [0, d3.max($scope.dimension.group().all(), function(d) { return d.value; } )];
 

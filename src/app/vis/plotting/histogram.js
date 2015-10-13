@@ -114,18 +114,18 @@ angular.module('plotter.vis.plotting.histogram',
 
       if( $scope.isSpecial() ) {
         // circle
-        $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables().name());
+        $scope.dimensionService.getReducedGroupHistoDistributions($scope.groupInst, $scope.window.variables());
         $scope.reduced = $scope.groupInst.get();
 
         $scope.totalGroupInst = $scope.totalDimensionInst.group(function(d) {
           return Math.floor(d / $scope.binWidth) * $scope.binWidth;
         });
         // total
-        $scope.primary.getReducedGroupHisto($scope.totalGroupInst, $scope.window.variables().name());
+        $scope.primary.getReducedGroupHisto($scope.totalGroupInst);
         $scope.totalReduced = $scope.totalGroupInst.get();
       }
       else {
-        $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables().name());
+        $scope.dimensionService.getReducedGroupHisto($scope.groupInst);
         $scope.reduced = $scope.groupInst.get();
       }
 

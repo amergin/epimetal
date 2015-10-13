@@ -43,10 +43,10 @@ angular.module('plotter.vis.plotting.profile-histogram',
         };
       }, true );
       $scope.groupsInst[variable.name()] = groupInst;
-      $scope.groups[variable.name()] = $scope.dimensionService.getReducedMean(groupInst, variable.name()).get();
+      $scope.groups[variable.name()] = $scope.dimensionService.getReducedMean(groupInst, variable).get();
       var groupAll = $scope.totalDimensionInst.groupAll();
       $scope.totalReducedInst[variable.name()] = groupAll;
-      $scope.totalReduced[variable.name()] = DimensionService.getPrimary().getReducedSTD( groupAll, variable.name() ).get();
+      $scope.totalReduced[variable.name()] = DimensionService.getPrimary().getReducedSTD(groupAll, variable).get();
     });
 
     $scope.filterOnSet = function(group, variable, totalReduced) {

@@ -437,10 +437,9 @@ angular.module('services.dimensions', [
           initial: reduceInitial
         });
         return dimensionGroup;
-        // return dimensionGroup.reduce(reduceAdd, reduceRemove, reduceInitial);
       };
 
-      this.getReducedGroupHisto = function(dimensionGroup, variable) {
+      this.getReducedGroupHisto = function(dimensionGroup) {
         var getKey = function(samp) {
           return [samp.originalDataset || samp.dataset, samp.sampleid].join("|");
         };
@@ -527,7 +526,7 @@ angular.module('services.dimensions', [
         // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Decremental_algorithm
         var reduceAdd = function(p, v) {
           p.n = p.n + 1;
-          var varValue = +v.variables[variable];
+          var varValue = +v.variables[variable.name()];
           if (!_.isNaN(varValue)) {
             var key = getKey(v),
             added = hasBeenAdded(key, v, p);
@@ -544,7 +543,7 @@ angular.module('services.dimensions', [
 
         var reduceRemove = function(p, v) {
           p.n = p.n - 1;
-          var varValue = +v.variables[variable];
+          var varValue = +v.variables[variable.name()];
           if (!_.isNaN(varValue)) { //_.isNumber(varValue) ) {
             var delta = varValue - p.mean;
 
@@ -666,7 +665,7 @@ angular.module('services.dimensions', [
         // see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Decremental_algorithm
         var reduceAdd = function(p, v) {
           var obj = p,
-          value = +v.variables[variable],
+          value = +v.variables[variable.name()],
           key = getKey(v),
           added = hasBeenAdded(key, v, p);
           add(key, p);
@@ -684,7 +683,7 @@ angular.module('services.dimensions', [
 
         var reduceRemove = function(p, v) {
           var obj = p,
-          value = +v.variables[variable],
+          value = +v.variables[variable.name()],
           key = getKey(v);
           remove(key, p);
           var sampsLeft = hasBeenAdded(key, v, p);
@@ -758,7 +757,7 @@ angular.module('services.dimensions', [
           if (_.isEmpty(v.bmus) || _.isUndefined(v.bmus)) {
             return p;
           }
-          var variableVal = +v.variables[variable];
+          var variableVal = +v.variables[variable.name()];
           if (_.isNaN(variableVal)) {
             // pass
           } else {
@@ -788,7 +787,7 @@ angular.module('services.dimensions', [
           if (_.isEmpty(v.bmus) || _.isUndefined(v.bmus)) {
             return p;
           }
-          var variableVal = +v.variables[variable];
+          var variableVal = +v.variables[variable.name()];
           if (_.isNaN(variableVal)) {
             // pass
           } else {

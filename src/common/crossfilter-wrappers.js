@@ -35,7 +35,6 @@ function CrossfilterDimension() {
     var destructFn = _.once(function() {
       delete _groups[id];
     });
-    //dimension, groupFn, injector, crossfilterInst, destructFn) {
     var group = 
     new CrossfilterGroup()
     .dimension(_dimension)
