@@ -1,5 +1,6 @@
 angular.module('services.dimensions', [
   'services.dataset',
+  'services.variable',
   'ui.router.state',
   'ext.dc',
   'ext.lodash'
@@ -8,7 +9,7 @@ angular.module('services.dimensions', [
 .constant('DIMENSIONS_MAX_COUNT', 32)
 
 // handles crossfilter.js dimensions/groupings and keeps them up-to-date
-.factory('DimensionService', function($injector, $q, constants, $rootScope, DIMENSIONS_MAX_COUNT, dc, _) {
+.factory('DimensionService', function($injector, $q, constants, $rootScope, VariableService, DIMENSIONS_MAX_COUNT, dc, _) {
 
   var _instances = {};
 
@@ -54,7 +55,7 @@ angular.module('services.dimensions', [
         var ret = [];
         _.each(dimensions, function(dim) {
           if (dim.type() == 'normal') {
-            ret = ret.concat(dim.variable());
+            ret.push(dim.variable());
           }
         });
         return ret;
@@ -1045,15 +1046,15 @@ angular.module('services.dimensions', [
         var defer = $q.defer();
 
         // what keys have been used in the past?
-        var currentKeys = _getCurrentKeys();
+        var currentVariables = VariableService.getVariables(_getCurrentKeys());
 
-        if (_.isEmpty(currentKeys)) {
+        if (_.isEmpty(currentVariables)) {
           // first transition to som, nothing pre-existing
           finish(primarySamples);
           defer.resolve();
         } else {
           var DatasetFactory = $injector.get('DatasetFactory');
-          DatasetFactory.getVariableData(currentKeys, null, {
+          DatasetFactory.getVariableData(currentVariables, null, {
               addToDimensionService: false,
               getRawData: true
             })

@@ -3,6 +3,7 @@ angular.module('plotter.vis.plotting.profile-histogram',
   'ui.router',
   'services.dimensions',
   'services.dataset',
+  'services.variable',
   'services.som',
   'services.window',
   'ext.d3',
@@ -120,7 +121,7 @@ angular.module('plotter.vis.plotting.profile-histogram',
 
 })
 
-.directive('plProfileHistogram', function plProfileHistogram($timeout, $rootScope, $injector, PROFILE_HISTOGRAM_SIZE, d3, _) {
+.directive('plProfileHistogram', function plProfileHistogram($timeout, $rootScope, $injector, VariableService, PROFILE_HISTOGRAM_SIZE, d3, _) {
 
     var PlotService = $injector.get('PlotService');
 
@@ -145,13 +146,13 @@ angular.module('plotter.vis.plotting.profile-histogram',
       })
       .onClick(function(d) {
         var config = {
-          variables: d.custom.variable,
+          variable: VariableService.getVariable(d.custom.variable),
           pooled: false,
           somSpecial: true,
           filterEnabled: false
         };
         // draw a new one
-        PlotService.drawHistogram( config, $scope.window.handler() );
+        PlotService.drawHistogram(config, $scope.window.handler());
 
       })
       .yAxisDisabled(true)

@@ -188,7 +188,7 @@ function CrossfilterDimension() {
   };
 
   _obj.variable = function(x) {
-    if(!arguments.length) { _variable = x; }
+    if(!arguments.length) { return _variable; }
     _variable = x;
     return _obj;
   };
