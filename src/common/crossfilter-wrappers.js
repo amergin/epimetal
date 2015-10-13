@@ -25,7 +25,7 @@ function CrossfilterDimension() {
       group.destroy();
     });
     _dimension.dispose();
-    destructFn(type, _variable);
+    _destructFn(_type, _variable);
   };
 
   _obj.groupAll = function() {
@@ -221,6 +221,12 @@ function CrossfilterGroup() {
       initial: null
     };
 
+  var destroy = function() {
+    console.log("Destroying group ", _groupFn || 'default');
+    _group.dispose();
+    _destructFn();
+  };
+
   var increment = function() {
     ++_count;
   };
@@ -271,8 +277,7 @@ function CrossfilterGroup() {
   };
 
   _obj.destroy = function() {
-    console.log("Destroying group ", _groupFn || 'default');
-    _group.dispose();
+    destroy();
     destructFn();
   };
 

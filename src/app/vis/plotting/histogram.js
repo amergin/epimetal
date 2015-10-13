@@ -43,14 +43,14 @@ angular.module('plotter.vis.plotting.histogram',
 
     function initSOMSpecial() {
       $scope.primary = $injector.get('DimensionService').getPrimary();
-      $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables().name());
+      $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables());
       $scope.totalDimension = $scope.totalDimensionInst.get();
-      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables().name());
+      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables());
       $scope.dimension = $scope.dimensionInst.get();
     }
 
     function initDefault() {
-      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables().name());
+      $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables());
       $scope.dimension = $scope.dimensionInst.get();
       $scope.groupInst = null;
       $scope.totalGroupInst = null;

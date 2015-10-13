@@ -11,7 +11,9 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
   $scope.dimensionService = $scope.window.handler().getDimensionService();
   $scope.dimensionInst = $scope.dimensionService.getXYDimension(
-    $scope.window.variables().x.name(), $scope.window.variables().y.name());
+    $scope.window.variables().x, 
+    $scope.window.variables().y
+  );
   $scope.dimension = $scope.dimensionInst.get();
 
   $scope.initGroup = function() {

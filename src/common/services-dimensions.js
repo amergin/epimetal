@@ -60,8 +60,18 @@ angular.module('services.dimensions', [
         return ret;
       };
 
-      var getDimensionKey = function(type, variable) {
-        return _.toArray(arguments).join("|");
+      var getDimensionKey = function() {
+        return _.chain(arguments)
+        .toArray()
+        .map(function(d) {
+          if(_.isObject(d)) {
+            return d.name();
+          } else {
+            return d;
+          }
+        })
+        .value()
+        .join("|");
       };
 
       // return one dimension. 
@@ -71,7 +81,7 @@ angular.module('services.dimensions', [
             return constants.nanValue;
           } else {
             // a little checking to make sure NaN's are not returned
-            var value = +d.variables[variable];
+            var value = +d.variables[variable.name()];
             return _.isNaN(value) ? constants.nanValue : value;
           }
         };
@@ -99,7 +109,7 @@ angular.module('services.dimensions', [
       this.classHistogramDimension = function(classvar) {
         var creationFn = function(d) {
           return {
-            classed: d.variables[classvar],
+            classed: d.variables[classvar.name()],
             dataset: d.dataset,
             valueOf: function() {
               return _.isUndefined(this.classed) ? String(constants.nanValue) : this.classed + "|" + this.dataset;
@@ -357,8 +367,8 @@ angular.module('services.dimensions', [
         var key = getDimensionKey('normal', xVariable, yVariable);
         var creationFn = function(d) {
           return {
-            x: +d.variables[xVariable],
-            y: +d.variables[yVariable],
+            x: +d.variables[xVariable.name()],
+            y: +d.variables[yVariable.name()],
             // override prototype function to ensure the object is naturally ordered
             valueOf: function() {
               // the value is not important, only the resulting ordering is. 

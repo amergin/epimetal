@@ -52,7 +52,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
     $scope.totalGroup = $scope.totalGroupInst.get();
     $scope.dimensionService.getReducedDeduplicated($scope.totalGroupInst);
 
-    $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables().name());
+    $scope.dimensionInst = $scope.dimensionService.getDimension($scope.window.variables());
     $scope.dimension = $scope.dimensionInst.get();
     $scope.groupInst = $scope.dimensionInst.groupDefault();
 
@@ -64,7 +64,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
     }
 
     function initDefault() {
-      $scope.dimensionInst = $scope.dimensionService.classHistogramDimension($scope.window.variables().name());
+      $scope.dimensionInst = $scope.dimensionService.classHistogramDimension($scope.window.variables());
       $scope.dimension = $scope.dimensionInst.get();
       $scope.groupInst = $scope.dimensionInst.groupDefault();
       $scope.dimensionService.getReducedGroupHisto($scope.groupInst, $scope.window.variables().name());
