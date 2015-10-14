@@ -1,5 +1,6 @@
 angular.module('services.correlation.ww', [
   'services.dataset',
+  'services.variable',
   'services.notify',
   'services.webworker',
   'ext.lodash',
@@ -13,7 +14,7 @@ angular.module('services.correlation.ww', [
 .constant('CORRELATION_VAR_THRESHOLD', 10)
 .constant('CORRELATION_THREADS', 3)
 
-.factory('CorrelationService', function CorrelationServiceWW($q, DatasetFactory, NotifyService, CORRELATION_SPLIT_MAX, CORRELATION_SPLIT_MIN, CORRELATION_VAR_THRESHOLD, CORRELATION_THREADS, WebWorkerService, TabService, coreEstimator, _) {
+.factory('CorrelationService', function CorrelationServiceWW($q, DatasetFactory, VariableService, NotifyService, CORRELATION_SPLIT_MAX, CORRELATION_SPLIT_MIN, CORRELATION_VAR_THRESHOLD, CORRELATION_THREADS, WebWorkerService, TabService, coreEstimator, _) {
   var that = this;
   var service = {};
 
@@ -42,7 +43,8 @@ angular.module('services.correlation.ww', [
       });
     };
     var deferred = $q.defer(),
-      variables = config.variables,
+      // objects
+      variables = VariableService.getVariables(config.variables),
       separated = (config.separate === true),
       raw;
 
@@ -63,7 +65,7 @@ angular.module('services.correlation.ww', [
             else { arr = [d.dataset, d.sampleid]; }
             return arr.join("|");
           });
-          var raw = getRaw(deDuplicated, variables);
+          var raw = getRaw(deDuplicated);
           deferred.resolve(raw);
         });
     }

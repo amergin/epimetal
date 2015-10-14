@@ -261,7 +261,6 @@ angular.module('plotter.vis.plotting.heatmap',
 
     $scope.computeVariables = function(callback) {
       var variables = _.map($scope.window.variables(), function(v) { return v.name(); });
-      // $scope.window.spin(true);
 
       // get coordinates in a separate worker
       CorrelationService.compute( { 
