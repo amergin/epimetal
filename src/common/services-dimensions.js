@@ -868,6 +868,16 @@ angular.module('services.dimensions', [
         return dataRemoved;
       };
 
+      this.removeCustomVariable = function(variable) {
+        var name = variable.name(), samp;
+        for(var sampid in currSamples) {
+          samp = currSamples[sampid];
+          if(samp.variables[name]) {
+            delete samp.variables[name];
+          }
+        }
+      };
+
       // receives new variable data. The function is called once for each dataset
       // receiving data, and therefore the additions have to operate on a dataset-basis
       this.addVariableData = function(config) {

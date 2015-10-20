@@ -577,6 +577,14 @@ angular.module('services.window', [
         // empty the window array, that'll remove all
         handler.get().splice(0);
       });
+    },
+    removeWindowsFromHandlers: function(rejectFn) {
+      var variables;
+      _.each(_handlers, function(handler) {
+        _.remove(handler.get(), function(win) {
+          return rejectFn(win.object);
+        });
+      });
     }
   };
 

@@ -6,14 +6,15 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
   'services.variable', 
   'services.dataset',
   'services.notify',
+  'services.window',
   'mentio'
   ])
 
 .constant('MENU_USER_DEFINED_VARS_CATEGORY', 'User-defined variables')
 
 .controller('MultipleVariableSelectionCtrl', 
-  function MultipleVariableSelectionCtrl($scope, $q, $log, DatasetFactory, 
-    VariableService, NotifyService, MENU_USER_DEFINED_VARS_CATEGORY, 
+  function MultipleVariableSelectionCtrl($scope, $q, $log, DatasetFactory, DimensionService, 
+    WindowHandler, VariableService, NotifyService, MENU_USER_DEFINED_VARS_CATEGORY, 
     _, math, constants) {
 
     // custom dialog stuff
@@ -46,7 +47,31 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     }
 
     $scope.removeCustomVariable = function(variable) {
+      function removeWindowsContaining() {
+        function rejectFn(win) {
+          variables = win.variables();
+          if(_.isArray(variables)) {
+            return _.contains(variables, variable);
+          } else if(win.figure() == 'pl-scatterplot') {
+            return _.chain(variables).values().contains(variable).value();
+          } else if(win.figure() == 'pl-regression') {
+            return _.contains(variables.adjust, variable) ||
+            _.contains(variables.association, variable) ||
+            _.contains(variables.target, variable);
+          } else {
+            return _.isEqual(variables, variable);
+          }
+        }
+        WindowHandler.removeWindowsFromHandlers(rejectFn);
+      }
+      removeWindowsContaining();
       VariableService.removeCustomVariable(variable);
+      DatasetFactory.removeCustomVariable(variable);
+      // remove from dim service
+      _.each(DimensionService.getAll(), function(obj) {
+        obj.instance.removeCustomVariable(variable);
+        obj.instance.rebuildInstance();
+      });
       removeVariableFromCache(variable);
       updateCustomMenu();
       // hide third

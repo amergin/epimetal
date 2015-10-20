@@ -135,6 +135,18 @@ angular.module('services.dataset', ['services.notify',
           .value();
       };
 
+      dset.removeCustomVariable = function(variable) {
+        var samp,
+        name = variable.name();
+        for(var sampid in priv.samples) {
+          samp = priv.samples[sampid];
+          if(samp.variables[name]) {
+            delete samp.variables[name];
+          }
+        }
+        return dset;
+      };
+
       // protected functions
       priv.getKey = function(samp) {
         return [samp.dataset, samp.sampleid].join("|");
@@ -722,6 +734,13 @@ angular.module('services.dataset', ['services.notify',
 
       return derived;
     }
+  };
+
+  service.removeCustomVariable = function(variable) {
+    _.each(that.sets, function(set, name) {
+      set.removeCustomVariable(variable);
+    });
+    return service;
   };
 
   // assumes getDatasets is called and therefore the service is initialized
