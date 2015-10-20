@@ -163,7 +163,7 @@ angular.module('services.dataset', ['services.notify',
 
         var retObj = {
           samples: {
-            added: [],
+            added: false,
             all: []
           },
           variables: {
@@ -205,7 +205,7 @@ angular.module('services.dataset', ['services.notify',
               processFn(response.result.values);
               var addedVars = _.chain(separated).values().flatten().value();
               if(callback) { callback(); }
-              defer.resolve(priv.getResult(addedVars, config, response.result.values));
+              defer.resolve(priv.getResult(addedVars, config, true));
             })
             .error(function(response, status, headers, config) {
               defer.reject(response);
@@ -239,7 +239,7 @@ angular.module('services.dataset', ['services.notify',
           } else {
             // no  normal vars, proceed with custom vars now
             customVarCallback(separated['custom']);
-            defer.resolve(priv.getResult(separated['custom'], config, []));
+            defer.resolve(priv.getResult(separated['custom'], config, true));
           }
         }
 
@@ -277,7 +277,7 @@ angular.module('services.dataset', ['services.notify',
         priv.getVariables(variables, config, defer, dset.name());
       } else if (_.isEmpty(newVariables)) {
         // nothing to done, everything already fetched
-        defer.resolve(priv.getResult(newVariables, config));
+        defer.resolve(priv.getResult(newVariables, config, false));
       } else {
         // fetch new variables
         priv.getVariables(newVariables, config, defer, dset.name());
@@ -333,7 +333,7 @@ angular.module('services.dataset', ['services.notify',
           priv.getVariables(variables, config, defer, dsetName, priv.processSamples);
         } else if (_.isEmpty(newVariables)) {
           // nothing to done, everything already fetched
-          defer.resolve(priv.getResult(newVariables, config));
+          defer.resolve(priv.getResult(newVariables, config, false));
         } else {
           // fetch new variables
           priv.getVariables(newVariables, config, defer, dsetName, priv.processSamples);
@@ -490,7 +490,7 @@ angular.module('services.dataset', ['services.notify',
 
       set.getVariables(activeVars).then(function sucFn(obj) {
 
-        if (_.isEmpty(obj.samples.added)) {
+        if(!obj.samples.added) {
           defer.resolve('enabled');
           return;
         }
