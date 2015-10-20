@@ -135,7 +135,19 @@ angular.module('services.dataset', ['services.notify',
         return [samp.dataset, samp.sampleid].join("|");
       };
 
-      priv.getResult = function(callVariables, newVariables, config, addedValues) {
+      // separates the input variables into db vars and custom vars
+      priv.separateVariables = function(variables) {
+        var ret = { 'db': [], 'custom': [] };
+        _.each(variables, function(v) {
+          ret[v.type()].push(v);
+          if( v.type() == 'custom' ) {
+            ret['db'].push.apply(ret['db'], v.dependencies());
+          }
+        });
+        return ret;
+      };
+
+      priv.getResult = function(newVariables, config, addedValues) {
         function getAllVariables() {
           var lookup = {};
           _.each(priv.samples, function(samp) {
@@ -177,24 +189,61 @@ angular.module('services.dataset', ['services.notify',
           });
         }
 
-        var performPost = function(vars, config, defer, datasetName, processFn) {
+        var performPost = function(normalVars, config, defer, datasetName, processFn, callback, separated) {
           $http.post(DATASET_URL_FETCH_MULTIPLE_VARS, {
-              variables: Utils.pickVariableNames(vars),
+              variables: Utils.pickVariableNames(normalVars),
               dataset: datasetName
             }, {
               cache: true
             })
             .success(function(response) {
               processFn(response.result.values);
-              defer.resolve(priv.getResult(variables, vars, config, response.result.values));
+              var addedVars = _.chain(separated).values().flatten().value();
+              if(callback) { callback(); }
+              defer.resolve(priv.getResult(addedVars, config, response.result.values));
             })
             .error(function(response, status, headers, config) {
               defer.reject(response);
             });
         };
 
+        function customVarCallback(vars) {
+          // adds the custom var value to the sample
+          _.each(vars, function(v) {
+            var name = v.name();
+            _.each(priv.samples, function(samp, id) {
+              if(!samp.variables[name]) {
+                samp.variables[name] = v.evaluate(samp);
+              }
+            });
+          });
+        }
+
+        function process() {
+          // function callback() {
+          //   if(separated['custom'].length) {
+          //     customVarCallback(separated['custom']);
+          //   }
+          // }
+          var separated = priv.separateVariables(variables);
+
+          if( separated['db'] && separated['db'].length ) {
+            // for the normal vars, request to API
+            performPost(separated['db'], config, defer, datasetName, processFn, function() {
+              if(separated['custom'].length) {
+                customVarCallback(separated['custom']);
+              }
+            }, separated);
+          } else {
+            // no  normal vars, proceed with custom vars now
+            customVarCallback(separated['custom']);
+            defer.resolve(priv.getResult(separated['custom'], config, []));
+          }
+        }
+
         var processFn = sampProcessFn ? sampProcessFn : defaultProcessFn;
-        performPost(variables, config, defer, datasetName, processFn);
+        process();
+        // performPost(variables, config, defer, datasetName, processFn);
       };
 
       return dset;
@@ -217,17 +266,17 @@ angular.module('services.dataset', ['services.notify',
       var defer = $q.defer(),
         configDefined = !_.isUndefined(config);
 
-      var empty = _.isEmpty(priv.samples),
+      var samplesEmpty = _.isEmpty(priv.samples),
         currentVariables = dset.variables(),
         intersection = _.intersection(currentVariables, variables),
         newVariables = _.difference(variables, intersection);
 
-      if (empty) {
+      if (samplesEmpty) {
         // get all variables
         priv.getVariables(variables, config, defer, dset.name());
       } else if (_.isEmpty(newVariables)) {
         // nothing to done, everything already fetched
-        defer.resolve(priv.getResult(variables, newVariables, config));
+        defer.resolve(priv.getResult(newVariables, config));
       } else {
         // fetch new variables
         priv.getVariables(newVariables, config, defer, dset.name());
@@ -283,7 +332,7 @@ angular.module('services.dataset', ['services.notify',
           priv.getVariables(variables, config, defer, dsetName, priv.processSamples);
         } else if (_.isEmpty(newVariables)) {
           // nothing to done, everything already fetched
-          defer.resolve(priv.getResult(variables, newVariables, config));
+          defer.resolve(priv.getResult(newVariables, config));
         } else {
           // fetch new variables
           priv.getVariables(newVariables, config, defer, dsetName, priv.processSamples);

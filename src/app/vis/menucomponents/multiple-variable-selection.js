@@ -14,7 +14,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 .controller('MultipleVariableSelectionCtrl', 
   function MultipleVariableSelectionCtrl($scope, $q, $log, DatasetFactory, 
     VariableService, NotifyService, MENU_USER_DEFINED_VARS_CATEGORY, 
-    _, math) {
+    _, math, constants) {
 
     // custom dialog stuff
     $scope.customDialogOpen = false;
@@ -152,6 +152,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
             .originalExpression(expression)
             .substitutedExpression(expWithSubNames)
             .substitutedCache(cache)
+            .external(constants.nanValue, math)
             .dependencies(metaInfo);
 
             VariableService.addCustomVariable(variable);
@@ -171,7 +172,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
             .object()
             .value();
 
-            // if expression is fine, this should go through
+            // if expression is fine, this should go through eval
             /* jshint ignore:start */
             var result = math.eval(expWithSubNames, values);
             /* jshint ignore:end */

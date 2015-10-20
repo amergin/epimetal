@@ -3,7 +3,8 @@ angular.module('services.dimensions', [
   'services.variable',
   'ui.router.state',
   'ext.dc',
-  'ext.lodash'
+  'ext.lodash',
+  'ext.mathjs'
 ])
 
 .constant('DIMENSIONS_MAX_COUNT', 32)
@@ -90,7 +91,7 @@ angular.module('services.dimensions', [
 
         var key = getDimensionKey('normal', variable);
         if (dimensions[key]) {
-          //pass
+          //pass, dimension already created
         } else {
           var destructFn = _.once(function() {
             delete dimensions[key];

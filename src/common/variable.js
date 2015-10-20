@@ -113,9 +113,16 @@ function PlCustomVariable() {
 
   var obj = this.obj,
   priv = this.privates;
+  priv.math = null;
 
   obj.type = function() {
     return 'custom';
+  };
+
+  obj.external = function(nanValue, math) {
+    priv.nanValue = nanValue;
+    priv.math = math;
+    return obj;
   };
 
   obj.originalExpression = function(x) {
@@ -134,6 +141,27 @@ function PlCustomVariable() {
     if(!arguments.length) { return priv.substitutedCache; }
     priv.substitutedCache = x;
     return obj;
+  };
+
+  obj.evaluate = function(sample) {
+    function originalVariableName(bracketName) {
+      var matchBrackets = /[\[|\]]/ig;
+      return bracketName.replace(matchBrackets, '');
+    }
+    var hasNaN = false,
+    values = _.chain(priv.substitutedCache)
+    // key is the original with brackets [], value is substituted
+    .map(function(subName, bracketName) {
+      var varName = originalVariableName(bracketName),
+      value = +sample.variables[varName];
+      if(isNaN(value)) { hasNaN = true; }
+      return [subName, value];
+    })
+    .object()
+    .value();
+    /* jshint ignore:start */
+    return hasNaN ? priv.nanValue : priv.math.eval(priv.substitutedExpression, values);
+    /* jshint ignore:end */
   };
 
   obj.dependencies = function(x) {

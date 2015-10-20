@@ -166,7 +166,7 @@ angular.module('plotter.vis.plotting.histogram',
         'all': function() {
           if( $scope.isSpecial() && name != 'total' ) {
             var ret = _.chain(group.all())
-            .reject(function(grp) { return grp.key < constants.legalMinValue; })
+            .reject(function(grp) { return grp.key == constants.nanValue; })
             .map(function(grp) {
               var lookup = {};
 
@@ -197,7 +197,7 @@ angular.module('plotter.vis.plotting.histogram',
           } else {
             // normal histograms or total
             return group.all().filter(function(d) {
-              return (d.value.counts[name] > 0) && (d.key >= constants.legalMinValue);
+              return (d.value.counts[name] > 0) && (d.key != constants.nanValue);
             });
           }
         }
