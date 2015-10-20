@@ -473,7 +473,7 @@ angular.module('plotter.vis.plotting.heatmap',
         if( winHandler == $scope.window.handler() ) {
           var filtered = _.startsWith(config.action, 'filter');
 
-          if($scope.window.separate) {
+          if($scope.window.extra().separate) {
             if(filtered) {
               doRedraw();
             }
