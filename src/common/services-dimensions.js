@@ -57,7 +57,7 @@ angular.module('services.dimensions', [
         _.each(dimensions, function(dim) {
           if (dim.type() == 'normal') {
             // flattens the array, useful when scatterplots are present
-            ret.concat(dim.variable());
+            ret = ret.concat(dim.variable());
           }
         });
         return ret;

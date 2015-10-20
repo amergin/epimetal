@@ -1,5 +1,6 @@
 angular.module('services.dataset', ['services.notify',
   'ui.router.state',
+  'services.variable',
   'ext.d3',
   'ext.lodash'
 ])
@@ -7,7 +8,8 @@ angular.module('services.dataset', ['services.notify',
 .constant('DATASET_URL_FETCH_DATASETS', '/API/datasets')
 .constant('DATASET_URL_FETCH_MULTIPLE_VARS', '/API/list/')
 
-.factory('DatasetFactory', function DatasetFactory($http, $q, $injector, $rootScope, NotifyService, d3, _,
+.factory('DatasetFactory', function DatasetFactory($http, $q, $injector, $rootScope, NotifyService, VariableService,
+  d3, _,
   DATASET_URL_FETCH_DATASETS, DATASET_URL_FETCH_MULTIPLE_VARS) {
 
   // privates
@@ -116,6 +118,9 @@ angular.module('services.dataset', ['services.notify',
           })
           .flatten()
           .uniq()
+          .map(function(v) {
+            return VariableService.getVariable(v);
+          })
           .value();
       };
 
@@ -220,20 +225,17 @@ angular.module('services.dataset', ['services.notify',
         }
 
         function process() {
-          // function callback() {
-          //   if(separated['custom'].length) {
-          //     customVarCallback(separated['custom']);
-          //   }
-          // }
           var separated = priv.separateVariables(variables);
 
           if( separated['db'] && separated['db'].length ) {
             // for the normal vars, request to API
-            performPost(separated['db'], config, defer, datasetName, processFn, function() {
+            performPost(separated['db'], config, defer, datasetName, processFn, 
+            function() {
               if(separated['custom'].length) {
                 customVarCallback(separated['custom']);
               }
-            }, separated);
+            }, 
+            separated);
           } else {
             // no  normal vars, proceed with custom vars now
             customVarCallback(separated['custom']);
@@ -243,7 +245,6 @@ angular.module('services.dataset', ['services.notify',
 
         var processFn = sampProcessFn ? sampProcessFn : defaultProcessFn;
         process();
-        // performPost(variables, config, defer, datasetName, processFn);
       };
 
       return dset;
@@ -494,11 +495,9 @@ angular.module('services.dataset', ['services.notify',
           return;
         }
 
-        var config = _.extend(obj, {
-          force: true
-        });
+        var config = _.extend(obj, { force: true });
 
-        var dataAdded = that.dimensionService.addVariableData(config); //(activeVars, obj.samples.added, obj.dataset, true);
+        var dataAdded = that.dimensionService.addVariableData(config);
         if (dataAdded) {
           dataWasAdded = true;
         }
