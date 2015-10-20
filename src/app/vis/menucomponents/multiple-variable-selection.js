@@ -2,6 +2,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
   [
   'ngTagsInput',
   'ext.lodash',
+  'ext.mathjs',
   'services.variable', 
   'services.dataset',
   'services.notify',
@@ -12,8 +13,8 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 
 .controller('MultipleVariableSelectionCtrl', 
   function MultipleVariableSelectionCtrl($scope, $q, $log, DatasetFactory, 
-    VariableService, _, NotifyService,
-    MENU_USER_DEFINED_VARS_CATEGORY) {
+    VariableService, NotifyService, MENU_USER_DEFINED_VARS_CATEGORY, 
+    _, math) {
 
     // custom dialog stuff
     $scope.customDialogOpen = false;
@@ -48,6 +49,8 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       VariableService.removeCustomVariable(variable);
       removeVariableFromCache(variable);
       updateCustomMenu();
+      // hide third
+      $scope.selected.third = null;
     };
 
     $scope.clearCustomField = function() {

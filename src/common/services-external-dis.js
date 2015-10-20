@@ -10,6 +10,15 @@ angular.module('ext.dc', []).factory('dc', function dc() {
     return window.dc;
 });
 
+angular.module('ext.mathjs', [])
+.run(function() {
+  // should come in handy for custom math expressions:
+  window.math.import({ln: window.math.log});
+})
+.factory('math', function mathjs() {
+    return window.math;
+});
+
 angular.module('utilities.math', []).factory('mathUtils', function mathUtils() {
     return window.mathUtils;
 });
