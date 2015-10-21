@@ -82,6 +82,15 @@ def withoutKeys(dictionary, keys):
 def dictSubset(dictionary, keys):
 	return dict([(i, dictionary[i]) for i in keys if i in dictionary])	
 
+def variablesExist(array):
+	variables = Sample.objects.first().variables
+	for variable in array:
+		if not variables.get(variable):
+			return False
+	return True
+
+
+
 @app.route( config.getFlaskVar('prefix') + 'headers/NMR_results', methods=['GET'])
 def headers():
 	def _getFormatted():
@@ -157,7 +166,7 @@ def createPlane():
 		resp = flask.jsonify({
 		'success': 'true',
 		'query': request.path,
-		'result': { 'message': 'SOM found.' }
+		'result': { 'message': 'SOM not found.' }
 		})
 		resp.status_code = 204 # No content
 		return resp
@@ -213,6 +222,7 @@ def createPlane():
 		som = payload.get('som', '')
 
 		if legalVariable(variable) and \
+		variablesExist([variable]) and \
 		legalPlane(plane) and \
 		legalSOM(som):
 			somDoc = SOMTrain.objects.get(id=som.encode('utf8'))
@@ -288,13 +298,6 @@ def createSOMTrain():
 		resp.status_code = 400
 		return resp
 
-	def legalVariables(array):
-		variables = Sample.objects.first().variables
-		for variable in array:
-			if not variables.get(variable):
-				return False
-		return True
-
 	def legalString(var):
 		return (isinstance(var, unicode) or isinstance(var, str)) and len(var) > 0
 
@@ -342,7 +345,7 @@ def createSOMTrain():
 		legalArray(weights) and \
 		legalArray(codebook) and \
 		legalArray(variables) and \
-		legalVariables(variables) and \
+		variablesExist(variables) and \
 		legalArray(distances):
 			somHash = somHash.encode('utf8')
 			# see if it already exists

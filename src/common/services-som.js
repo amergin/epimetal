@@ -155,7 +155,7 @@ angular.module('services.som', [
       return diff.length === 0 && !isSubset;
     }
 
-    if(!arguments.length) { return angular.copy(that.trainVariables); }
+    if(!arguments.length) { return _.clone(that.trainVariables); }
 
     var currEmpty = _.isUndefined(that.trainVariables) || that.trainVariables.length === 0;
 

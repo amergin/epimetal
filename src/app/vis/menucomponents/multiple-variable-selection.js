@@ -4,6 +4,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
   'ext.lodash',
   'ext.mathjs',
   'services.variable', 
+  'services.som',
   'services.dataset',
   'services.notify',
   'services.window',
@@ -14,7 +15,8 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 
 .controller('MultipleVariableSelectionCtrl', 
   function MultipleVariableSelectionCtrl($scope, $q, $log, DatasetFactory, DimensionService, 
-    WindowHandler, VariableService, NotifyService, MENU_USER_DEFINED_VARS_CATEGORY, 
+    WindowHandler, VariableService, NotifyService, SOMService,
+    MENU_USER_DEFINED_VARS_CATEGORY, 
     _, math, constants) {
 
     // custom dialog stuff
@@ -64,7 +66,43 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
         }
         WindowHandler.removeWindowsFromHandlers(rejectFn);
       }
+
+      function removeFromTrainVars(v) {
+        var current = SOMService.trainVariables(),
+        contains = _.contains(current, v);
+        if(contains) {
+          SOMService.trainVariables(_.without(current, v));
+        }
+      }
+
+      function removeFromSelections(v) {
+        function removeFrom(payload) {
+          var ind = _.findIndex(payload, v);
+          if(ind >= 0) { payload.splice(ind, 1); }
+        }
+
+        switch($scope.mode) {
+          case 'multi':
+          removeFrom($scope.payload);
+          break;
+
+          case 'scatterplot':
+          removeFrom($scope.payload.x);
+          removeFrom($scope.payload.y);
+          break;
+
+          case 'regression':
+          removeFrom($scope.payload.target);
+          removeFrom($scope.payload.adjust);
+          removeFrom($scope.payload.association);
+          break;
+        }
+      }
+
+      $log.debug('Removing custom variable', variable.name());
       removeWindowsContaining();
+      removeFromSelections(variable);
+      removeFromTrainVars();
       VariableService.removeCustomVariable(variable);
       DatasetFactory.removeCustomVariable(variable);
       // remove from dim service
