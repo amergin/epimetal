@@ -102,7 +102,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       $log.debug('Removing custom variable', variable.name());
       removeWindowsContaining();
       removeFromSelections(variable);
-      removeFromTrainVars();
+      removeFromTrainVars(variable);
       VariableService.removeCustomVariable(variable);
       DatasetFactory.removeCustomVariable(variable);
       // remove from dim service

@@ -53,8 +53,8 @@ angular.module('services.som', [
 })
 
 .factory('SOMService', function SOMService(SOMComputeService, VariableService, WindowHandler, $timeout, 
-  $injector, $rootScope, NotifyService, $q, DatasetFactory, TabService,
-  d3, _, $http, $log,
+  $injector, $rootScope, NotifyService, $http, $log, $q, DatasetFactory, TabService,
+  d3, _, 
   SOM_DEFAULT_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TRAIN_VARS, SOM_MIN_SAMPLE_COUNT, 
   SOM_TRAIN_GET_URL, SOM_TRAIN_POST_URL, SOM_PLANE_GET_URL, SOM_PLANE_POST_URL) {
 
@@ -77,6 +77,13 @@ angular.module('services.som', [
   var service = {};
   var _dbId = null;
   var _size = SOM_DEFAULT_SIZE;
+
+  function hasCustomVars(vars) {
+    for(var i=0; i < vars.length; ++i) {
+      if(vars[i].type() == 'custom') { return true; }
+    }
+    return false;
+  }
 
   service.inProgress = function() {
     return that.inProgress;
@@ -150,18 +157,21 @@ angular.module('services.som', [
   service.trainVariables = function(variables) {
     function sameVars() {
       var inter = _.intersection(variables, that.trainVariables),
-        diff = _.difference(variables, inter),
-        isSubset = variables.length === inter.length;
-      return diff.length === 0 && !isSubset;
+      diff = _.difference(variables, inter),
+      noChange =  (that.trainVariables.length - inter.length) === 0;
+      return diff.length === 0 && noChange;
     }
 
-    if(!arguments.length) { return _.clone(that.trainVariables); }
+    if(!arguments.length) { return that.trainVariables; }
 
     var currEmpty = _.isUndefined(that.trainVariables) || that.trainVariables.length === 0;
 
     if (currEmpty || sameVars()) {
       return;
     }
+
+    $log.info("SOM train variables have changed.");
+
     that.trainVariables = variables;
     // recompute
     var windowHandler = WindowHandler.get('vis.som.plane');
@@ -264,6 +274,12 @@ angular.module('services.som', [
       }
 
       function sendNewTrain(somObject, callback) {
+        // don't send cust vars to DB
+        if( hasCustomVars(that.trainVariables) ) { 
+          callback(); 
+          return; 
+        }
+
         var rawTrainVarNames = Utils.pickVariableNames(that.trainVariables);
         $http.post(SOM_TRAIN_POST_URL, {
           bmus: Array.prototype.slice.call(somObject.bmus),
@@ -432,6 +448,7 @@ angular.module('services.som', [
 
     function doCall() {
       function sendNewPlane(plane) {
+        if(hasCustomVars([testVar])) { return; }
         plane = _.clone(plane);
         $http.post(SOM_PLANE_POST_URL, {
           variable: testVar.name(),

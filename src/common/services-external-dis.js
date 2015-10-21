@@ -1,5 +1,7 @@
 angular.module('ext.lodash', []).factory('_', function lodash() {
-    return window._;
+  // see https://github.com/lodash/lodash/issues/926
+  _.indexOf = _.findIndex;
+  return window._;
 });
 
 angular.module('ext.d3', []).factory('d3', function d3() {
