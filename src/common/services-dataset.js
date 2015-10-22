@@ -331,6 +331,16 @@ angular.module('services.dataset', ['services.notify',
 
     // 'variables' is a list
     dset.getVariables = function(variables, config) {
+      function concatenate(resArray) {
+        var results = {};
+        _.each(resArray, function(obj) {
+          for(var key in obj.samples.all) {
+            if(!results[key]) { results[key] = obj.samples.all[key]; }
+          }
+        });
+        return results;
+      }
+
       var configDefined = !_.isUndefined(config),
         allDefer = $q.defer(),
         promises = [];
@@ -360,7 +370,7 @@ angular.module('services.dataset', ['services.notify',
         // concatenate results into one object and return it
         var retObj = {
           samples: {
-            added: [],
+            added: _.chain(resArray).map(function(d) { return d.samples.added; }).any().value(),
             all: {}
           },
           variables: {
@@ -371,7 +381,6 @@ angular.module('services.dataset', ['services.notify',
 
         if(config.getRawData === true) {
           _.each(resArray, function(setResult) {
-            retObj.samples.added = retObj.samples.added.concat(setResult.samples.added);
             retObj.variables.added = retObj.variables.added.concat(setResult.variables.added);
           });
           var all = _.chain(resArray)
@@ -379,7 +388,7 @@ angular.module('services.dataset', ['services.notify',
               return obj.samples.all;
             })
             .value();
-          retObj.samples.all = _.merge.apply(this, all);
+          retObj.samples.all = concatenate(resArray);
           retObj.variables.added = _.uniq(retObj.variables.added);
         }
 
@@ -432,7 +441,7 @@ angular.module('services.dataset', ['services.notify',
         }
 
         // shallow copy, otherwise this will mess up other datasets that have this sample
-        copySample = angular.copy(samp);
+        copySample = angular.extend({}, samp);//angular.copy(samp);
         setOrigin(copySample, samp);
         // copySample.originalDataset = samp.dataset;
         copySample.dataset = dset.name();

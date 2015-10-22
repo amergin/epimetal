@@ -244,7 +244,6 @@ angular.module('services.correlation.ww', [
         });
 
         $q.all(workerPromises).then(function succFn(results) {
-            console.log("elapsed time = ", Math.ceil((perf2 - perf1)/1000));
             windowObject.circleSpinValue(100);
             var flattened = _.chain(results).values().flatten(true).unique().value(),
               _result = combineResults(flattened, cellInfo.diagonals);
