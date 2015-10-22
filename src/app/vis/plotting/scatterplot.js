@@ -491,7 +491,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
             dset = config.dset,
             compute = config.compute;
 
-          if (action == 'filter:add' || action == 'filter:reset') {
+          if (action == 'filter:add' || action == 'filter:reset' || compute) {
             $scope.redrawAll();
           } else if (action == 'dataset:disabled') {
             $scope.disable(dset);
