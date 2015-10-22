@@ -47,6 +47,8 @@ angular.module('services.tab', [
       checkSOMState();
     } else if (toState.name == 'vis.regression') {
       checkRegressionState();
+    } else if(toState.name == 'vis.explore') {
+      WindowHandler.get('vis.explore').rerenderAll();
     }
 
   });

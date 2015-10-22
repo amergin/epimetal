@@ -747,7 +747,6 @@ angular.module('services.dataset', ['services.notify',
     $injector.get('WindowHandler').reRenderVisible({
       compute: true
     });
-
     return derived;
   };
 
