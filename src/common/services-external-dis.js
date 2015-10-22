@@ -1,8 +1,13 @@
-angular.module('ext.lodash', []).factory('_', function lodash() {
-  // see https://github.com/lodash/lodash/issues/926
-  _.indexOf = _.findIndex;
+angular.module('ext.lodash', [])
+.factory('_', function lodash() {
   return window._;
+})
+.factory('lodashEq', function objEqualityLodash() {
+  var lodash = window._.runInContext();
+  lodash.indexOf = lodash.findIndex;
+  return lodash;
 });
+
 
 angular.module('ext.d3', []).factory('d3', function d3() {
     return window.d3;

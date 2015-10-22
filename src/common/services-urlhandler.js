@@ -312,7 +312,7 @@ angular.module('services.urlhandler', [
           defaultHistograms = $injector.get('EXPLORE_DEFAULT_HISTOGRAMS');
 
         VariableService.getVariables(defaultHistograms).then(function(variables) {
-          DatasetFactory.getVariableData(variables, exploreHandler)
+          DatasetFactory.getVariableData(variables, exploreHandler, { getRawData: true })
             .then(function succFn(res) {
               _.each(variables, function(variable) {
                 PlotService.drawHistogram({

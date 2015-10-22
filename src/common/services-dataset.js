@@ -9,7 +9,7 @@ angular.module('services.dataset', ['services.notify',
 .constant('DATASET_URL_FETCH_MULTIPLE_VARS', '/API/list/')
 
 .factory('DatasetFactory', function DatasetFactory($http, $q, $injector, $rootScope, NotifyService, VariableService,
-  d3, _,
+  d3, _, lodashEq,
   DATASET_URL_FETCH_DATASETS, DATASET_URL_FETCH_MULTIPLE_VARS) {
 
   // privates
@@ -188,7 +188,9 @@ angular.module('services.dataset', ['services.notify',
           retObj.samples.added = addedValues;
         }
 
-        retObj.samples.all = getAllVariables();
+        if(config.getRawData === true) {
+          retObj.samples.all = getAllVariables();          
+        }
 
         return retObj;
       };
@@ -281,8 +283,8 @@ angular.module('services.dataset', ['services.notify',
 
       var samplesEmpty = _.isEmpty(priv.samples),
         currentVariables = dset.variables(),
-        intersection = _.intersection(currentVariables, variables),
-        newVariables = _.difference(variables, intersection);
+        intersection = lodashEq.intersection(currentVariables, variables),
+        newVariables = lodashEq.difference(variables, intersection);
 
       if (samplesEmpty) {
         // get all variables
@@ -337,14 +339,14 @@ angular.module('services.dataset', ['services.notify',
         var defer = $q.defer(),
           empty = _.isEmpty(priv.samples),
           currentVariables = dset.variables(dsetName),
-          intersection = _.intersection(currentVariables, variables),
-          newVariables = _.difference(variables, intersection);
+          intersection = lodashEq.intersection(currentVariables, variables),
+          newVariables = lodashEq.difference(variables, intersection);
 
         if (empty) {
           // get all variables
           priv.getVariables(variables, config, defer, dsetName, priv.processSamples);
         } else if (_.isEmpty(newVariables)) {
-          // nothing to done, everything already fetched
+          // nothing to do, everything already fetched
           defer.resolve(priv.getResult(newVariables, config, false));
         } else {
           // fetch new variables
@@ -367,17 +369,19 @@ angular.module('services.dataset', ['services.notify',
           dataset: dset
         };
 
-        _.each(resArray, function(setResult) {
-          retObj.samples.added = retObj.samples.added.concat(setResult.samples.added);
-          retObj.variables.added = retObj.variables.added.concat(setResult.variables.added);
-        });
-        var all = _.chain(resArray)
-          .map(function(obj) {
-            return obj.samples.all;
-          })
-          .value();
-        retObj.samples.all = _.merge.apply(this, all);
-        retObj.variables.added = _.uniq(retObj.variables.added);
+        if(config.getRawData === true) {
+          _.each(resArray, function(setResult) {
+            retObj.samples.added = retObj.samples.added.concat(setResult.samples.added);
+            retObj.variables.added = retObj.variables.added.concat(setResult.variables.added);
+          });
+          var all = _.chain(resArray)
+            .map(function(obj) {
+              return obj.samples.all;
+            })
+            .value();
+          retObj.samples.all = _.merge.apply(this, all);
+          retObj.variables.added = _.uniq(retObj.variables.added);
+        }
 
         allDefer.resolve(retObj);
       }, function errFn(res) {
@@ -420,7 +424,8 @@ angular.module('services.dataset', ['services.notify',
       }
 
       var copySample,
-        initialCall = !_.isUndefined(initial) ? initial : false;
+      initialCall = !_.isUndefined(initial) ? initial : false;
+
       _.each(addSamples, function(samp) {
         if (initialCall) {
           setByDataset(samp);
@@ -500,8 +505,7 @@ angular.module('services.dataset', ['services.notify',
       // var promises = [];
       var dataWasAdded = false;
 
-      set.getVariables(activeVars).then(function sucFn(obj) {
-
+      set.getVariables(activeVars, { getRawData: false }).then(function sucFn(obj) {
         if(!obj.samples.added) {
           defer.resolve('enabled');
           return;
@@ -539,17 +543,15 @@ angular.module('services.dataset', ['services.notify',
 
       $q.all(setPromises).then(function sucFn(res) {
         _.each(res, function(setObj) {
+          var config = setObj;
 
           if (getRawData) {
             // combine result samples
             _.extend(result.samples, setObj.samples.all);
           }
 
-          var config = setObj;
-
-          if (!addData) {
-            return;
-          } else {
+          if(!addData) { return; }
+          else {
             var dataAdded = windowHandler.getDimensionService().addVariableData(config);
             if (dataAdded) {
               dataWasAdded = true;
@@ -594,6 +596,10 @@ angular.module('services.dataset', ['services.notify',
       };
 
     var DimensionService = $injector.get('DimensionService');
+
+    if(!configDefined) {
+      config = {};
+    }
 
     var setPromises = [],
       addData = true,
@@ -688,52 +694,52 @@ angular.module('services.dataset', ['services.notify',
 
     if (that.sets[name]) {
       throw new Error('Dataset name exists');
+    } 
+
+    var samples = getSamples(circles),
+      DimensionService = $injector.get('DimensionService'),
+      primary = DimensionService.getPrimary(),
+      dataWasAdded;
+
+    var derived = new DerivedDataset()
+      .name(name)
+      .size(samples.length)
+      .color(that.colors(name))
+      .samples(samples)
+      .active(config.setActive);
+
+    if (circles) {
+      // deselectOthers();
+      that.sets[name] = derived;
+      service.updateDataset();
     } else {
-      var samples = getSamples(circles),
-        DimensionService = $injector.get('DimensionService'),
-        primary = DimensionService.getPrimary(),
-        dataWasAdded;
-
-      var derived = new DerivedDataset()
-        .name(name)
-        .size(samples.length)
-        .color(that.colors(name))
-        .samples(samples)
-        .active(config.setActive);
-
-      if (circles) {
-        // deselectOthers();
-        that.sets[name] = derived;
-        service.updateDataset();
-      } else {
-        deselectOthers();
-        that.sets[name] = derived;
-        removeFilters();
-        service.updateDataset();
-      }
-
-      // add to dimension service
-      dataWasAdded = primary.addVariableData({
-        dataset: derived,
-        samples: {
-          all: derived.samples(),
-          added: []
-        },
-        variables: {
-          added: []
-        }
-      });
-      if (dataWasAdded) {
-        primary.rebuildInstance();
-      }
-
-      emitEvent(derived);
-      $injector.get('WindowHandler').reRenderVisible({
-        compute: true
-      });
-
-      return derived;
+      deselectOthers();
+      that.sets[name] = derived;
+      removeFilters();
+      service.updateDataset();
     }
+
+    // add to dimension service
+    dataWasAdded = primary.addVariableData({
+      dataset: derived,
+      samples: {
+        all: derived.samples(),
+        added: []
+      },
+      variables: {
+        added: []
+      }
+    });
+    if (dataWasAdded) {
+      primary.rebuildInstance();
+    }
+
+    emitEvent(derived);
+    $injector.get('WindowHandler').reRenderVisible({
+      compute: true
+    });
+
+    return derived;
   };
 
   service.removeCustomVariable = function(variable) {

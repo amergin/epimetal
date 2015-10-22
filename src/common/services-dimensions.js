@@ -1058,27 +1058,28 @@ angular.module('services.dimensions', [
         var defer = $q.defer();
 
         // what keys have been used in the past?
-        var currentVariables = VariableService.getVariables(_getCurrentKeys());
+        VariableService.getVariables(_getCurrentKeys()).then(function(currentVariables) {
+          if (_.isEmpty(currentVariables)) {
+            // first transition to som, nothing pre-existing
+            finish(primarySamples);
+            defer.resolve();
+          } else {
+            var DatasetFactory = $injector.get('DatasetFactory');
+            DatasetFactory.getVariableData(currentVariables, null, {
+                addToDimensionService: false,
+                getRawData: true
+              })
+              .then(function succFn(result) {
+                currSamples = {};
+                finish(primarySamples, result.samples);
+                defer.resolve();
+              }, function errFn(result) {
+                console.log("DatasetFactory variable fetch failed!");
+                defer.reject();
+              });
+          }
+        });
 
-        if (_.isEmpty(currentVariables)) {
-          // first transition to som, nothing pre-existing
-          finish(primarySamples);
-          defer.resolve();
-        } else {
-          var DatasetFactory = $injector.get('DatasetFactory');
-          DatasetFactory.getVariableData(currentVariables, null, {
-              addToDimensionService: false,
-              getRawData: true
-            })
-            .then(function succFn(result) {
-              currSamples = {};
-              finish(primarySamples, result.samples);
-              defer.resolve();
-            }, function errFn(result) {
-              console.log("DatasetFactory variable fetch failed!");
-              defer.reject();
-            });
-        }
 
         return defer.promise;
       };

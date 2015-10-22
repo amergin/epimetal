@@ -54,7 +54,7 @@ angular.module('services.som', [
 
 .factory('SOMService', function SOMService(SOMComputeService, VariableService, WindowHandler, $timeout, 
   $injector, $rootScope, NotifyService, $http, $log, $q, DatasetFactory, TabService,
-  d3, _, 
+  d3, _, lodashEq,
   SOM_DEFAULT_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TRAIN_VARS, SOM_MIN_SAMPLE_COUNT, 
   SOM_TRAIN_GET_URL, SOM_TRAIN_POST_URL, SOM_PLANE_GET_URL, SOM_PLANE_POST_URL) {
 
@@ -156,8 +156,8 @@ angular.module('services.som', [
 
   service.trainVariables = function(variables) {
     function sameVars() {
-      var inter = _.intersection(variables, that.trainVariables),
-      diff = _.difference(variables, inter),
+      var inter = lodashEq.intersection(variables, that.trainVariables),
+      diff = lodashEq.difference(variables, inter),
       noChange =  (that.trainVariables.length - inter.length) === 0;
       return diff.length === 0 && noChange;
     }
@@ -216,11 +216,13 @@ angular.module('services.som', [
         if(d.originalDataset) { arr = [d.originalDataset, d.sampleid]; }
         else { arr = [d.dataset, d.sampleid]; }
         return arr.join("|");
-      });
+      }),
+      variableNames = Utils.pickVariableNames(variables),
+      obj;
 
-      var variableNames = Utils.pickVariableNames(variables);
-
-      _.each(deDuplicated, function(obj, ind) {
+      /* jshint ignore:start */
+      for(var ind = 0; ind < deDuplicated.length; ++ind) {
+        obj = deDuplicated[ind];
         var sampValues = _.chain(obj.variables)
           .pick(variableNames)
           .map(function(val, key) {
@@ -252,7 +254,9 @@ angular.module('services.som', [
           }
           retObj.columns[i].push(sampValues[i]);
         });
-      });
+
+      }
+      /* jshint ignore:end */
       return retObj;
     }
 

@@ -191,7 +191,7 @@ angular.module('plotter.vis.plotting',
           copyConfig.dataset = set;
           configs.push(copyConfig);
           var promise = DatasetFactory.getVariableData(config.variables, windowHandler, 
-          { getRawData: true, singleDataset: true, dataset: set });
+          { getRawData: false, singleDataset: true, dataset: set });
           promises.push(promise);
         });
 
@@ -213,7 +213,8 @@ angular.module('plotter.vis.plotting',
       }
 
       function combinedMap() {
-        var plottingDataPromise = DatasetFactory.getVariableData(config.variables, windowHandler);
+        var plottingDataPromise = DatasetFactory.getVariableData(config.variables, windowHandler,
+        { getRawData: false });
         plottingDataPromise.then(function successFn(res) {
             draw(config, windowHandler);
             defer.resolve();
