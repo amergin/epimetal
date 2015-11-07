@@ -77,16 +77,18 @@ angular.module('services.urlhandler', [
       browsing: getBrowsingStates()
     };
 
-    $log.info("Created Url object: ", sendObject);
+    $log.info("Sending URL object: ", sendObject);
 
     var defer = $q.defer();
-    // $http.post(API_URL_STATE, sendObject)
-    //   .success(function(response) {
-    //     defer.resolve(response.result);
-    //   })
-    //   .error(function(response) {
-    //     defer.reject(response);
-    //   });
+    $http.post(API_URL_STATE, sendObject)
+    .success(function(response) {
+      $log.debug('Sending state obj succeeded, got back: ', response.result);
+      defer.resolve(response.result);
+    })
+    .error(function(response) {
+      $log.error('Sending state obj FAILED, got back: ', response);
+      defer.reject(response);
+    });
     return defer.promise;
   };
 

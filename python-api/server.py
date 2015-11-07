@@ -71,13 +71,21 @@ def _getUrlSalt():
 	ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	return ''.join(random.choice(ALPHABET) for i in range(24))
 
-# run-based hash -> always unique
-URL_SALT = _getUrlSalt()
-hashids = Hashids(salt=URL_SALT)
+def _getHashids():
+	# returns always with a new salt
+	return Hashids(salt=_getUrlSalt(), min_length=8)
+
+def _getSizeOfDict(d):
+	size = sys.getsizeof(d)
+	size += sum(map(sys.getsizeof, d.itervalues())) + sum(map(sys.getsizeof, d.iterkeys()))	
+	return size
 
 def withoutKeys(dictionary, keys):
 	for excludeKey in keys:
 		dictionary.pop(excludeKey, None)
+
+def flatten(l): 
+	return [item for sublist in l for item in sublist]
 
 def dictSubset(dictionary, keys):
 	return dict([(i, dictionary[i]) for i in keys if i in dictionary])	
@@ -89,7 +97,25 @@ def variablesExist(array):
 			return False
 	return True
 
+def variablesExistObject(obj):
+	variables = Sample.objects.first().variables
+	array = None
+	if isinstance(obj, list):
+		array = obj
+	elif isinstance(obj, dict):
+		array = flatten(obj.values())
 
+	print "array=", array
+	for variable in array:
+		if variable.get('type') == 'db':
+			if not variables.get(variable.get('name')):
+				print "falsy var = ", variable
+				return False
+		else:
+			# custom is not processed, TODO
+			pass
+	print "returns true"
+	return True
 
 @app.route( config.getFlaskVar('prefix') + 'headers/NMR_results', methods=['GET'])
 def headers():
@@ -286,6 +312,22 @@ def getSOMTrain(somHash):
 		resp.status_code = 204 # No content
 		return resp
 
+
+def legalString(var):
+	return (isinstance(var, unicode) or isinstance(var, str)) and len(var) > 0
+
+def isArray(variable):
+	return isinstance(variable, list)
+
+def legalArray(var):
+	def isNotEmpty(array):
+		return len(array) > 0
+
+	return isArray(var) and isNotEmpty(var)
+
+def legalBool(var):
+	return isinstance(var, bool)
+
 # stores a new set of som training information to db
 @app.route( config.getFlaskVar('prefix') + 'som', methods=['POST'] )
 def createSOMTrain():
@@ -297,18 +339,6 @@ def createSOMTrain():
 		})
 		resp.status_code = 400
 		return resp
-
-	def legalString(var):
-		return (isinstance(var, unicode) or isinstance(var, str)) and len(var) > 0
-
-	def legalArray(var):
-		def isArray(variable):
-			return isinstance(variable, list)
-
-		def isNotEmpty(array):
-			return len(array) > 0
-
-		return isArray(var) and isNotEmpty(var)
 
 	def legalDistance(var):
 		return isinstance(var, float) and (0 < var < 10)
@@ -427,108 +457,176 @@ def postState():
 		resp.status_code = 400
 		return resp
 
-	def validDatasets(sets):
-		uniqueDatasets = Sample.objects.distinct('dataset')
-		atLeastOneSet = len(sets) > 0
-		for s in sets:
-			if not s in uniqueDatasets:
-				return False
-		return atLeastOneSet
-
-	def validSOM(som, datasets):
-		def validSize(size):
-			val = isinstance(size, dict) and \
-			size.get('x') and isinstance(size.get('x'), int) and \
-			size.get('y') and isinstance(size.get('y'), int)
-			return val
-
-		def validSamples(bmus, datasets, size):
-			try:
-				for bmu in bmus:
-					x = bmu.get('x')
-					y = bmu.get('y')
-					sample = bmu.get('sample')
-					sampId = sample.get('sampleid')
-					validSet = sample.get('dataset') in datasets
-					if validSet and sample and sampId and (x <= size.get('x')) and (y <= size.get('y')):
-						# valid
-						pass
-					else:
-						return False
-				return True
-			except Exception, e:
-				return False
-
-		bmus = som.get('bmus')
-		planeSize = som.get('size')
-		return isinstance(som, dict) and \
-		isinstance(bmus, list) and \
-		validSize(planeSize) and \
-		validSamples(bmus, datasets, planeSize)
-
 	def validRegression(regression):
-		selectedVariables = regression.get('selected')
+		print "1 = ", isinstance(regression, dict)
+		print "2 = ", isinstance(regression.get('selected'), dict)
+		print "3 = ", variablesExistObject(regression.get('selected'))
+
 		return isinstance(regression, dict) and \
-		selectedVariables is not None and \
-		isinstance(selectedVariables, dict)
-
-	def validViews(views):
-		return True
-
-	def getViewSize(views):
-		ret = []
-		for view in views:
-			ret.append(len(view.get('figures')))
-		return ret
+		isinstance(regression.get('selected'), dict) and \
+		variablesExistObject(regression.get('selected'))
 
 	def getHash(stateDict):
 		stateString = json.dumps(stateDict, sort_keys=True, ensure_ascii=True, separators=(',',':'))
 		return hashlib.md5(stateString).hexdigest()
 
-	try:
-		payload = request.get_json()
-		activeState = payload.get('activeState')
-		datasets = payload.get('datasets')
-		sampleCount = payload.get('sampleCount')
-		som = payload.get('som')
-		regression = payload.get('regression')
-		views = payload.get('views')
+	def validBrowsing(browsing):
+		def validHandlers(handlers):
+			def validHandler(handler):
+				windows = handler.get('windows', [])
+				baseOK = legalString(handler.get('name')) and isArray(windows)
+				# print "baseok = ", baseOK
+				# print "windows=", windows
+				# print "array=", isArray(windows)
+				if baseOK:
+					for win in windows:
+						ok = legalString(win.get('figure')) and \
+						legalString(win.get('id')) and \
+						isinstance(win.get('position'), dict) and \
+						isinstance(win.get('size'), dict) and \
+						variablesExistObject(win.get('variables'))
+						if not ok:
+							print "not ok"
+							return False
+					return True
+				else:
+					return False
 
-		# check input validity
-		if validDatasets(datasets) and validSOM(som, datasets) and validViews(views) and validRegression(regression):
-			# form the hash
-			stateHash = getHash(payload)
-			urlHash = None
-			try:
-				# try to fetch old one, if any
-				state = BrowsingState.objects.get(stateHash__exact=stateHash)
-				urlHash = state['urlHash']
-			except Exception, e:
-				# failed, does not exist
-				#print "failed, does not exist"
-				viewSize = getViewSize(views)
-				urlHash = hashids.encode(sampleCount, len(som.get('bmus')), *viewSize)				
-				state = BrowsingState(urlHash=urlHash, stateHash=stateHash, activeState=activeState, \
-					datasets=datasets, som=som, sampleCount=sampleCount, views=views, regression=regression)
-				state.save()
-			finally:
-				response = { 
-				'success': 'true',
-				'query': request.path,
-				'result': urlHash
-				}
-				response = flask.jsonify(response)
-				response.status_code = 200
-				return response
-		else:
-			#print "no except, but not valid"
-			return getError()
-	except Exception, e:
-		print "exception occured", e
-		exc_type, exc_obj, exc_tb = sys.exc_info()
-		fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-		print(exc_type, fname, exc_tb.tb_lineno)
+			for handler in handlers:
+				if not validHandler(handler):
+					return False
+			return True
+
+		def validExplore(state):
+			return isArray(state.get('filters')) and \
+			legalArray(state.get('handlers'))
+
+		def validSOM(state):
+			def legalNumber(var):
+				return isinstance(var, int) and (var >= 0)
+
+			def validSize(state):
+				size = state.get('size')
+				return isinstance(size, dict) and \
+				legalNumber(size.get('columns')) and \
+				legalNumber(size.get('rows'))
+
+			print "filters=", isArray(state.get('filters'))
+			print "handlers=", validHandlers(state.get('handlers', []))
+			print "selection=", legalArray(state.get('selection'))
+			print "size=", validSize(state)
+
+			return isArray(state.get('filters')) and \
+			validHandlers(state.get('handlers', [])) and \
+			legalArray(state.get('selection')) and \
+			validSize(state)
+
+		def validRegression(state):
+			return isArray(state.get('filters')) and \
+			validHandlers(state.get('handlers')) and \
+			isinstance(state.get('selection'), dict)
+
+		for state in browsing:
+			typ = state.get('type', '')
+			if typ == 'explore':
+				if not validExplore(state):
+					print "explore = false"
+					return False
+			elif typ == 'som':
+				if not validSOM(state):
+					print "som = false"
+					return False
+			elif typ == 'regression':
+				if not validRegression(state):
+					print "regression = false"
+					return False
+			else:
+				print "type=", typ
+				return False
+		return True
+
+	def validCommon(common):
+		def validActive(common):
+			return legalString(common.get('active', ''))
+
+
+		def validDatasets(common):
+			sets = common.get('datasets', [])
+			uniqueDatasets = Sample.objects.distinct('dataset')
+			atLeastOneSet = len(sets) > 0
+			for s in sets:
+				name = s.get('name', '')
+				if s.get('type') == 'database':
+					if name not in uniqueDatasets:
+						return False
+				elif s.get('type') == 'derived':
+					# TODO
+					pass
+				else:
+					return False
+			return atLeastOneSet
+
+		# def validDatasets(common):
+		# 	def validDataset(ds):
+		# 		name = ds.get('name', '')
+		# 		if not legalString(name):
+		# 			return False
+		# 		else:
+		# 			return Sample.objects.filter(dataset=name).count() > 0
+
+		# 	dsets = common.get('datasets', [])
+		# 	for dset in dsets:
+		# 		if not validDataset(dset):
+		# 			return False
+		# 	return True
+
+		def validMenu(common):
+			return isinstance(common.get('menu', None), dict)
+
+		def validVariables(common):
+			return variablesExistObject(common.get('variables', []))
+
+		print "active = ", validActive(common)
+		print "validDatasets = ", validDatasets(common)
+		print "menu = ", validMenu(common)
+		print "vars = ", validVariables(common)
+
+		return validActive(common) and \
+		validDatasets(common) and \
+		validMenu(common) and \
+		validVariables(common)
+
+	#try:
+	payload = request.get_json()
+	browsing = payload.get('browsing')
+	common = payload.get('common')
+
+	# check input validity
+	if validBrowsing(browsing) and validCommon(common):
+		hashids = _getHashids()
+		urlHash = hashids.encode(_getSizeOfDict(payload))
+		state = BrowsingState(urlHash=urlHash, browsing=browsing, common=common)
+		state.save()
+
+		response = { 
+		'success': 'true',
+		'query': request.path,
+		'result': urlHash
+		}
+
+		response = flask.jsonify(response)
+		response.status_code = 200
+		return response
+	else:
+		print "common=", validCommon(common)
+		print "browsing=", validBrowsing(browsing)
 		return getError()
+	# except Exception, e:
+	# 	print "exception occured", e
+	# 	exc_type, exc_obj, exc_tb = sys.exc_info()
+	# 	fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+	# 	print(exc_type, fname, exc_tb.tb_lineno)
+	# 	return getError()
 
 
 @app.route( config.getFlaskVar('prefix') + 'datasets', methods=['GET'] )
