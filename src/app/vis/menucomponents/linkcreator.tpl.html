@@ -1,26 +1,4 @@
-<div class="popover" tabindex="-1" ng-show="content">
-	<div class="arrow"></div>
-	<h3 class="popover-title" ng-bind-html="title" ng-show="title"></h3>
-	<div class="popover-content">
-		<div growl inline="true" limit-messages="1" reference="linkcreatorinfo" class="am-fade container-fluid"></div>
-		<span us-spinner="{radius:30, width:8, length: 16}" spinner-key="linkcreator"></span>
-		<div class="container-fluid">
-			<form role="form">
-				<div class="row">
-					<div class="form-group col-sm-12">
-						<p>
-							<textarea readonly ng-show="stateLink" select-on-click class="form-control" rows="3" id="longurl">{{stateLink}}</textarea>
-						</p>
-						<p>
-							<button type="button" class="btn btn-primary" clip-click="clicked()" clip-copy="stateLink">
-							<i class="fa fa-clipboard"></i> Copy to clipboard
-							</button>
-						</p>
-					</div>
-				</div>
-			</form>
-		</div>
-	</div>
-</div>
-
-
+<button class="btn btn-primary" title="Link this view" placement="bottom-right" content-template="vis/menucomponents/linkcreator.inner.tpl.html" data-animation="am-fade" bs-popover data-auto-close="0">
+	<span>Link this view</span>
+	<i class="fa fa-caret-down"></i>
+</button>

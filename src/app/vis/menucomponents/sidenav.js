@@ -24,4 +24,14 @@ angular.module('plotter.vis.menucomponents.sidenav',
         return values.open;
     };
 
+    // returns a serializable object of the current state
+    that.getState = function() {
+        return values;
+    };
+
+    that.loadState = function(x) {
+        values = x;
+        return that;
+    };
+
 });

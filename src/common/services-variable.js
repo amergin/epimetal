@@ -106,6 +106,12 @@ angular.module('services.variable', ['services.notify'])
     return service;
   };
 
+  service.getCustomVariables = function() {
+    return _.filter(_variableCache, function(v, name) {
+      return v.type() == 'custom';
+    });
+  };
+
   service.getProfiles = _.once(function() {
     function pickVariables(list) {
       return _.map(list, function(v) {

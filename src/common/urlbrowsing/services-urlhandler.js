@@ -1,98 +1,92 @@
 angular.module('services.urlhandler', [
   'services.dataset',
   'services.variable',
+  'plotter.vis.menucomponents.sidenav',
   'ui.router',
   'ext.lodash'
 ])
 
 .constant('API_URL_STATE', '/API/state')
 
-.factory('UrlHandler', function UrlHandler($injector, $timeout, $location, DatasetFactory, VariableService, DimensionService, $rootScope, $state, SOMService, API_URL_STATE, $q, $http, _) {
+.factory('UrlHandler', function UrlHandler($injector, $timeout, $location, $rootScope, $state, $q, $http, $log,
+  DatasetFactory, VariableService, WindowHandler, RegressionService, FilterService, TabService,
+  plSidenav, DimensionService, SOMService, API_URL_STATE, _) {
 
   var _service = {},
     _loaded = false; // only do state loading once per page load
 
-  // gathers the current state of the application
+  // gathers the current state of the application. Sends it to the DB
+  // and returns the resulting details or yields error where applicable.
   _service.create = function() {
-    // emits an event that provides a callback for each figure/component
-    // to present its current state on this service
-    var windows = [];
-
-    function emitGather() {
-      var callback = function(win) {
-        windows.push(win);
-      };
-      $rootScope.$emit('UrlHandler:getState', callback);
+    function getCommonState() {
+      var state = new PlCommonBrowsingState()
+      .datasets(DatasetFactory.getSets())
+      .activeView(TabService.activeState().name)
+      .customVariables(_.map(VariableService.getCustomVariables(), function(cv) {
+        return cv.get();
+      }))
+      .sideMenu(plSidenav.getState());
+      return state.get();
     }
 
-    function getDBFormat() {
-      var groupedByHandler = _.chain(windows)
-        .map(function(win) {
-          // handler object to its name so the object is serializable later
-          return _.assign(win, {
-            handler: win.handler.getName()
-          });
-        })
-        .groupBy('handler')
-        .map(function(windows, key) {
-          return {
-            name: key,
-            figures: windows
-          };
-        })
-        .value();
-
-      var activeSets = _.chain(DatasetFactory.getSets())
-        .values()
-        .filter(function(set) {
-          return set.isActive();
-        })
-        .map(function(set) {
-          return set.name();
-        })
-        .value();
-
-      var FilterService = $injector.get('FilterService'),
-        RegressionService = $injector.get('RegressionService');
-
-      function getSOMFilters() {
-        return _.map(FilterService.getSOMFilters(), function(filter) {
-          return {
-            radius: filter.radius(),
-            position: filter.position(),
-            id: filter.id()
-          };
-        });
+    function getBrowsingStates() {
+      function regression() {
+        var state = new PlRegressionBrowsingState()
+        .windowHandlers([WindowHandler.get('vis.regression')])
+        .filters(null)
+        .selection(RegressionService.selectedVariables());
+        return state;
       }
 
-      return {
-        activeState: $state.current.name,
-        views: groupedByHandler,
-        datasets: activeSets,
-        som: {
-          size: SOMService.planeSize(),
-          bmus: SOMService.bmus(),
-          testVars: SOMService.getVariables(),
-          filters: getSOMFilters()
-        },
-        regression: {
-          selected: RegressionService.selectedVariables()
-        },
-        sampleCount: DimensionService.getPrimary().getSampleInfo().active
-      };
+      function som() {
+        var state = new PlSOMBrowsingState()
+        .windowHandlers([
+          WindowHandler.get('vis.som.content'),
+          WindowHandler.get('vis.som.plane')
+        ])
+        .filters(FilterService.getSOMFilters())
+        .selection(SOMService.trainVariables())
+        .size({
+          rows: SOMService.rows(),
+          columns: SOMService.columns()
+        });
+        return state;
+      }
+
+      function explore() {
+        var filters = _.reject(FilterService.getFilters(), function(filter) {
+          return filter.type() == 'circle';
+        }),
+        state = new PlExploreBrowsingState()
+        .windowHandlers([WindowHandler.getPrimary()])
+        .filters(filters);
+        return state;
+      }
+
+      // get states:
+      var states = [
+        explore().get(),
+        som().get(),
+        regression().get()
+      ];
+      return states;
     }
 
-    emitGather();
-    var postData = getDBFormat();
+    var sendObject = {
+      common: getCommonState(),
+      browsing: getBrowsingStates()
+    };
+
+    $log.info("Created Url object: ", sendObject);
 
     var defer = $q.defer();
-    $http.post(API_URL_STATE, postData)
-      .success(function(response) {
-        defer.resolve(response.result);
-      })
-      .error(function(response) {
-        defer.reject(response);
-      });
+    // $http.post(API_URL_STATE, sendObject)
+    //   .success(function(response) {
+    //     defer.resolve(response.result);
+    //   })
+    //   .error(function(response) {
+    //     defer.reject(response);
+    //   });
     return defer.promise;
   };
 
@@ -387,34 +381,34 @@ angular.module('services.urlhandler', [
         });
     } else {
       // load from hash id
-      loadFromState(urlHash).then(function succFn() {
-          console.log("url state loaded");
-          defer.resolve({
-            result: 'hash_success'
-          });
-        }, function errFn() {
-          NotifyService.addSticky('Error',
-            'Loading the state from the provided URL failed. Please check the link you followed.',
-            'error');
-          loadDefaultView().then(function succFn() {
-            console.log("default view loaded successfully");
-            defer.resolve({
-              result: 'default_success'
-            });
-          }, function errFn() {
-            NotifyService.addSticky('Error', 'Loading the default figures failed.', 'error');
-            defer.resolve({
-              result: 'default_failed'
-            });
-          });
-        })
-        .finally(function() {
-          NotifyService.disabled(false);
-          $timeout(function() {
-            removeHash();
-          });
-          _loaded = true;
-        });
+      // loadFromState(urlHash).then(function succFn() {
+      //     console.log("url state loaded");
+      //     defer.resolve({
+      //       result: 'hash_success'
+      //     });
+      //   }, function errFn() {
+      //     NotifyService.addSticky('Error',
+      //       'Loading the state from the provided URL failed. Please check the link you followed.',
+      //       'error');
+      //     loadDefaultView().then(function succFn() {
+      //       console.log("default view loaded successfully");
+      //       defer.resolve({
+      //         result: 'default_success'
+      //       });
+      //     }, function errFn() {
+      //       NotifyService.addSticky('Error', 'Loading the default figures failed.', 'error');
+      //       defer.resolve({
+      //         result: 'default_failed'
+      //       });
+      //     });
+      //   })
+      //   .finally(function() {
+      //     NotifyService.disabled(false);
+      //     $timeout(function() {
+      //       removeHash();
+      //     });
+      //     _loaded = true;
+      //   });
     }
 
     return defer.promise;

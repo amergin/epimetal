@@ -147,6 +147,15 @@ angular.module('services.dataset', ['services.notify',
         return dset;
       };
 
+      priv.state = function() {
+        return {
+          name: dset.name(),
+          color: dset.color(),
+          size: dset.size(),
+          active: dset.active()          
+        };
+      };
+
       // protected functions
       priv.getKey = function(samp) {
         return [samp.dataset, samp.sampleid].join("|");
@@ -276,6 +285,12 @@ angular.module('services.dataset', ['services.notify',
       return 'database';
     };
 
+    dset.state = function() {
+      return _.extend(priv.state(), {
+        type: dset.type()
+      });
+    };
+
     // 'variables' is a list
     dset.getVariables = function(variables, config) {
       var defer = $q.defer(),
@@ -317,6 +332,18 @@ angular.module('services.dataset', ['services.notify',
 
     dset.type = function() {
       return 'derived';
+    };
+
+    dset.state = function() {
+      return _.extend(priv.state(), {
+        type: dset.type(),
+        samples: _.map(priv.samples, function(samp) { 
+          return { 
+            dataset: samp.originalDataset, 
+            sampleid: samp.sampleid 
+          }; 
+        })
+      });
     };
 
     dset.injector = function(x) {

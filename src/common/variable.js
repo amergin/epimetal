@@ -22,10 +22,6 @@ function PlVariable() {
       throw new Error("not implemented");
     };
 
-    obj.get = function(x) {
-      throw new Error("not implemented");
-    };
-
     obj.description = function(x) {
       if (!arguments.length) {
         return priv.desc;
@@ -98,6 +94,13 @@ function PlDatabaseVariable() {
     return 'db';
   };
 
+  obj.get = function(x) {
+    return {
+      type: obj.type(),
+      name: obj.name()
+    };
+  };
+
   return obj;
 
 }
@@ -117,6 +120,20 @@ function PlCustomVariable() {
 
   obj.type = function() {
     return 'custom';
+  };
+
+  // only custom vars need to have a state
+  obj.get = function(x) {
+    return {
+      type: obj.type(),
+      dependencies: _.map(obj.dependencies(), function(dep) {
+        return dep.id;
+      }),
+      unit: obj.unit(),
+      name: obj.name(),
+      nameOrder: obj.nameOrder(),
+      originalExpression: obj.originalExpression()
+    };
   };
 
   obj.external = function(nanValue, math) {

@@ -383,6 +383,46 @@ angular.module('services.window', [
         return obj;
       };
 
+      // get state
+      obj.get = function() {
+        function getVariables() {
+          function mapper(v) { return v.get(); }
+
+          var vars = obj.variables();
+          // is variable
+          if(vars.type) {
+            return _.map([].concat(vars), mapper);
+          }
+          else if(_.isArray(vars)) {
+            return _.chain(obj.variables())
+            .map(function(vari) {
+              return vari.get();
+            })
+            .value();
+          }
+          else if(_.isObject(vars)) {
+            // pick variable state instead of the whole object
+            // while preserving the structure
+            return _.chain(obj.variables())
+            .map(function(arr,key) { 
+              var vals = _.map(arr, function(v) { return v.get(); }); 
+              return [key, vals];
+            })
+            .object()
+            .value();
+          }
+        }
+        return {
+          id: obj.id(),
+          figure: obj.figure(),
+          extra: obj.extra(),
+          variables: getVariables(),
+          pooled: obj.pooled(),
+          position: obj.position(),
+          size: obj.size()
+        };
+      };
+
       return obj;
     } // GridWindow
 
@@ -494,7 +534,14 @@ angular.module('services.window', [
         throw new Error("remove");
       };
 
-      this.getId = function(key, val) {};
+      this.getState = function() {
+        return {
+          name: that.getName(),
+          windows: _.map(windows, function(win) {
+            return win.object.get();
+          })
+        };
+      };
 
       this.get = function() {
         return windows;

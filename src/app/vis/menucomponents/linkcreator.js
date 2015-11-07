@@ -8,12 +8,18 @@ angular.module('plotter.vis.menucomponents.linkcreator',
 .controller('LinkCreatorController', function LinkCreatorController($scope, UrlHandler, NotifyService, $state, usSpinnerService) {
     $scope.stateLink = null;
 
+    $scope.buttonText = function() {
+      if($scope.stateLink) { return "Copy link to clipboard"; }
+      return "Create link of this view";
+    };
+
     $scope.clicked = function() {
       NotifyService.addTransient('Copied to clip board', 'Link copied to clip board', 'info');
       $scope.$hide();
     };
 
     $scope.getStateLink = function() {
+      // $scope.processing = true;
       usSpinnerService.spin('linkcreator');
       UrlHandler.create()
       .then(function succFn(hash) {
@@ -26,21 +32,23 @@ angular.module('plotter.vis.menucomponents.linkcreator',
           { referenceId: 'linkcreatorinfo' });
       })
       .finally(function() {
+        $scope.processing = false;
         usSpinnerService.stop('linkcreator');
       });
 
     };
 
     // init on load
-    $scope.getStateLink();
+    // $scope.getStateLink();
 
 })
 
 // directive for heatmap form
-.directive('linkCreator', function () {
+.directive('plLinkCreator', function () {
   return {
-    restrict: 'C',
-    replace: true,
+    restrict: 'A',
+    scope: true,
+    // replace: true,
     controller: 'LinkCreatorController',
     templateUrl: 'vis/menucomponents/linkcreator.tpl.html',
     link: function (scope, elm, attrs) {
