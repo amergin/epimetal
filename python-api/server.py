@@ -432,7 +432,7 @@ def state(hashId):
 	try:
 		if len(hashId) > 50:
 			return getError()
-		state = BrowsingState.objects.exclude('_id').exclude('stateHash').get(urlHash=hashId)
+		state = BrowsingState.objects.exclude('_id').get(urlHash=hashId)
 		response = { 
 		'success': 'true',
 		'query': request.path,

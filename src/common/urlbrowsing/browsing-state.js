@@ -35,6 +35,10 @@ function PlBrowsingState() {
       };
     };
 
+    // common functionality
+    priv.load = function(stateObj) {
+    };
+
     // loads an object that is retrieved from the DB
     // and can be used to initialize the running state
     // of the app
@@ -68,6 +72,16 @@ function PlExploreBrowsingState() {
     return 'explore';
   };
 
+  obj.load = function(stateObj) {
+    try {
+      // common
+      priv.load(stateObj);
+      obj.type(stateObj['type']);
+    } catch(err) {
+      throw new Error("PlExploreBrowsingState thows error");
+    }
+  };
+
   obj.get = function() {
     // call super and add this level info to it
     return _.extend(priv.get(), {
@@ -76,7 +90,6 @@ function PlExploreBrowsingState() {
   };
 
   return obj;
-
 }
 
 PlExploreBrowsingState.prototype = _.create(PlExploreBrowsingState.prototype, {

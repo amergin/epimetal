@@ -28,13 +28,47 @@ function PlCommonBrowsingState() {
   // loads an object that is retrieved from the DB
   // and can be used to initialize the running state
   // of the app
-  obj.load = function(x) {
-    throw new Error("not implemented");
+  obj.load = function(stateObj) {
+    function datasets(sets) {
+      return _.map(sets, function(obj) {
+        if(obj['type'] == 'database') {
+          return inject.get('DatasetFactory').getSet(obj['name'])
+          .active(obj['active'])
+          .color(obj['color']);
+        } else {
+          // custom dsets, TODO
+        }
+      });
+    }
+
+    function customVariables() {
+      // TODO
+    }
+
+    try {
+      obj.activeView(stateObj['active']);
+
+      var inject = obj.injector(),
+      dsets = datasets(stateObj['datasets']);
+      obj.datasets(dsets);
+      DatasetFactory.updateDataset();
+
+      obj.sideMenu(stateObj['menu']);
+      // obj.customVariables();
+    } catch(err) {
+      throw new Error("PlCommonBrowsingState throws error");
+    }
   };  
 
   obj.datasets = function(x) {
     if (!arguments.length) { return priv.datasets; }
     priv.datasets = x;
+    return obj;
+  };
+
+  obj.injector = function(x) {
+    if (!arguments.length) { return priv.injector; }
+    priv.injector = x;
     return obj;
   };
 

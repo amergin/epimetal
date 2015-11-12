@@ -1,5 +1,6 @@
 from mongoengine import Document, DynamicDocument, CASCADE
-from mongoengine.fields import StringField, ListField, SortedListField, FloatField, IntField, DictField, IntField, ReferenceField, GenericReferenceField, DynamicField, BooleanField
+from mongoengine.fields import StringField, ListField, SortedListField, FloatField, IntField, DictField, IntField, ReferenceField, GenericReferenceField, DynamicField, BooleanField, DateTimeField
+from datetime import datetime
 
 class Sample(DynamicDocument):
 	dataset = StringField(required=True, unique=False)
@@ -81,10 +82,13 @@ class BrowsingState(DynamicDocument):
 	urlHash = StringField(required=True, unique=True, max_length=50)
 	browsing = ListField(DictField(), required=True)
 	common = DictField(required=True)
+	created = DateTimeField(default=datetime.now)
 
 	meta = {
 		'indexes': [
-			{'fields': ['urlHash'], 'unique': True }
+			{'fields': ['urlHash'], 'unique': True },
+			# remove url from index after 30 days, aka TTL
+			{'fields': ['created'], 'expireAfterSeconds': 2592000 }
 		],
 	'db_alias': 'samples'		
 	}

@@ -10,7 +10,7 @@ angular.module('services.urlhandler', [
 
 .factory('UrlHandler', function UrlHandler($injector, $timeout, $location, $rootScope, $state, $q, $http, $log,
   DatasetFactory, VariableService, WindowHandler, RegressionService, FilterService, TabService,
-  plSidenav, DimensionService, SOMService, API_URL_STATE, _) {
+  NotifyService, SOMService, DimensionService, PlotService, plSidenav, API_URL_STATE, _) {
 
   var _service = {},
     _loaded = false; // only do state loading once per page load
@@ -105,6 +105,29 @@ angular.module('services.urlhandler', [
           });
         return defer.promise;
       };
+
+      function loadCommon(common) {
+        var state = new PlCommonBrowsingState()
+        .injector($injector)
+        .load(common);
+        return state;
+      }
+
+      function loadBrowsing(browsing) {
+        var state;
+        return _.map(browsing, function(browse) {
+          if(browse.type == 'explore') {
+            state = new PlExploreBrowsingState().load(browsing);
+          } else if(browser.type == 'som') {
+            state = new PlSOMBrowsingState().load(browsing);
+          } else if(browser.type == 'regression') {
+            state = new PlRegressionBrowsingState().load(browsing);
+          } else {
+            throw new Error('Unknown browsing type');
+          }
+          ret.push(state);
+        });
+      }
 
       function loadVariables(stateObj) {
         function addSOMTestVariables(stateObj, fetchVariables) {
@@ -279,21 +302,21 @@ angular.module('services.urlhandler', [
 
       getState(hash).then(function succFn(stateObj) {
 
-        selectDatasets(stateObj.datasets);
-        loadSOM(stateObj);
-        loadRegression(stateObj);
-        loadVariables(stateObj).then(function succFn() {
-          $timeout(function() {
-            addFigures(stateObj).then(function succFn() {
-              defer.resolve();
-            }, function errFn() {
-              defer.reject();
-            });
-          });
+        // selectDatasets(stateObj.datasets);
+        // loadSOM(stateObj);
+        // loadRegression(stateObj);
+        // loadVariables(stateObj).then(function succFn() {
+        //   $timeout(function() {
+        //     addFigures(stateObj).then(function succFn() {
+        //       defer.resolve();
+        //     }, function errFn() {
+        //       defer.reject();
+        //     });
+        //   });
 
-        }, function errFn() {
-          defer.reject();
-        });
+        // }, function errFn() {
+        //   defer.reject();
+        // });
 
       }, function errFn(result) {
         defer.reject();
@@ -347,14 +370,6 @@ angular.module('services.urlhandler', [
       $location.url($location.path());
     }
 
-    var NotifyService = $injector.get('NotifyService'),
-      FilterService = $injector.get('FilterService'),
-      WindowHandler = $injector.get('WindowHandler'),
-      SOMService = $injector.get('SOMService'),
-      DatasetFactory = $injector.get('DatasetFactory'),
-      DimensionService = $injector.get('DimensionService'),
-      PlotService = $injector.get('PlotService');
-
     var defer = $q.defer();
 
     if (_loaded) {
@@ -383,34 +398,34 @@ angular.module('services.urlhandler', [
         });
     } else {
       // load from hash id
-      // loadFromState(urlHash).then(function succFn() {
-      //     console.log("url state loaded");
-      //     defer.resolve({
-      //       result: 'hash_success'
-      //     });
-      //   }, function errFn() {
-      //     NotifyService.addSticky('Error',
-      //       'Loading the state from the provided URL failed. Please check the link you followed.',
-      //       'error');
-      //     loadDefaultView().then(function succFn() {
-      //       console.log("default view loaded successfully");
-      //       defer.resolve({
-      //         result: 'default_success'
-      //       });
-      //     }, function errFn() {
-      //       NotifyService.addSticky('Error', 'Loading the default figures failed.', 'error');
-      //       defer.resolve({
-      //         result: 'default_failed'
-      //       });
-      //     });
-      //   })
-      //   .finally(function() {
-      //     NotifyService.disabled(false);
-      //     $timeout(function() {
-      //       removeHash();
-      //     });
-      //     _loaded = true;
-      //   });
+      loadFromState(urlHash).then(function succFn() {
+          $log.info("url state ", urlHash, "loaded");
+          defer.resolve({
+            result: 'hash_success'
+          });
+        }, function errFn() {
+          NotifyService.addSticky('Error',
+            'Loading the state from the provided URL failed. Please check the link you followed.',
+            'error');
+          loadDefaultView().then(function succFn() {
+            console.log("default view loaded successfully");
+            defer.resolve({
+              result: 'default_success'
+            });
+          }, function errFn() {
+            NotifyService.addSticky('Error', 'Loading the default figures failed.', 'error');
+            defer.resolve({
+              result: 'default_failed'
+            });
+          });
+        })
+        .finally(function() {
+          NotifyService.disabled(false);
+          $timeout(function() {
+            removeHash();
+          });
+          _loaded = true;
+        });
     }
 
     return defer.promise;
