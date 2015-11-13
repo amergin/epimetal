@@ -25,7 +25,7 @@ angular.module('services.urlhandler', [
       .customVariables(_.map(VariableService.getCustomVariables(), function(cv) {
         return cv.get();
       }))
-      .sideMenu(plSidenav.getState());
+      .sideMenu(plSidenav.get());
       return state.get();
     }
 
@@ -98,6 +98,7 @@ angular.module('services.urlhandler', [
         var defer = $q.defer();
         $http.get(API_URL_STATE + "/" + hash)
           .success(function(response) {
+            $log.debug("Loading URL state from object: ", response.result);
             defer.resolve(response.result);
           })
           .error(function(response) {
@@ -110,197 +111,264 @@ angular.module('services.urlhandler', [
         var state = new PlCommonBrowsingState()
         .injector($injector)
         .load(common);
+
+        plSidenav.load(state.sideMenu());
+
         return state;
       }
 
       function loadBrowsing(browsing) {
-        var state;
         return _.map(browsing, function(browse) {
+          var state;
           if(browse.type == 'explore') {
-            state = new PlExploreBrowsingState().load(browsing);
-          } else if(browser.type == 'som') {
-            state = new PlSOMBrowsingState().load(browsing);
-          } else if(browser.type == 'regression') {
-            state = new PlRegressionBrowsingState().load(browsing);
-          } else {
+            state = new PlExploreBrowsingState()
+            .injector($injector)
+            .load(browse);
+          } 
+          else if(browse.type == 'som') {
+            state = new PlSOMBrowsingState()
+            .injector($injector)            
+            .load(browse);
+          } 
+          else if(browse.type == 'regression') {
+            state = new PlRegressionBrowsingState()
+            .injector($injector)
+            .load(browse);           
+          } 
+          else {
             throw new Error('Unknown browsing type');
           }
-          ret.push(state);
+          return state;
         });
       }
 
-      function loadVariables(stateObj) {
-        function addSOMTestVariables(stateObj, fetchVariables) {
-          var testVars = stateObj.som.testVars;
-          return _.union(fetchVariables, testVars);
-        }
-
-        var defer = $q.defer(),
-          promises = [];
-
-        var fetches = _.chain(stateObj.views)
-          .groupBy(function(view) {
-            return WindowHandler.get(view.name).getDimensionService().getName();
-          })
-          .map(function(views, somServiceName) {
-            var handler,
-              fetchVariables = _.chain(views)
-              .map(function(v) {
-                return v.figures;
-              })
-              .flatten()
-              .map(function(fig) {
-                handler = fig.handler;
-                var isRegression = (fig.type == 'regression-plot');
-                if (isRegression) {
-                  return fig.computation.input;
-                } else {
-                  return fig.variables;
-                }
-              })
-              .map(function(d) {
-                return _.chain(d)
-                  .pick('x', 'y', 'adjust', 'association', 'target')
-                  .values()
-                  .value();
-              })
-              .flattenDeep()
-              .value();
-
-            var handlerInstance = WindowHandler.get(handler);
-
-            if (SOMService.getDimensionService() == handlerInstance.getDimensionService()) {
-              // add SOM test variables to be fetched, too
-              fetchVariables = addSOMTestVariables(stateObj, fetchVariables);
-
+      // fetches all data of variables belonging to primary dimension
+      // service.
+      function fetchPrimaryDimensionVars(browsing, common) {
+        var vars = [],
+        defer = $q.defer(),
+        primaryHandler = null;
+        flattenedVars = [];
+        _.each(browsing, function(browse) {
+          _.each(browse.windowHandlers(), function(handler) {
+            var isPrimary = $injector.get('WindowHandler').getPrimary() == handler;
+            if(isPrimary) {
+              primaryHandler = handler;
+              var windows = handler.get(),
+              variables = _.map(windows, function(w) { return w.object.variables(); });
+              vars = vars.concat(variables);
             }
-
-            return {
-              handler: handlerInstance,
-              variables: fetchVariables,
-              service: DimensionService.get(somServiceName)
-            };
-          })
-          .value();
-
-        _.each(fetches, function(obj) {
-          promises.push(DatasetFactory.getVariableData(obj.variables, obj.handler));
+          });
         });
 
-        $q.all(promises).then(function succFn(res) {
+        flattenedVars = 
+          _.chain(vars)
+          .map(function(v) {
+            if(!_.has(v, 'type')) {
+              return _.values(v);
+            } else {
+              return v;
+            }
+          })
+          .flatten()
+          .value();
+
+        DatasetFactory.getVariableData(flattenedVars, primaryHandler, { getRawData: true }).then(function succFn() {
           defer.resolve();
-        }, function errFn(res) {
+        }, function errFn() {
           defer.reject();
         });
         return defer.promise;
       }
 
-      function addFigures(stateObj) {
-        function addView(view, promises) {
-          _.each(view.figures, function(figure) {
-            var handler = WindowHandler.get(figure.handler),
-              config = _.omit(figure, 'handler');
+      // function loadVariables(stateObj) {
+      //   function addSOMTestVariables(stateObj, fetchVariables) {
+      //     var testVars = stateObj.som.testVars;
+      //     return _.union(fetchVariables, testVars);
+      //   }
 
-            if (config.type == 'regression-plot' || config.type == 'somplane') {
-              handler.add(config);
-            } else {
-              promises.push(PlotService.draw(config.type, config, handler));
-            }
-          });
-        }
+      //   var defer = $q.defer(),
+      //     promises = [];
 
-        var promises = [],
-          deferred = $q.defer();
+      //   var fetches = _.chain(stateObj.views)
+      //     .groupBy(function(view) {
+      //       return WindowHandler.get(view.name).getDimensionService().getName();
+      //     })
+      //     .map(function(views, somServiceName) {
+      //       var handler,
+      //         fetchVariables = _.chain(views)
+      //         .map(function(v) {
+      //           return v.figures;
+      //         })
+      //         .flatten()
+      //         .map(function(fig) {
+      //           handler = fig.handler;
+      //           var isRegression = (fig.type == 'regression-plot');
+      //           if (isRegression) {
+      //             return fig.computation.input;
+      //           } else {
+      //             return fig.variables;
+      //           }
+      //         })
+      //         .map(function(d) {
+      //           return _.chain(d)
+      //             .pick('x', 'y', 'adjust', 'association', 'target')
+      //             .values()
+      //             .value();
+      //         })
+      //         .flattenDeep()
+      //         .value();
 
-        _.chain(stateObj.views)
-          .sortBy(function(view) {
-            // load the states in the order described below
-            var sortNum = {
-              'vis.explore': 0,
-              'vis.som': 10,
-              'vis.som.profiles': 11,
-              'vis.som.distributions': 12,
-              'vis.regression': 20
-            };
-            return sortNum[view.name];
-          })
-          .each(function(view) {
-            addView(view, promises);
-          })
-          .value();
+      //       var handlerInstance = WindowHandler.get(handler);
 
-        $q.all(promises).then(function succFn() {
-          deferred.resolve();
-        }, function errFn() {
-          deferred.reject();
-        });
+      //       if (SOMService.getDimensionService() == handlerInstance.getDimensionService()) {
+      //         // add SOM test variables to be fetched, too
+      //         fetchVariables = addSOMTestVariables(stateObj, fetchVariables);
 
-        return deferred.promise;
-      }
+      //       }
 
-      function selectDatasets(dsets) {
-        try {
-          var setObjs = DatasetFactory.getSets();
-          _.each(dsets, function(set) {
-            setObjs[set].enable();
-          });
-          DatasetFactory.updateDataset();
-        } catch (e) {
-          throw new Error('Unknown dataset name');
-        }
-      }
+      //       return {
+      //         handler: handlerInstance,
+      //         variables: fetchVariables,
+      //         service: DimensionService.get(somServiceName)
+      //       };
+      //     })
+      //     .value();
 
-      function loadSOM(stateObj) {
-        function positionCircles(circles) {
-          try {
-            _.each(circles, function(circle) {
-              var filter = FilterService.getSOMFilter(circle.id);
-              if (circle.position && circle.radius) {
-                filter.position(circle.position).radius(circle.radius);
-              }
-            });
-          } catch (e) {
-            throw new Error('Invalid SOM filters');
-          }
-        }
+      //   _.each(fetches, function(obj) {
+      //     promises.push(DatasetFactory.getVariableData(obj.variables, obj.handler));
+      //   });
 
-        function addBMUs(bmus) {
-          try {
-            if (!bmus || bmus.length === 0) {
-              return;
-            }
-            SOMService.bmus(bmus);
-            DimensionService.get('vis.som').addBMUs(bmus);
-          } catch (e) {
-            throw new Error('Invalid bmu samples');
-          }
-        }
+      //   $q.all(promises).then(function succFn(res) {
+      //     defer.resolve();
+      //   }, function errFn(res) {
+      //     defer.reject();
+      //   });
+      //   return defer.promise;
+      // }
 
-        function addTestVars(vars) {
-          try {
-            var somBottomHandler = WindowHandler.get('vis.som');
-            SOMService.updateVariables(vars, somBottomHandler);
-          } catch (e) {
-            throw new Error('Invalid SOM test vars');
-          }
-        }
-        positionCircles(stateObj.som.filters);
-        addBMUs(stateObj.som.bmus);
-        addTestVars(stateObj.som.testVars);
-      }
+      // function addFigures(stateObj) {
+      //   function addView(view, promises) {
+      //     _.each(view.figures, function(figure) {
+      //       var handler = WindowHandler.get(figure.handler),
+      //         config = _.omit(figure, 'handler');
 
-      function loadRegression(stateObj) {
-        try {
-          var RegressionService = $injector.get('RegressionService');
-          RegressionService.selectedVariables(stateObj.regression.selected);
-        } catch (e) {
-          throw new Error('Invalid Regression info');
-        }
-      }
+      //       if (config.type == 'regression-plot' || config.type == 'somplane') {
+      //         handler.add(config);
+      //       } else {
+      //         promises.push(PlotService.draw(config.type, config, handler));
+      //       }
+      //     });
+      //   }
+
+      //   var promises = [],
+      //     deferred = $q.defer();
+
+      //   _.chain(stateObj.views)
+      //     .sortBy(function(view) {
+      //       // load the states in the order described below
+      //       var sortNum = {
+      //         'vis.explore': 0,
+      //         'vis.som': 10,
+      //         'vis.som.profiles': 11,
+      //         'vis.som.distributions': 12,
+      //         'vis.regression': 20
+      //       };
+      //       return sortNum[view.name];
+      //     })
+      //     .each(function(view) {
+      //       addView(view, promises);
+      //     })
+      //     .value();
+
+      //   $q.all(promises).then(function succFn() {
+      //     deferred.resolve();
+      //   }, function errFn() {
+      //     deferred.reject();
+      //   });
+
+      //   return deferred.promise;
+      // }
+
+      // function selectDatasets(dsets) {
+      //   try {
+      //     var setObjs = DatasetFactory.getSets();
+      //     _.each(dsets, function(set) {
+      //       setObjs[set].enable();
+      //     });
+      //     DatasetFactory.updateDataset();
+      //   } catch (e) {
+      //     throw new Error('Unknown dataset name');
+      //   }
+      // }
+
+      // function loadSOM(stateObj) {
+      //   function positionCircles(circles) {
+      //     try {
+      //       _.each(circles, function(circle) {
+      //         var filter = FilterService.getSOMFilter(circle.id);
+      //         if (circle.position && circle.radius) {
+      //           filter.position(circle.position).radius(circle.radius);
+      //         }
+      //       });
+      //     } catch (e) {
+      //       throw new Error('Invalid SOM filters');
+      //     }
+      //   }
+
+      //   function addBMUs(bmus) {
+      //     try {
+      //       if (!bmus || bmus.length === 0) {
+      //         return;
+      //       }
+      //       SOMService.bmus(bmus);
+      //       DimensionService.get('vis.som').addBMUs(bmus);
+      //     } catch (e) {
+      //       throw new Error('Invalid bmu samples');
+      //     }
+      //   }
+
+      //   function addTestVars(vars) {
+      //     try {
+      //       var somBottomHandler = WindowHandler.get('vis.som');
+      //       SOMService.updateVariables(vars, somBottomHandler);
+      //     } catch (e) {
+      //       throw new Error('Invalid SOM test vars');
+      //     }
+      //   }
+      //   positionCircles(stateObj.som.filters);
+      //   addBMUs(stateObj.som.bmus);
+      //   addTestVars(stateObj.som.testVars);
+      // }
+
+      // function loadRegression(stateObj) {
+      //   try {
+      //     var RegressionService = $injector.get('RegressionService');
+      //     RegressionService.selectedVariables(stateObj.regression.selected);
+      //   } catch (e) {
+      //     throw new Error('Invalid Regression info');
+      //   }
+      // }
 
       var defer = $q.defer();
 
       getState(hash).then(function succFn(stateObj) {
+        // ensure variables have been loaded
+        VariableService.getVariables().then(function succFn() {
+          // try {
+            // init common
+            var common = loadCommon(stateObj.common),
+            // init browsing states
+            browsing = loadBrowsing(stateObj.browsing);
+
+            fetchPrimaryDimensionVars(browsing, common).then(function succFn() {
+              defer.resolve();
+            }, function errFn() {
+              defer.reject();
+            });
+        }, function errFn() {
+          defer.reject();
+        });
 
         // selectDatasets(stateObj.datasets);
         // loadSOM(stateObj);

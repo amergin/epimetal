@@ -70,10 +70,12 @@ angular.module('services.filter', [
       }
 
       var id = _.uniqueId('circle');
-      var circle = new CircleFilter($injector)
+      var circle = new CircleFilter()
+        .injector($injector)
         .name(name)
         .id(id)
-        .color(_colors(id));
+        .color(_colors(id))
+        .init();
       _filters.push(circle);
       updateCircleFilterHandler();
       $rootScope.$emit('som:circle:add', circle);

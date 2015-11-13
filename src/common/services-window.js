@@ -4,12 +4,10 @@ angular.module('services.window', [
   'ext.lodash'
 ])
 
-.factory('WindowHandler', function WindowHandlerFn($injector, $rootScope, $timeout, usSpinnerService, $state, EXPORT_FILENAME_MAX_LENGTH, DatasetFactory, _) {
+.factory('WindowHandler', function WindowHandlerFn($injector, $rootScope, usSpinnerService, $state, EXPORT_FILENAME_MAX_LENGTH, DatasetFactory, _) {
 
-  function GridWindow(injector) {
+  function GridWindow() {
       var obj = {},
-        $injector = injector,
-        $timeout = $injector.get('$timeout'),
         priv = {
           reference: null,
           type: null,
@@ -43,6 +41,12 @@ angular.module('services.window', [
           }
         });
       }
+
+      obj.injector = function(x) {
+        if(!arguments.length) { return priv.injector; }
+        priv.injector = x;
+        return obj;
+      };
 
       obj.reference = function(x) {
         if (!arguments.length) {
@@ -82,9 +86,9 @@ angular.module('services.window', [
 
       obj.spin = function(x) {
         if (!arguments.length || x === true) {
-          $injector.get('usSpinnerService').spin(obj.id());
+          obj.injector().get('usSpinnerService').spin(obj.id());
         } else {
-          $injector.get('usSpinnerService').stop(obj.id());
+          obj.injector().get('usSpinnerService').stop(obj.id());
         }
         return obj;
       };
@@ -391,13 +395,23 @@ angular.module('services.window', [
           var vars = obj.variables();
           // is variable
           if(vars.type) {
-            return _.map([].concat(vars), mapper);
+            return mapper(vars);
+            // return _.map([].concat(vars), mapper);
           }
           else if(_.isArray(vars)) {
             return _.chain(obj.variables())
             .map(function(vari) {
               return vari.get();
             })
+            .value();
+          }
+          else if(_.has(vars, 'x') && _.has(vars, 'y')) {
+            // x & y
+            return _.chain(vars)
+            .map(function(v, key) {
+              return [key, v.get()];
+            })
+            .object()
             .value();
           }
           else if(_.isObject(vars)) {
@@ -475,7 +489,8 @@ angular.module('services.window', [
           });
         }
 
-        var gridWindow = new GridWindow($injector)
+        var gridWindow = new GridWindow()
+          .injector($injector)
           .id(_.uniqueId("win_")),
           reference = {
             'handler': that,
@@ -541,6 +556,59 @@ angular.module('services.window', [
             return win.object.get();
           })
         };
+      };
+
+      this.load = function(state) {
+        function getVariables(vars) {
+          function mapper(v) {
+            return $injector.get('VariableService').getVariable(v.name);
+          }
+
+          // is variable
+          if(vars.type) {
+            return mapper(vars);
+          }
+          else if(_.isArray(vars)) {
+            return _.chain(vars)
+            .map(mapper)
+            .value();
+          }
+          else if(_.has(vars, 'x') && _.has(vars, 'y')) {
+            // x & y
+            return _.chain(vars)
+            .map(function(v, key) {
+              return [key, mapper(v)];
+            })
+            .object()
+            .value();
+          }
+          else if(_.isObject(vars)) {
+            // pick variable state instead of the whole object
+            // while preserving the structure
+            return _.chain(vars)
+            .map(function(arr,key) { 
+              var vals = _.map(arr, function(v) { return mapper(v); }); 
+              return [key, vals];
+            })
+            .object()
+            .value();
+          }
+        }
+
+        _.each(state.windows, function(win) {
+          var variables = getVariables(win.variables);
+
+          // add new grid win and init it
+          var winObj = that.add()
+          .figure(win.figure)
+          .extra(win.extra)
+          .pooled(win.pooled || false)
+          .variables(variables)
+          .size(win.size)
+          .position(win.position);
+
+        });
+        return that;
       };
 
       this.get = function() {

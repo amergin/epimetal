@@ -16,6 +16,12 @@ function PlBrowsingState() {
       throw new Error("not implemented");
     };
 
+    obj.injector = function(x) {
+      if (!arguments.length) { return priv.injector; }
+      priv.injector = x;
+      return obj;
+    };
+
     // returns a serializable object of this instance
     // that can be stored to DB
     priv.get = function(x) {
@@ -37,14 +43,50 @@ function PlBrowsingState() {
 
     // common functionality
     priv.load = function(stateObj) {
+      var WindowHandler = obj.injector().get('WindowHandler'),
+      FilterService = obj.injector().get('FilterService');
+
+      // load handlers
+      var handlers = _.map(stateObj['handlers'], function(handler) {
+        var winHandler = WindowHandler.get(handler.name);
+        if(!winHandler) { throw new Error("WindowHandler not found: " + handler.name); }
+        winHandler.load(handler);
+        return winHandler;
+      });
+      // and init
+      obj.windowHandlers(handlers);
+
+      // load filters
+      var filters = _.map(stateObj['filters'], function(filt) {
+        if(filt.type == 'range') {
+          return new HistogramFilter()
+          .injector(obj.injector())
+          .load(filt);
+        }
+        else if(filt.type == 'classed') {
+          return new ClassedBarChartFilter()
+          .injector(obj.injector())
+          .load(filt);
+        }
+        else if(filt.type == 'circle') {
+          return new CircleFilter()
+          .injector(obj.injector())
+          .load(filt);
+        }
+        else {
+          throw new Error("Unsupported filter type: " + filt.type);
+        }
+      });
+      // and init
+      obj.filters(filters);
     };
 
     // loads an object that is retrieved from the DB
     // and can be used to initialize the running state
     // of the app
-    obj.load = function(x) {
-      throw new Error("not implemented");
-    }; 
+    // obj.load = function(x) {
+    //   throw new Error("not implemented");
+    // }; 
 
     obj.windowHandlers = function(x) {
       if(!arguments.length) { return priv.windowHandlers; }
@@ -76,9 +118,9 @@ function PlExploreBrowsingState() {
     try {
       // common
       priv.load(stateObj);
-      obj.type(stateObj['type']);
+      return obj;
     } catch(err) {
-      throw new Error("PlExploreBrowsingState thows error");
+      throw new Error("PlExploreBrowsingState thows error: ", err.message);
     }
   };
 
@@ -128,6 +170,16 @@ function PlSOMBrowsingState() {
     });
   };
 
+  obj.load = function(stateObj) {
+    try {
+      // common
+      priv.load(stateObj);
+      return obj;
+    } catch(err) {
+      throw new Error("PlExploreBrowsingState thows error: ", err.message);
+    }
+  };
+
   return obj;
 }
 
@@ -151,6 +203,18 @@ function PlRegressionBrowsingState() {
     if(!arguments.length) { return priv.selection; }
     priv.selection = x;
     return obj;
+  };
+
+  obj.load = function(stateObj) {
+    try {
+      // common
+      priv.load(stateObj);
+      obj.type(stateObj['type']);
+      obj.selection(stateObj['selection']);
+      return obj;
+    } catch(err) {
+      throw new Error("PlRegressionBrowsingState thows error ", err.message);
+    }
   };
 
   obj.get = function() {

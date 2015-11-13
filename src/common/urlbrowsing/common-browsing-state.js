@@ -51,12 +51,14 @@ function PlCommonBrowsingState() {
       var inject = obj.injector(),
       dsets = datasets(stateObj['datasets']);
       obj.datasets(dsets);
-      DatasetFactory.updateDataset();
+      obj.injector().get('DatasetFactory').updateDataset();
 
       obj.sideMenu(stateObj['menu']);
       // obj.customVariables();
+      return obj;
+      
     } catch(err) {
-      throw new Error("PlCommonBrowsingState throws error");
+      throw new Error("PlCommonBrowsingState throws error: " + err.message);
     }
   };  
 

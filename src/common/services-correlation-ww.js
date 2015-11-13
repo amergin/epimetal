@@ -302,7 +302,7 @@ angular.module('services.correlation.ww', [
         initWorkers(_availableCores);
       });
 
-  }, 2000);
+  });//, 2000);
 
 
   return service;

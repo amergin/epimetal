@@ -559,7 +559,7 @@ angular.module('services.regression.ww', [
         initWorkers(_availableCores);
       });
 
-  }, 3000);
+  });//, 3000);
 
   return service;
 

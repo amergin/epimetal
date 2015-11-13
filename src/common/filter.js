@@ -6,10 +6,6 @@ function BaseFilter() {
     throw new Error("not implemented");
   };
 
-  filter.state = function() {
-    throw new Error("not implemented");
-  };
-
   filter.isPayload = function() {
     throw new Error("not implemented");
   };
@@ -26,10 +22,16 @@ function BaseFilter() {
     throw new Error("not implemented");
   };  
 
+  filter.injector = function(x) {
+    if (!arguments.length) { return priv.injector; }
+    priv.injector = x;
+    return filter;
+  };
+
   return filter;
 }
 
-function CircleFilter($injector) {
+function CircleFilter() {
 
   BaseFilter.call(this);
 
@@ -48,15 +50,19 @@ function CircleFilter($injector) {
       }
     }),
     filter = this.filter;
-  priv.injector = $injector;
 
   function initOrigin() {
-    var SOMService = priv.injector.get('SOMService');
+    var SOMService = filter.injector().get('SOMService');
     priv.origin.x = _.random(1, SOMService.columns() - 1);
     priv.origin.y = _.random(1, SOMService.rows() - 1);
   }
 
-  initOrigin();
+  // initOrigin();
+
+  filter.init = function() {
+    initOrigin();
+    return filter;
+  };
 
   filter.isPayload = function(x) {
     return false;
@@ -94,19 +100,13 @@ function CircleFilter($injector) {
     return filter;
   };
 
-  // filter.injector = function(x) {
-  //   if(!arguments.length) { return priv.injector; }
-  //   priv.injector = x;
-  //   return filter;
-  // };
-
   filter.hexagons = function(hexagons) {
     if (!arguments.length) {
       return priv.hexagons;
     }
     priv.hexagons = hexagons;
-    priv.injector.get('DimensionService').get('vis.som').updateSOMFilter(filter.id(), priv.hexagons);
-    priv.injector.get('WindowHandler').redrawVisible();
+    filter.injector().get('DimensionService').get('vis.som').updateSOMFilter(filter.id(), priv.hexagons);
+    filter.injector().get('WindowHandler').redrawVisible();
     return filter;
   };
 
@@ -155,8 +155,17 @@ function CircleFilter($injector) {
       name: filter.name(),
       id: filter.id(),
       origin: filter.origin(),
-      color: filter.color()
+      color: filter.color(),
+      type: filter.type()
     };
+  };
+
+  filter.load = function(state) {
+    filter.color(state.color);
+    filter.id(state.id);
+    filter.name(state.name);
+    filter.origin(state.origin);
+    return filter;
   };
 
   filter.remove = function() {
@@ -221,12 +230,26 @@ function BaseFigureFilter() {
     return !_.isUndefined(instance.chart) && filter.chart() == instance.chart();
   };
 
-  filter.get = function() {
+  priv.get = function() {
     return {
       payload: filter.payload(),
       windowid: filter.windowid(),
       variable: filter.variable().get()
     };
+  };
+
+  priv.load = function(state) {
+    filter.payload(state['payload']);
+    filter.windowid(state['windowid']);
+
+    // find and assign variable
+    var VariableService = filter.injector().get('VariableService');
+    if(state['variable'].type == 'db') {
+      var variable = VariableService.getVariable(state.variable.name);
+      filter.variable(variable);
+    } else if(state['variable'].type == 'custom') {
+      // TODO
+    }
   };
 
   return filter;
@@ -245,6 +268,17 @@ function HistogramFilter() {
 
   filter.type = function() {
     return 'range';
+  };
+
+  filter.get = function() {
+    return _.extend(priv.get(), {
+      'type': filter.type()
+    });
+  };
+
+  filter.load = function(state) {
+    // do common
+    priv.load(state);
   };
 
   filter.remove = function() {
@@ -269,6 +303,17 @@ function ClassedBarChartFilter() {
 
   filter.type = function() {
     return 'classed';
+  };
+
+  filter.get = function() {
+    return _.extend(priv.get(), {
+      'type': filter.type()
+    });
+  };
+
+  filter.load = function(state) {
+    // do common
+    priv.load(state);
   };
 
   filter.remove = function() {
