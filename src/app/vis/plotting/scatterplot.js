@@ -33,10 +33,12 @@ angular.module('plotter.vis.plotting.scatterplot', [
     $scope.sets = DatasetFactory.activeSets();
     // min&max for all active datasets
     $scope.xExtent = d3.extent($scope.group.top(Infinity), function(d) {
-      return d.key.x;
+      var x = d.key.x;
+      return (x == constants.nanValue) ? null : x;
     });
     $scope.yExtent = d3.extent($scope.group.top(Infinity), function(d) {
-      return d.key.y;
+      var y = d.key.y;
+      return (y == constants.nanValue) ? null : y;
     });
 
     $scope.xRange = [$scope.margins[3], $scope.width - $scope.margins[1]];
@@ -47,7 +49,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
   $scope._createCanvas = function(set, zIndex) {
     var name = set.name();
     var data = $scope.group.all().filter(function(d) {
-      return (d.value.counts[name] > 0) && d.key.valueOf() >= constants.legalMinValue;
+      return (d.value.counts[name] > 0) && d.key.valueOf() !== constants.nanValue;
     });
     var color = $scope.window.pooled() ? SCATTERPLOT_POOLING_COLOR : set.color();
     var canvas = $scope.createCanvas(
