@@ -128,7 +128,10 @@ angular.module('services.filter', [
         if(filter.type() == 'circle') {
           return filter.type() == 'circle' && filter.id() == existing.id();
         } 
-        else if(filter.type() == 'classed') { return false; }
+        else if(filter.type() == 'classed') {
+          return existing.type() == filter.type() && existing.payload() == filter.payload();
+        }
+        // else if(filter.type() == 'classed') { return false; }
         else {
           if(existing.type() !== 'circle') {
             return existing.windowid() == filter.windowid();
