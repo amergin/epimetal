@@ -14,7 +14,7 @@ angular.module('plotter', [
   ])
 
 .constant('constants', {
-  nanValue: -1000,
+  nanValue: -1012312311244,
   legalMinValue: 0,
   tickFormat: d3.format(".2s"),
   groups: {
