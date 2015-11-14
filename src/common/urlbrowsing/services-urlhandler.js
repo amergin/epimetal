@@ -184,12 +184,10 @@ angular.module('services.urlhandler', [
       function activateFilters(browsing) {
         var promises = [];
         _.each(browsing, function(browse) {
-          renderAfterCount = 0;
           _.each(browse.filters(), function(filter) {
             // add the filter to service and later each figure checks upon init
             // if such filter has been applied to its window
             FilterService.addFilter(filter);
-            ++renderAfterCount;
           });
         });
       }

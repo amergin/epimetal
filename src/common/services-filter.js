@@ -127,11 +127,12 @@ angular.module('services.filter', [
       var contains = lodashEq.contains(_filters, function(existing) {
         if(filter.type() == 'circle') {
           return filter.type() == 'circle' && filter.id() == existing.id();
-        } else {
+        } 
+        else if(filter.type() == 'classed') { return false; }
+        else {
           if(existing.type() !== 'circle') {
             return existing.windowid() == filter.windowid();
           }
-          return false;
         }
       });
       if(!contains) {

@@ -77,6 +77,23 @@ function PlBrowsingState() {
           throw new Error("Unsupported filter type: " + filt.type);
         }
       });
+
+      _.each(stateObj.handlers, function(handler) {
+        _.each(handler.windows, function(win) {
+          console.log("WIN = ", win.figure);
+
+          _.chain(filters)
+          .filter(function(filter) {
+            return filter.windowid() == win.oldId;
+          })
+          .each(function(filter) {
+            filter.windowid(win.id);
+          })
+          .value();
+
+        });
+      });
+
       // and init
       obj.filters(filters);
     };

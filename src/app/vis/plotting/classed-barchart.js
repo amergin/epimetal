@@ -40,9 +40,37 @@ angular.module('plotter.vis.plotting.classedbarchart',
     }
   }, true);
 
+  $scope.initExistingFilters = function(chart) {
+    // query from the service if filters have been applied to this win before init:
+    // e.g. have the page been loaded from state.
+    var existing = _.filter(FilterService.getFilters(), function(filter) {
+      return filter.type() !== 'circle' && filter.windowid() == $scope.window.id();
+    });
+
+    // dc only allows to use existing reduced groups, so don't try to filter with a 
+    // newly created obj that has no reference to the crossfilter dim-redu system
+    var groups = $scope.filterDefault($scope.reduced).all();
+
+    _.each(existing, function(filter) {
+      var group = _.find(groups, function(grp) { 
+        var key = _.omit(grp.key),
+        match = _.matches(filter.payload());
+        return match(key);
+      });
+
+      filter.chart(chart);
+      if(group) { 
+        filter.payload(group.key);
+        chart.filter(group.key);
+      }
+    });
+   
+  };
+
   function getTotalCount() {
     return _.sum($scope.totalGroup.all(), function(d) { return d.value.valueOf(); });
   }
+
 
   function initSOMSpecial() {
     $scope.primary = DimensionService.getPrimary();
@@ -426,7 +454,8 @@ angular.module('plotter.vis.plotting.classedbarchart',
         dimension: $scope.dimension,
         reduced: $scope.reduced,
         chartGroup: constants.groups.histogram.interactive,
-        variable: $scope.window.variables().name()
+        variable: $scope.window.variables().name(),
+        callback: $scope.initExistingFilters
       };
       drawFunction = $scope.drawDefault;
     }
@@ -435,6 +464,9 @@ angular.module('plotter.vis.plotting.classedbarchart',
       $timeout(function() {
         drawFunction(config);
         $scope.chart.render();
+        if(config.callback) {
+          config.callback($scope.chart);
+        }
         initDropdown();
       });
     });

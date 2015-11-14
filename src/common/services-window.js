@@ -607,6 +607,9 @@ angular.module('services.window', [
           .size(win.size)
           .position(win.position);
 
+          // overwrite the state id and keep the old one
+          win.oldId = win.id;
+          win.id = winObj.id();
         });
         return that;
       };
