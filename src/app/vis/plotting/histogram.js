@@ -15,7 +15,7 @@ angular.module('plotter.vis.plotting.histogram',
 .constant('HISTOGRAM_POOLING_COLOR', '#000000')
 .constant('HISTOGRAM_SOM_TOTAL_COLOR', '#00b300')
 
-.controller('HistogramPlotController', function HistogramPlotController($scope, DatasetFactory, constants, $state, $injector, $timeout, HISTOGRAM_POOLING_COLOR, GRID_WINDOW_PADDING, d3, dc, _) {
+.controller('HistogramPlotController', function HistogramPlotController($scope, $rootScope, DatasetFactory, constants, $state, $injector, $timeout, HISTOGRAM_POOLING_COLOR, GRID_WINDOW_PADDING, d3, dc, _) {
 
     $scope.isSpecial = function() {
       return $scope.window.extra().somSpecial || false;
@@ -56,6 +56,22 @@ angular.module('plotter.vis.plotting.histogram',
       $scope.totalGroupInst = null;
 
     }
+
+    $scope.initExistingFilters = function(chart) {
+      // query from the service if filters have been applied to this win before init:
+      // e.g. have the page been loaded from state.
+      var existing = _.filter($injector.get('FilterService').getFilters(), function(filter) {
+        var exists = filter.type() !== 'circle' && filter.windowid() == $scope.window.id();
+        if(exists) {
+          filter.chart(chart);
+        }
+        return exists;
+      });
+
+      if(existing.length) {
+        chart.filter(existing[0].payload());
+      }
+    };
 
     if( $scope.isSpecial() ) {
       initSOMSpecial();
@@ -280,7 +296,7 @@ angular.module('plotter.vis.plotting.histogram',
             return filt.type() == 'range' && filt.chart() == $scope.histogram;
           });
 
-          if(current) {
+          if(current && filters.length) {
             // shifted
             current.payload(filter);
           } else {
@@ -386,17 +402,11 @@ angular.module('plotter.vis.plotting.histogram',
       }
 
       // 3. compose & render the composite chart
-      $scope.histogram.compose(charts);
-      $scope.histogram.render();
 
-      if( !$scope.isSpecial() && !_.isUndefined( $scope.window.filters ) && $scope.window.filters.length > 0) {
-        $timeout( function() {
-          var filter = dc.filters.RangedFilter($scope.window.filters[0], $scope.window.filters[1]);
-          $scope.histogram.filter(filter);
-          $scope.histogram.render();
-          $rootScope.$emit('scatterplot.redrawAll');
-        });
-      }
+      $scope.histogram.render();
+      $scope.histogram.compose(charts);
+
+      config.callback($scope.histogram);
 
     };
 
@@ -441,7 +451,8 @@ angular.module('plotter.vis.plotting.histogram',
         groupNames: $scope.groupNames,
         colorScale: $scope.colorScale,
         filter: $scope.filterOnSet,
-        filterEnabled: $scope.window.extra().filterEnabled
+        filterEnabled: $scope.window.extra().filterEnabled,
+        callback: $scope.initExistingFilters
       };
 
       $scope.element.ready(function() {
@@ -623,10 +634,14 @@ angular.module('plotter.vis.plotting.histogram',
         }
       });
 
-      var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
-      });
+      // var gatherFilterUnbind = $rootScope.$on('urlhandler.getfilter', function(event, windowId, callback) {
+      //   if($scope.window.id() == windowId) {
+      //     // tell the caller which DC chart is being used in this filter
+      //     callback($scope.histogram);
+      //   }
+      // });
 
-      $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind, derivedAddUnbind, derivedRemoveUnbind, somFilterRemovedUnbind, somFilterAddedUnbind);
+      $scope.deregisters.push(reRenderUnbind, redrawUnbind, derivedAddUnbind, derivedRemoveUnbind, somFilterRemovedUnbind, somFilterAddedUnbind);
 
       $scope.$on('$destroy', function() {
         console.log("destroying histogram for", $scope.window.variables());

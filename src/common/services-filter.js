@@ -6,7 +6,7 @@ angular.module('services.filter', [
 ])
 
 .constant('SOM_MAX_FILTERS', 5)
-  .factory('FilterService', function FilterService($injector, $rootScope, WindowHandler, SOM_MAX_FILTERS, d3, _) {
+  .factory('FilterService', function FilterService($injector, $rootScope, WindowHandler, SOM_MAX_FILTERS, d3, _, lodashEq) {
 
     var DimensionService = $injector.get('DimensionService');
     var _activeDimensionService = DimensionService.getPrimary();
@@ -123,7 +123,20 @@ angular.module('services.filter', [
       if (service.disabled()) {
         return;
       }
-      _filters.push(filter);
+      // do a little double-checking: does the filter exist?
+      var contains = lodashEq.contains(_filters, function(existing) {
+        if(filter.type() == 'circle') {
+          return filter.type() == 'circle' && filter.id() == existing.id();
+        } else {
+          if(existing.type() !== 'circle') {
+            return existing.windowid() == filter.windowid();
+          }
+          return false;
+        }
+      });
+      if(!contains) {
+        _filters.push(filter);
+      }
     };
 
     service.removeFilter = function(filter) {

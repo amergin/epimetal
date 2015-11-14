@@ -20,7 +20,11 @@ function BaseFilter() {
 
   filter.get = function() {
     throw new Error("not implemented");
-  };  
+  };
+
+  filter.load = function() {
+    throw new Error("not implemented");
+  };
 
   filter.injector = function(x) {
     if (!arguments.length) { return priv.injector; }
@@ -250,6 +254,7 @@ function BaseFigureFilter() {
     } else if(state['variable'].type == 'custom') {
       // TODO
     }
+    return filter;
   };
 
   return filter;
@@ -278,7 +283,9 @@ function HistogramFilter() {
 
   filter.load = function(state) {
     // do common
+    state.payload = new dc.filters.RangedFilter(state.payload[0], state.payload[1]);
     priv.load(state);
+    return filter;
   };
 
   filter.remove = function() {
@@ -314,6 +321,7 @@ function ClassedBarChartFilter() {
   filter.load = function(state) {
     // do common
     priv.load(state);
+    return filter;
   };
 
   filter.remove = function() {

@@ -181,6 +181,19 @@ angular.module('services.urlhandler', [
         return defer.promise;
       }
 
+      function activateFilters(browsing) {
+        var promises = [];
+        _.each(browsing, function(browse) {
+          renderAfterCount = 0;
+          _.each(browse.filters(), function(filter) {
+            // add the filter to service and later each figure checks upon init
+            // if such filter has been applied to its window
+            FilterService.addFilter(filter);
+            ++renderAfterCount;
+          });
+        });
+      }
+
       // function loadVariables(stateObj) {
       //   function addSOMTestVariables(stateObj, fetchVariables) {
       //     var testVars = stateObj.som.testVars;
@@ -362,6 +375,7 @@ angular.module('services.urlhandler', [
             browsing = loadBrowsing(stateObj.browsing);
 
             fetchPrimaryDimensionVars(browsing, common).then(function succFn() {
+              activateFilters(browsing);
               defer.resolve();
             }, function errFn() {
               defer.reject();
