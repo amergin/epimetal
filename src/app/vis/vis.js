@@ -333,10 +333,18 @@ angular.module('plotter.vis', [
     promise.then(function succFn(selection) {
       // update input variables
       SOMService.trainVariables(selection.variables);
+
+      var sizeChanged = (SOMService.columns() !== selection.size.cols) || 
+      (SOMService.rows() !== selection.size.rows);
       // update SOM size
       SOMService
       .rows(selection.size.rows)
       .columns(selection.size.cols);
+
+      if(sizeChanged) { 
+        var somHandler = WindowHandler.get('vis.som.plane');
+        SOMService.getSOM(somHandler); // no use to wait results
+      }
     });
 
   };
