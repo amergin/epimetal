@@ -102,10 +102,13 @@ def variablesExistObject(obj):
 	array = None
 	if isinstance(obj, list):
 		array = obj
+	elif obj.get('type', '') == 'db':
+		array = [obj]
 	elif isinstance(obj, dict):
 		array = flatten(obj.values())
 
-	print "array=", array
+	print "variablesExistObject, obj = ", obj
+	print "variablesExistObject array=", array
 	for variable in array:
 		if variable.get('type') == 'db':
 			if not variables.get(variable.get('name')):
@@ -114,7 +117,7 @@ def variablesExistObject(obj):
 		else:
 			# custom is not processed, TODO
 			pass
-	print "returns true"
+	#print "returns true"
 	return True
 
 @app.route( config.getFlaskVar('prefix') + 'headers/NMR_results', methods=['GET'])
@@ -484,7 +487,7 @@ def postState():
 						legalString(win.get('id')) and \
 						isinstance(win.get('position'), dict) and \
 						isinstance(win.get('size'), dict) and \
-						variablesExistObject(win.get('variables'))
+						variablesExistObject(win.get('variables', []))
 						if not ok:
 							print "not ok"
 							return False
@@ -511,10 +514,10 @@ def postState():
 				legalNumber(size.get('columns')) and \
 				legalNumber(size.get('rows'))
 
-			print "filters=", isArray(state.get('filters'))
-			print "handlers=", validHandlers(state.get('handlers', []))
-			print "selection=", legalArray(state.get('selection'))
-			print "size=", validSize(state)
+			#print "filters=", isArray(state.get('filters'))
+			#print "handlers=", validHandlers(state.get('handlers', []))
+			#print "selection=", legalArray(state.get('selection'))
+			#print "size=", validSize(state)
 
 			return isArray(state.get('filters')) and \
 			validHandlers(state.get('handlers', [])) and \
@@ -586,10 +589,10 @@ def postState():
 		def validVariables(common):
 			return variablesExistObject(common.get('variables', []))
 
-		print "active = ", validActive(common)
-		print "validDatasets = ", validDatasets(common)
-		print "menu = ", validMenu(common)
-		print "vars = ", validVariables(common)
+		#print "active = ", validActive(common)
+		#print "validDatasets = ", validDatasets(common)
+		#print "menu = ", validMenu(common)
+		#print "vars = ", validVariables(common)
 
 		return validActive(common) and \
 		validDatasets(common) and \

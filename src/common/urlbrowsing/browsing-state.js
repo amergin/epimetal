@@ -84,7 +84,8 @@ function PlBrowsingState() {
 
           _.chain(filters)
           .filter(function(filter) {
-            return filter.windowid() == win.oldId;
+            // don't try to fill windowID to circle filters
+            return filter.type() == 'circle' ? false : filter.windowid() == win.oldId;
           })
           .each(function(filter) {
             filter.windowid(win.id);
@@ -188,9 +189,15 @@ function PlSOMBrowsingState() {
   };
 
   obj.load = function(stateObj) {
+    function getSelection(selection) {
+      return _.map(selection, function(vari) {
+        return obj.injector().get('VariableService').getVariable(vari['name']);
+      });
+    }   
     try {
       // common
-      priv.load(stateObj);
+      // priv.load(stateObj);
+      obj.selection(getSelection(stateObj['selection']));
       return obj;
     } catch(err) {
       throw new Error("PlExploreBrowsingState thows error: ", err.message);
@@ -223,11 +230,22 @@ function PlRegressionBrowsingState() {
   };
 
   obj.load = function(stateObj) {
+    function getSelection(selection) {
+      return _.chain(selection)
+      .map(function(val, key) {
+        var variables = _.map(val, function(vari) {
+          return obj.injector().get('VariableService').getVariable(vari['name']);
+        });
+        return [key, variables];
+      })
+      .object()
+      .value();
+    }
     try {
       // common
       priv.load(stateObj);
       obj.type(stateObj['type']);
-      obj.selection(stateObj['selection']);
+      obj.selection(getSelection(stateObj['selection']));
       return obj;
     } catch(err) {
       throw new Error("PlRegressionBrowsingState thows error ", err.message);

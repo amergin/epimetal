@@ -192,6 +192,17 @@ angular.module('services.urlhandler', [
         });
       }
 
+      function makeSelections(browsing) {
+        _.each(browsing, function(browse) {
+          if(browse.type() == 'regression') {
+            RegressionService.selectedVariables(browse.selection());
+          }
+          else if(browse.type() == 'som') {
+            SOMService.trainVariables(browse.selection());
+          }
+        });
+      }
+
       // function loadVariables(stateObj) {
       //   function addSOMTestVariables(stateObj, fetchVariables) {
       //     var testVars = stateObj.som.testVars;
@@ -374,6 +385,7 @@ angular.module('services.urlhandler', [
 
             fetchPrimaryDimensionVars(browsing, common).then(function succFn() {
               activateFilters(browsing);
+              makeSelections(browsing);
               defer.resolve();
             }, function errFn() {
               defer.reject();
