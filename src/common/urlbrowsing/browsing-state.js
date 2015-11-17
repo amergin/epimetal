@@ -177,9 +177,9 @@ function PlSOMBrowsingState() {
     return obj;
   };
 
-  obj.somId = function(x) {
-    if(!arguments.length) { return priv.somId; }
-    priv.somId = x;
+  obj.som = function(x) {
+    if(!arguments.length) { return priv.som; }
+    priv.som = x;
     return obj;
   };
 
@@ -189,7 +189,7 @@ function PlSOMBrowsingState() {
       type: obj.type(),
       selection: _.map(obj.selection(), function(v) { return v.get(); }),
       size: obj.size(),
-      somId: obj.somId()
+      som: obj.som()
     });
   };
 
@@ -205,7 +205,7 @@ function PlSOMBrowsingState() {
       priv.load(stateObj);
       obj.selection(getSelection(stateObj['selection']));
       obj.size(stateObj['size']);
-      obj.somId(stateObj['somId']);
+      obj.som(stateObj['som']);
       return obj;
     } catch(err) {
       throw new Error("PlExploreBrowsingState thows error: ", err.message);

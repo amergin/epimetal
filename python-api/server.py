@@ -129,6 +129,15 @@ def legalSOM(var):
 	else:
 		return False
 
+def legalSOMHash(var):
+	if (isinstance(var, str) or isinstance(var, unicode)) and len(var) > 0:
+		try: 
+			return SOMTrain.objects.get(somHash=var.encode('utf8')) is not None
+		except DoesNotExist, e:
+			return False
+	else:
+		return False
+
 
 @app.route( config.getFlaskVar('prefix') + 'headers/NMR_results', methods=['GET'])
 def headers():
@@ -523,7 +532,8 @@ def postState():
 							return True
 					return False
 					
-				somId = state.get('somId')
+				som = state.get('som', dict())
+				somId = som.get('id')
 				if not somId:
 					if hasWindows(state):
 						return False
@@ -557,6 +567,12 @@ def postState():
 				if not validSOM(state):
 					print "som = false"
 					return False
+				else:
+					try:
+						# add som hash to the object
+						state['som']['hashId'] = SOMTrain.objects.get(id=state.get('som').get('id')).somHash
+					except DoesNotExist:
+						return False
 			elif typ == 'regression':
 				if not validRegression(state):
 					print "regression = false"

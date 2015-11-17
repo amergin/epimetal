@@ -54,7 +54,9 @@ angular.module('services.urlhandler', [
           rows: SOMService.rows(),
           columns: SOMService.columns()
         })
-        .somId(SOMService.somId());
+        .som({
+          id: SOMService.somId()
+        });
         return state;
       }
 
@@ -215,10 +217,8 @@ angular.module('services.urlhandler', [
       function initSOM(browse) {
         SOMService.rows(browse.size().rows);
         SOMService.columns(browse.size().columns);
-        SOMService.somId(browse.somId());
-        // _.each(browse.filters(), function(filter) {
-        //   FilterService.createCircleFilter(filter);
-        // });
+        // SOMService.(browse.somId());
+        SOMService.getSOM( WindowHandler.get('vis.som.plane') );
       }
 
       // function loadVariables(stateObj) {
