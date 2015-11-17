@@ -80,8 +80,6 @@ function PlBrowsingState() {
 
       _.each(stateObj.handlers, function(handler) {
         _.each(handler.windows, function(win) {
-          console.log("WIN = ", win.figure);
-
           _.chain(filters)
           .filter(function(filter) {
             // don't try to fill windowID to circle filters

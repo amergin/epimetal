@@ -19,11 +19,6 @@ angular.module('services.filter', [
 
     var _bmusLookup = {};
 
-    function initCircleFilters() {
-      service.createCircleFilter('A');
-      service.createCircleFilter('B');
-    }
-
     function getCircleCounts(array) {
       return _.chain(array)
         .filter(function(f) {
@@ -58,28 +53,38 @@ angular.module('services.filter', [
       $rootScope.$emit('som:circle:remove', filter);
     };
 
-    service.createCircleFilter = function(name) {
-      var nameTaken = _.any(_filters, function(filt) {
-        return filt.type() == 'circle' && filt.name() == name;
-      });
-      if (nameTaken) {
-        throw new Error('The supplied circle name is already in use');
-      }
-      if (service.getSOMFilters().length >= SOM_MAX_FILTERS) {
-        throw new Error('Maximum amount of circle filters reached.');
-      }
+    service.createCircleFilter = function(arg) {
+      if(_.isString(arg)) {
+        var name = arg;
+        var nameTaken = _.any(_filters, function(filt) {
+          return filt.type() == 'circle' && filt.name() == name;
+        });
+        if (nameTaken) {
+          throw new Error('The supplied circle name is already in use');
+        }
+        if (service.getSOMFilters().length >= SOM_MAX_FILTERS) {
+          throw new Error('Maximum amount of circle filters reached.');
+        }
 
-      var id = _.uniqueId('circle');
-      var circle = new CircleFilter()
-        .injector($injector)
-        .name(name)
-        .id(id)
-        .color(_colors(id))
-        .init();
-      _filters.push(circle);
-      updateCircleFilterHandler();
-      $rootScope.$emit('som:circle:add', circle);
-      return circle;
+        var id = _.uniqueId('circle');
+        var circle = new CircleFilter()
+          .injector($injector)
+          .name(name)
+          .id(id)
+          .color(_colors(id))
+          .init();
+        _filters.push(circle);
+        updateCircleFilterHandler();
+        $rootScope.$emit('som:circle:add', circle);
+        return circle;
+      } else {
+        // load object
+        var circleFilter = arg;
+        _filters.push(circleFilter);
+        updateCircleFilterHandler();
+        $rootScope.$emit('som:circle:add', circleFilter);
+        return circleFilter;
+      }
     };
 
     service.disabled = function(x) {
@@ -292,8 +297,6 @@ angular.module('services.filter', [
 
       resolveAmounts();
     };
-
-    initCircleFilters();
 
     return service;
 

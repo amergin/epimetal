@@ -192,7 +192,11 @@ angular.module('services.urlhandler', [
           _.each(browse.filters(), function(filter) {
             // add the filter to service and later each figure checks upon init
             // if such filter has been applied to its window
-            FilterService.addFilter(filter);
+            if(filter.type() == 'circle') {
+              FilterService.createCircleFilter(filter);
+            } else {
+              FilterService.addFilter(filter);
+            }
           });
         });
       }
@@ -212,6 +216,9 @@ angular.module('services.urlhandler', [
         SOMService.rows(browse.size().rows);
         SOMService.columns(browse.size().columns);
         SOMService.somId(browse.somId());
+        // _.each(browse.filters(), function(filter) {
+        //   FilterService.createCircleFilter(filter);
+        // });
       }
 
       // function loadVariables(stateObj) {
@@ -448,8 +455,6 @@ angular.module('services.urlhandler', [
               defer.reject();
             });
         });
-
-
       };
 
       var selectDatasets = function() {
@@ -459,10 +464,16 @@ angular.module('services.urlhandler', [
         DatasetFactory.updateDataset();
       };
 
+      function createSOMFilters() {
+        FilterService.createCircleFilter('A');
+        FilterService.createCircleFilter('B');
+      }
+
       var defer = $q.defer();
 
       selectDatasets();
       drawExplore(defer);
+      createSOMFilters();
 
       return defer.promise;
     }
