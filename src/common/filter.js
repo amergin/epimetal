@@ -160,7 +160,9 @@ function CircleFilter() {
       id: filter.id(),
       origin: filter.origin(),
       color: filter.color(),
-      type: filter.type()
+      type: filter.type(),
+      radius: filter.radius(),
+      position: filter.position()
     };
   };
 
@@ -169,6 +171,8 @@ function CircleFilter() {
     filter.id(state.id);
     filter.name(state.name);
     filter.origin(state.origin);
+    filter.radius(state.radius);
+    filter.position(state.position);
     return filter;
   };
 
