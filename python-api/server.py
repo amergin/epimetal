@@ -120,6 +120,16 @@ def variablesExistObject(obj):
 	#print "returns true"
 	return True
 
+def legalSOM(var):
+	if (isinstance(var, str) or isinstance(var, unicode)) and len(var) > 0:
+		try: 
+			return SOMTrain.objects.get(id=var.encode('utf8')) is not None
+		except DoesNotExist, e:
+			return False
+	else:
+		return False
+
+
 @app.route( config.getFlaskVar('prefix') + 'headers/NMR_results', methods=['GET'])
 def headers():
 	def _getFormatted():
@@ -234,15 +244,6 @@ def createPlane():
 		legalLabels(var) and \
 		legalSize(var) and \
 		legalCells(var)
-
-	def legalSOM(var):
-		if (isinstance(var, str) or isinstance(var, unicode)) and len(var) > 0:
-			try: 
-				return SOMTrain.objects.get(id=var.encode('utf8')) is not None
-			except DoesNotExist, e:
-				return False
-		else:
-			return False
 
 	try:
 		payload = request.get_json()
@@ -514,6 +515,22 @@ def postState():
 				legalNumber(size.get('columns')) and \
 				legalNumber(size.get('rows'))
 
+			def validDoc(state):
+				def hasWindows(state):
+					# not having a somID is totally okay if there are no windows
+					for handler in state.get('handlers', []):
+						if(len(handler.get('windows')) > 0):
+							return True
+					return False
+					
+				somId = state.get('somId')
+				if not somId:
+					if hasWindows(state):
+						return False
+					return True
+				else:
+					return legalSOM(somId)
+
 			#print "filters=", isArray(state.get('filters'))
 			#print "handlers=", validHandlers(state.get('handlers', []))
 			#print "selection=", legalArray(state.get('selection'))
@@ -522,7 +539,8 @@ def postState():
 			return isArray(state.get('filters')) and \
 			validHandlers(state.get('handlers', [])) and \
 			legalArray(state.get('selection')) and \
-			validSize(state)
+			validSize(state) and \
+			validDoc(state)
 
 		def validRegression(state):
 			return isArray(state.get('filters')) and \

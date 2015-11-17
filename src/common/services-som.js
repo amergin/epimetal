@@ -75,7 +75,6 @@ angular.module('services.som', [
   var _queueWindows = [];
   var _cancelled = false;
   var service = {};
-  var _dbId = null;
   var _size = SOM_DEFAULT_SIZE;
 
   function hasCustomVars(vars) {
@@ -87,6 +86,12 @@ angular.module('services.som', [
 
   service.inProgress = function() {
     return that.inProgress;
+  };
+
+  service.somId = function(x) {
+    if(!arguments.length) { return that._dbId; }
+    that._dbId = x;
+    return service;
   };
 
   service.empty = function() {
@@ -428,11 +433,11 @@ angular.module('services.som', [
 
   service.getPlane = function(testVar, windowObject, notifyFunction) {
     function getThreadData(variable, skipNaNs) {
-      function inTrainSamples(sample) {
-        return _.any(that.trainSamples, function(d) {
-          return _.isEqual(d, sample);
-        });
-      }
+      // function inTrainSamples(sample) {
+      //   return _.any(that.trainSamples, function(d) {
+      //     return _.isEqual(d, sample);
+      //   });
+      // }
 
       var data = [], sampValue, notNumber, sampleid;
       var deDuplicated = _.unique(that.sampleDimension.top(Infinity), false, function(d) { 

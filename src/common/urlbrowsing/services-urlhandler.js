@@ -15,6 +15,10 @@ angular.module('services.urlhandler', [
   var _service = {},
     _loaded = false; // only do state loading once per page load
 
+  _service.loaded = function() {
+    return _loaded;
+  };
+
   // gathers the current state of the application. Sends it to the DB
   // and returns the resulting details or yields error where applicable.
   _service.create = function() {
@@ -49,7 +53,8 @@ angular.module('services.urlhandler', [
         .size({
           rows: SOMService.rows(),
           columns: SOMService.columns()
-        });
+        })
+        .somId(SOMService.somId());
         return state;
       }
 
@@ -201,6 +206,12 @@ angular.module('services.urlhandler', [
             SOMService.trainVariables(browse.selection());
           }
         });
+      }
+
+      function initSOM(browse) {
+        SOMService.rows(browse.size().rows);
+        SOMService.columns(browse.size().columns);
+        SOMService.somId(browse.somId());
       }
 
       // function loadVariables(stateObj) {
@@ -386,6 +397,7 @@ angular.module('services.urlhandler', [
             fetchPrimaryDimensionVars(browsing, common).then(function succFn() {
               activateFilters(browsing);
               makeSelections(browsing);
+              initSOM(_.find(browsing, function(br) { return br.type() == 'som'; }) );
               defer.resolve();
             }, function errFn() {
               defer.reject();

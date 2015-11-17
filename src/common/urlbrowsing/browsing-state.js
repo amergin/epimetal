@@ -179,12 +179,19 @@ function PlSOMBrowsingState() {
     return obj;
   };
 
+  obj.somId = function(x) {
+    if(!arguments.length) { return priv.somId; }
+    priv.somId = x;
+    return obj;
+  };
+
   obj.get = function() {
     // call super and add this level info to it
     return _.extend(priv.get(), {
       type: obj.type(),
       selection: _.map(obj.selection(), function(v) { return v.get(); }),
-      size: obj.size()
+      size: obj.size(),
+      somId: obj.somId()
     });
   };
 
@@ -193,11 +200,14 @@ function PlSOMBrowsingState() {
       return _.map(selection, function(vari) {
         return obj.injector().get('VariableService').getVariable(vari['name']);
       });
-    }   
+    }
+
     try {
       // common
-      // priv.load(stateObj);
+      priv.load(stateObj);
       obj.selection(getSelection(stateObj['selection']));
+      obj.size(stateObj['size']);
+      obj.somId(stateObj['somId']);
       return obj;
     } catch(err) {
       throw new Error("PlExploreBrowsingState thows error: ", err.message);
