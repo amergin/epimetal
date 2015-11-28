@@ -190,7 +190,7 @@ angular.module('services.som', [
     that.bmus = [];
   }
 
-  service.getSOM = function(windowHandler) {
+  service.getSOM = function(windowHandler, hashId) {
     function computationNeeded() {
       if (!that.sampleDimension) {
         // early invoke, even before dimensionservice is initialized
@@ -313,7 +313,7 @@ angular.module('services.som', [
         });
       }
 
-      function doTrain(data) {
+      function doTrain(data, defer) {
         TaskHandlerService.circleSpin(true);
         NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'info');
         SOMComputeService.create(service.rows(), service.columns(), data.samples, data.columns)
@@ -351,25 +351,6 @@ angular.module('services.som', [
         });
       }
 
-      function populateFromDb(result, data) {
-        var id = result.id,
-        dbObject = result.data;
-        $log.info("Populating SOM train from DB object", id);
-        that.som = SOMComputeService.init(dbObject.rows, dbObject.cols, data.samples,
-          dbObject.bmus, dbObject.codebook, dbObject.distances, dbObject.weights);
-        that._dbId = id;
-        that.bmus = SOMComputeService.get_formatter_bmus(that.som);
-        that.dimensionService.addBMUs(that.bmus);
-        $rootScope.$emit('dataset:SOMUpdated', that.som);
-
-        TabService.lock(false);
-        that.inProgress = false;
-        TaskHandlerService.circleSpin(false);
-        TaskHandlerService.circleSpinValue(0);
-
-        defer.resolve(that.som);
-      }
-
       removePrevious();
 
       var skipNaNs = false;
@@ -389,10 +370,10 @@ angular.module('services.som', [
       .then(function succFn(response) {
         if(response.status == 200) {
           // object found from DB
-          populateFromDb(response.data.result, data);
+          populateFromDb(response.data.result, data, defer);
         } else if(response.status == 204) {
           // not found, compute afresh
-          doTrain(data);
+          doTrain(data, defer);
         }
       }, function errFn(response) {
 
@@ -402,16 +383,71 @@ angular.module('services.som', [
 
     }
 
+    function doExisting(hashId, defer) {
+      $http.get( _.template(SOM_TRAIN_GET_URL)({ hash: hashId }), 
+        // don't cache: otherwise it'll store the first 'not found' reply and
+        // will result in subsequent calls to be always re-calculated
+        { cache: false }
+      )
+      .then(function succFn(response) {
+        if(response.status == 200) {
+          // object found from DB
+          populateFromDb(response.data.result, data, defer);
+        } else if(response.status == 204) {
+          // not found, compute afresh
+          doTrain(data);
+        }
+      }, function errFn(response) {
+
+      }, function notifyFn(msg) {
+        console.log("notify", msg);
+      })
+      .finally(function() {
+        that.inProgress = false;
+      });
+
+    }
+
+    function populateFromDb(result, data, defer) {
+      var id = result.id,
+      dbObject = result.data;
+      $log.info("Populating SOM train from DB object", id);
+      that.som = SOMComputeService.init(dbObject.rows, dbObject.cols, data.samples,
+        dbObject.bmus, dbObject.codebook, dbObject.distances, dbObject.weights);
+      that._dbId = id;
+      that.bmus = SOMComputeService.get_formatter_bmus(that.som);
+      that.dimensionService.addBMUs(that.bmus);
+      $rootScope.$emit('dataset:SOMUpdated', that.som);
+
+      TabService.lock(false);
+      that.inProgress = false;
+      TaskHandlerService.circleSpin(false);
+      TaskHandlerService.circleSpinValue(0);
+
+      defer.resolve(that.som);
+    }
+
+
     var defer = $q.defer();
 
-    if (!computationNeeded()) {
+    if(hashId) {
+      TabService.lock(true);
+      that.inProgress = true;
+      windowHandler.getDimensionService().clearFilters();
+      DatasetFactory.getVariableData(that.trainVariables, windowHandler)
+        .then(function succFn(res) {
+          doExisting(hashId, defer);
+        });
+    }
+
+    else if(!computationNeeded()) {
       $timeout(function() {
         defer.resolve('not_needed');
       }, 5);
 
     } else {
       TabService.lock(true);
-      // that.inProgress = true;
+      that.inProgress = true;
 
       // important: without clearing filters there's a risk only the sample that
       // are within the circles get passed

@@ -56,6 +56,7 @@ angular.module('services.urlhandler', [
         })
         .som({
           id: SOMService.somId()
+          // hashId will be appended by the db
         });
         return state;
       }
@@ -217,8 +218,7 @@ angular.module('services.urlhandler', [
       function initSOM(browse) {
         SOMService.rows(browse.size().rows);
         SOMService.columns(browse.size().columns);
-        // SOMService.(browse.somId());
-        SOMService.getSOM( WindowHandler.get('vis.som.plane') );
+        SOMService.getSOM( WindowHandler.get('vis.som.plane'), browse.som().hashId );
       }
 
       // function loadVariables(stateObj) {
