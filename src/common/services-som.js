@@ -191,6 +191,8 @@ angular.module('services.som', [
   }
 
   service.getSOM = function(windowHandler, hashId) {
+    var TaskHandlerService = $injector.get('TaskHandlerService');
+
     function computationNeeded() {
       if (!that.sampleDimension) {
         // early invoke, even before dimensionservice is initialized
@@ -357,7 +359,6 @@ angular.module('services.som', [
       var data = getData(skipNaNs);
       that.trainSamples = data.samples;
 
-      var TaskHandlerService = $injector.get('TaskHandlerService');
       that.inProgress = true;     
 
       // ask from the server if the train result is already stored in the DB
@@ -384,6 +385,10 @@ angular.module('services.som', [
     }
 
     function doExisting(hashId, defer) {
+      var skipNaNs = false;
+      var data = getData(skipNaNs);
+      that.trainSamples = data.samples;
+
       $http.get( _.template(SOM_TRAIN_GET_URL)({ hash: hashId }), 
         // don't cache: otherwise it'll store the first 'not found' reply and
         // will result in subsequent calls to be always re-calculated
@@ -435,9 +440,9 @@ angular.module('services.som', [
       that.inProgress = true;
       windowHandler.getDimensionService().clearFilters();
       DatasetFactory.getVariableData(that.trainVariables, windowHandler)
-        .then(function succFn(res) {
-          doExisting(hashId, defer);
-        });
+      .then(function succFn(res) {
+        doExisting(hashId, defer);
+      });
     }
 
     else if(!computationNeeded()) {
@@ -577,7 +582,12 @@ angular.module('services.som', [
 
     if (somNotComputed()) {
       service.getSOM(windowHandler).then(function succFn(res) {
-        startPlaneComputation();
+
+        if(res == 'not_needed') {
+          defer.reject('not_needed');
+        } else {
+          startPlaneComputation();
+        }
       }, function errFn(res) {
         defer.reject();
       });

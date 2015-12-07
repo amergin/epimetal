@@ -544,6 +544,7 @@ angular.module('plotter.vis.plotting.som', [
           initDropdown();
         },
         function errFn(res) {
+          if (res !== 'not_needed') { return; }
           NotifyService.addTransient('Plane computation failed', res, 'error');
         }, 
         notify)
