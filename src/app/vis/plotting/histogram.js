@@ -92,7 +92,7 @@ angular.module('plotter.vis.plotting.histogram',
 
     $scope.render = function() {
       // only render if the dashboard is visible
-      if( $state.current.name === $scope.window.handler().getName() ) {
+      if( _.startsWith($state.current.name, $scope.window.handler().getName()) ) {
         $scope.computeExtent();
         $scope.histogram.render();
       }
@@ -608,7 +608,7 @@ angular.module('plotter.vis.plotting.histogram',
           if( config.omit == 'histogram' ) { return; }
           $timeout( function() {
             if(config.compute) {
-              $scope.render();
+              // $scope.render();
 
               if(!$scope.isSpecial()) {
                 // var oldFilters = $scope.histogram.filters();
