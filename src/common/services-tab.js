@@ -145,7 +145,6 @@ angular.module('services.tab', [
     var primary = DimensionService.getPrimary(),
       current = DimensionService.get('vis.som'),
       datasetToggle = !_.isUndefined(cfg) && _.isEqual(cfg.origin, 'dataset'),
-      // forced = !_.isUndefined(cfg) && _.isEqual(cfg.force, true),
       cancelled = $injector.get('SOMService').cancelled(),
       notForced = !_.isUndefined(cfg) && _.isEqual(cfg.force, false);
 
@@ -156,20 +155,14 @@ angular.module('services.tab', [
       windowHandler = WindowHandler.get('vis.explore');
 
       DatasetFactory.getVariableData(trainVariables, windowHandler, {
-        getRawData: true
+        getRawData: true,
+        bypassLimit: true
       })
       .then(function succFn(res) {
         SOMService.cancelled(false);
         restart();
       });
-
-      // $injector.get('SOMService').cancelled(false);
-      // restart();
     }
-    // } else if(forced) {
-    //   startSOMComputation();
-    // } else if (notForced) {
-    //   return;
     else if (!DimensionService.equal(primary, current)) {
       // when tab change triggered
       restart();

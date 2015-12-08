@@ -884,7 +884,7 @@ angular.module('services.dimensions', [
         var addSamples,
           samples = config.samples.all;
         // workaround: for secondary, don't add samples not in your scope:
-        if (_service.getPrimary() !== that && config.limit === true && crossfilterInst.size() > 0) {
+        if (_service.getPrimary() !== that && config.bypassLimit === true && crossfilterInst.size() > 0) {
           addSamples = _.filter(samples, function(s) {
             var id = _getSampleKey(s.dataset, s.sampleid);
             return _.isUndefined(currSamples[id]) ? false : true;

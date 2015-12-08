@@ -535,19 +535,14 @@ angular.module('services.dataset', ['services.notify',
     }
     if(activeVars.length === 0) {
       if(isPrimary) {
+        // this is the case when no windows are present but selections are made
+        // on the datasets. Just update the dimensionFilter...
         defer.resolve('empty');
       } else {
         defer.resolve('enabled');
       }
     }
     else {
-    // } else if (isPrimary && activeVars.length === 0) {
-    //   // this is the case when no windows are present but selections are made
-    //   // on the datasets. Just update the dimensionFilter...
-    //   defer.resolve('empty');
-    // } else {
-
-      // var promises = [];
       var dataWasAdded = false;
 
       set.getVariables(activeVars, { getRawData: false }).then(function sucFn(obj) {
