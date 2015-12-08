@@ -39,17 +39,17 @@ angular.module('plotter.vis.menucomponents.dataset',
     WindowHandler.spinAllVisible();
 
     set.toggle();
-    DatasetFactory.checkActiveVariables(set).then( function succFn(res) {
+    DatasetFactory.checkActiveVariables(set).then( function succFn(action) {
 
-      if( res === 'enabled' || res === 'disabled' ) {
-        DatasetFactory.updateDataset(set);
+        if( action === 'enabled' || action === 'disabled' ) {
+          DatasetFactory.updateDataset(set);
 
-        TabService.check({ force: true, origin: 'dataset' });
+          TabService.check({ origin: 'dataset' });
 
           // important!
-          WindowHandler.reRenderVisible({ compute: true, dset: set, action: ("dataset:" + res) });
+          WindowHandler.reRenderVisible({ compute: true, dset: set, action: ("dataset:" + action) });
         }
-        else if( res === 'empty' ) {
+        else if( action === 'empty' ) {
           DatasetFactory.updateDataset(set);
         }
 

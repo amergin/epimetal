@@ -527,16 +527,25 @@ angular.module('services.dataset', ['services.notify',
       DimensionService = $injector.get('DimensionService'),
       $state = $injector.get('$state'),
       activeVars = DimensionService.getPrimary().activeVariables(),
-      isPrimary = $state.current.name == 'vis.som';
+      isPrimary = $state.current.name == 'vis.explore';
 
     // nothing to add if disabled
     if (!set.active()) {
       defer.resolve('disabled');
-    } else if (isPrimary && activeVars.length === 0) {
-      // this is the case when no windows are present but selections are made
-      // on the datasets. Just update the dimensionFilter...
-      defer.resolve('empty');
-    } else {
+    }
+    if(activeVars.length === 0) {
+      if(isPrimary) {
+        defer.resolve('empty');
+      } else {
+        defer.resolve('enabled');
+      }
+    }
+    else {
+    // } else if (isPrimary && activeVars.length === 0) {
+    //   // this is the case when no windows are present but selections are made
+    //   // on the datasets. Just update the dimensionFilter...
+    //   defer.resolve('empty');
+    // } else {
 
       // var promises = [];
       var dataWasAdded = false;

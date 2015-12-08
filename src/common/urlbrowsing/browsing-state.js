@@ -208,7 +208,7 @@ function PlSOMBrowsingState() {
       obj.som(stateObj['som']);
       return obj;
     } catch(err) {
-      throw new Error("PlExploreBrowsingState thows error: ", err.message);
+      throw new Error("PlSOMBrowsingState thows error: ", err.message);
     }
   };
 

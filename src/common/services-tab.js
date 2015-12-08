@@ -144,16 +144,33 @@ angular.module('services.tab', [
 
     var primary = DimensionService.getPrimary(),
       current = DimensionService.get('vis.som'),
-      forced = !_.isUndefined(cfg) && _.isEqual(cfg.force, true),
+      datasetToggle = !_.isUndefined(cfg) && _.isEqual(cfg.origin, 'dataset'),
+      // forced = !_.isUndefined(cfg) && _.isEqual(cfg.force, true),
       cancelled = $injector.get('SOMService').cancelled(),
       notForced = !_.isUndefined(cfg) && _.isEqual(cfg.force, false);
 
-    if (forced || cancelled) {
-      $injector.get('SOMService').cancelled(false);
-      restart();
-    } else if (notForced) {
-      return;
-    } else if (!DimensionService.equal(primary, current)) {
+    if (cancelled || datasetToggle) {
+      var SOMService = $injector.get('SOMService'),
+      DatasetFactory = $injector.get('DatasetFactory'),
+      trainVariables = SOMService.trainVariables(),
+      windowHandler = WindowHandler.get('vis.explore');
+
+      DatasetFactory.getVariableData(trainVariables, windowHandler, {
+        getRawData: true
+      })
+      .then(function succFn(res) {
+        SOMService.cancelled(false);
+        restart();
+      });
+
+      // $injector.get('SOMService').cancelled(false);
+      // restart();
+    }
+    // } else if(forced) {
+    //   startSOMComputation();
+    // } else if (notForced) {
+    //   return;
+    else if (!DimensionService.equal(primary, current)) {
       // when tab change triggered
       restart();
     }

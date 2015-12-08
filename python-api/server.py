@@ -568,6 +568,9 @@ def postState():
 					print "som = false"
 					return False
 				else:
+					if len(state.get('som')) is 0:
+						# empty SOM details is valid
+						return True
 					try:
 						# add som hash to the object
 						state['som']['hashId'] = SOMTrain.objects.get(id=state.get('som').get('id')).somHash

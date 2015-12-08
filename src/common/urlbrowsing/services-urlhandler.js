@@ -218,7 +218,12 @@ angular.module('services.urlhandler', [
       function initSOM(browse) {
         SOMService.rows(browse.size().rows);
         SOMService.columns(browse.size().columns);
-        SOMService.getSOM( WindowHandler.get('vis.som.plane'), browse.som().hashId );
+        // SOM object can be empty as well, which is valid
+        if(!browse.som().hashId) {
+          SOMService.getSOM( WindowHandler.get('vis.som.plane') );
+        } else {
+          SOMService.getSOM( WindowHandler.get('vis.som.plane'), browse.som().hashId );
+        }
       }
 
       // function loadVariables(stateObj) {

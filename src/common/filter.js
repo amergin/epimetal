@@ -134,7 +134,11 @@ function CircleFilter() {
     if (!arguments.length) {
       return priv.position;
     }
-    priv.position = _.pick(position, 'x', 'y');
+    if(position === undefined) {
+      // pass
+    } else {
+      priv.position = _.pick(position, 'x', 'y');
+    }
     return filter;
   };
 

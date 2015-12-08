@@ -490,7 +490,7 @@ angular.module('plotter.vis.plotting.som', [
     }, true);
 
     _.each(FilterService.getSOMFilters(), function(filt, ind) {
-      addCircle(filt, filt.position() || filt.position() || {
+      addCircle(filt, filt.position() || {
         x: circleX(filt.origin().x),
         y: circleY(filt.origin().y)
       },

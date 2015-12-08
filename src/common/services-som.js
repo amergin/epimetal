@@ -400,7 +400,7 @@ angular.module('services.som', [
           populateFromDb(response.data.result, data, defer);
         } else if(response.status == 204) {
           // not found, compute afresh
-          doTrain(data);
+          doTrain(data, defer);
         }
       }, function errFn(response) {
 
@@ -460,9 +460,9 @@ angular.module('services.som', [
 
       // prefetch data and store it in the dimensionservice of that particular handler
       DatasetFactory.getVariableData(that.trainVariables, windowHandler)
-        .then(function succFn(res) {
-          doCall();
-        });
+      .then(function succFn(res) {
+        doCall();
+      });
     }
 
     return defer.promise;
