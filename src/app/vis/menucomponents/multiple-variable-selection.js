@@ -180,7 +180,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
         matchVariables = /\[[\w|-]*\]/ig;
 
 
-        function variableNames() {
+        function hasInvalidVariables() {
           var matchBrackets = /[\[|\]]/ig,
           variables = expression.match(matchVariables),
           nameWithoutBrackets,
@@ -194,14 +194,20 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
               NotifyService.addTransient(null, 'Invalid variable: ' + nameWithoutBrackets, 'error',
                 { referenceId: errorField });
               hadErrors = true;
-            } else {
+            } 
+            else if(metaData.type() == 'custom') {
+              NotifyService.addTransient(null, 'Variable can not depend on other derived variables', 'error',
+                { referenceId: errorField });
+              hadErrors = true;
+            }
+            else {
               metaInfo.push(metaData);
             }
           });
           return hadErrors;
         }
 
-        function tryExpression() {
+        function hasInvalidExpression() {
           function createVariable() {
             var variable = new PlCustomVariable()
             .name($scope.customVariableName.content)
@@ -257,10 +263,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
           }
         }
 
-        var vars = variableNames(),
-        exp = tryExpression();
-
-        return vars && exp;
+        return hasInvalidVariables() || hasInvalidExpression();
       }
 
       var errorField = 'cust-var-info-' + $scope.customExpressionFieldId;
