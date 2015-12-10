@@ -148,6 +148,14 @@ function PlCustomVariable() {
     return obj;
   };
 
+  // override
+  obj.axisLabel = function() {
+    var ret = [];
+    ret.push(obj.name());
+    ret.push("(" + obj.originalExpression() + ")");
+    return ret.join(" ");
+  };
+
   obj.substitutedExpression = function(x) {
     if(!arguments.length) { return priv.substitutedExpression; }
     priv.substitutedExpression = x;
