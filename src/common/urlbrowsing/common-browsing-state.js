@@ -46,7 +46,8 @@ function PlCommonBrowsingState() {
             name: obj.name,
             samples: obj.samples,
             color: obj.color,
-            setActive: obj.active
+            setActive: obj.active,
+            deselectOthers: false
           });
         }
       });

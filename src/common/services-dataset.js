@@ -754,7 +754,11 @@ angular.module('services.dataset', ['services.notify',
       that.sets[name] = derived;
       service.updateDataset();
     } else {
-      deselectOthers();
+      if(config.deselectOthers === false) { 
+        // pass
+      } else {
+        deselectOthers();
+      }
       that.sets[name] = derived;
       removeFilters();
       service.updateDataset();
