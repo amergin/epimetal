@@ -126,7 +126,7 @@ angular.module('plotter.vis.menucomponents.filterinfo',
 
       var stateName = $state.current.name,
       // spaces to underscores, truncate
-      modified = name.replace(/\s/g, '_').substring(0,15),
+      modified = name.replace(/\s/g, '_'), //.substring(0,15),
       circles;
 
       if(stateName == 'vis.som') {
@@ -137,7 +137,10 @@ angular.module('plotter.vis.menucomponents.filterinfo',
 
       try {
         var config = {
-          name: modified,
+          name: {
+            display: name,
+            id: modified
+          },
           circles: circles || undefined
         };
         config.setActive = circles ? false : true;
