@@ -7,7 +7,7 @@
   	</thead> -->
   	<tbody>
   		<tr ng-repeat="circle in circles track by circle.id()">
-  			<td ng-style="{ 'color': circle.color() }"><strong>Circle filter {{circle.name()}}</strong></td>
+  			<td ng-style="{ 'color': circle.color() }"><strong>Circle filter {{circle.name() | cut:true:5:' ...'}}</strong></td>
   			<td>
   				<i class="fa fa-lg fa-times-circle ctrl text-danger" ng-click="remove(circle)"></i>
   			</td>
@@ -17,7 +17,7 @@
   	</tfoot>
   </table>
   <div class="form-group">
-    <input ng-model="circleName" type="text" class="form-control" id="pl-cir-name" placeholder="Create a new circle with name" maxlength="{{cirleMaxLength}}">
+    <input ng-model="circleName" type="text" class="form-control" id="pl-cir-name" placeholder="Create a new circle with name" maxlength="{{circleNameMaxLength}}">
   </div>
   <button type="submit" class="btn btn-primary" ng-disabled="!canSubmit() || !circleName" ng-click="createCircle(circleName)">Create circle</button>
 

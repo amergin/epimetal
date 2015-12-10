@@ -13,7 +13,9 @@ angular.module('plotter.vis.plotting.som', [
   left: 30
 })
 
-.controller('SOMController', function SOMController($scope, $timeout, $rootScope, FilterService, SOM_PLANE_MARGINS, d3, _) {
+.constant('SOM_FILTER_TEXT_LENGTH', 3)
+
+.controller('SOMController', function SOMController($scope, $timeout, $rootScope, FilterService, SOM_PLANE_MARGINS, SOM_FILTER_TEXT_LENGTH, d3, _) {
 
   $scope.getHeight = function(ele) {
     return ele.height();
@@ -404,7 +406,13 @@ angular.module('plotter.vis.plotting.som', [
         .attr('alignment-baseline', 'middle')
         .attr('class', 'circle-filter noselect')
         .style('fill', circle.color())
-        .text(circle.name())
+        .text(function() {
+          if(circle.name().length > SOM_FILTER_TEXT_LENGTH) {
+            return circle.name().substring(0, SOM_FILTER_TEXT_LENGTH) + "...";
+          } else {
+            return circle.name();
+          }
+        })
         .call(innerCircleDrag);
 
 

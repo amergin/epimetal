@@ -19,7 +19,7 @@
             <td  class="col-sm-9" ng-switch="filter.type()">
               <span ng-switch-when="circle">
                 <label for="check{{$index}}">
-                  <span ng-style="{ 'color': filter.color() }">Circle {{filter.name()}}</span> 
+                  <span ng-style="{ 'color': filter.color() }">Circle {{filter.name() | cut:true:5:' ...'}}</span> 
                   <span class="badge am-fade pull-right" style="margin-left: 10px;">{{filter.count()}} samples</span>
                 </label>
               </span>
@@ -43,7 +43,6 @@
             </td>
             <td class="col-sm-3 text-center" ng-switch="filter.type()">
               <input id="check{{$index}}" ng-switch-when="circle" type="checkbox" ng-model="somCheckbox[filter.id()]"/>
-              <!-- ng-change="somCheckboxToggle(filter)" -->
               <i ng-switch-default class="fa fa-lg fa-times-circle ctrl text-danger" ng-click="close(filter)"></i>
             </td>
           </tr>

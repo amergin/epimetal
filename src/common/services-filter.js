@@ -53,11 +53,17 @@ angular.module('services.filter', [
       $rootScope.$emit('som:circle:remove', filter);
     };
 
-    service.createCircleFilter = function(arg) {
-      if(_.isString(arg)) {
-        var name = arg;
+    service.createCircleFilter = function(config) {
+      if(config.filter) {
+        // load object
+        _filters.push(config.filter);
+        updateCircleFilterHandler();
+        $rootScope.$emit('som:circle:add', config.filter);
+        return config.filter;
+      }
+      else {
         var nameTaken = _.any(_filters, function(filt) {
-          return filt.type() == 'circle' && filt.name() == name;
+          return filt.type() == 'circle' && filt.name() == config.name;
         });
         if (nameTaken) {
           throw new Error('The supplied circle name is already in use');
@@ -66,10 +72,10 @@ angular.module('services.filter', [
           throw new Error('Maximum amount of circle filters reached.');
         }
 
-        var id = _.uniqueId('circle');
-        var circle = new CircleFilter()
+        var id = _.uniqueId('circle'),
+        circle = new CircleFilter()
           .injector($injector)
-          .name(name)
+          .name(config.name)
           .id(id)
           .color(_colors(id))
           .init();
@@ -77,13 +83,6 @@ angular.module('services.filter', [
         updateCircleFilterHandler();
         $rootScope.$emit('som:circle:add', circle);
         return circle;
-      } else {
-        // load object
-        var circleFilter = arg;
-        _filters.push(circleFilter);
-        updateCircleFilterHandler();
-        $rootScope.$emit('som:circle:add', circleFilter);
-        return circleFilter;
       }
     };
 

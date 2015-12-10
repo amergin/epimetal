@@ -13,16 +13,16 @@ angular.module('plotter.vis.som.circle-filter-control', [
   };
 })
 
-.constant('CIRCLE_FILTER_NAME_MAX_LENGTH', 4)
+.constant('CIRCLE_FILTER_NAME_MAX_LENGTH', 20)
 
-.controller('CircleFilterControlCtrl', function CircleFilterControlCtrl($scope, FilterService, $state, NotifyService, TabService, CIRCLE_FILTER_NAME_MAX_LENGTH, WindowHandler) {
+.controller('CircleFilterControlCtrl', function CircleFilterControlCtrl($scope, FilterService, $state, NotifyService, TabService, WindowHandler, CIRCLE_FILTER_NAME_MAX_LENGTH) {
 
   $scope.isVisible = function() {
     var stateName = $state.current.name;
     return stateName == 'vis.som' ? true : false;
   };
 
-  $scope.cirleMaxLength = CIRCLE_FILTER_NAME_MAX_LENGTH;
+  $scope.circleNameMaxLength = CIRCLE_FILTER_NAME_MAX_LENGTH;
 
   function update() {
     $scope.circles = FilterService.getSOMFilters();
@@ -44,9 +44,8 @@ angular.module('plotter.vis.som.circle-filter-control', [
   $scope.circleName = null;
 
   $scope.createCircle = function(name) {
-    var modified = name.substring(0, CIRCLE_FILTER_NAME_MAX_LENGTH);
     try {
-      var filter = FilterService.createCircleFilter(modified);
+      var filter = FilterService.createCircleFilter({ name: name });
       update();
     } catch (err) {
       NotifyService.addSticky('Error', err.message, 'error', {

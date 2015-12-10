@@ -196,7 +196,7 @@ angular.module('services.urlhandler', [
             // add the filter to service and later each figure checks upon init
             // if such filter has been applied to its window
             if(filter.type() == 'circle') {
-              FilterService.createCircleFilter(filter);
+              FilterService.createCircleFilter({ filter: filter });
             } else {
               FilterService.addFilter(filter);
             }
@@ -285,8 +285,8 @@ angular.module('services.urlhandler', [
       };
 
       function createSOMFilters() {
-        FilterService.createCircleFilter('A');
-        FilterService.createCircleFilter('B');
+        FilterService.createCircleFilter({ name: 'A' });
+        FilterService.createCircleFilter({ name: 'B' });
       }
 
       var defer = $q.defer();
