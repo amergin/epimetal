@@ -36,7 +36,18 @@ function PlCommonBrowsingState() {
           .active(obj['active'])
           .color(obj['color']);
         } else {
-          // custom dsets, TODO
+          var samples = _.map(obj.samples, function(samp) {
+            return _.assign(samp, {
+              bmus: {},
+              variables: {}
+            });
+          });
+          return inject.get('DatasetFactory').createDerived({
+            name: obj.name,
+            samples: obj.samples,
+            color: obj.color,
+            setActive: obj.active
+          });
         }
       });
     }

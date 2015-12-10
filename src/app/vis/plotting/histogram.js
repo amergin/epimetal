@@ -122,11 +122,15 @@ angular.module('plotter.vis.plotting.histogram',
         return d.key;
       });
 
-      $scope.noBins = _.max([_.min([Math.floor($scope.dimension.group().size() / 20), 50]), 20]);
+      $scope.noBins = _.max([_.min([Math.floor($scope.dimension.groupAll().value() / 20), 50]), 20]);
       $scope.binWidth = ($scope.extent[1] - $scope.extent[0]) / $scope.noBins;
       $scope.groupInst = $scope.dimensionInst.group(function(d) {
         return Math.floor(d / $scope.binWidth) * $scope.binWidth;
       });
+
+      // these depend on bin size -> need to be updated whenever bin is touched
+      var range = $scope.isSpecial() ? [$scope.noBins*2, 18] : [$scope.noBins-5, 18];
+      $scope.xUnitsScale = d3.scale.linear().domain([250, 900]).range(range).clamp(true);      
 
       if( $scope.isSpecial() ) {
         // circle
@@ -250,9 +254,7 @@ angular.module('plotter.vis.plotting.histogram',
           // don't redraw here, or it will form a feedback loop
       };
 
-      var dcGroup = $scope.isSpecial() ? constants.groups.histogram.nonInteractive : constants.groups.histogram.interactive,
-      range = $scope.isSpecial() ? [config.noBins*2, 18] : [config.noBins-5, 18],
-      xUnitsScale = d3.scale.linear().domain([250, 900]).range(range).clamp(true);
+      var dcGroup = $scope.isSpecial() ? constants.groups.histogram.nonInteractive : constants.groups.histogram.interactive;
 
       // 1. create composite chart
       $scope.histogram = dc.compositeChart(config.element[0], dcGroup)
@@ -275,7 +277,7 @@ angular.module('plotter.vis.plotting.histogram',
       .x(d3.scale.linear().domain(config.extent).range([0, config.noBins]))
       .xUnits(function(low, high) {
         var width = $scope.getWidth($scope.element);
-        return Math.round(xUnitsScale(width));
+        return Math.round($scope.xUnitsScale(width));
       })
       .margins({
         top: 15,
@@ -608,15 +610,9 @@ angular.module('plotter.vis.plotting.histogram',
           if( config.omit == 'histogram' ) { return; }
           $timeout( function() {
             if(config.compute) {
-              // $scope.render();
-
               if(!$scope.isSpecial()) {
-                // var oldFilters = $scope.histogram.filters();
-                // $scope.histogram.filter(null);
-                // _.each(oldFilters, function(filter) {
-                //   $scope.histogram.filter(filter);
-                // });
-                $scope.histogram.redraw();
+                $scope.computeExtent();
+                $scope.histogram.render();
               }
             }
             else {
@@ -633,13 +629,6 @@ angular.module('plotter.vis.plotting.histogram',
           });
         }
       });
-
-      // var gatherFilterUnbind = $rootScope.$on('urlhandler.getfilter', function(event, windowId, callback) {
-      //   if($scope.window.id() == windowId) {
-      //     // tell the caller which DC chart is being used in this filter
-      //     callback($scope.histogram);
-      //   }
-      // });
 
       $scope.deregisters.push(reRenderUnbind, redrawUnbind, derivedAddUnbind, derivedRemoveUnbind, somFilterRemovedUnbind, somFilterAddedUnbind);
 

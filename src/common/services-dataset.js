@@ -175,10 +175,11 @@ angular.module('services.dataset', ['services.notify',
 
       priv.getResult = function(newVariables, config, addedValues) {
         function getAllVariables() {
-          var lookup = {};
-          _.each(priv.samples, function(samp) {
+          var lookup = {}, samp;
+          for(var sampid in priv.samples) {
+            samp = priv.samples[sampid];
             lookup[priv.getKey(samp)] = samp;
-          });
+          }
           return lookup;
         }
 
@@ -533,7 +534,7 @@ angular.module('services.dataset', ['services.notify',
     if (!set.active()) {
       defer.resolve('disabled');
     }
-    if(activeVars.length === 0) {
+    else if(activeVars.length === 0) {
       if(isPrimary) {
         // this is the case when no windows are present but selections are made
         // on the datasets. Just update the dimensionFilter...
@@ -545,13 +546,13 @@ angular.module('services.dataset', ['services.notify',
     else {
       var dataWasAdded = false;
 
-      set.getVariables(activeVars, { getRawData: false }).then(function sucFn(obj) {
-        if(!obj.samples.added) {
-          defer.resolve('enabled');
-          return;
-        }
+      set.getVariables(activeVars, { getRawData: true }).then(function sucFn(obj) {
+        // if(!obj.samples.added) {
+        //   defer.resolve('enabled');
+        //   return;
+        // }
 
-        var config = _.extend(obj, { force: true });
+        var config = _.extend(obj, {});//, { force: true });
 
         var dataAdded = that.dimensionService.addVariableData(config);
         if (dataAdded) {
@@ -736,7 +737,7 @@ angular.module('services.dataset', ['services.notify',
       throw new Error('Dataset name exists');
     } 
 
-    var samples = getSamples(circles),
+    var samples = config.samples || getSamples(circles),
       DimensionService = $injector.get('DimensionService'),
       primary = DimensionService.getPrimary(),
       dataWasAdded;
@@ -744,7 +745,7 @@ angular.module('services.dataset', ['services.notify',
     var derived = new DerivedDataset()
       .name(name)
       .size(samples.length)
-      .color(that.colors(name))
+      .color(config.color || that.colors(name))
       .samples(samples)
       .active(config.setActive);
 
