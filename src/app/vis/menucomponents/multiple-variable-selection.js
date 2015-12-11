@@ -149,127 +149,23 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     };
 
     $scope.customSubmit = function() {
-      function nameHasErrors(name) {
-        var exists = !_.isUndefined(VariableService.getVariable(name)),
-        hasSpace = _.contains(name, ' '),
-        hasNonAlphaNumeric = name.match(/\W+/g) != null,
-        hadErrors = false;
-
-        if(exists) {
-          NotifyService.addTransient(null, 'Variable is already defined', 'error',
-            { referenceId: errorField });
-          hadErrors = true;
-        }
-
-        if(hasSpace) {
-          NotifyService.addTransient(null, 'Variable name has a space', 'error',
-            { referenceId: errorField });
-          hadErrors = true;          
-        }
-
-        if(hasNonAlphaNumeric) {
-          NotifyService.addTransient(null, 'Invalid characters in variable name', 'error',
-            { referenceId: errorField });
-          hadErrors = true;
-        }
-        return hadErrors;
-      }
-
-      function expressionHasErrors(expression) {
-        var metaInfo = [],
-        matchVariables = /\[[\w|-]*\]/ig;
-
-
-        function hasInvalidVariables() {
-          var matchBrackets = /[\[|\]]/ig,
-          variables = expression.match(matchVariables),
-          nameWithoutBrackets,
-          metaData,
-          hadErrors = false;
-
-          _.each(variables, function(v) {
-            nameWithoutBrackets = v.replace(matchBrackets, '');
-            metaData = VariableService.getVariable(nameWithoutBrackets);
-            if(!metaData) {
-              NotifyService.addTransient(null, 'Invalid variable: ' + nameWithoutBrackets, 'error',
-                { referenceId: errorField });
-              hadErrors = true;
-            } 
-            else if(metaData.type() == 'custom') {
-              NotifyService.addTransient(null, 'Variable can not depend on other derived variables', 'error',
-                { referenceId: errorField });
-              hadErrors = true;
-            }
-            else {
-              metaInfo.push(metaData);
-            }
-          });
-          return hadErrors;
-        }
-
-        function hasInvalidExpression() {
-          function createVariable() {
-            var variable = new PlCustomVariable()
-            .name($scope.customVariableName.content)
-            .description('Expression: ' + expression)
-            .group({
-              name: MENU_USER_DEFINED_VARS_CATEGORY,
-              order: -1,
-              topgroup: null,
-              type: 'custom'
-            })
-            .originalExpression(expression)
-            .substitutedExpression(expWithSubNames)
-            .substitutedCache(cache)
-            .external(constants.nanValue, math)
-            .dependencies(metaInfo);
-
-            VariableService.addCustomVariable(variable);
-          }
-          try {
-            var cache = {};
-            var expWithSubNames = expression.replace(matchVariables, function(d) {
-              var id = _.uniqueId('var');
-              cache[d] = id;
-              return id;
-            });
-            var values = _.chain(cache)
-            .values()
-            .map(function(d) {
-              return [d, _.random(0.5, 10)];
-            })
-            .object()
-            .value();
-
-            // if expression is fine, this should go through eval
-            /* jshint ignore:start */
-            var result = math.eval(expWithSubNames, values);
-            /* jshint ignore:end */
-            $log.debug('Expression result', result);
-
-            // everything seems fine, create the custom variable
-            createVariable();
-
-            updateCustomMenu();
-
-            return false;
-            // DatasetFactory.getVariables(metaInfo).then(function() {
-            // });
-          } catch(err) {
-            $log.debug('Expression evaluation failed', err.message);
-            NotifyService.addTransient(null, 'Please check the mathematical expression. ' + err.message, 'error',
-              { referenceId: errorField });
-            return true;
-          }
-        }
-
-        return hasInvalidVariables() || hasInvalidExpression();
-      }
-
       var errorField = 'cust-var-info-' + $scope.customExpressionFieldId;
-      if( nameHasErrors($scope.customVariableName.content) ||
-        expressionHasErrors($scope.typedCustomVarExpression.content) ) {
-        return;
+      try {
+        VariableService.addCustomVariable({
+          name: $scope.customVariableName.content,
+          expression: $scope.typedCustomVarExpression.content,
+          group: {
+                name: MENU_USER_DEFINED_VARS_CATEGORY,
+                order: -1,
+                topgroup: null,
+                type: 'custom'
+              }
+        });
+        updateCustomMenu();
+      } catch(errors) {
+        _.each(errors, function(error) {
+          NotifyService.addTransient(null, error, 'error', { referenceId: errorField });
+        });
       }
 
     };

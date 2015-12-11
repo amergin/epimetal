@@ -1,4 +1,7 @@
-angular.module('services.variable', ['services.notify'])
+angular.module('services.variable', 
+  ['services.notify',
+   'ext.mathjs'
+  ])
 
 .constant('VARIABLE_GET_URL', '/API/headers/NMR_results')
 
@@ -19,7 +22,7 @@ angular.module('services.variable', ['services.notify'])
   }
 ])
 
-.factory('VariableService', function VariablesService(NotifyService, $q, $http, 
+.factory('VariableService', function VariablesService(NotifyService, $q, $http, $log, math, constants,
   VARIABLE_GET_URL, SOM_DEFAULT_PROFILES) {
 
   var service = {};
@@ -96,9 +99,129 @@ angular.module('services.variable', ['services.notify'])
     return defer.promise;
   };
 
-  service.addCustomVariable = function(x) {
-    _variableCache[x.name()] = x;
-    return service;
+  service.addCustomVariable = function(config) {
+      function checkNameErrors(name) {
+        var exists = !_.isUndefined(service.getVariable(name)),
+        hasSpace = _.contains(name, ' '),
+        hasNonAlphaNumeric = name.match(/\W+/g) != null,
+        hadErrors = false,
+        errors = [];
+
+        if(exists) {
+          errors.push('Variable is already defined');
+          throw new Error('Variable is already defined');
+          // NotifyService.addTransient(null, 'Variable is already defined', 'error',
+          //   { referenceId: errorField });
+          // hadErrors = true;
+        }
+
+        if(hasSpace) {
+          errors.push('Variable name has a space');
+          // NotifyService.addTransient(null, 'Variable name has a space', 'error',
+          //   { referenceId: errorField });
+          // hadErrors = true;          
+        }
+
+        if(hasNonAlphaNumeric) {
+          errors.push('Variable name has a space');
+          // NotifyService.addTransient(null, 'Invalid characters in variable name', 'error',
+          //   { referenceId: errorField });
+          // hadErrors = true;
+        }
+        if(errors.length) {
+          throw errors;
+        }
+      }
+
+      function checkExpressionErrors(expression, group) {
+        var metaInfo = [],
+        matchVariables = /\[[\w|-]*\]/ig;
+
+
+        function checkInvalidVariables() {
+          var matchBrackets = /[\[|\]]/ig,
+          variables = expression.match(matchVariables),
+          nameWithoutBrackets,
+          metaData,
+          errors = [];
+          // hadErrors = false;
+
+          _.each(variables, function(v) {
+            nameWithoutBrackets = v.replace(matchBrackets, '');
+            metaData = service.getVariable(nameWithoutBrackets);
+            if(!metaData) {
+              errors.push('Invalid variable: ' + nameWithoutBrackets);
+              // NotifyService.addTransient(null, 'Invalid variable: ' + nameWithoutBrackets, 'error',
+              //   { referenceId: errorField });
+              // hadErrors = true;
+            } 
+            else if(metaData.type() == 'custom') {
+              errors.push('Variable can not depend on other derived variables');
+              // NotifyService.addTransient(null, 'Variable can not depend on other derived variables', 'error',
+              //   { referenceId: errorField });
+              // hadErrors = true;
+            }
+            else {
+              metaInfo.push(metaData);
+            }
+          });
+          if(errors.length) {
+            throw errors;
+          }
+        }
+
+        function checkInvalidExpression() {
+          function createVariable() {
+            var variable = new PlCustomVariable()
+            .name(config.name)
+            .description('Expression: ' + expression)
+            .group(group)
+            .originalExpression(expression)
+            .substitutedExpression(expWithSubNames)
+            .substitutedCache(cache)
+            .external(constants.nanValue, math)
+            .dependencies(metaInfo);
+
+            _variableCache[variable.name()] = variable;
+          }
+          try {
+            var cache = {};
+            var expWithSubNames = expression.replace(matchVariables, function(d) {
+              var id = _.uniqueId('var');
+              cache[d] = id;
+              return id;
+            });
+            var values = _.chain(cache)
+            .values()
+            .map(function(d) {
+              return [d, _.random(0.5, 10)];
+            })
+            .object()
+            .value();
+
+            // if expression is fine, this should go through eval
+            /* jshint ignore:start */
+            var result = math.eval(expWithSubNames, values);
+            /* jshint ignore:end */
+            $log.debug('Expression result', result);
+
+            // everything seems fine, create the custom variable
+            createVariable();
+
+          } catch(err) {
+            $log.debug('Expression evaluation failed', err.message);
+            throw ['Please check the mathematical expression.'];
+          }
+        }
+
+        checkInvalidVariables();
+        checkInvalidExpression();
+      }
+
+      checkNameErrors(config.name);
+      checkExpressionErrors(config.expression, config.group);
+
+      return service;
   };
 
   service.removeCustomVariable = function(x) {
