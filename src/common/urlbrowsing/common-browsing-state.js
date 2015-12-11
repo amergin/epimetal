@@ -53,8 +53,21 @@ function PlCommonBrowsingState() {
       });
     }
 
-    function customVariables() {
-      // TODO
+    function customVariables(variables) {
+      var inject = obj.injector(),
+      MENU_USER_DEFINED_VARS_CATEGORY = inject.get('MENU_USER_DEFINED_VARS_CATEGORY');
+      _.each(variables, function(custvar) {
+        inject.get('VariableService').addCustomVariable({
+          name: custvar.name,
+          expression: custvar.originalExpression,
+          group: {
+                name: MENU_USER_DEFINED_VARS_CATEGORY,
+                order: -1,
+                topgroup: null,
+                type: 'custom'
+              }
+        });
+      });
     }
 
     try {
@@ -66,7 +79,7 @@ function PlCommonBrowsingState() {
       obj.injector().get('DatasetFactory').updateDataset();
 
       obj.sideMenu(stateObj['menu']);
-      // obj.customVariables();
+      customVariables(stateObj['variables']);
       return obj;
       
     } catch(err) {
