@@ -109,24 +109,14 @@ angular.module('services.variable',
 
         if(exists) {
           errors.push('Variable is already defined');
-          throw new Error('Variable is already defined');
-          // NotifyService.addTransient(null, 'Variable is already defined', 'error',
-          //   { referenceId: errorField });
-          // hadErrors = true;
         }
 
         if(hasSpace) {
           errors.push('Variable name has a space');
-          // NotifyService.addTransient(null, 'Variable name has a space', 'error',
-          //   { referenceId: errorField });
-          // hadErrors = true;          
         }
 
         if(hasNonAlphaNumeric) {
           errors.push('Variable name has a space');
-          // NotifyService.addTransient(null, 'Invalid characters in variable name', 'error',
-          //   { referenceId: errorField });
-          // hadErrors = true;
         }
         if(errors.length) {
           throw errors;
