@@ -755,7 +755,7 @@ angular.module('services.dataset', ['services.notify',
       .name(config.name.display)
       .idName(config.name.id)
       .size(samples.length)
-      .color(config.color || that.colors(name))
+      .color(config.color || that.colors(config.name.display))
       .samples(samples)
       .active(config.setActive);
 
