@@ -346,15 +346,13 @@ angular.module('plotter.vis.plotting.histogram',
         $scope.resetButton(false);
         return [];
       })
-      .renderlet( function(chart) {
+      .on('renderlet', function(chart) {
         if( $scope.window.pooled() ) {
           d3.selectAll( $(config.element).find('rect.bar:not(.deselected)') )
           .attr("class", 'bar pooled')
           .attr("fill", HISTOGRAM_POOLING_COLOR);
         }
       });
-      // .on("postRender", resizeSVG)
-      // .on("postRedraw", resizeSVG);
 
       // set x axis format
       $scope.histogram

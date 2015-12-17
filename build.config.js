@@ -97,7 +97,6 @@ module.exports = {
       // customize this for release:
       'vendor/angular-bootstrap/custom-build/ui-bootstrap-custom-tpls-0.13.0.js',
       'vendor/angular-growl-2/build/angular-growl.js',
-      'vendor/statistics-distributions-js/statistics-distributions-packaged.js',
       'vendor/SOM.js/src/services-compute-som.js',
       'vendor/SOM.js/src/utilities.som.js',
       'vendor/ngprogress/build/ngprogress.js',
@@ -134,7 +133,7 @@ module.exports = {
       'vendor/lodash/lodash.min.js',
       'vendor/numericjs/lib/numeric.min.js',
       'vendor/mathjs/dist/math.min.js',
-      'vendor/statistics-distributions-js/statistics-distributions-packaged.js'
+      'vendor/statistics-distributions-js-packaged/statistics-distributions-packaged.js'
     ]
   },
 };
