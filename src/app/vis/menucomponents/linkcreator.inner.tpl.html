@@ -1,25 +1,16 @@
-<div>
-	<!-- refactor this template to nicer -->
-	<br><br><br><br>
-	<div growl inline="true" limit-messages="1" reference="linkcreatorinfo" class="am-fade container-fluid"></div>
-	<span us-spinner="{radius:15, width:8, length: 16}" spinner-key="linkcreator"></span>
-	<div class="container-fluid">
-		<form role="form">
-			<div class="row">
-				<div class="form-group col-sm-12">
-					<p>
-						<textarea readonly ng-hide="!stateLink" select-on-click class="form-control" rows="3" id="longurl">{{stateLink}}</textarea>
-					</p>
-					<p>
-						<button type="button" class="btn btn-primary" ng-click="getStateLink()" ng-disabled="processing || stateLink">
-						<i class="fa fa-clipboard"></i> {{buttonText()}}
-						</button>
-<!-- 						<button type="button" class="btn btn-primary" clip-click="clicked()" clip-copy="stateLink">
-						<i class="fa fa-clipboard"></i> {{buttonText()}}
-						</button> -->
-					</p>
-				</div>
+<div class="container-fluid">
+	<form role="form">
+		<div class="row">
+			<div class="form-group col-sm-12">
+				<p>
+					<textarea readonly select-on-click class="form-control" rows="3" id="longurl">{{getCopyLink()}}</textarea>
+				</p>
+				<p>
+					<button type="button" class="btn btn-primary" clip-copy="getCopyLink()" clip-click="copied()">
+						<i class="fa fa-clipboard"></i> Copy link to clipboard
+					</button>
+				</p>
 			</div>
-		</form>
-	</div>
+		</div>
+	</form>
 </div>
