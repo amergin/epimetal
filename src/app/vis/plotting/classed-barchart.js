@@ -16,7 +16,10 @@ angular.module('plotter.vis.plotting.classedbarchart',
   aspectRatio: 'stretch'
 })
 
-.controller('ClassedBarChartPlotController', function ClassedBarChartPlotController($scope, DimensionService, DatasetFactory, constants, $injector, $timeout, FilterService, GRID_WINDOW_PADDING, d3, dc, _) {
+.controller('ClassedBarChartPlotController', function ClassedBarChartPlotController($scope,  $injector, $timeout, 
+  DimensionService, DatasetFactory, FilterService,
+  GRID_WINDOW_PADDING, constants, 
+  d3, dc, _) {
 
   $scope.dimensionService = $scope.window.handler().getDimensionService();
 
@@ -88,7 +91,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
     $scope.reduced = $scope.groupInst.get();
     // total will always have largest count
     $scope.extent = [0, getTotalCount()];
-    $scope.colorScale = $injector.get('FilterService').getSOMFilterColors();
+    $scope.colorScale = $injector.get('FilterService').getSOMColorScale();
     }
 
     function initDefault() {
@@ -267,14 +270,19 @@ angular.module('plotter.vis.plotting.classedbarchart',
         .x(d3.scale.linear().domain(config.extent))
         .renderLabel(true)
         .dimension(config.dimension)
-        .colorAccessor(function(d) {
-          return d.value.type == 'total' ? 'total' : d.value.circle.id();
-        })
         .group(config.filter(config.reduced))
         .valueAccessor(function(d) {
           return d.value.count;
         })
-        .colors(config.colorScale)
+        .colors(config.colorScale.scale())
+        .colorAccessor(function(d) {
+          var type = d.value.type;
+          if(type == 'circle') {
+            return d.value.circle.name();
+          } else {
+            return '9';
+          }
+        })
         // .on("postRender", resizeSVG)
         // .on("postRedraw", resizeSVG)
         .ordering(function(d) {
@@ -336,7 +344,10 @@ angular.module('plotter.vis.plotting.classedbarchart',
         .valueAccessor(function(d) {
           return d.value.counts[d.key.dataset];
         })
-        .colors(config.colorScale)
+        .colors(config.colorScale.scale())
+        .colorAccessor(function(d) {
+          return config.colorScale.getAccessor(d.key.dataset);
+        })
         // .on("postRender", resizeSVG)
         // .on("postRedraw", resizeSVG)
         .addFilterHandler(function(filters, filter) {

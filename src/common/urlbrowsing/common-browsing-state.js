@@ -20,6 +20,7 @@ function PlCommonBrowsingState() {
     return {
       datasets: _.map(obj.datasets(), function(set) { return set.state(); }),
       variables: obj.customVariables(),
+      colorScale: obj.injector().get('DatasetFactory').getColorScale().get(),
       active: obj.activeView(),
       menu: obj.sideMenu()
     };
@@ -73,8 +74,10 @@ function PlCommonBrowsingState() {
     try {
       obj.activeView(stateObj['active']);
 
-      var inject = obj.injector(),
-      dsets = datasets(stateObj['datasets']);
+      var inject = obj.injector();
+      obj.injector().get('DatasetFactory').getColorScale().load(stateObj['colorScale']);
+
+      var dsets = datasets(stateObj['datasets']);
       obj.datasets(dsets);
       obj.injector().get('DatasetFactory').updateDataset();
 

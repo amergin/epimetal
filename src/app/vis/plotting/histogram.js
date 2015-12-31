@@ -29,7 +29,7 @@ angular.module('plotter.vis.plotting.histogram',
           $scope.histogram.colors(null);
           $scope.histogram.linearColors([HISTOGRAM_POOLING_COLOR]);
         } else {
-          $scope.histogram.colors($scope.colorScale);
+          $scope.histogram.colors($scope.colorScale.scale());
         }
 
         $scope.histogram.render();
@@ -170,12 +170,11 @@ angular.module('plotter.vis.plotting.histogram',
     $scope.barCharts = {};
 
     if( $scope.isSpecial() ) {
-      var filters = $injector.get('FilterService').getSOMFilters();
-      $scope.groupNames = _.map(filters, function(f) { return f.id(); } );
-      $scope.colorScale = $injector.get('FilterService').getSOMFilterColors();
+      $scope.groups = $injector.get('FilterService').getSOMFilters();
+      $scope.colorScale = $injector.get('FilterService').getSOMColorScale();
 
     } else {
-      $scope.groupNames = DatasetFactory.getSetNames();
+      $scope.groups = DatasetFactory.getSets();
       $scope.colorScale = DatasetFactory.getColorScale();      
     }
 
@@ -234,7 +233,10 @@ angular.module('plotter.vis.plotting.histogram',
 
 })
 
-.directive('plHistogram', function plHistogram(constants, $timeout, $rootScope, $injector, HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, HISTOGRAM_SOM_TOTAL_COLOR, _, dc) {
+.directive('plHistogram', function plHistogram(constants, $timeout, $rootScope, $injector, 
+  HISTOGRAM_WIDTH, HISTOGRAM_HEIGHT, HISTOGRAM_POOLING_COLOR, HISTOGRAM_SOM_TOTAL_COLOR, 
+  DatasetFactory,
+  _, dc) {
 
     var createSVG = function($scope, config) {
       var _xBarWidth = 50;
@@ -362,11 +364,14 @@ angular.module('plotter.vis.plotting.histogram',
       if ( $scope.window.pooled() ) {
         $scope.histogram.linearColors([HISTOGRAM_POOLING_COLOR]);
       } else {
-        $scope.histogram.colors(config.colorScale);
+        $scope.histogram.colors(config.colorScale.scale());
       }
 
       // 2. for each of the additional stacks, create a child chart
-      _.each(config.groupNames, function(name, ind) {
+      _.each(config.groups, function(instance, ind) {
+
+        var name = instance.name(),
+        valueAccessor = instance.type() == 'circle' ? instance.id() : instance.name(); 
 
         var chart = dc.barChart($scope.histogram)
         .centerBar(true)
@@ -374,13 +379,22 @@ angular.module('plotter.vis.plotting.histogram',
         .brushOn(true)
         .dimension(config.dimension)
         .group(config.filter(config.reduced, name), name)
-          .valueAccessor(function(d) { // is y direction
-            return d.value.counts[name];
-          });
-
-          $scope.barCharts[name] = chart;
-          charts.push(chart);
+        .valueAccessor(function(d) { // is y direction
+          return d.value.counts[valueAccessor];
+        })
+        .colorAccessor(function(d) {
+          return config.colorScale.getAccessor(name);
         });
+
+        /* chart.getColor = function(d) {
+          console.log("d", d);
+          return DatasetFactory.getSet(name).color();
+        }; */
+
+
+        $scope.barCharts[name] = chart;
+        charts.push(chart);
+      });
 
       if( $scope.isSpecial()  ) {
         var name = 'total';
@@ -391,11 +405,15 @@ angular.module('plotter.vis.plotting.histogram',
         .brushOn(true)
         .dimension($scope.totalDimension)
         .group(config.filter($scope.totalReduced, name), name)
-          .valueAccessor(function(d) { // is y direction
-            return d.value.counts[name];
-          });
-          $scope.barCharts[name] = chart;
-          charts.push(chart);
+        .colorAccessor(function(d) {
+          return 9;
+        })
+        .valueAccessor(function(d) { // is y direction
+          return d.value.counts[name];
+        });
+
+        $scope.barCharts[name] = chart;
+        charts.push(chart);
 
         // total to background
         charts.reverse();
@@ -446,9 +464,8 @@ angular.module('plotter.vis.plotting.histogram',
         noBins: $scope.noBins,
         extent: $scope.extent,
         binWidth: $scope.binWidth,
-        groups: $scope.groups,
         reduced: $scope.reduced,
-        groupNames: $scope.groupNames,
+        groups: $scope.groups,
         colorScale: $scope.colorScale,
         filter: $scope.filterOnSet,
         filterEnabled: $scope.window.extra().filterEnabled,
@@ -464,21 +481,24 @@ angular.module('plotter.vis.plotting.histogram',
 
       $scope.deregisters = [];
 
+
       var somFilterAddedUnbind = $rootScope.$on('som:circle:add', function(event, filter) {
         function addChart() {
-          var name = filter.id(),
-          chart = dc.barChart($scope.histogram)
+          var chart = dc.barChart($scope.histogram)
           .centerBar(true)
           .barPadding(0.15)
           .brushOn(true)
           .dimension($scope.dimension)
-          .group($scope.filterOnSet($scope.reduced, name), name)
+          .group($scope.filterOnSet($scope.reduced, filter.id()), filter.name())
           .valueAccessor(function(d) { // is y direction
-            return d.value.counts[name];
+            return d.value.counts[filter.id()];
+          })
+          .colorAccessor(function(d) {
+            return $scope.colorScale.getAccessor(filter.name());
           }),
           currentChildren = $scope.histogram.children();
 
-          $scope.barCharts[name] = chart;
+          $scope.barCharts[filter.name()] = chart;
           currentChildren.push(chart);
           $scope.histogram.compose(currentChildren);
         }
@@ -493,7 +513,7 @@ angular.module('plotter.vis.plotting.histogram',
       var somFilterRemovedUnbind = $rootScope.$on('som:circle:remove', function(event, filter) {
         function removeChart() {
           var currentChildren = $scope.histogram.children(),
-          name = filter.id(),
+          name = filter.name(),
           chart = $scope.barCharts[name];
 
           _.remove(currentChildren, chart);
@@ -517,6 +537,9 @@ angular.module('plotter.vis.plotting.histogram',
           .group($scope.filterOnSet($scope.reduced, name), name)
           .valueAccessor(function(d) { // is y direction
             return d.value.counts[name];
+          })
+          .colorAccessor(function(d) {
+            return config.colorScale.getAccessor(name);
           }),
           currentChildren = $scope.histogram.children();
 

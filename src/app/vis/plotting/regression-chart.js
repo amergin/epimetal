@@ -40,7 +40,8 @@ function RegressionChart() {
         left: 0
     },
     _circleColors,
-    _datasetColors;
+    _datasetColors,
+    _colorAccessor;
 
   _chart.render = function() {
     function root() {
@@ -400,7 +401,7 @@ function RegressionChart() {
           if(pay.result.success === false) {
             return;
           }
-          var colorFn = pay.type === 'som' ? _circleColors : _datasetColors,
+          var colorScale = pay.type === 'som' ? _circleColors : _datasetColors,
           boxChart = new HorizontalBoxPlot()
           .element(el)
           .width(chartMeasurements.width)
@@ -410,7 +411,7 @@ function RegressionChart() {
           .domain(_domain)
           .margins(_boxPlotMargins)
           .variable(d.variable)
-          .color(colorFn(pay.name))
+          .color(_colorAccessor(pay.name, colorScale)) //colorFn(pay.name))
           .quartiles([ pay.ci[0], pay.betas[1], pay.ci[1] ])
           .pvalue(pay.pvalue)
           .render();
@@ -580,6 +581,12 @@ function RegressionChart() {
   _chart.circleColors = function(x) {
     if(!arguments.length) { return _circleColors; }
     _circleColors = x;
+    return _chart;
+  };
+
+  _chart.colorAccessor = function(fn) {
+    if(!arguments.length) { return _colorAccessor; }
+    _colorAccessor = fn;
     return _chart;
   };
 

@@ -24,6 +24,7 @@ angular.module('services.urlhandler', [
   _service.create = function() {
     function getCommonState() {
       var state = new PlCommonBrowsingState()
+      .injector($injector)
       .datasets(DatasetFactory.getSets())
       .activeView(TabService.activeState().name)
       .customVariables(_.map(VariableService.getCustomVariables(), function(cv) {
@@ -44,6 +45,7 @@ angular.module('services.urlhandler', [
 
       function som() {
         var state = new PlSOMBrowsingState()
+        .injector($injector)
         .windowHandlers([
           WindowHandler.get('vis.som.content'),
           WindowHandler.get('vis.som.plane')
@@ -215,14 +217,20 @@ angular.module('services.urlhandler', [
         });
       }
 
-      function initSOM(browse) {
+      function initSOM(browse, callback) {
         SOMService.rows(browse.size().rows);
         SOMService.columns(browse.size().columns);
         // SOM object can be empty as well, which is valid
         if(!browse.som().hashId) {
-          SOMService.getSOM( WindowHandler.get('vis.som.plane') );
+          SOMService.getSOM( WindowHandler.get('vis.som.plane') )
+          .then(function succFn() {
+            if(callback) { callback(); }
+          });
         } else {
-          SOMService.getSOM( WindowHandler.get('vis.som.plane'), browse.som().hashId );
+          SOMService.getSOM( WindowHandler.get('vis.som.plane'), browse.som().hashId )
+          .then(function succFn() {
+            if(callback) { callback(); }
+          });
         }
       }
 
@@ -240,8 +248,10 @@ angular.module('services.urlhandler', [
             fetchPrimaryDimensionVars(browsing, common).then(function succFn() {
               activateFilters(browsing);
               makeSelections(browsing);
-              initSOM(_.find(browsing, function(br) { return br.type() == 'som'; }) );
-              defer.resolve();
+              initSOM(_.find(browsing, function(br) { return br.type() == 'som'; }),
+              function callback() {
+                defer.resolve();
+              });
             }, function errFn() {
               defer.reject();
             });

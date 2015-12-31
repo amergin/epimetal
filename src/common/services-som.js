@@ -71,7 +71,6 @@ angular.module('services.som', [
   that.dimensionService = undefined;
   that.sampleDimension = undefined;
 
-  var _colors = d3.scale.category10();
   var _queueWindows = [];
   var _cancelled = false;
   var service = {};
@@ -439,7 +438,9 @@ angular.module('services.som', [
       TabService.lock(true);
       that.inProgress = true;
       windowHandler.getDimensionService().clearFilters();
-      DatasetFactory.getVariableData(that.trainVariables, windowHandler)
+      DatasetFactory.getVariableData(that.trainVariables, windowHandler, {
+        getRawData: true
+      })
       .then(function succFn(res) {
         doExisting(hashId, defer);
       });

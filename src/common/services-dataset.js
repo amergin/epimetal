@@ -1,6 +1,7 @@
 angular.module('services.dataset', ['services.notify',
   'ui.router.state',
   'services.variable',
+  'services.color-scale',
   'ext.d3',
   'ext.lodash'
 ])
@@ -8,15 +9,16 @@ angular.module('services.dataset', ['services.notify',
 .constant('DATASET_URL_FETCH_DATASETS', '/API/datasets')
 .constant('DATASET_URL_FETCH_MULTIPLE_VARS', '/API/list/')
 
-.factory('DatasetFactory', function DatasetFactory($http, $q, $injector, $rootScope, NotifyService, VariableService,
-  d3, _, lodashEq,
+.factory('DatasetFactory', function DatasetFactory($http, $q, $injector, $rootScope, 
+  NotifyService, VariableService, ColorScaleFactory,
+  d3, _, lodashEq, 
   DATASET_URL_FETCH_DATASETS, DATASET_URL_FETCH_MULTIPLE_VARS) {
 
   // privates
   var that = this;
   that.sets = {};
   that.variables = [];
-  that.colors = d3.scale.category20();
+  that.colorScale = ColorScaleFactory.createCategory20();
   that.classedVariables = {};
   that.variableCache = {};
 
@@ -35,7 +37,7 @@ angular.module('services.dataset', ['services.notify',
           // create a dataset stub
           var dset = new DatabaseDataset();
           dset.name(nameObj.name)
-            .color(that.colors(nameObj.name))
+            .color(that.colorScale.useColor(nameObj.name))
             .size(nameObj.size);
           res[nameObj.name] = dset;
         });
@@ -522,7 +524,7 @@ angular.module('services.dataset', ['services.notify',
   var service = {};
 
   service.getColorScale = function() {
-    return that.colors;
+    return that.colorScale;
   };
 
   service.getDatasets = function() {
@@ -689,6 +691,7 @@ angular.module('services.dataset', ['services.notify',
     var dataRemoved = DimensionService.getPrimary().removeVariableData({
       samples: set.samples()
     });
+    that.colorScale.freeColor(set.color());
     delete that.sets[set.idName()];
     if (dataRemoved) {
       DimensionService.getPrimary().rebuildInstance();
@@ -755,7 +758,7 @@ angular.module('services.dataset', ['services.notify',
       .name(config.name.display)
       .idName(config.name.id)
       .size(samples.length)
-      .color(config.color || that.colors(config.name.display))
+      .color(config.color || that.colorScale.useColor(config.name.display)) //that.colors(config.name.display))
       .samples(samples)
       .active(config.setActive);
 

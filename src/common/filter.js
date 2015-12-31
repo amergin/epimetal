@@ -161,7 +161,6 @@ function CircleFilter() {
   filter.get = function() {
     return {
       name: filter.name(),
-      id: filter.id(),
       origin: filter.origin(),
       color: filter.color(),
       type: filter.type(),
@@ -171,9 +170,11 @@ function CircleFilter() {
   };
 
   filter.load = function(state) {
-    filter.color(state.color);
-    filter.id(state.id);
+    var id = _.uniqueId('circle');
+
+    filter.id(id);
     filter.name(state.name);
+    filter.color(state.color);
     filter.origin(state.origin);
     filter.radius(state.radius);
     filter.position(state.position);

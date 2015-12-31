@@ -21,7 +21,7 @@ angular.module('plotter.vis.plotting.profile-histogram',
     $scope.window.headerText(['Profile histogram for ', $scope.window.extra().name]);
 
     $scope.dimensionService = $scope.window.handler().getDimensionService();
-    $scope.colorScale = FilterService.getSOMFilterColors();
+    $scope.colorScale = FilterService.getSOMColorScale();
 
     $scope.dimensionInst = $scope.dimensionService.getVariableBMUDimension();
     $scope.dimension = $scope.dimensionInst.get();
@@ -141,8 +141,10 @@ angular.module('plotter.vis.plotting.profile-histogram',
       .data(config.data)
       .rotate(true)
       .tooltip(tooltip)
-      .colorAccessor(function(d, colors) {
-        return colors(d.custom.circle.id());
+      .colorAccessor(function(d, colorScale) {
+        var accessor = colorScale.getAccessor(d.custom.circle.name()),
+        color = colorScale.scale()(accessor);
+        return color;
       })
       .onClick(function(d) {
         var config = {

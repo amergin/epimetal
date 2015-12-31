@@ -1,21 +1,26 @@
 angular.module('services.filter', [
   'services.dimensions',
   'services.window',
+  'services.color-scale',
   'ext.d3',
   'ext.lodash'
 ])
 
 .constant('SOM_MAX_FILTERS', 5)
-  .factory('FilterService', function FilterService($injector, $rootScope, WindowHandler, SOM_MAX_FILTERS, d3, _, lodashEq) {
+  .factory('FilterService', function FilterService($injector, $rootScope, 
+    WindowHandler, ColorScaleFactory,
+    SOM_MAX_FILTERS, d3, _, lodashEq) {
 
     var DimensionService = $injector.get('DimensionService');
     var _activeDimensionService = DimensionService.getPrimary();
-    var _colors = d3.scale.category10();
+    //var _colors = d3.scale.category10();
     var _filters = [];
     var _disabled = false;
 
     var _somDimensionInst = _activeDimensionService.getSOMDimension();
     var _somDimension = _somDimensionInst.get();
+
+    var _colorScale = ColorScaleFactory.createCategory10();
 
     var _bmusLookup = {};
 
@@ -44,10 +49,13 @@ angular.module('services.filter', [
     }
 
     service.removeCircleFilter = function(filter) {
+
+      service.getSOMColorScale().freeColor(filter.name());
+
       _.remove(_filters, function(filt) {
         return filt.is(filter);
       });
-      // filter.remove();
+
       updateCircleFilterHandler();
       service.updateCircleFilters();
       $rootScope.$emit('som:circle:remove', filter);
@@ -73,11 +81,12 @@ angular.module('services.filter', [
         }
 
         var id = _.uniqueId('circle'),
+        color = service.getSOMColorScale().useColor(config.name),
         circle = new CircleFilter()
           .injector($injector)
           .name(config.name)
           .id(id)
-          .color(_colors(id))
+          .color(color)
           .init();
         _filters.push(circle);
         updateCircleFilterHandler();
@@ -119,9 +128,15 @@ angular.module('services.filter', [
       });
     };
 
-    service.getSOMFilterColors = function() {
-      return _colors;
+    service.getSOMColorScale = function() {
+      return _colorScale;
     };
+
+    /* service.getSOMFilterColors = function() {
+      return colorScale;
+
+      //return _colors;
+    }; */
 
     service.addFilter = function(filter) {
       if (service.disabled()) {

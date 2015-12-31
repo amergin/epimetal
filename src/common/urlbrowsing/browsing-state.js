@@ -188,6 +188,7 @@ function PlSOMBrowsingState() {
     return _.extend(priv.get(), {
       type: obj.type(),
       selection: _.map(obj.selection(), function(v) { return v.get(); }),
+      colorScale: obj.injector().get('FilterService').getSOMColorScale().get(),
       size: obj.size(),
       som: obj.som()
     });
@@ -206,6 +207,7 @@ function PlSOMBrowsingState() {
       obj.selection(getSelection(stateObj['selection']));
       obj.size(stateObj['size']);
       obj.som(stateObj['som']);
+      obj.injector().get('FilterService').getSOMColorScale().load(stateObj['colorScale']);
       return obj;
     } catch(err) {
       throw new Error("PlSOMBrowsingState thows error: ", err.message);

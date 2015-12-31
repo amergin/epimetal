@@ -514,16 +514,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
       }
     });
 
-    var gatherStateUnbind = $rootScope.$on('UrlHandler:getState', function(event, callback) {
-      var retObj = _.chain($scope.window)
-        .pick(['type', 'grid', 'handler', 'variables', 'pooled', 'handler'])
-        .clone()
-        .value();
-
-      callback(retObj);
-    });
-
-    $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind, derivedAddUnbind, derivedRemoveUnbind);
+    $scope.deregisters.push(reRenderUnbind, redrawUnbind, derivedAddUnbind, derivedRemoveUnbind);
 
     $scope.$on('$destroy', function() {
       _.each($scope.deregisters, function(unbindFn) {

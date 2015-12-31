@@ -38,8 +38,13 @@ angular.module('plotter.vis.plotting.regression',
         function(v) { return v.name(); })
       }
     ])
-    .circleColors(FilterService.getSOMFilterColors())
-    .datasetColors(DatasetFactory.getColorScale());
+    .circleColors(FilterService.getSOMColorScale())
+    .datasetColors(DatasetFactory.getColorScale())
+    .colorAccessor(function(name, colorScale) {
+      var key = colorScale.getAccessor(name),
+      color = colorScale.scale()(key);
+      return color;
+    });
 
     height = $scope.chart.estimatedHeight();
     windowSize(width, height);
