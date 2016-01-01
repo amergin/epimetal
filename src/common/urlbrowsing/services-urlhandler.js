@@ -152,27 +152,11 @@ angular.module('services.urlhandler', [
         });
       }
 
-      // fetches all data of variables belonging to primary dimension
-      // service.
-      function fetchPrimaryDimensionVars(browsing, common) {
-        var vars = [],
-        defer = $q.defer(),
-        primaryHandler = null;
-        flattenedVars = [];
-        _.each(browsing, function(browse) {
-          _.each(browse.windowHandlers(), function(handler) {
-            var isPrimary = $injector.get('WindowHandler').getPrimary() == handler;
-            if(isPrimary) {
-              primaryHandler = handler;
-              var windows = handler.get(),
-              variables = _.map(windows, function(w) { return w.object.variables(); });
-              vars = vars.concat(variables);
-            }
-          });
-        });
-
-        flattenedVars = 
-          _.chain(vars)
+      // fetches all data of variables belonging to primary and secondary
+      // dimension services.
+      function fetchDimensionVars(browsing, common) {
+        function flattenVars(vars) {
+          return _.chain(vars)
           .map(function(v) {
             if(!_.has(v, 'type')) {
               return _.values(v);
@@ -180,14 +164,42 @@ angular.module('services.urlhandler', [
               return v;
             }
           })
-          .flatten()
-          .value();
+          .flatten(true)
+          .value();          
+        }
 
-        DatasetFactory.getVariableData(flattenedVars, primaryHandler, { getRawData: true }).then(function succFn() {
+        var primaryVars = [],
+        secondaryVars = [],
+        defer = $q.defer(),
+        primaryHandler = null,
+        secondaryHandler = null;
+
+        _.each(browsing, function(browse) {
+          _.each(browse.windowHandlers(), function(handler) {
+            var isPrimary = $injector.get('DimensionService').getPrimary() == handler.getDimensionService(),
+            isSecondary = $injector.get('DimensionService').getSecondary() == handler.getDimensionService(),
+            windows = handler.get();
+            if(isPrimary) {
+              primaryHandler = handler;
+              variables = _.map(windows, function(w) { return w.object.variables(); });
+              primaryVars = primaryVars.concat(variables);
+            } else if(isSecondary) {
+              secondaryHandler = handler;
+              variables = _.map(windows, function(w) { return w.object.variables(); });
+              secondaryVars = secondaryVars.concat(variables);
+            }
+          });
+        });
+
+        var primaryPromise = DatasetFactory.getVariableData(flattenVars(primaryVars), primaryHandler, { getRawData: true }),
+        secondaryPromise = DatasetFactory.getVariableData(flattenVars(secondaryVars), secondaryHandler, { getRawData: true });
+
+        $q.all([primaryPromise, secondaryPromise]).then(function succFn() {
           defer.resolve();
         }, function errFn() {
           defer.reject();
         });
+
         return defer.promise;
       }
 
@@ -245,7 +257,7 @@ angular.module('services.urlhandler', [
             // init browsing states
             browsing = loadBrowsing(stateObj.browsing);
 
-            fetchPrimaryDimensionVars(browsing, common).then(function succFn() {
+            fetchDimensionVars(browsing, common).then(function succFn() {
               activateFilters(browsing);
               makeSelections(browsing);
               initSOM(_.find(browsing, function(br) { return br.type() == 'som'; }),
