@@ -354,6 +354,12 @@ angular.module('plotter.vis.plotting.histogram',
           .attr("class", 'bar pooled')
           .attr("fill", HISTOGRAM_POOLING_COLOR);
         }
+      })
+      .on('preRedraw', function(chart) {
+        chart.rescale();
+      })
+      .on('preRender', function(chart) {
+        chart.rescale();
       });
 
       // set x axis format
@@ -421,8 +427,8 @@ angular.module('plotter.vis.plotting.histogram',
 
       // 3. compose & render the composite chart
 
-      $scope.histogram.render();
       $scope.histogram.compose(charts);
+      $scope.histogram.render();
 
       config.callback($scope.histogram);
 

@@ -56,7 +56,7 @@ angular.module('utilities', [])
       'window': '=reWindow' 
     },
     restrict: 'A',
-    priority: 200,
+    //priority: 200,
     transclude: true,
     link: {
       post: function(scope, element, attrs) {
