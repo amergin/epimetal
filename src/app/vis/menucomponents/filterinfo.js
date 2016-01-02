@@ -17,7 +17,7 @@ angular.module('plotter.vis.menucomponents.filterinfo',
   }
 )
 
-.controller('FilterInfoController', function FilterInfoController($scope, $timeout, $injector, DimensionService, FilterService, $state, NotifyService, TabService, DatasetFactory, SOMService, d3, _) {
+.controller('FilterInfoController', function FilterInfoController($scope, $timeout, $log, $injector, DimensionService, FilterService, $state, NotifyService, TabService, DatasetFactory, SOMService, d3, _) {
     var numFormat = d3.format('.2e');
     var dimensionService = DimensionService.getPrimary();
 
@@ -125,8 +125,6 @@ angular.module('plotter.vis.menucomponents.filterinfo',
       }
 
       var stateName = $state.current.name,
-      // spaces to underscores, truncate
-      modified = name.replace(/\s/g, '_'), //.substring(0,15),
       circles;
 
       if(stateName == 'vis.som') {
@@ -137,10 +135,7 @@ angular.module('plotter.vis.menucomponents.filterinfo',
 
       try {
         var config = {
-          name: {
-            display: name,
-            id: modified
-          },
+          name: name,
           circles: circles || undefined
         };
         config.setActive = circles ? false : true;
@@ -148,6 +143,7 @@ angular.module('plotter.vis.menucomponents.filterinfo',
         TabService.check();
       }
       catch(err) {
+        $log.error(err.stack);
         NotifyService.addSticky('Error', err.message, 'error', { referenceId: 'datasetinfo' });
       }
     };

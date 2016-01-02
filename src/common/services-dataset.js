@@ -337,18 +337,8 @@ angular.module('services.dataset', ['services.notify',
       return 'derived';
     };
 
-    dset.idName = function(x) {
-      if(!arguments.length) { return priv.idName; }
-      priv.idName = x;
-      return dset;
-    };
-
     dset.state = function() {
       return _.extend(priv.state(), {
-        name: {
-          id: dset.idName(),
-          display: dset.name()
-        },
         type: dset.type(),
         samples: _.map(priv.samples, function(samp) { 
           return { 
@@ -692,7 +682,7 @@ angular.module('services.dataset', ['services.notify',
       samples: set.samples()
     });
     that.colorScale.freeColor(set.color());
-    delete that.sets[set.idName()];
+    delete that.sets[set.name()];
     if (dataRemoved) {
       DimensionService.getPrimary().rebuildInstance();
     }
@@ -755,8 +745,7 @@ angular.module('services.dataset', ['services.notify',
       dataWasAdded;
 
     var derived = new DerivedDataset()
-      .name(config.name.display)
-      .idName(config.name.id)
+      .name(config.name)
       .size(samples.length)
       .color(config.color || that.colorScale.useColor(config.name.display)) //that.colors(config.name.display))
       .samples(samples)
@@ -764,7 +753,7 @@ angular.module('services.dataset', ['services.notify',
 
     if (circles) {
       // deselectOthers();
-      that.sets[derived.idName()] = derived;
+      that.sets[derived.name()] = derived;
       service.updateDataset();
     } else {
       if(config.deselectOthers === false) { 
@@ -772,7 +761,7 @@ angular.module('services.dataset', ['services.notify',
       } else {
         deselectOthers();
       }
-      that.sets[derived.idName()] = derived;
+      that.sets[derived.name()] = derived;
       removeFilters();
       service.updateDataset();
     }
