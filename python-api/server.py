@@ -591,17 +591,31 @@ def postState():
 
 
 		def validDatasets(common):
+			def validDbDataset(set):
+				name = set.get('name', '')
+				nameInDb = name in uniqueDatasets
+				hasColor = set.get('color', None) is not None
+				sizeCorrect = Sample.objects.filter(dataset=name).count() == set.get('size', 0)
+
+				return nameInDb and hasColor and sizeCorrect
+
+			def validDerivedDataset(set):
+				nameNotInDb = set.get('name', '') not in uniqueDatasets
+				hasColor = set.get('color', None) is not None
+				sampleSize = len( set.get('samples', []) )
+				hasSamples = sampleSize > 0
+				sizeCorrect = sampleSize == set.get('size', 0)
+
+				return hasColor and hasSamples and sizeCorrect
+
 			sets = common.get('datasets', [])
 			uniqueDatasets = Sample.objects.distinct('dataset')
 			atLeastOneSet = len(sets) > 0
 			for s in sets:
-				name = s.get('name', '')
 				if s.get('type') == 'database':
-					if name not in uniqueDatasets:
-						return False
+					return validDbDataset(s)
 				elif s.get('type') == 'derived':
-					# TODO
-					pass
+					return validDerivedDataset(s)
 				else:
 					return False
 			return atLeastOneSet
