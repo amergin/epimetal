@@ -111,7 +111,7 @@ def variablesExistObject(obj):
 	print "variablesExistObject array=", array
 	for variable in array:
 		if variable.get('type') == 'db':
-			if not variables.get(variable.get('name')):
+			if not variable.get('name') in variables:
 				print "falsy var = ", variable
 				return False
 		else:
