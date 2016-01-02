@@ -7,7 +7,10 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
 .constant('SCATTERPLOT_POOLING_COLOR', 'black')
 
-.controller('ScatterPlotController', function ScatterPlotController($scope, DatasetFactory, DimensionService, constants, SCATTERPLOT_POOLING_COLOR, GRID_WINDOW_PADDING, d3, _) {
+.controller('ScatterPlotController', function ScatterPlotController($scope, 
+  DatasetFactory, DimensionService, 
+  constants, SCATTERPLOT_POOLING_COLOR, GRID_WINDOW_PADDING, 
+  d3, _) {
 
   $scope.dimensionService = $scope.window.handler().getDimensionService();
   $scope.dimensionInst = $scope.dimensionService.getXYDimension(
@@ -47,6 +50,8 @@ angular.module('plotter.vis.plotting.scatterplot', [
   };
 
   $scope._createCanvas = function(set, zIndex) {
+
+    // spaces to underscores
     var name = set.name();
     var data = $scope.group.all().filter(function(d) {
       return (d.value.counts[name] > 0) && d.key.valueOf() !== constants.nanValue;
@@ -304,13 +309,18 @@ angular.module('plotter.vis.plotting.scatterplot', [
       xscale = d3.scale.linear(), // x scale
       yscale = d3.scale.linear(); // yscale
 
+    // sanitize name and use it as an id
+    var identifier = dataset.replace(/\s/g, '_');
+
     // create canvas element
     var c = document.createElement('canvas');
-    c.setAttribute('id', "ds" + dataset);
+    c.setAttribute('id', "ds" + identifier);
     $(element).append(c);
 
+
+
     // adjust canvas size
-    var canvas = d3.select(element[0]).select("#" + "ds" + dataset)
+    var canvas = d3.select(element[0]).select("#" + "ds" + identifier)
       .attr("width", w + "px")
       .attr("height", h + "px")
       .style('z-index', zIndex);
