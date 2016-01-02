@@ -636,37 +636,37 @@ def postState():
 		validMenu(common) and \
 		validVariables(common)
 
-	#try:
-	payload = request.get_json()
-	browsing = payload.get('browsing')
-	common = payload.get('common')
+	try:
+		payload = request.get_json()
+		browsing = payload.get('browsing')
+		common = payload.get('common')
 
-	# check input validity
-	if validBrowsing(browsing) and validCommon(common):
-		hashids = _getHashids()
-		urlHash = hashids.encode(_getSizeOfDict(payload))
-		state = BrowsingState(urlHash=urlHash, browsing=browsing, common=common)
-		state.save()
+		# check input validity
+		if validBrowsing(browsing) and validCommon(common):
+			hashids = _getHashids()
+			urlHash = hashids.encode(_getSizeOfDict(payload))
+			state = BrowsingState(urlHash=urlHash, browsing=browsing, common=common)
+			state.save()
 
-		response = { 
-		'success': 'true',
-		'query': request.path,
-		'result': urlHash
-		}
+			response = { 
+			'success': 'true',
+			'query': request.path,
+			'result': urlHash
+			}
 
-		response = flask.jsonify(response)
-		response.status_code = 200
-		return response
-	else:
-		print "common=", validCommon(common)
-		print "browsing=", validBrowsing(browsing)
+			response = flask.jsonify(response)
+			response.status_code = 200
+			return response
+		else:
+			print "common=", validCommon(common)
+			print "browsing=", validBrowsing(browsing)
+			return getError()
+	except Exception, e:
+		print "exception occured", e
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+		print(exc_type, fname, exc_tb.tb_lineno)
 		return getError()
-	# except Exception, e:
-	# 	print "exception occured", e
-	# 	exc_type, exc_obj, exc_tb = sys.exc_info()
-	# 	fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-	# 	print(exc_type, fname, exc_tb.tb_lineno)
-	# 	return getError()
 
 
 @app.route( config.getFlaskVar('prefix') + 'datasets', methods=['GET'] )
