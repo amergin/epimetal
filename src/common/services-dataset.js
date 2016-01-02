@@ -747,7 +747,7 @@ angular.module('services.dataset', ['services.notify',
     var derived = new DerivedDataset()
       .name(config.name)
       .size(samples.length)
-      .color(config.color || that.colorScale.useColor(config.name.display)) //that.colors(config.name.display))
+      .color(config.color || that.colorScale.useColor(config.name))
       .samples(samples)
       .active(config.setActive);
 
