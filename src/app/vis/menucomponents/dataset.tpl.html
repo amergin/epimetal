@@ -17,7 +17,7 @@
         <tbody>
           <tr ng-repeat="set in datasets track by $index" ng-style="{ 'background-color': set.color() }" ng-click="!canToggle() || toggle(set)" class="ctrl">
             <td class="dataset-select col-sm-1"><input type="checkbox" ng-disabled="!canToggle()" ng-click="toggle(set)" ng-checked="set.active()" noclick></td>
-            <td class="dataset-name col-sm-6">{{set.name() | cut:true:10:' ...'}}</td>
+            <td class="dataset-name col-sm-6" ng-attr-title={{set.name()}}>{{set.name() | cut:true:10:' ...'}}</td>
             <td class="dataset-size col-sm-3">{{set.size()}}</td>
             <td class="dataset-size col-sm-2">
                 <i class="fa fa-lg fa-times-circle" ng-show="set.type() == 'derived'" ng-click="removeDerived(set)"></i>
