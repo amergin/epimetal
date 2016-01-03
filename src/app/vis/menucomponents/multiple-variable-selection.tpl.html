@@ -53,6 +53,8 @@
 
 
 <div ng-switch="inputIsDefined()">
+
+	<!-- Show table when text in input field -->
 	<div ng-switch-when="true" class="am-fade">
 		<table class="table table-striped">
 			<thead>
@@ -113,8 +115,13 @@
 		</div>		
 	</div>
 
+
+
+	<!-- show variable selection menu when no input -->
 	<div ng-switch-when="false">
 		<div class="pl-container pl-nav-list pl-flex-row">
+
+			<!-- first column -->
 			<div class="list-group pl-nav-column">
 				<div class="list-group-item ctrl am-fade" ng-repeat="group in nested | orderBy:orderGroup track by $index" ng-click="selectGroup(group, 'first')" ng-class="{ 'active': isSelected(group, 'first') }">
 					{{getGroupName(group)}}
@@ -122,6 +129,7 @@
 				</div>
 			</div>
 
+			<!-- second column -->
 			<div class="list-group pl-nav-column">
 				<div class="list-group-item am-fade" ng-repeat="item in selected.first | orderBy:orderGroup track by $index" ng-click="selectGroup(item, 'second')" ng-class="{ 'active': isSelected(item, 'second') }" ng-switch="getType(item)">
 					<div ng-switch-when="continues" class="ctrl">
@@ -208,6 +216,7 @@
 			</div>
 		</div>
 
+		<!-- third column -->
 		<div class="list-group pl-nav-column am-fade" ng-show="selected.third">
 			<div class="list-group-item well well-small">
 				<h3>{{selected.third.name()}}</h3>
