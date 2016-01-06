@@ -132,16 +132,13 @@ angular.module('services.filter', [
       return _colorScale;
     };
 
-    /* service.getSOMFilterColors = function() {
-      return colorScale;
-
-      //return _colors;
-    }; */
-
     service.addFilter = function(filter) {
       if (service.disabled()) {
         return;
       }
+
+      var added = false;
+
       // do a little double-checking: does the filter exist?
       var contains = lodashEq.contains(_filters, function(existing) {
         if(filter.type() == 'circle') {
@@ -159,7 +156,10 @@ angular.module('services.filter', [
       });
       if(!contains) {
         _filters.push(filter);
+        added = true;
       }
+
+      return added;
     };
 
     service.removeFilter = function(filter) {
@@ -181,6 +181,7 @@ angular.module('services.filter', [
           origin: 'filter'
         });
       }
+      return removed;
     };
 
     service.resetFilters = function(config) {

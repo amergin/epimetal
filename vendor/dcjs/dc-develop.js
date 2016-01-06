@@ -7037,17 +7037,17 @@ dc.compositeChart = function (parent, chartGroup) {
         }, dc.constants.EVENT_DELAY);
     };
 
-    // _chart._brushing = function () {
-    //     var extent = _chart.extendBrush();
-    //     var brushIsEmpty = _chart.brushIsEmpty(extent);
+    /*_chart._brushing = function () {
+        var extent = _chart.extendBrush();
+        var brushIsEmpty = _chart.brushIsEmpty(extent);
 
-    //     for (var i = 0; i < _children.length; ++i) {
-    //         _children[i].filter(null);
-    //         if (!brushIsEmpty) {
-    //             _children[i].filter(extent);
-    //         }
-    //     }
-    // };
+        for (var i = 0; i < _children.length; ++i) {
+            _children[i].filter(null);
+            if (!brushIsEmpty) {
+                _children[i].filter(extent);
+            }
+        }
+    }; */
 
     _chart._prepareYAxis = function () {
         var left = (leftYAxisChildren().length !== 0);

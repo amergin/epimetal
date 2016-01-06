@@ -63,6 +63,7 @@ angular.module('plotter.vis.plotting.histogram',
       var existing = _.filter($injector.get('FilterService').getFilters(), function(filter) {
         var exists = filter.type() !== 'circle' && filter.windowid() == $scope.window.id();
         if(exists) {
+          console.log("exists", exists);
           filter.chart(chart);
         }
         return exists;
@@ -291,6 +292,7 @@ angular.module('plotter.vis.plotting.histogram',
       .addFilterHandler(function(filters, filter) {
         function defaultFn(filters, filter) {
           filters.push(filter);
+          console.log("filters after appending = ", filters);
           return filters;
         }
 
@@ -300,8 +302,11 @@ angular.module('plotter.vis.plotting.histogram',
             return filt.type() == 'range' && filt.chart() == $scope.histogram;
           });
 
-          if(current && filters.length) {
+          console.log("current = ", current);
+
+          if(current) {
             // shifted
+            console.log("shifted", current);
             current.payload(filter);
           } else {
             // new
@@ -311,12 +316,14 @@ angular.module('plotter.vis.plotting.histogram',
             .windowid($scope.window.id())
             .payload(filter);
 
-            $injector.get('FilterService').addFilter(filt);
+            var added = $injector.get('FilterService').addFilter(filt);
+            console.log("new filter", added, filt);
           }
           $scope.resetButton(true);
           $injector.get('WindowHandler').reRenderVisible({ compute: true, action: 'filter:add', omit: 'histogram' });
         }
 
+        console.log("called addFilter, ", filters.length, arguments);
         custom.apply(this, arguments);
         return defaultFn.apply(this, arguments);
       })
@@ -337,10 +344,12 @@ angular.module('plotter.vis.plotting.histogram',
           $scope.resetButton(false);
         }
 
+        console.log("removeFilterHandler called", arguments);
         custom.apply(this, arguments);
         return defaultFn.apply(this, arguments);
       })
       .resetFilterHandler(function(filters) {
+        console.log("resetFilterHandler called", arguments);
         _.each(filters, function(filter) {
           $injector.get('FilterService').removeFilterByPayload(filter);
         });
@@ -428,9 +437,9 @@ angular.module('plotter.vis.plotting.histogram',
       // 3. compose & render the composite chart
 
       $scope.histogram.compose(charts);
+      config.callback($scope.histogram);
       $scope.histogram.render();
 
-      config.callback($scope.histogram);
 
     };
 

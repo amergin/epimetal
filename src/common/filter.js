@@ -298,6 +298,7 @@ function HistogramFilter() {
   };
 
   filter.remove = function() {
+    console.log("remove triggered");
     priv.chart.filterAll();
     priv.chart.redraw();
     return filter;
