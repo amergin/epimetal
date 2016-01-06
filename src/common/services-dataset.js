@@ -735,7 +735,7 @@ angular.module('services.dataset', ['services.notify',
 
     var circles = config.circles || undefined;
 
-    if (that.sets[config.name.id]) {
+    if (that.sets[config.name]) {
       throw new Error('Dataset name exists');
     } 
 
