@@ -321,10 +321,10 @@ angular.module('services.urlhandler', [
     }
 
     function removeHash() {
-      // remove the state hash from url
-      $state.params['state'] = undefined;
-      $location.search('state', undefined);
-      $location.url($location.path());
+      // remove the state hash from url and replace
+      // the previous history state with the one without the 'state' parameter
+      // to eliminate back button browsing to it
+      $state.go($state.current.name, { 'state': undefined }, { 'location': 'replace' });
     }
 
     var defer = $q.defer();
