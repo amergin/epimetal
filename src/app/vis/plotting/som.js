@@ -25,7 +25,13 @@ angular.module('plotter.vis.plotting.som', [
     return ele.width();
   };
 
+  $scope.updateElementSize = function() {
+    $scope.width = $scope.getWidth($scope.element);
+    $scope.height = $scope.getHeight($scope.element);    
+  };
+
   $scope.draw = function() {
+    $scope.updateElementSize();
     $scope.drawSOMPlane({
       plane: $scope.window.extra().plane,
       element: $scope.element,
@@ -568,8 +574,9 @@ angular.module('plotter.vis.plotting.som', [
 
     $scope.element = ele;
 
-    $scope.width = $scope.getWidth($scope.element);
-    $scope.height = $scope.getHeight($scope.element);
+    $scope.updateElementSize();
+    // $scope.width = $scope.getWidth($scope.element);
+    // $scope.height = $scope.getHeight($scope.element);
 
     $scope.deregisters = [];
 
