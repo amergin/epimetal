@@ -1,0 +1,15 @@
+api:
+ build: ./api
+ links:
+  - db
+
+db:
+ build: ./db
+
+http:
+ build: ./http
+ links:
+  - api
+
+web:
+ build: ./web

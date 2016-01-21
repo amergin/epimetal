@@ -12,7 +12,6 @@ from flask.ext.mongoengine import MongoEngine
 import json
 
 from orm_models import Sample, HeaderSample, HeaderGroup, BrowsingState, SOMTrain, SOMPlane
-from flask_sockets import Sockets
 
 from pymongo import ReadPreference
 
@@ -58,7 +57,6 @@ register_connection(
 # 	}
 # )
 db = MongoEngine(app)
-sockets = Sockets(app)
 
 def _getModifiedParameters(variables):
 	ret = ['sampleid', 'dataset']
