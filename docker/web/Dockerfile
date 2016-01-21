@@ -9,7 +9,9 @@ RUN apt-get update && apt-get install -y \
     git \
     wget \
     npm \
-    subversion
+    subversion \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
 # Have Chrome for grunt purposes
 #RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \ 
@@ -34,10 +36,9 @@ WORKDIR /home/builduser/plotter
 RUN npm install
 RUN bower --config.interactive=false install
 
-RUN npm install karma-phantomjs-launcher
 COPY karma-unit.tpl.js /home/builduser/plotter/karma/karma-unit.tpl.js
 # Compile the project
-RUN grunt build --verbose
+RUN grunt
 
 # done, minified is now under plotter/bin/
 # and non-minified under plotter/build/
