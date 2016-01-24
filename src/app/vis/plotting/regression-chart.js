@@ -652,10 +652,10 @@ function RegressionChart() {
   }
 
   function sortData() {
-    var groupedData = d3.nest().key(function(d) { 
-      return d.variable.group().order;
+    var groupedData = d3.nest()
+    .key(function(d) {
+      return +d.variable.group().order;
     })
-    .sortKeys(d3.ascending)
     .sortValues(sortValues)
     .entries(_data);
 
