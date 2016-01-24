@@ -82,23 +82,39 @@ angular.module('services.urlhandler', [
       return states;
     }
 
-    var sendObject = {
-      common: getCommonState(),
-      browsing: getBrowsingStates()
-    };
+    function doStart() {
+      var sendObject = {
+        common: getCommonState(),
+        browsing: getBrowsingStates()
+      };
 
-    $log.info("Sending URL object: ", sendObject);
+      $log.info("Sending URL object: ", sendObject);
+      $http.post(API_URL_STATE, sendObject)
+      .success(function(response) {
+        $log.debug('Sending state obj succeeded, got back: ', response.result);
+        defer.resolve(response.result);
+      })
+      .error(function(response) {
+        $log.error('Sending state obj FAILED, got back: ', response);
+        defer.reject(response);
+      });      
+    }
 
     var defer = $q.defer();
-    $http.post(API_URL_STATE, sendObject)
-    .success(function(response) {
-      $log.debug('Sending state obj succeeded, got back: ', response.result);
-      defer.resolve(response.result);
-    })
-    .error(function(response) {
-      $log.error('Sending state obj FAILED, got back: ', response);
-      defer.reject(response);
-    });
+
+    if(TabService.needSOMRestart()) {
+      var primary = DimensionService.getPrimary(),
+      current = DimensionService.get('vis.som');
+
+      DimensionService.restart(current, primary).then(function succFn(res) {
+        SOMService.getSOM( WindowHandler.get('vis.som.plane') ).then(function succFn() {
+          doStart();
+        });
+      });
+    } else {
+      doStart();
+    }
+
     return defer.promise;
   };
 

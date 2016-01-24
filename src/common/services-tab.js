@@ -169,6 +169,14 @@ angular.module('services.tab', [
     }
   }
 
+  _service.needSOMRestart = function() {
+    var primary = DimensionService.getPrimary(),
+      current = DimensionService.get('vis.som'),
+      cancelled = $injector.get('SOMService').cancelled();
+
+    return !DimensionService.equal(primary, current) || cancelled;
+  };
+
   _service.lock = function(x) {
     if (!arguments.length) {
       return _locked;
