@@ -795,6 +795,13 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       $scope.sortReverse = !$scope.sortReverse;
     };
 
+    $scope.tableSort = function(variable) {
+      if($scope.sortType == 'group.order') {
+        return variable.group().name;
+      } 
+      return variable[$scope.sortType].call();
+    };
+
     var _selectedCache;
 
     function initPayload() {

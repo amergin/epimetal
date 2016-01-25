@@ -73,10 +73,10 @@
 						</a>
 					</th>
 					<th class="ctrl">
-						<a ng-click="setSortType('desc'); toggleSortReverse()">
+						<a ng-click="setSortType('description'); toggleSortReverse()">
 							Description
-							<span ng-show="sortTypeIs('desc') && !sortReverse" class="fa fa-caret-down"></span>
-							<span ng-show="sortTypeIs('desc') && sortReverse" class="fa fa-caret-up"></span>
+							<span ng-show="sortTypeIs('description') && !sortReverse" class="fa fa-caret-down"></span>
+							<span ng-show="sortTypeIs('description') && sortReverse" class="fa fa-caret-up"></span>
 						</a>
 					</th>
 					<th class="ctrl">
@@ -96,7 +96,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr ng-repeat="variable in filtered = (variables | filter:tableFilter) | orderBy:sortType:sortReverse | limitTo: pageSize track by $index" ng-click="updateSelection(variable)">
+				<tr ng-repeat="variable in filtered = (variables | filter:tableFilter) | orderBy:tableSort:sortReverse | limitTo: pageSize track by $index" ng-click="updateSelection(variable)">
 					<td><input type="checkbox" ng-checked="variableIsSelected(variable)" ng-click="updateSelection(variable)" noclick></td>
 					<td>{{variable.name()}}</td>
 					<td>{{variable.description()}}</td>
