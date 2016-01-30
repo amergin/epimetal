@@ -39,20 +39,20 @@ angular.module('plotter.vis.menucomponents.filterinfo',
       console.log(filter);
     };
 
-    $scope.canSubmitDerived = function() {
-      function som() {
-        var hasFilters = _.any($scope.somCheckbox, function(val, key) { return val; });
-        return hasFilters && $scope.derivedInput;
-      }
-      function explore() {
-        return $scope.derivedInput;
-      }
+    // $scope.canSubmitDerived = function() {
+    //   function som() {
+    //     var hasFilters = _.any($scope.somCheckbox, function(val, key) { return val; });
+    //     return hasFilters && $scope.derivedInput;
+    //   }
+    //   function explore() {
+    //     return $scope.derivedInput;
+    //   }
 
-      var stateName = $state.current.name;
-      if(stateName == 'vis.som') { return som(); }
-      else if(stateName == 'vis.explore') { return explore(); }
+    //   var stateName = $state.current.name;
+    //   if(stateName == 'vis.som') { return som(); }
+    //   else if(stateName == 'vis.explore') { return explore(); }
 
-    };
+    // };
 
     $scope.formatNumber = function(num) {
       return numFormat(num);
@@ -124,10 +124,21 @@ angular.module('plotter.vis.menucomponents.filterinfo',
         .value();
       }
 
+      if(!name || !name.length) {
+        NotifyService.addTransient('Error', 'Please name the dataset you are creating.', 'error', { referenceId: 'datasetinfo' });
+        return;
+      }
+
       var stateName = $state.current.name,
       circles;
 
       if(stateName == 'vis.som') {
+        var hasFilters = _.any($scope.somCheckbox, function(val, key) { return val; });
+
+        if(!hasFilters) {
+          NotifyService.addTransient('Error', 'Please check at least one filter based upon which the dataset will be created.', 'error', { referenceId: 'datasetinfo' });
+          return;
+        }
         circles = getSelectedCircles();
       } else {
         // nothing
