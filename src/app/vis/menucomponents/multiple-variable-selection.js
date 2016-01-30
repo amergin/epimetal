@@ -689,13 +689,22 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       }
     };
 
-    $scope.orderGroup = function(group) {
-      var type = $scope.getType(group);
+    $scope.orderByName = function(group) {
+      return _.keys(group)[0];
+    };
+
+    $scope.orderGroup = function(iteratee) {
+      var type = $scope.getType(iteratee),
+      order;
       if(type == 'terminates') {
-        return '1_' + group.name;
-      } else if(type == 'continues') {         
-        return '0_' + $scope.getGroupName(group);
+        // variables
+        // constant ensures the continuing groups are placed before variables
+        order = 1000 + iteratee.nameOrder();
+      } else if(type == 'continues') {
+        // groups
+        order = _.values(iteratee)[0][0].group().order;
       }
+      return order;
     };
 
     $scope.setFocus = function(field) {

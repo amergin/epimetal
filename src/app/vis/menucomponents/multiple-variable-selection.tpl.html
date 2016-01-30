@@ -123,7 +123,7 @@
 
 			<!-- first column -->
 			<div class="list-group pl-nav-column">
-				<div class="list-group-item ctrl am-fade" ng-repeat="group in nested | orderBy:orderGroup track by $index" ng-click="selectGroup(group, 'first')" ng-class="{ 'active': isSelected(group, 'first') }">
+				<div class="list-group-item ctrl am-fade" ng-repeat="group in nested | orderBy:orderByName track by $index" ng-click="selectGroup(group, 'first')" ng-class="{ 'active': isSelected(group, 'first') }">
 					{{getGroupName(group)}}
 					<span class="badge pull-right">{{groupSelectedCount(group)}}</span>
 				</div>
@@ -195,6 +195,7 @@
 			</form>
 		</div>
 
+		<!-- third column -->
 		<div class="list-group pl-nav-column">
 			<div class="list-group-item am-fade" ng-repeat="item in selected.second | orderBy:orderGroup track by $index">
 				<div class="checkbox">
@@ -216,7 +217,7 @@
 			</div>
 		</div>
 
-		<!-- third column -->
+		<!-- fourth column -->
 		<div class="list-group pl-nav-column am-fade" ng-show="selected.third">
 			<div class="list-group-item well well-small">
 				<h3>{{selected.third.name()}}</h3>
