@@ -169,7 +169,7 @@
 
 			<div ng-class="{ 'list-group pl-nav-double-column': customCreateDialog() }" ng-show="customCreateDialog()">
 				<div growl inline="true" limit-messages="1" reference="{{'cust-var-info-' + customExpressionFieldId}}" class="am-fade"></div>
-				<form>
+				<form class="col-sm-8">
 					<div class="form-group">
 						<label for="custom-var-name">Variable name</label>
 						<input type="text" class="form-control" id="custom-var-name" placeholder="Short variable name" maxlength="8" ng-model="customVariableName.content">
@@ -189,12 +189,22 @@
 						mentio-search="customExpressionSearch(term)"
 						mentio-select="customTagName(item)"
 						rows="2"
+						placeholder="Start by typing the character :"
 						>
 					</textarea>
-
 				</div>
 				<button ng-disabled="!customCanSubmit()" ng-click="customSubmit()" type="submit" class="btn btn-secondary pull-right">Create</button>
 			</form>
+			<div class="col-sm-4 well well-sm info">
+			<p>
+			When creating a mathematical expression, start to search for a variable by typing ":" followed by a free text search. This free text is then matched against variable names and descriptions. 
+			</p>
+			<p>
+			Finish the search by either selecting the active search result or by pressing <i>Enter</i>. The selected variable is then displayed inside square brackets. For instance, selecting a variable <i>BMI</i> results in the text <i>[BMI]</i> being added to the expression.  
+			</p>
+			<p>
+			Several common mathematical functions can be applied to a variable. For a list of available functions, refer to the <a href="http://mathjs.org/docs/reference/functions/alphabetical.html" target="_blank">Math.js library documentation</a>.
+			</p>
 		</div>
 
 		<!-- third column -->
