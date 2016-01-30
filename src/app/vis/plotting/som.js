@@ -56,9 +56,21 @@ angular.module('plotter.vis.plotting.som', [
   });
 
   function initHeader() {
-    var pvalFormat = d3.format('.2e');
+    function getPvalueString() {
+      var pvalFormat = d3.format('.2e'),
+      threshold = Math.pow(10,-16),
+      pvalue = $scope.window.extra().plane.pvalue,
+      template = _.template("(P <%= character %> <%= pvalue %>)");
+
+      if(pvalue > threshold) {
+        return template({ 'character': '=', 'pvalue': pvalFormat(pvalue) });
+      } else {
+        return template({ 'character': '<', 'pvalue': threshold });
+      }
+    }
+    
     if($scope.window.extra() && $scope.window.extra().plane) {
-      $scope.window.headerText(['Self-organizing map of', $scope.window.variables().name(), "(P = " + pvalFormat($scope.window.extra().plane.pvalue) + ")"]);
+      $scope.window.headerText(['Self-organizing map of', $scope.window.variables().name(), getPvalueString()]);
     }
   }
 
