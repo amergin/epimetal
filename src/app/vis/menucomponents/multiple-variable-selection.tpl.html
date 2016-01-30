@@ -96,7 +96,8 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr ng-repeat="variable in filtered = (variables | filter:tableFilter) | orderBy:tableSort:sortReverse | limitTo: pageSize track by $index" ng-click="updateSelection(variable)">
+				<!--  notice two orderBy's: always preserve variable's group order -->
+				<tr ng-repeat="variable in filtered = (variables | filter:tableFilter) | orderBy:tableSort:sortReverse track by $index" ng-click="updateSelection(variable)">
 					<td><input type="checkbox" ng-checked="variableIsSelected(variable)" ng-click="updateSelection(variable)" noclick></td>
 					<td>{{variable.name()}}</td>
 					<td>{{variable.description()}}</td>
@@ -106,13 +107,14 @@
 			</tbody>
 		</table>
 
-		<div ng-show="filtered.length == 0">
+		<div ng-if="filtered.length == 0">
 			<p class="text-info">Result set is empty. Filter the results by typing to the above field.</p>
 		</div>
+		<div ng-if="filtered.length > 0">
+			<p class="text-info">Total of {{filtered.length}} variables.</p>
+		</div>
 
-		<div ng-show="filtered.length > pageSize">
-			<p class="text-info">Showing first {{pageSize}} results of {{filtered.length}} variables</p>
-		</div>		
+
 	</div>
 
 
