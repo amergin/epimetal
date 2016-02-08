@@ -29,7 +29,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
   $scope.initGroup();
 
-  $scope.window.headerText(['Scatter plot of', $scope.window.variables().x.name() + ", " + $scope.window.variables().y.name()]);
+  $scope.window.headerText(['Scatter plot of', $scope.window.variables().x.labelName() + ", " + $scope.window.variables().y.labelName()]);
   $scope.window.resetButton(false);
 
   $scope._calcCanvasAttributes = function() {
@@ -68,8 +68,8 @@ angular.module('plotter.vis.plotting.scatterplot', [
       $scope.xRange,
       $scope.yRange,
       zIndex,
-      $scope.window.variables().x.name(),
-      $scope.window.variables().y.name(),
+      $scope.window.variables().x.labelName(),
+      $scope.window.variables().y.labelName(),
       data,
       name,
       color
@@ -423,7 +423,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
     });
 
     NotifyService.addTransient('Scatter plot added',
-      'Scatter plot for ' + '(' + $scope.window.variables().x.name() + ", " + $scope.window.variables().y.name() + ') has been added',
+      'Scatter plot for ' + '(' + $scope.window.variables().x.labelName() + ", " + $scope.window.variables().y.labelName() + ') has been added',
       'success');
 
     $scope.deregisters = [];

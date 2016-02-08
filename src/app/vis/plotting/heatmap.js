@@ -194,25 +194,31 @@ angular.module('plotter.vis.plotting.heatmap',
       .valueAccessor(function(d) {
         return d.key.y;
       })
+      .rowsLabel(function(d) {
+        return VariableService.getVariable(d).labelName();
+      })
+      .colsLabel(function(d) {
+        return VariableService.getVariable(d).labelName();
+      })
       .rowOrdering(function(a,b) {
         var grpA = getVarGroupOrder(a),
         grpB = getVarGroupOrder(b),
         varA = getVarNameOrder(a),
         varB = getVarNameOrder(b);
-        return d3.descending( grpA * 10 + varA, grpB * 10 + varB);
+        return d3.descending( grpA * 100 + varA, grpB * 100 + varB);
       })
       .colOrdering(function(a,b) {
         var grpA = getVarGroupOrder(a),
         grpB = getVarGroupOrder(b),
         varA = getVarNameOrder(a),
         varB = getVarNameOrder(b);
-        return d3.ascending( grpA * 10 + varA, grpB * 10 + varB);
+        return d3.ascending( grpA * 100 + varA, grpB * 100 + varB);
       })
       .title(function(d) {
         return "Horizontal variable:  " +
-        d.key.x + "\n" +
+        VariableService.getVariable(d.key.x).labelName() + "\n" +
         "Vertical variable:  " +
-        d.key.y + "\n" +
+        VariableService.getVariable(d.key.y).labelName() + "\n" +
         "Correlation:  " + 
         constants.tickFormat(d.value) + "\n" + 
         "P-value:   " + 

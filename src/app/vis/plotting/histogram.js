@@ -15,24 +15,211 @@ angular.module('plotter.vis.plotting.histogram',
 .constant('HISTOGRAM_POOLING_COLOR', '#000000')
 .constant('HISTOGRAM_SOM_TOTAL_COLOR', '#00b300')
 
-.controller('HistogramPlotController', function HistogramPlotController($scope, $rootScope, DatasetFactory, constants, $state, $injector, $timeout, HISTOGRAM_POOLING_COLOR, GRID_WINDOW_PADDING, d3, dc, _) {
+.controller('HistogramPlotController', function HistogramPlotController($scope, $rootScope, DatasetFactory, constants, $state, $injector, $timeout, $log, HISTOGRAM_POOLING_COLOR, GRID_WINDOW_PADDING, d3, dc, _) {
 
     $scope.isSpecial = function() {
       return $scope.window.extra().somSpecial || false;
     };
+
+    $scope.poolFigure = function poolFigure() {
+      $log.info("Pooling requested");
+
+      // empty composite chart contents
+      $scope.histogram.resetSvg();
+
+      var dcGroup = $scope.isSpecial() ? constants.groups.histogram.nonInteractive : constants.groups.histogram.interactive,
+      element = $scope.element,
+      colorScale = $scope.colorScale;
+
+      // create a separate bar chart
+      $scope.stacked = dc.barChart(element[0], dcGroup)
+      .width( $scope.getWidth(element) )
+      .height( $scope.getHeight(element) )
+      .centerBar(true)
+      .barPadding(0.15)
+      .brushOn(true)
+      .dimension($scope.dimension)
+      .linearColors([HISTOGRAM_POOLING_COLOR])
+      .x(d3.scale.linear().domain($scope.extent).range([0, $scope.noBins]))
+      .elasticY(true)
+      .elasticX(false)
+      .renderTitle(false)
+      .xUnits(function(low, high) {
+        var width = $scope.getWidth(element);
+        return Math.round($scope.xUnitsScale(width));
+      })
+      .margins({
+        top: 15,
+        right: 10,
+        bottom: 30,
+        left: 40
+      })
+      .xAxisLabel($scope.window.variables().axisLabel())
+      .addFilterHandler(function(filters, filter) {
+        function defaultFn(filters, filter) {
+          filters.push(filter);
+          console.log("filters after appending = ", filters);
+          return filters;
+        }
+
+        function custom(filters, filter) {
+          // adding a filter may be actually shifting it to another position
+          var current = _.find($injector.get('FilterService').getFilters(), function(filt) {
+            return filt.type() == 'range' && filt.chart() == $scope.histogram;
+          });
+
+          console.log("current = ", current);
+
+          if(current) {
+            // shifted
+            console.log("shifted", current);
+            current.payload(filter);
+          } else {
+            // new
+            var filt = new HistogramFilter()
+            .chart($scope.histogram)
+            .variable($scope.window.variables())
+            .windowid($scope.window.id())
+            .payload(filter);
+
+            var added = $injector.get('FilterService').addFilter(filt);
+            console.log("new filter", added, filt);
+          }
+          $scope.resetButton(true);
+          $injector.get('WindowHandler').reRenderVisible({ compute: true, action: 'filter:add', omit: 'histogram' });
+        }
+
+        console.log("called addFilter, ", filters.length, arguments);
+        custom.apply(this, arguments);
+        return defaultFn.apply(this, arguments);
+      })
+      .removeFilterHandler(function(filters, filter) {
+        function defaultFn(filters, filter) {
+          for (var i = 0; i < filters.length; i++) {
+            if (filters[i] <= filter && filters[i] >= filter) {
+              filters.splice(i, 1);
+              break;
+            }
+          }
+          return filters;
+        }
+
+        function custom(filters, filter) {
+          $injector.get('FilterService').removeFilter(filt);
+          $injector.get('WindowHandler').reRenderVisible({ compute: true, action: 'filter:remove', omit: 'histogram' });
+          $scope.resetButton(false);
+        }
+
+        console.log("removeFilterHandler called", arguments);
+        custom.apply(this, arguments);
+        return defaultFn.apply(this, arguments);
+      })
+      .resetFilterHandler(function(filters) {
+        console.log("resetFilterHandler called", arguments);
+        _.each(filters, function(filter) {
+          $injector.get('FilterService').removeFilterByPayload(filter);
+        });
+        $injector.get('WindowHandler').reRenderVisible({ compute: true, action: 'filter:reset', omit: 'histogram' });
+        $scope.resetButton(false);
+        return [];
+      })
+      // .on('renderlet', function(chart) {
+      //   if( $scope.window.pooled() ) {
+      //     d3.selectAll( $(config.element).find('rect.bar:not(.deselected)') )
+      //     .attr("class", 'bar pooled')
+      //     .attr("fill", HISTOGRAM_POOLING_COLOR);
+      //   }
+      // })
+      .on('preRedraw', function(chart) {
+        chart.rescale();
+      })
+      .on('preRender', function(chart) {
+        chart.rescale();
+      });
+
+      // set x axis format
+      $scope.stacked
+      .xAxis()
+      .ticks(7)
+      .tickFormat(constants.tickFormat);
+
+
+      var first = true;
+
+      _.each($scope.groups, function(instance, groupName) {
+          var name = instance.name(),
+          valueAccessor = instance.type() == 'circle' ? instance.id() : instance.name(),
+          filteredGroup = $scope.filterOnSet($scope.reduced, name, true);
+
+          if(first) {
+            // first stack must be group
+            $scope.stacked
+            .group(filteredGroup, name)
+            // and it must have an accessor
+            .valueAccessor(function(d) {
+              return d.value.counts[groupName];
+            });
+
+            first = false;
+          } else {
+            $scope.stacked.stack(filteredGroup, name, function(d) {
+              return d.value.counts[groupName];
+            });
+          }
+
+      });
+
+      $scope.stacked.render();
+    };
+
+    $scope.renderFigure = function() {
+      if($scope.window.pooled()) {
+        if(!$scope.stacked) {
+          $scope.poolFigure();
+        } else {
+          $scope.updateChartSize($scope.stacked);
+          $scope.stacked.render();
+        }
+      } else {
+        $scope.updateChartSize($scope.histogram);
+        $scope.histogram.render();        
+      }
+    };
+
+    $scope.updateChartSize = function updateSize(chart) {
+      var width = $scope.getWidth($scope.element),
+      height = $scope.getHeight($scope.element);
+      chart.width(width);
+      chart.height(height);
+    };
+
+    $scope.redrawFigure = function() {
+      var chart;
+      if($scope.window.pooled()) {
+        chart = $scope.stacked;
+      } else {
+        chart = $scope.histogram;
+      }
+      $scope.updateChartSize(chart);
+      chart.redraw();
+    };
+
 
     $scope.$watch(function() {
       return $scope.window.pooled();
     }, function(newVal, oldVal) {
       if( newVal !== oldVal) {
         if(newVal) {
-          $scope.histogram.colors(null);
-          $scope.histogram.linearColors([HISTOGRAM_POOLING_COLOR]);
+          if(!$scope.stacked) {
+            $scope.poolFigure();
+          } else {
+            $scope.updateChartSize($scope.stacked);
+            $scope.stacked.render();
+          }
         } else {
-          $scope.histogram.colors($scope.colorScale.scale());
+          $scope.updateChartSize($scope.histogram);
+          $scope.histogram.render();
         }
-
-        $scope.histogram.render();
       }
     });
 
@@ -100,7 +287,7 @@ angular.module('plotter.vis.plotting.histogram',
     };
 
     // share information with the plot window
-    $scope.window.headerText(['Histogram of', $scope.window.variables().name()]);
+    $scope.window.headerText(['Histogram of', $scope.window.variables().labelName()]);
 
     $scope.computeExtent = function() {
       // remove older ones
@@ -181,7 +368,7 @@ angular.module('plotter.vis.plotting.histogram',
 
     // see https://github.com/dc-js/dc.js/wiki/FAQ#filter-the-data-before-its-charted
     // this used to filter to only the one set & limit out NaN's
-    $scope.filterOnSet = function(group, name) {
+    $scope.filterOnSet = function(group, name, pooled) {
       return {
         'all': function() {
           if( $scope.isSpecial() && name != 'total' ) {
@@ -210,14 +397,25 @@ angular.module('plotter.vis.plotting.histogram',
                 }
               };
             })
-            .reject(function(grp) { return grp.value.counts[name] === 0; })
+            .reject(function(grp) { 
+              if(pooled === true) {
+                return false;
+              } else {
+                return grp.value.counts[name] === 0;
+              }
+            })
             .value();
 
             return ret;
           } else {
             // normal histograms or total
             return group.all().filter(function(d) {
-              return (d.value.counts[name] > 0) && (d.key != constants.nanValue);
+              var notNaN = (Math.ceil(d.key) != constants.nanValue);
+              if(pooled === true) {
+                return notNaN && (d.value.counts[name] >= 0);
+              } else {
+                return notNaN && (d.value.counts[name] > 0);
+              }
             });
           }
         }
@@ -239,7 +437,7 @@ angular.module('plotter.vis.plotting.histogram',
   DatasetFactory,
   _, dc) {
 
-    var createSVG = function($scope, config) {
+    function createSVG($scope, config) {
       var _xBarWidth = 50;
 
       // collect charts here
@@ -357,13 +555,13 @@ angular.module('plotter.vis.plotting.histogram',
         $scope.resetButton(false);
         return [];
       })
-      .on('renderlet', function(chart) {
-        if( $scope.window.pooled() ) {
-          d3.selectAll( $(config.element).find('rect.bar:not(.deselected)') )
-          .attr("class", 'bar pooled')
-          .attr("fill", HISTOGRAM_POOLING_COLOR);
-        }
-      })
+      // .on('renderlet', function(chart) {
+      //   if( $scope.window.pooled() ) {
+      //     d3.selectAll( $(config.element).find('rect.bar:not(.deselected)') )
+      //     .attr("class", 'bar pooled')
+      //     .attr("fill", HISTOGRAM_POOLING_COLOR);
+      //   }
+      // })
       .on('preRedraw', function(chart) {
         chart.rescale();
       })
@@ -441,7 +639,7 @@ angular.module('plotter.vis.plotting.histogram',
       $scope.histogram.render();
 
 
-    };
+    }
 
     function postLink($scope, ele, attrs, ctrl) {
 
@@ -542,7 +740,7 @@ angular.module('plotter.vis.plotting.histogram',
       });
 
       var derivedAddUnbind = $rootScope.$on('dataset:derived:add', function(eve, set) {
-        function addChart() {
+        function addNormalChart() {
           var name = set.name(),
           chart = dc.barChart($scope.histogram)
           .centerBar(true)
@@ -568,7 +766,11 @@ angular.module('plotter.vis.plotting.histogram',
           // $scope.histogram.render();
         } else {
           $scope.computeExtent();
-          addChart();
+          if($scope.window.pooled()) {
+            $scope.poolFigure();
+          } else {
+            addNormalChart();
+          }
           $scope.histogram.render();
         }
       });
@@ -600,10 +802,12 @@ angular.module('plotter.vis.plotting.histogram',
 
         var width = $scope.getWidth($scope.element),
         height = $scope.getHeight($scope.element);
-        $scope.histogram.width(width);
-        $scope.histogram.height(height);
-        // currently buggy, use render instead of redraw
-        $scope.histogram.render(); //.redraw();
+        var chart = $scope.window.pooled() ? $scope.stacked : $scope.histogram;
+
+        chart.width(width);
+        chart.height(height);
+        chart.render();
+
         setSize();
       }
 
@@ -648,11 +852,11 @@ angular.module('plotter.vis.plotting.histogram',
             if(config.compute) {
               if(!$scope.isSpecial()) {
                 $scope.computeExtent();
-                $scope.histogram.render();
+                $scope.renderFigure();
               }
             }
             else {
-              $scope.histogram.redraw();
+              $scope.redrawFigure();
             }
           });
         }
@@ -661,7 +865,7 @@ angular.module('plotter.vis.plotting.histogram',
       var redrawUnbind = $rootScope.$on('window-handler.redraw', function(event, winHandler) {
         if( winHandler == $scope.window.handler() ) {
           $timeout( function() {
-            $scope.histogram.redraw();
+            $scope.redrawFigure();
           });
         }
       });

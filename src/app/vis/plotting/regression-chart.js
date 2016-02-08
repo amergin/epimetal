@@ -433,7 +433,7 @@ function RegressionChart() {
         return "translate(0," + offset.middle + ")";
       })
 
-      .text(function(d) { return d.variable.name(); });
+      .text(function(d) { return d.variable.labelName(); });
     }
 
     function rows() {
