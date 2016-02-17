@@ -16,7 +16,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 .controller('MultipleVariableSelectionCtrl', 
   function MultipleVariableSelectionCtrl($scope, $q, $log, DatasetFactory, DimensionService, 
     WindowHandler, VariableService, NotifyService, SOMService,
-    MENU_USER_DEFINED_VARS_CATEGORY, 
+    MENU_USER_DEFINED_VARS_CATEGORY, CUSTOM_VAR_GROUP_NUMBER, 
     _, math, constants) {
 
     // custom dialog stuff
@@ -156,7 +156,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
           expression: $scope.typedCustomVarExpression.content,
           group: {
                 name: MENU_USER_DEFINED_VARS_CATEGORY,
-                order: -1,
+                order: CUSTOM_VAR_GROUP_NUMBER,
                 topgroup: null,
                 type: 'custom'
               }
@@ -445,7 +445,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
         return _.isString(str) ? str.toLowerCase() : str;
       }
       var input = $scope.getInputField();
-      return _.contains(lower(variable.name()), lower(input)) || 
+      return _.contains(lower(variable.labelName()), lower(input)) || 
       _.contains(lower(variable.description()), lower(input)) ||
       _.contains(lower(variable.group().name), lower(input));
     };

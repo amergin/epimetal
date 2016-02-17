@@ -56,14 +56,16 @@ function PlCommonBrowsingState() {
 
     function customVariables(variables) {
       var inject = obj.injector(),
-      MENU_USER_DEFINED_VARS_CATEGORY = inject.get('MENU_USER_DEFINED_VARS_CATEGORY');
+      MENU_USER_DEFINED_VARS_CATEGORY = inject.get('MENU_USER_DEFINED_VARS_CATEGORY'),
+      CUSTOM_VAR_GROUP_NUMBER = inject.get('CUSTOM_VAR_GROUP_NUMBER');
       _.each(variables, function(custvar) {
         inject.get('VariableService').addCustomVariable({
           name: custvar.name,
+          id: custvar.id,
           expression: custvar.originalExpression,
           group: {
                 name: MENU_USER_DEFINED_VARS_CATEGORY,
-                order: -1,
+                order: CUSTOM_VAR_GROUP_NUMBER,
                 topgroup: null,
                 type: 'custom'
               }

@@ -22,8 +22,10 @@ angular.module('services.variable',
   }
 ])
 
+.constant('CUSTOM_VAR_GROUP_NUMBER', -1)
+
 .factory('VariableService', function VariablesService(NotifyService, $q, $http, $log, math, constants,
-  VARIABLE_GET_URL, SOM_DEFAULT_PROFILES) {
+  VARIABLE_GET_URL, SOM_DEFAULT_PROFILES, CUSTOM_VAR_GROUP_NUMBER) {
 
   var service = {};
 
@@ -32,7 +34,17 @@ angular.module('services.variable',
   _groupCache = {};
 
   var initVariables = _.once(function() {
+
+    function initCustomGroup() {
+      _groupCache[CUSTOM_VAR_GROUP_NUMBER] = {
+        'name': 'Custom variables',
+        'order': CUSTOM_VAR_GROUP_NUMBER,
+        'topgroup': null
+      };
+    }
     var defer = $q.defer();
+
+    initCustomGroup();
     $http.get(VARIABLE_GET_URL, {
         cache: true
       })
@@ -100,29 +112,6 @@ angular.module('services.variable',
   };
 
   service.addCustomVariable = function(config) {
-      function checkNameErrors(name) {
-        var exists = !_.isUndefined(service.getVariable(name)),
-        hasSpace = _.contains(name, ' '),
-        hasNonAlphaNumeric = name.match(/\W+/g) != null,
-        hadErrors = false,
-        errors = [];
-
-        if(exists) {
-          errors.push('Variable is already defined');
-        }
-
-        if(hasSpace) {
-          errors.push('Variable name has a space');
-        }
-
-        if(hasNonAlphaNumeric) {
-          errors.push('Variable name has a space');
-        }
-        if(errors.length) {
-          throw errors;
-        }
-      }
-
       function checkExpressionErrors(expression, group) {
         var metaInfo = [],
         matchVariables = /\[[\w|-]*\]/ig;
@@ -163,7 +152,8 @@ angular.module('services.variable',
         function checkInvalidExpression() {
           function createVariable() {
             var variable = new PlCustomVariable()
-            .name(config.name)
+            .name(config.id || _.uniqueId('_custvar'))
+            .descriptiveName(config.name)
             .description('Expression: ' + expression)
             .group(group)
             .originalExpression(expression)
@@ -208,7 +198,7 @@ angular.module('services.variable',
         checkInvalidExpression();
       }
 
-      checkNameErrors(config.name);
+      // checkNameErrors(config.name);
       checkExpressionErrors(config.expression, config.group);
 
       return service;

@@ -139,8 +139,8 @@ angular.module('services.window', [
 
           if (hasX && hasY) {
             return _.template('X_<%= x %>_Y_<%= y %>')({
-              x: variables.x.name(),
-              y: variables.y.name()
+              x: variables.x.labelName(),
+              y: variables.y.labelName()
             });
           }
           if (hasTarget) {
@@ -152,7 +152,7 @@ angular.module('services.window', [
             });
           } else {
             if(_.isArray(variables)) {
-              return _.map(variables, function(v) { return v.name(); })
+              return _.map(variables, function(v) { return v.labelName(); })
               .join("_");
             } else {
               return variables.name();
@@ -561,7 +561,7 @@ angular.module('services.window', [
       this.load = function(state) {
         function getVariables(vars) {
           function mapper(v) {
-            return $injector.get('VariableService').getVariable(v.name);
+            return $injector.get('VariableService').getVariable(v.id || v.name);
           }
 
           // is variable

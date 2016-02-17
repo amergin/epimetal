@@ -25,22 +25,18 @@ RUN apt-get update && apt-get install -y \
 
 RUN npm -g install grunt-cli karma bower
 
-RUN useradd -m builduser
-USER builduser
-
-# Clone Plotter repo: TODO - remove the private token and make repo public!
-RUN git clone https://51f231e2cf6432f41bae640e73b4d09da18b13de@github.com/amergin/plotter.git /home/builduser/plotter
-WORKDIR /home/builduser/plotter
+ADD . /plotter
+WORKDIR /plotter
+RUN rm -rf node_modules/
 
 # Start installing
 RUN npm install
-RUN bower --config.interactive=false install
+RUN bower --config.interactive=false install --allow-root
 
-COPY karma-unit.tpl.js /home/builduser/plotter/karma/karma-unit.tpl.js
-# Compile the project
-RUN grunt
+ADD web-docker/karma-unit.tpl.js karma/karma-unit.tpl.js
 
-# done, minified is now under plotter/bin/
-# and non-minified under plotter/build/
-VOLUME /home/builduser/plotter/bin
-VOLUME /home/builduser/plotter/build
+# Switch to "grunt" to have the minified version (takes a lot longer)
+RUN grunt build
+
+VOLUME /plotter/build
+VOLUME /plotter/bin

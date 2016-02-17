@@ -99,7 +99,7 @@
 				<!--  notice two orderBy's: always preserve variable's group order -->
 				<tr ng-repeat="variable in filtered = (variables | filter:tableFilter) | orderBy:tableSort:sortReverse track by $index" ng-click="updateSelection(variable)">
 					<td><input type="checkbox" ng-checked="variableIsSelected(variable)" ng-click="updateSelection(variable)" noclick></td>
-					<td>{{variable.name()}}</td>
+					<td>{{variable.labelName()}}</td>
 					<td>{{variable.description()}}</td>
 					<td>{{variable.group().name}}</td>
 					<td>{{variable.unit()}}</td>
@@ -141,7 +141,7 @@
 					<div ng-switch-when="terminates" class="checkbox">
 						<label>
 							<input type="checkbox" ng-checked="variableIsSelected(item)" ng-click="updateSelection(item)" noclick>
-							{{item.name()}}
+							{{item.labelName()}}
 						</label>
 						<i class="fa fa-times-circle ctrl pull-right text-danger" ng-click="removeCustomVariable(item)" ng-show="isCustomCreateDialog()"></i>
 						<i class="fa fa-info-circle ctrl pull-right text-muted" ng-click="selectInfo(item)"></i>
@@ -172,7 +172,7 @@
 				<form class="col-sm-8">
 					<div class="form-group">
 						<label for="custom-var-name">Variable name</label>
-						<input type="text" class="form-control" id="custom-var-name" placeholder="Short variable name" maxlength="8" ng-model="customVariableName.content">
+						<input type="text" class="form-control" id="custom-var-name" placeholder="Variable name" maxlength="40" ng-model="customVariableName.content">
 					</div>
 					<div class="form-group">
 						<label for="custom-var-expression">Mathematical expression</label>
@@ -203,7 +203,7 @@
 					Finish the search by either selecting the active search result or by pressing <i>Enter</i>. The selected variable is then displayed inside square brackets. For instance, selecting a variable <i>BMI</i> results in the text <i>[BMI]</i> being added to the expression.  
 					</p>
 					<p>
-					Several common mathematical functions can be applied to a variable. For a list of available functions, refer to the <a href="http://mathjs.org/docs/reference/functions/alphabetical.html" target="_blank">Math.js library documentation</a>.
+					Several common mathematical functions can be applied within an expression. For a list of available functions, refer to the <a href="http://mathjs.org/docs/reference/functions/alphabetical.html" target="_blank">Math.js library documentation</a>.
 					</p>
 				</div>
 			</div>
@@ -214,7 +214,7 @@
 				<div class="checkbox">
 					<label>
 						<input type="checkbox" ng-checked="variableIsSelected(item)" ng-click="updateSelection(item)">
-						{{item.name()}}
+						{{item.labelName()}}
 					</label>
 					<i class="fa fa-info-circle ctrl pull-right text-muted" ng-click="selectInfo(item)"></i>
 				</div>
@@ -233,7 +233,7 @@
 		<!-- fourth column -->
 		<div class="list-group pl-nav-column am-fade" ng-show="selected.third">
 			<div class="list-group-item well well-small">
-				<h3>{{selected.third.name()}}</h3>
+				<h3>{{selected.third.descriptiveName()}}</h3>
 				<em>{{selected.third.description()}}</em>
 				<p>{{selected.third.unit()}}</p>
 			</div>

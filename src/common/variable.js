@@ -39,6 +39,10 @@ function PlVariable() {
       return obj;
     };
 
+    obj.labelName = function() {
+      throw new Error("not implemented");
+    };
+
     obj.classed = function(x) {
       if (!arguments.length) {
         return priv.classed;
@@ -66,7 +70,7 @@ function PlVariable() {
     // utility fn, only get
     obj.axisLabel = function() {
       var ret = [];
-      ret.push(obj.name());
+      ret.push(obj.labelName());
       if(obj.unit()) { ret.push("(" + obj.unit() + ")"); }
       return ret.join(" ");
     };
@@ -93,6 +97,8 @@ function PlDatabaseVariable() {
   obj.type = function() {
     return 'db';
   };
+
+  obj.labelName = obj.name;
 
   obj.get = function(x) {
     return {
@@ -130,10 +136,24 @@ function PlCustomVariable() {
         return dep.id;
       }),
       unit: obj.unit(),
-      name: obj.name(),
+      name: obj.descriptiveName(),
+      id: obj.id,
       nameOrder: obj.nameOrder(),
-      originalExpression: obj.originalExpression()
+      originalExpression: obj.originalExpression(),
     };
+  };
+
+  obj.descriptiveName = function(x) {
+    if(!arguments.length) { return priv.descName; }
+    priv.descName = x;
+    return obj;
+  };
+
+  // override, only get
+  obj.labelName = function() {
+    var limitLength = 20,
+    descName = obj.descriptiveName();
+    return descName.length > limitLength ? descName.substr(0, limitLength) + "..." : descName;
   };
 
   obj.external = function(nanValue, math) {
@@ -151,7 +171,7 @@ function PlCustomVariable() {
   // override
   obj.axisLabel = function() {
     var ret = [];
-    ret.push(obj.name());
+    ret.push(obj.labelName());
     ret.push("(" + obj.originalExpression() + ")");
     return ret.join(" ");
   };
