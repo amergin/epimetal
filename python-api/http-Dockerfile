@@ -1,0 +1,13 @@
+# Dockerfile for the API of Plotter
+FROM nginx:1.9.11
+MAINTAINER Jussi Ekholm "jussi@sedaris.fi"
+
+# Copy our own config
+ADD http-docker/nginx.conf /etc/nginx/nginx.conf
+
+# Use volumes provided by web docker to serve the app:
+# /plotter/build for non-minified
+# /plotter/bin for minified
+
+EXPOSE 80 443
+CMD ["nginx", "-g", "daemon off;"]
