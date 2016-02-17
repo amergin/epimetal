@@ -13,6 +13,8 @@ vendor/dcjs/*
 vendor/modernizr/*
 !vendor/modernizr/*.js
 python-api/*
+!python-api/*docker
+!python-api/*Dockerfile
 !python-api/metabolites*.tsv
 !python-api/README.md
 !python-api/requirements.txt
@@ -20,5 +22,3 @@ python-api/*
 !python-api/*.config
 !python-api/*.py
 !python-api/*.json
-!python-api/melikerion-controller/
-python-api/melikerion-controller/*.pyc
