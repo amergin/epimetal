@@ -107,10 +107,11 @@ module.exports = {
       'vendor/SparkMD5/spark-md5.js',
       'vendor/ment.io/dist/mentio.js',
       'vendor/mathjs/dist/math.js',
+      'vendor/regression-js/src/regression.js',
       // 'vendor/angular-workers/dist/angular-workers.js',
       'vendor/angular-svg-round-progressbar/build/roundProgress.js',
       // this is a hack to allow the subdirectories to be copied
-      'build/assets/core-estimator/core-estimator.js'
+      'build/assets/core-estimator/core-estimator.js',
     ],
     css: [
       'vendor/dcjs/dc.css',

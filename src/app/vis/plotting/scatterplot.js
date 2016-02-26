@@ -120,8 +120,8 @@ angular.module('plotter.vis.plotting.scatterplot', [
       $scope.xRange,
       $scope.yRange,
       100,
-      $scope.window.variables().x.axisLabel(),
-      $scope.window.variables().y.axisLabel()
+      $scope.window.variables().x,
+      $scope.window.variables().y
     );
     $scope.canvases['axes'] = {
       'zindex': 100,
@@ -131,6 +131,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
   $scope.canvases = {};
 
+  // margins = top, right, bottom, left
   $scope.margins = [10, 10, 45, 55];
   $scope.zIndexCount = 1;
 
@@ -146,11 +147,34 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
 
   $scope.createAxisCanvas = function(element, w, h, m, xExtent, yExtent, xRange, yRange, zIndex, varX, varY) {
+    function drawLine(start, end) {
+      ctx.moveTo(start.x, start.y);
+      ctx.lineTo(end.x, end.y);
+      ctx.lineWidth = "1.0";
+      ctx.strokeStyle = "black";
+      ctx.stroke();
+    }
+
+    function addLabelText(text, start, trans, rotate, align) {
+      ctx.textAlign = "center";
+      ctx.textBaseline = align;
+      ctx.save();
+      ctx.translate(trans.x, trans.y);
+      ctx.rotate(rotate);
+      ctx.fillStyle = "black";
+      ctx.font = "11px sans-serif";
+      ctx.fillText(text, start.x, start.y);
+      ctx.restore();
+    }
+
     var xscale = d3.scale.linear(), // x scale
       yscale = d3.scale.linear(); // yscale
 
     var X_TICK_FORMAT = constants.tickFormat;
     var Y_TICK_FORMAT = constants.tickFormat;
+
+    var varXLabel = varX.axisLabel(),
+    varYLabel = varY.axisLabel();
 
     // create canvas element
     var c = document.createElement('canvas');
@@ -180,29 +204,54 @@ angular.module('plotter.vis.plotting.scatterplot', [
     yscale.domain(yExtent).range(yRange);
 
     addAxes();
+    addRegressionLine();
     return ctx;
 
+    function addRegressionLine() {
+      function mapData() {
+        var samples = $scope.dimension.top(Infinity),
+        data = _.chain(samples)
+        .filter(function(d) {
+          var xVal = d.variables[varX.id],
+          yVal = d.variables[varY.id];
+          return !isNaN(+xVal) && !isNaN(+yVal);
+        })
+        .map(function(d) {
+          return [d.variables[varX.id], d.variables[varY.id]];
+        })
+        .value();
+
+        return data;
+      }
+
+      function point(coord) {
+        return {
+          x: xscale(coord[0]), y: yscale(coord[1])
+        };
+      }
+
+      var data = mapData();
+
+      if(!data.length) { return; }
+
+      var regressionLine = regression('linear', data);
+
+      if(!regressionLine.points) { return; }
+
+      var extent = d3.extent(regressionLine.points),
+      startPoint = point(extent[0]),
+      endPoint = point(extent[1]),
+      label = regressionLine.string;
+
+      drawLine(startPoint, endPoint);
+
+      addLabelText(label,
+        { x: 0, y: 0},
+        { x: w - m[3] - m[1] - 10, y: m[0] }, 
+        0, 'middle');
+    }
+
     function addAxes() {
-      function drawLine(start, end) {
-        ctx.moveTo(start.x, start.y);
-        ctx.lineTo(end.x, end.y);
-        ctx.lineWidth = "1.0";
-        ctx.strokeStyle = "black";
-        ctx.stroke();
-      }
-
-      function addLabelText(text, start, trans, rotate, align) {
-        ctx.textAlign = "center";
-        ctx.textBaseline = align;
-        ctx.save();
-        ctx.translate(trans.x, trans.y);
-        ctx.rotate(rotate);
-        ctx.fillStyle = "black";
-        ctx.font = "11px sans-serif";
-        ctx.fillText(text, start.x, start.y);
-        ctx.restore();
-      }
-
       function addVerticalAxisTicks(origin) {
         function addTickText(coord, text) {
           ctx.fillStyle = "black";
@@ -270,7 +319,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
         x: origin.x,
         y: origin.y
       });
-      addLabelText(varY, {
+      addLabelText(varYLabel, {
         x: 0,
         y: 0
       }, {
@@ -289,7 +338,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
           y: origin.y
         } //y: h - d3.round(0.75 * m[2])}
       );
-      addLabelText(varX, {
+      addLabelText(varXLabel, {
           x: 0,
           y: 4
         }, {
