@@ -148,6 +148,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
   $scope.createAxisCanvas = function(element, w, h, m, xExtent, yExtent, xRange, yRange, zIndex, varX, varY) {
     function drawLine(start, end) {
+      ctx.beginPath();
       ctx.moveTo(start.x, start.y);
       ctx.lineTo(end.x, end.y);
       ctx.lineWidth = "1.0";
@@ -214,7 +215,8 @@ angular.module('plotter.vis.plotting.scatterplot', [
         .filter(function(d) {
           var xVal = d.variables[varX.id],
           yVal = d.variables[varY.id];
-          return !isNaN(+xVal) && !isNaN(+yVal);
+          return (!isNaN(+xVal) && !isNaN(+yVal)) && 
+          (xVal !== constants.nanValue && yVal !== constants.nanValue);
         })
         .map(function(d) {
           return [d.variables[varX.id], d.variables[varY.id]];
@@ -238,7 +240,17 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
       if(!regressionLine.points) { return; }
 
-      var extent = d3.extent(regressionLine.points),
+      var extent = d3.extent(regressionLine.points, function(d) {
+        var x = d[0],
+        y = d[1],
+        xInRange = (x >= xExtent[0] && x <= xExtent[1]),
+        yInRange = (y >= yExtent[0] && y <= yExtent[1]);
+
+        // make sure the points returned are within the drawing area, e.g. in the real extent
+        // if not, do not include them
+        if(!xInRange || !yInRange) { return undefined; }
+        return d;
+      }),
       startPoint = point(extent[0]),
       endPoint = point(extent[1]),
       label = regressionLine.string;
