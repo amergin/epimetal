@@ -18,7 +18,7 @@ angular.module('plotter.vis.plotting.heatmap',
   top: 0,
   right: 0,
   bottom: 60,
-  left: 80
+  left: 95
 })
 
 .controller('HeatmapController', function($scope, constants, $injector, $timeout, CorrelationService, VariableService, HEATMAP_UNDEFINED_COLOR, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH, d3, dc, _) {
