@@ -26,12 +26,12 @@
               <span ng-switch-when="range">
                 {{formatNumber(filter.payload()[0])}}
                 <span class="spaced">&lt;</span>
-                <strong>{{filter.variable().name()}}</strong>
+                <strong>{{filter.variable().labelName()}}</strong>
                 <span class="spaced">&lt;</span>
                 {{formatNumber(filter.payload()[1])}}
               </span>
               <span ng-switch-when="classed">
-                <strong>{{filter.variable().name()}}</strong>
+                <strong>{{filter.variable().labelName()}}</strong>
                 <span class="spaced">|</span>
                 {{filter.payload().name}}
                 <span class="spaced">|</span>

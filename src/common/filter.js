@@ -256,13 +256,16 @@ function BaseFigureFilter() {
     filter.windowid(state['windowid']);
 
     // find and assign variable
-    var VariableService = filter.injector().get('VariableService');
+    var VariableService = filter.injector().get('VariableService'),
+    identifier,
+    variable;
     if(state['variable'].type == 'db') {
-      var variable = VariableService.getVariable(state.variable.name);
-      filter.variable(variable);
+      identifier = state.variable.name;
     } else if(state['variable'].type == 'custom') {
-      // TODO
+      identifier = state.variable.id;
     }
+    variable = VariableService.getVariable(identifier);
+    filter.variable(variable);
     return filter;
   };
 

@@ -139,7 +139,7 @@ function PlCustomVariable() {
       name: obj.descriptiveName(),
       id: obj.id,
       nameOrder: obj.nameOrder(),
-      originalExpression: obj.originalExpression(),
+      originalExpression: obj.originalExpression()
     };
   };
 
