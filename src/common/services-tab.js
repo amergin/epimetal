@@ -4,7 +4,7 @@ angular.module('services.tab', [
   'ext.lodash'
 ])
 
-.factory('TabService', function TabService(VariableService, $injector, $timeout, $rootScope, $state, WindowHandler, DimensionService, _) {
+.factory('TabService', function TabService(VariableService, NotifyService, SideNavService, $injector, $log, $timeout, $rootScope, $state, WindowHandler, DimensionService, _) {
 
   var _service = {},
     _locked = false,
@@ -44,7 +44,9 @@ angular.module('services.tab', [
     changeDimensionService(toState.name);
 
     if (toState.name == 'vis.som') {
-      checkSOMState();
+      checkSOMState({
+        tabChanged: true
+      });
     } else if (toState.name == 'vis.regression') {
       checkRegressionState();
     } else if(toState.name == 'vis.explore') {
@@ -104,9 +106,144 @@ angular.module('services.tab', [
   }
 
   function checkSOMState(cfg) {
-    function startSOMComputation() {
+    function hasExisting() {
+      return SOMService.hasExisting();
+    }
+
+    function hasChanged() {
+      var primaryDim = DimensionService.getPrimary(),
+      currentDim = DimensionService.get('vis.som');
+
+      var equalSamples = DimensionService.equal(primaryDim, currentDim);
+      return !equalSamples;
+    }
+
+    function originatedFromTabChange() {
+      return cfg.tabChanged === true;
+    }
+
+    function doDialog() {
+      var diagScope = $rootScope.$new(true);
+
+      diagScope.config = {
+        title: 'Do you want to recompute the Self-Organizing Map?',
+        template: 'vis/menucomponents/new.som.action.tpl.html',
+        actions: {
+          submit: 'Recompute',
+          cancel: 'Cancel'
+        }
+      };
+
+      var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', 
+        diagScope, { controller: 'ModalCtrl' });
+
+      return promise;
+    }
+
+    var SOMService = $injector.get('SOMService');
+
+    if(hasExisting()) {
+      // has existing computation in place, but is there a change?
+      $log.debug("Existing SOM found, but is there a change?");
+
+      if(hasChanged()) {
+        $log.debug("...There is a change.");
+        if(originatedFromTabChange()) {
+          $log.debug("...Originated from tab change & there's a change, ask the user.");
+          var dialogPromise = doDialog();
+
+          dialogPromise.then(function succFn(result) {
+            $log.debug("...User said yes");
+            _service.doComputeSOM();
+          }, function errFn() {
+            $log.debug("...User said no.");
+          });
+        } else {
+          $log.debug("...Originated from user actions, show button.");
+          SideNavService.somRefreshButton(true);
+        }
+      } else {
+        $log.debug("...There is NO change, do nothing.");
+        SideNavService.somRefreshButton(false);
+      }
+    } else {
+      $log.debug("No existing SOM computations -> start comp without asking.");
+      checkDefaultPlanes();
+      _service.doComputeSOM();
+    }
+  }
+
+  // function checkSOMState(cfg) {
+  //   function startSOMComputation() {
+  //     var SOMService = $injector.get('SOMService'),
+  //       somPlaneHandler = WindowHandler.get('vis.som.plane');
+
+  //     // WindowHandler.spinAllVisible();
+  //     SOMService.getSOM(somPlaneHandler).then(function succFn() {
+  //         checkDefaultPlanes();
+  //         $timeout(function() {
+  //           WindowHandler.reRenderVisible({
+  //             compute: true
+  //           });
+  //         });
+  //       }, function errFn(msg) {
+  //         WindowHandler.removeAllVisible();
+
+  //         // stop plane spins
+  //         _.each(WindowHandler.getVisible(), function(handler) {
+  //           _.each(handler.get(), function(win) {
+  //             if (win.object.figure() == 'pl-somplane') {
+  //               win.object.spin(false);
+  //             }
+  //           });
+  //         });
+  //       })
+  //       .finally(function() {
+  //         WindowHandler.stopAllSpins();
+  //       });
+  //   }
+
+  //   function restart() {
+  //     console.log("dimension instances not equal, need to restart");
+  //     WindowHandler.spinAllVisible();
+  //     DimensionService.restart(current, primary).then(function succFn(res) {
+  //       startSOMComputation();
+  //     });
+  //   }
+
+
+  //   var primary = DimensionService.getPrimary(),
+  //     current = DimensionService.get('vis.som'),
+  //     datasetToggle = !_.isUndefined(cfg) && _.isEqual(cfg.origin, 'dataset'),
+  //     cancelled = $injector.get('SOMService').cancelled(),
+  //     notForced = !_.isUndefined(cfg) && _.isEqual(cfg.force, false);
+
+  //   if (cancelled || datasetToggle) {
+  //     var SOMService = $injector.get('SOMService'),
+  //     DatasetFactory = $injector.get('DatasetFactory'),
+  //     trainVariables = SOMService.trainVariables(),
+  //     windowHandler = WindowHandler.get('vis.explore');
+
+  //     DatasetFactory.getVariableData(trainVariables, windowHandler, {
+  //       getRawData: true,
+  //       bypassLimit: true
+  //     })
+  //     .then(function succFn(res) {
+  //       SOMService.cancelled(false);
+  //       restart();
+  //     });
+  //   }
+  //   else if (!DimensionService.equal(primary, current)) {
+  //     // when tab change triggered
+  //     restart();
+  //   }
+  // }
+
+  // wrapper function that does the necessary logic prior to SOM computation
+  _service.doComputeSOM = function(callback) {
+    function startComputation() {
       var SOMService = $injector.get('SOMService'),
-        somPlaneHandler = WindowHandler.get('vis.som.plane');
+      somPlaneHandler = WindowHandler.get('vis.som.plane');
 
       // WindowHandler.spinAllVisible();
       SOMService.getSOM(somPlaneHandler).then(function succFn() {
@@ -116,58 +253,35 @@ angular.module('services.tab', [
               compute: true
             });
           });
+          if(callback) { callback(); }
         }, function errFn(msg) {
-          WindowHandler.removeAllVisible();
-
-          // stop plane spins
-          _.each(WindowHandler.getVisible(), function(handler) {
-            _.each(handler.get(), function(win) {
-              if (win.object.figure() == 'pl-somplane') {
-                win.object.spin(false);
-              }
+          function stopPlaneSpins() {
+            _.each(WindowHandler.getVisible(), function(handler) {
+              _.each(handler.get(), function(win) {
+                if (win.object.figure() == 'pl-somplane') {
+                  win.object.spin(false);
+                }
+              });
             });
-          });
+          }
+          WindowHandler.removeAllVisible();
+          stopPlaneSpins();
         })
         .finally(function() {
           WindowHandler.stopAllSpins();
         });
     }
 
-    function restart() {
-      console.log("dimension instances not equal, need to restart");
-      WindowHandler.spinAllVisible();
-      DimensionService.restart(current, primary).then(function succFn(res) {
-        startSOMComputation();
-      });
-    }
+    $log.debug("SOM compute is called");
+    WindowHandler.spinAllVisible();
+    var primaryDim = DimensionService.getPrimary(),
+    currentDim = DimensionService.get('vis.som');
 
-
-    var primary = DimensionService.getPrimary(),
-      current = DimensionService.get('vis.som'),
-      datasetToggle = !_.isUndefined(cfg) && _.isEqual(cfg.origin, 'dataset'),
-      cancelled = $injector.get('SOMService').cancelled(),
-      notForced = !_.isUndefined(cfg) && _.isEqual(cfg.force, false);
-
-    if (cancelled || datasetToggle) {
-      var SOMService = $injector.get('SOMService'),
-      DatasetFactory = $injector.get('DatasetFactory'),
-      trainVariables = SOMService.trainVariables(),
-      windowHandler = WindowHandler.get('vis.explore');
-
-      DatasetFactory.getVariableData(trainVariables, windowHandler, {
-        getRawData: true,
-        bypassLimit: true
-      })
-      .then(function succFn(res) {
-        SOMService.cancelled(false);
-        restart();
-      });
-    }
-    else if (!DimensionService.equal(primary, current)) {
-      // when tab change triggered
-      restart();
-    }
-  }
+    DimensionService.restart(currentDim, primaryDim)
+    .then(function succFn(res) {
+      startComputation();
+    });
+  };
 
   _service.needSOMRestart = function() {
     var primary = DimensionService.getPrimary(),

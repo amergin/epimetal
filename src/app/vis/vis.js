@@ -176,7 +176,7 @@ angular.module('plotter.vis', [
 })
 
 
-.controller('HeaderCtrl', function HeaderCtrl($scope, $state, TabService, plSidenav, _) {
+.controller('HeaderCtrl', function HeaderCtrl($scope, $state, TabService, SideNavService, _) {
 
   $scope.tabs = [{
     'title': 'Explore and filter',
@@ -207,20 +207,20 @@ angular.module('plotter.vis', [
 
 
   $scope.toggleSidenav = function() {
-    plSidenav.toggle();
+    SideNavService.toggle();
   };
 
   $scope.sideNavOpen = function() {
-    return plSidenav.isOpen();
+    return SideNavService.isOpen();
   };
 
   console.log("header ctrl");
 })
 
-.controller('SidenavCtrl', function sidenavCtrl($scope, TabService, $rootScope, NotifyService, WindowHandler, PlotService, RegressionService, plSidenav, SOMService, _) {
+.controller('SidenavCtrl', function sidenavCtrl($scope, TabService, $rootScope, NotifyService, WindowHandler, PlotService, RegressionService, SideNavService, SOMService, _) {
 
   $scope.toggleSidenav = function() {
-    plSidenav.toggle();
+    SideNavService.toggle();
   };
 
   $scope.openGraphModal = function(ev) {
@@ -235,9 +235,8 @@ angular.module('plotter.vis', [
       }
     };
 
-    var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
-      controller: 'ModalCtrl'
-    }, ev);
+    var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', 
+      diagScope, { controller: 'ModalCtrl' });
 
     promise.then(function(config) {
       var winHandler = WindowHandler.getVisible()[0];
@@ -295,9 +294,8 @@ angular.module('plotter.vis', [
       }
     };
 
-    var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
-      controller: 'ModalCtrl'
-    }, ev);
+    var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', 
+      diagScope, { controller: 'ModalCtrl' });
 
     promise.then(function succFn(variables) {
 
@@ -315,6 +313,16 @@ angular.module('plotter.vis', [
     return !SOMService.inProgress();
   };
 
+  $scope.somRefreshButton = function() {
+    return SideNavService.somRefreshButton();
+  };
+
+  $scope.refreshSOM = function() {
+    TabService.doComputeSOM(function callback() {
+      SideNavService.somRefreshButton(false);
+    });
+  };
+
   $scope.openSOMSettings = function(ev) {
 
     var diagScope = $rootScope.$new(true);
@@ -328,9 +336,8 @@ angular.module('plotter.vis', [
       }
     };
 
-    var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
-      controller: 'ModalCtrl'
-    }, ev);
+    var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', 
+      diagScope, { controller: 'ModalCtrl' });
 
     promise.then(function succFn(selection) {
       // update input variables
@@ -363,9 +370,8 @@ angular.module('plotter.vis', [
       }
     };
 
-    var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', diagScope, {
-      controller: 'ModalCtrl'
-    }, ev);
+    var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', 
+      diagScope, { controller: 'ModalCtrl' });
 
     promise.then(function succFn(result) {
       var winHandler = WindowHandler.getVisible()[0],
@@ -406,8 +412,8 @@ angular.module('plotter.vis', [
 
   $scope.submit = {
     initial: function() {
-      var retval = $scope.submit.inherited();
-      if (retval === false) {
+      var retval = $scope.submit.inherited ? $scope.submit.inherited() : true;
+      if (!retval) {
         return;
       } else {
         $scope.$close(retval);
@@ -425,7 +431,7 @@ angular.module('plotter.vis', [
 
 })
 
-.controller('VisCtrl', function VisCtrl($scope, $rootScope, DimensionService, variables, datasets, TabService, NotifyService, plSidenav, $state, _) {
+.controller('VisCtrl', function VisCtrl($scope, $rootScope, DimensionService, variables, datasets, TabService, NotifyService, SideNavService, $state, _) {
   console.log("viscontroller");
 
   $rootScope.tabChangeEnabled = function(tab) {
@@ -450,7 +456,7 @@ angular.module('plotter.vis', [
   $scope.dimensionService = DimensionService.getPrimary();
 
   $rootScope.sideMenuVisible = function() {
-    return plSidenav.isOpen();
+    return SideNavService.isOpen();
   };
 
 });

@@ -93,9 +93,13 @@ angular.module('services.som', [
     return service;
   };
 
-  service.empty = function() {
-    return _.isEmpty(that.som);
+  service.hasExisting = function() {
+    return !_.isEmpty(that.trainSamples) && !_.isEmpty(that.som);
   };
+
+  // service.empty = function() {
+  //   return _.isEmpty(that.som);
+  // };
 
   service.rows = function(x) {
     if (!arguments.length) { return _size.rows; }
@@ -469,10 +473,6 @@ angular.module('services.som', [
     return defer.promise;
   };
 
-  function somNotComputed() {
-    return _.isEmpty(that.trainSamples) || _.isEmpty(that.som);
-  }
-
   service.getPlane = function(testVar, windowObject, notifyFunction) {
     function getThreadData(variable, skipNaNs) {
       // function inTrainSamples(sample) {
@@ -581,7 +581,7 @@ angular.module('services.som', [
     var defer = $q.defer(),
     windowHandler = windowObject.handler();
 
-    if (somNotComputed()) {
+    if (!service.hasExisting()) {
       service.getSOM(windowHandler).then(function succFn(res) {
 
         if(res == 'not_needed') {

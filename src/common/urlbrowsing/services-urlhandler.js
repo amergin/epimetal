@@ -10,7 +10,7 @@ angular.module('services.urlhandler', [
 
 .factory('UrlHandler', function UrlHandler($injector, $timeout, $location, $rootScope, $state, $q, $http, $log,
   DatasetFactory, VariableService, WindowHandler, RegressionService, FilterService, TabService,
-  NotifyService, SOMService, DimensionService, PlotService, plSidenav, API_URL_STATE, _) {
+  NotifyService, SOMService, DimensionService, PlotService, SideNavService, API_URL_STATE, _) {
 
   var _service = {},
     _loaded = false; // only do state loading once per page load
@@ -30,7 +30,7 @@ angular.module('services.urlhandler', [
       .customVariables(_.map(VariableService.getCustomVariables(), function(cv) {
         return cv.get();
       }))
-      .sideMenu(plSidenav.get());
+      .sideMenu(SideNavService.get());
       return state.get();
     }
 
@@ -138,7 +138,7 @@ angular.module('services.urlhandler', [
         .injector($injector)
         .load(common);
 
-        plSidenav.load(state.sideMenu());
+        SideNavService.load(state.sideMenu());
 
         return state;
       }

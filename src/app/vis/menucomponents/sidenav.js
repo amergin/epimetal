@@ -1,18 +1,25 @@
 angular.module('plotter.vis.menucomponents.sidenav', 
 [])
 
-.service('plSidenav', function($injector) {
+.service('SideNavService', function($injector) {
     var that = this,
-    values = {
-        open: true
+    _values = {
+        open: true,
+        showSOMBtn: false
     };
 
     that.show = function() {
         values.open = true;
     };
 
+    that.somRefreshButton = function(x) {
+        if(!arguments.length) { return _values.showSOMBtn; }
+        _values.showSOMBtn = x;
+        return that;
+    };
+
     that.hide = function() {
-        values.open = false;
+        _values.open = false;
     };
 
     that.toggle = function() {
@@ -21,16 +28,16 @@ angular.module('plotter.vis.menucomponents.sidenav',
     };
 
     that.isOpen = function() {
-        return values.open;
+        return _values.open;
     };
 
     // returns a serializable object of the current state
     that.get = function() {
-        return values;
+        return _.pick(_values, 'open');
     };
 
     that.load = function(x) {
-        values = x;
+        _values = x;
         return that;
     };
 

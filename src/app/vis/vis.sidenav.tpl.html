@@ -14,6 +14,9 @@
         <div class="row text-center">
           <button class="btn btn-secondary" ng-disabled="!canOpen()" ng-click="openSOMSettings($event)">Adjust SOM settings</button>
         </div>
+        <div class="row text-center">
+          <button class="btn btn-warning" ng-show="somRefreshButton()" ng-click="refreshSOM()">Refresh the calculation</button>
+        </div>
       </div>
       <div ng-switch-when="regression">
         <button class="btn btn-primary" ng-disabled="!canOpen()" ng-click="openRegressionModal($event)">Create a new regression view</button>
