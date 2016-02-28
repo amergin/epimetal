@@ -120,7 +120,7 @@ angular.module('plotter.vis', [
     },
     resolve: {
       // bottom portion of the page only!
-      bottomWindowHandler: function(WindowHandler, DimensionService) {
+      sideWindowHandler: function(WindowHandler, DimensionService) {
         return WindowHandler.get('vis.som.plane');
       },
 
@@ -130,14 +130,16 @@ angular.module('plotter.vis', [
     },
     views: {
       'som@vis': {
+        templateUrl: 'vis/som/vis.som.tpl.html'
+      },
+      'content@vis.som': {
         templateUrl: 'vis/som/vis.som.content.tpl.html',
         controller: 'SOMContentCtrl'
       },
-
-      'bottom@': {
-        templateUrl: 'vis/som/vis.som.bottom.tpl.html',
-        controller: 'SOMBottomContentCtrl'
-      }
+      'side@vis.som': {
+        templateUrl: 'vis/som/vis.som.side.tpl.html',
+        controller: 'SOMSideCtrl'
+      }      
     },
     deepStateRedirect: true,
     sticky: true
@@ -449,10 +451,6 @@ angular.module('plotter.vis', [
 
   $rootScope.sideMenuVisible = function() {
     return plSidenav.isOpen();
-  };
-
-  $rootScope.showBottomContainer = function() {
-    return _.startsWith($state.current.name, 'vis.som');
   };
 
 });

@@ -42,34 +42,27 @@ angular.module('plotter.vis.som', [
     },
     defaultSizeX: SOM_DEFAULT_SIZE_X,
     defaultSizeY: SOM_DEFAULT_SIZE_Y,
-    columns: 4 * 3,
+    columns: SOM_DEFAULT_SIZE_X * 3,
     width: 'auto',
     colWidth: 'auto',
     rowHeight: 'match',
-    minSizeX: 2,
-    maxSizeX: 20,
-    minSizeY: 2,
-    maxSizeY: 8,
-    maxRows: 50,
-    resizable: {
-      enabled: true,
-      handles: ['se']
-        //  start: function(event, $element, widget) { console.log("resize start"); },
-        //  resize: function(event, $element, widget) { 
-        //   // event.stopImmediatePropagation();
-        //   emitResize($element); 
-        //   },
-        //  stop: function(event, $element, widget) { 
-        //   // event.stopImmediatePropagation();
-        //   emitResize($element);
-        // }
-    }
-  };
+      // colWidth: 150,
+      // rowHeight: '125',
+      minSizeX: 2,
+      maxSizeX: 8,
+      minSizeY: 2,
+      maxSizeY: 8,
+      maxRows: 50,
+      resizable: {
+       enabled: true,
+       handles: ['se']
+        }
+      };
 
 })
 
-.controller('SOMBottomContentCtrl', function SOMBottomContentCtrl($scope, bottomWindowHandler, PlotService, SOM_DEFAULT_PLANES, _) {
-  $scope.windowHandler = bottomWindowHandler;
+.controller('SOMSideCtrl', function SOMSideCtrl($scope, sideWindowHandler, PlotService, SOM_DEFAULT_PLANES, _) {
+  $scope.windowHandler = sideWindowHandler;
   $scope.windows = $scope.windowHandler.get();
 
   $scope.checkDefaults = function() {
@@ -101,11 +94,11 @@ angular.module('plotter.vis.som', [
       enabled: true,
       handle: '.handle'
     },
+    mobileModeEnabled: false,
     defaultSizeX: 4,
     defaultSizeY: 4,
-    // minColumns: 40,
-    columns: 4 * 40,
-    width: 4 * 40 * 100,
+    columns: 4,
+    width: 'auto',
     colWidth: '100',
     rowHeight: '79',
     resizable: {
@@ -113,5 +106,6 @@ angular.module('plotter.vis.som', [
       handles: ['se']
     }
   };
+
 
 });

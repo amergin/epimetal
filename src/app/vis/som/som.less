@@ -1,3 +1,67 @@
+.pl-som-wrapper {
+    overflow-y: hidden;
+}
+
+.pl-som-content {
+    -webkit-order: 0;
+    -ms-flex-order: 0;
+    order: 0;
+
+    -webkit-flex: 8 3 auto;
+    -ms-flex: 8 3 auto;
+    flex: 8 3 auto;
+
+    /*-webkit-flex: 0 0 auto;
+    -ms-flex: 0 0 auto;
+    flex: 0 0 auto;*/
+
+    -webkit-align-self: stretch;
+    -ms-flex-item-align: stretch;
+    align-self: stretch;
+
+/*    &.resizable {
+        flex: 0 0 420px;
+    }*/
+}
+
+.pl-som-side {
+    background-color: #777;
+    white-space: nowrap;
+    padding: 10px;
+
+    -webkit-order: 1;
+    -ms-flex-order: 1;
+    order: 1;
+
+    -webkit-flex: 0 0 5%;
+    -ms-flex: 0 0 5%;
+    flex: 0 0 5%;
+
+
+    /*-webkit-flex: 1 1 auto;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;*/
+
+    -webkit-align-self: stretch;
+    -ms-flex-item-align: stretch;
+    align-self: stretch;
+
+    min-width: 440px;
+
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: scroll;
+
+    /*&.resizable {
+        flex: 0 0 px;
+    }*/
+}
+
+
 text.circle-filter {
 	font-size: 4em;
 	stroke: #000000;

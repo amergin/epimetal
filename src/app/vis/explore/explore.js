@@ -28,12 +28,6 @@ angular.module('plotter.vis.explore',
     col: 'window.grid.position.col'
   };
 
-  var emitResize = function($element) {
-    dc.events.trigger( function() {
-      $rootScope.$emit('gridster.resize', $element);
-    }, 200 );
-  };
-
   $scope.gridOptions = {
     pushing: true,
     floating: true,
@@ -60,19 +54,10 @@ angular.module('plotter.vis.explore',
       resizable: {
        enabled: true,
        handles: ['se']
-          //  start: function(event, $element, widget) { console.log("resize start"); },
-          //  resize: function(event, $element, widget) { 
-          //   // event.stopImmediatePropagation();
-          //   emitResize($element); 
-          //   },
-          //  stop: function(event, $element, widget) { 
-          //   // event.stopImmediatePropagation();
-          //   emitResize($element);
-          // }
         }
       };
-    }
-    )
+
+})
 
 .controller('ExploreMenuCtrl', function ExploreMenuCtrl($scope, datasets, variables, windowHandler) {
   console.log("menu ctrl");

@@ -24,14 +24,17 @@
 
 <body>
 <div class="pl-container pl-flex-row">
-  <div class="pl-sidenav am-fade-left" ui-view="sidenav" ng-show="sideMenuVisible()"></div>
+  <div class="pl-left pl-sidenav am-fade-left" ui-view="sidenav" ng-show="sideMenuVisible()"></div>
   <div class="pl-right pl-container pl-flex-column">
     <div class="pl-header" ui-view="header"></div>
     <span us-spinner="{radius:30, width:8, length: 16}" spinner-key="main" class="ng-scope"></span>
-    <div growl class="ng-isolate-scope" limit-messages="4"></div>      
-    <div class="pl-content" ui-view="content">
-    </div>
-    <div class="pl-bottom-content" resizable r-directions="['top']" r-flex="true" ng-show="showBottomContainer()" ui-view="bottom">
+    <div growl class="ng-isolate-scope" limit-messages="4"></div>
+    <div class="pl-content pl-flex-row" ui-view="content">
+<!-- resizable r-directions="['right']" r-flex="true" -->
+<!--       <div class="pl-content" >
+      </div> -->
+<!--       <div class="pl-som-side-content" ng-show="showSOMSideContainer()" ui-view="side">
+      </div> -->
     </div>
   </div>
 </div>
