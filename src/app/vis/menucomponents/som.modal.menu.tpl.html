@@ -4,7 +4,7 @@
 			<tab-heading>Profiles</tab-heading>
 			<h1>Predefined profiles</h1>
 			<div class="row">
-				<div class="col-sm-12" ng-repeat="profile in selection.profiles track by $index" style="margin-bottom: 20px;">
+				<div class="col-sm-8" ng-repeat="profile in selection.profiles track by $index" style="margin-bottom: 20px;">
 					<div class="input-group">
 					    <span class="input-group-addon">
 							<label>
@@ -14,6 +14,12 @@
 						</span>
 					    <tags-input ng-disabled="true" ng-model="profile.variables" key-property="id" template="vis/menucomponents/tag.tpl.html" placeholder="-"></tags-input>
 					</div>
+				</div>
+				<div class="col-sm-4 well well-sm v-align">
+				<p>The profile histogram calculates <var>n</var> separate bars based on the equation below for the listed variables, where <var>n</var> is the number of active SOM circle filters.</p>
+
+				<p><var>Bar value</var> = (<var>mean<sub>variable within the circle selection</sub></var> - <var>mean<sub>variable subgroup</sub></var>) / (<var>std<sub>all samples</sub></var> * <var>constant</var>)
+				</p>
 				</div>
 			</div>
 
