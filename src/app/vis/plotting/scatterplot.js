@@ -263,8 +263,10 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
       var y1 = regressionLine.equation[0] * xExtent[0] + regressionLine.equation[1],
       y2 = regressionLine.equation[0] * xExtent[1] + regressionLine.equation[1],
-      startPoint = point([xExtent[0], y1]),
-      endPoint = point([xExtent[1], y2]),
+      clippedY1 = (y1 < yExtent[0]) ? yExtent[0] : y1,
+      clippedY2 = (y2 > yExtent[1]) ? yExtent[1] : y2,
+      startPoint = point([xExtent[0], clippedY1]),
+      endPoint = point([xExtent[1], clippedY2]),
       label = regressionLine.string;
 
       drawLine(startPoint, endPoint);
