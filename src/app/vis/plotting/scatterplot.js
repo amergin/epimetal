@@ -36,12 +36,33 @@ angular.module('plotter.vis.plotting.scatterplot', [
     $scope.sets = DatasetFactory.activeSets();
     // min&max for all active datasets
     $scope.xExtent = d3.extent($scope.group.top(Infinity), function(d) {
-      var x = d.key.x;
-      return (x == constants.nanValue) ? null : x;
+          var x = d.key.x,
+          notNaN = (x !== constants.nanValue),
+          hasCount = _.chain(d.value.counts)
+          .values()
+          .some()
+          .value();
+
+          if(notNaN && hasCount) {
+            return x;
+          } else {
+            return null;
+          }
     });
+
     $scope.yExtent = d3.extent($scope.group.top(Infinity), function(d) {
-      var y = d.key.y;
-      return (y == constants.nanValue) ? null : y;
+          var y = d.key.y,
+          notNaN = (y !== constants.nanValue),
+          hasCount = _.chain(d.value.counts)
+          .values()
+          .some()
+          .value();
+
+          if(notNaN && hasCount) {
+            return y;
+          } else {
+            return null;
+          }
     });
 
     $scope.xRange = [$scope.margins[3], $scope.width - $scope.margins[1]];
@@ -238,21 +259,12 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
       var regressionLine = regression('linear', data);
 
-      if(!regressionLine.points) { return; }
+      if(!regressionLine.equation.length) { return; }
 
-      var extent = d3.extent(regressionLine.points, function(d) {
-        var x = d[0],
-        y = d[1],
-        xInRange = (x >= xExtent[0] && x <= xExtent[1]),
-        yInRange = (y >= yExtent[0] && y <= yExtent[1]);
-
-        // make sure the points returned are within the drawing area, e.g. in the real extent
-        // if not, do not include them
-        if(!xInRange || !yInRange) { return undefined; }
-        return d;
-      }),
-      startPoint = point(extent[0]),
-      endPoint = point(extent[1]),
+      var y1 = regressionLine.equation[0] * xExtent[0] + regressionLine.equation[1],
+      y2 = regressionLine.equation[0] * xExtent[1] + regressionLine.equation[1],
+      startPoint = point([xExtent[0], y1]),
+      endPoint = point([xExtent[1], y2]),
       label = regressionLine.string;
 
       drawLine(startPoint, endPoint);
