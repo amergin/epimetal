@@ -15,7 +15,7 @@ angular.module('plotter.vis.menucomponents.dataset',
 })
 
 // dataset table controller
-.controller('DatasetTableController', function DatasetTableController($scope, DatasetFactory, NotifyService, WindowHandler, TabService, _) {
+.controller('DatasetTableController', function DatasetTableController($scope, $log, DatasetFactory, NotifyService, WindowHandler, TabService, _) {
 
   $scope.$watch(function() {
     return DatasetFactory.getSets();
@@ -36,9 +36,17 @@ angular.module('plotter.vis.menucomponents.dataset',
   };
 
   $scope.toggle = function(set) {
+    set.toggle();
+
+    if (TabService.activeState().name == 'vis.som') {
+      DatasetFactory.updateDataset(set);
+      TabService.check({ origin: 'dataset' });
+      $log.debug("Toggled: SOM -> not necessary to continue.");
+      return;
+    }
+    
     WindowHandler.spinAllVisible();
 
-    set.toggle();
     DatasetFactory.checkActiveVariables(set).then( function succFn(action) {
 
         if( action === 'enabled' || action === 'disabled' ) {
