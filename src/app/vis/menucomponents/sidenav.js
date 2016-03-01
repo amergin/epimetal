@@ -9,7 +9,7 @@ angular.module('plotter.vis.menucomponents.sidenav',
     };
 
     that.show = function() {
-        values.open = true;
+        _values.open = true;
     };
 
     that.somRefreshButton = function(x) {
