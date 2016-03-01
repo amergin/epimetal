@@ -286,7 +286,7 @@ angular.module('plotter.vis.plotting',
 
     this.drawSOM = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
-        var gridWindow = windowHandler.add();
+        var gridWindow = windowHandler.add(config);
 
         gridWindow
         .figure('pl-somplane')

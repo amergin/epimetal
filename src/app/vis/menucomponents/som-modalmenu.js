@@ -80,7 +80,11 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
           },
           action: function(variables) {
             _.each(variables, function(variable) {
-                PlotService.drawSOM({ variable: variable }, planeHandler);
+                PlotService.drawSOM({ 
+                  variable: variable, 
+                  prepend: true,
+                  prependMode: 'vertical' 
+                }, planeHandler);
             });
           } 
         },

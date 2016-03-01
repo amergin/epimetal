@@ -489,18 +489,56 @@ angular.module('services.window', [
           });
         }
 
+        // Only a stub: fixed y size: TODO = calculate it.
+        // don't try to use outside SOM vertical
+        function prependVertical(prependWindow) {
+          var ySize = 4,
+          minPositionRow = Infinity,
+          positionCol,
+          positionRow;
+
+          _.each(windows, function(win) {
+            positionRow = win.grid.position.row;
+            if(positionRow < minPositionRow) {
+              minPositionRow = positionRow;
+              positionCol = win.grid.position.col;
+            }
+          });
+
+          _.each(windows, function(win) {
+            win.grid.position.row += ySize;
+          });
+
+          prependWindow.reference().grid.position.col = positionCol;
+          prependWindow.reference().grid.position.row = minPositionRow;
+
+          windows.unshift(prependWindow.reference());
+        }
+
         var gridWindow = new GridWindow()
           .injector($injector)
           .id(_.uniqueId("win_")),
           reference = {
             'handler': that,
             'object': gridWindow
-          };
-        windows.push(reference);
+          },
+        prepend = arguments.length && config.prepend === true,
+        prependMode = prepend ? (config.prependMode || 'vertical') : null;
 
-        gridWindow.reference(reference)
-          .remove(removeFn);
+        gridWindow
+        .reference(reference)
+        .remove(removeFn);
 
+        if(prepend) {
+          if(prependMode == 'vertical') {
+            prependVertical(gridWindow);
+          }
+        }
+        else {
+          windows.push(reference);
+        }
+
+        console.log(windows);
         return gridWindow;
       };
 
