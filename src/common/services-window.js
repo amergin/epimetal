@@ -426,10 +426,23 @@ angular.module('services.window', [
             .value();
           }
         }
+
+        function getExtra() {
+          var extra = obj.extra();
+
+          if(extra.dataset) {
+            return _.extend(extra, {
+              'dataset': extra.dataset.state()
+            });
+          } 
+          else {
+            return extra;
+          }
+        }
         return {
           id: obj.id(),
           figure: obj.figure(),
-          extra: obj.extra(),
+          extra: getExtra(),
           variables: getVariables(),
           pooled: obj.pooled(),
           position: obj.position(),
@@ -632,13 +645,26 @@ angular.module('services.window', [
           }
         }
 
+        function getExtra(state) {
+          var dataset = state.dataset;
+
+          if(dataset) {
+            return _.extend(state, {
+              'dataset': $injector.get('DatasetFactory').getSet(dataset.name)
+            });
+          } else {
+            return state;
+          }
+        }
+
         _.each(state.windows, function(win) {
-          var variables = getVariables(win.variables);
+          var variables = getVariables(win.variables),
+          extra = getExtra(win.extra);
 
           // add new grid win and init it
           var winObj = that.add()
           .figure(win.figure)
-          .extra(win.extra)
+          .extra(extra)
           .pooled(win.pooled || false)
           .variables(variables)
           .size(win.size)
