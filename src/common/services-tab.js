@@ -4,7 +4,7 @@ angular.module('services.tab', [
   'ext.lodash'
 ])
 
-.factory('TabService', function TabService(VariableService, NotifyService, SideNavService, $injector, $log, $timeout, $rootScope, $state, WindowHandler, DimensionService, _) {
+.factory('TabService', function TabService(VariableService, NotifyService, DatasetFactory, SideNavService, $injector, $log, $timeout, $rootScope, $state, WindowHandler, DimensionService, _) {
 
   var _service = {},
     _locked = false,
@@ -37,6 +37,43 @@ angular.module('services.tab', [
 
   });
 
+  // called on tab transition, checks whether some windows are
+  // invalid and should now be removed
+  function checkActiveWindows() {
+    function removeInactiveSeparatedHeatmaps() {
+      var win = null,
+      isSeparated = false,
+      isHeatmap = false,
+      isSameDataset = false,
+      winsToBeRemoved = [];
+      _.each(DatasetFactory.getSets(), function(set, name) {
+        if(set.active()) {
+          return;
+        }
+
+        _.each(WindowHandler.getVisible(), function(handler) {
+          _.each(handler.get(), function(w) {
+            win = w.object;
+            isHeatmap = win.figure() == 'pl-heatmap';
+            isSeparated = win.extra().separate === true;
+            isSameDataset = win.extra().dataset == set;
+
+            if(isHeatmap && isSeparated && isSameDataset) {
+              winsToBeRemoved.push(win);
+            }
+          });
+        });
+      });
+
+      _.each(winsToBeRemoved, function(win) {
+        win.remove();
+      });
+    }
+
+
+    removeInactiveSeparatedHeatmaps();
+  }
+
   // listen on tab changes
   $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams) {
     console.log("tab change: ", fromState.name, " -> ", toState.name);
@@ -52,6 +89,8 @@ angular.module('services.tab', [
     } else if(toState.name == 'vis.explore') {
       WindowHandler.get('vis.explore').rerenderAll();
     }
+
+    checkActiveWindows();
 
   });
 

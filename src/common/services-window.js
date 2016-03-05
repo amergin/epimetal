@@ -538,7 +538,6 @@ angular.module('services.window', [
           windows.push(reference);
         }
 
-        console.log(windows);
         return gridWindow;
       };
 

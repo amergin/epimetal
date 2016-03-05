@@ -36,6 +36,31 @@ angular.module('plotter.vis.menucomponents.dataset',
   };
 
   $scope.toggle = function(set) {
+    function removeInactiveSeparatedHeatmaps(set) {
+      var win = null,
+      isSeparated = false,
+      isHeatmap = false,
+      isSameDataset = false,
+      winToBeRemoved = null;
+      _.each(WindowHandler.getVisible(), function(handler) {
+        _.each(handler.get(), function(w) {
+          win = w.object;
+          isHeatmap = win.figure() == 'pl-heatmap';
+          isSeparated = win.extra().separate === true;
+          isSameDataset = win.extra().dataset == set;
+
+          if(isHeatmap && isSeparated && isSameDataset) {
+            winToBeRemoved = win;
+          }
+        });
+      });
+
+      if(winToBeRemoved) {
+        $log.debug("Dataset ", set, " has become inactive -> removing its separated heatmap.");
+        winToBeRemoved.remove();
+      }
+    }
+
     set.toggle();
 
     if (TabService.activeState().name == 'vis.som') {
@@ -43,6 +68,11 @@ angular.module('plotter.vis.menucomponents.dataset',
       TabService.check({ origin: 'dataset' });
       $log.debug("Toggled: SOM -> not necessary to continue.");
       return;
+    }
+    else if (TabService.activeState().name == 'vis.explore') {
+      if(!set.active()) {
+        removeInactiveSeparatedHeatmaps(set);
+      }
     }
     
     WindowHandler.spinAllVisible();
