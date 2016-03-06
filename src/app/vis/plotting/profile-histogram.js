@@ -146,7 +146,7 @@ angular.module('plotter.vis.plotting.profile-histogram',
           left: 10
       })
       .yAxisLabel("Variable")
-      .xAxisLabel("Value")
+      .xAxisLabel("(mean_var - mean_group) / (std_all * const)")
       .tooltip(tooltip)
       .colors(config.colors)
       .colorAccessor(function(d, colorScale) {

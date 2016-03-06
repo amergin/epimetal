@@ -293,7 +293,7 @@ function GroupedRowChart() {
       .attr("class", "x label")
       .attr("text-anchor", "end")
       .attr("x", xEnd())
-      .attr("y", yStart() - 6)
+      .attr("y", yStart() - 9)
       .text(_xAxisLabel);
 
       // update
