@@ -249,7 +249,7 @@ angular.module('plotter.vis.plotting',
       var draw = function() {
         var gridWindow = windowHandler.add();
         gridWindow.figure('pl-profile-histogram')
-        .size({ x: 10, y: 3 })
+        .size({ x: 4, y: 6 })
         .variables(config.variables)
         .extra({ name: config.name });
       };

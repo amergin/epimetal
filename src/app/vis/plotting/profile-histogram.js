@@ -11,8 +11,8 @@ angular.module('plotter.vis.plotting.profile-histogram',
   ])
 
 .constant('PROFILE_HISTOGRAM_SIZE', {
-  height: 400,
-  width: 1400,
+  height: 500,
+  width: 700,
   aspectRatio: 'preserve'
 })
 
@@ -135,16 +135,39 @@ angular.module('plotter.vis.plotting.profile-histogram',
         "<strong>Sample count</strong>: " + "<span class='tooltip-val'>" + d.custom.n + "</span>"
         ].join("<br>");
       };
-      $scope.histogram = new GroupedBarChart($scope.element[0], config.size.width, config.size.height)
-      .yLabel('')
-      .colors(config.colors)
-      .data(config.data)
-      .rotate(true)
+      $scope.chart = new GroupedRowChart()
+      .element($scope.element[0])
+      .width(500)//config.size.width)
+      .height(700)
+      .margins({
+          top: 10,
+          right: 40,
+          bottom: 10,
+          left: 10
+      })
+      .yAxisLabel("Variable")
+      .xAxisLabel("Value")
       .tooltip(tooltip)
+      .colors(config.colors)
       .colorAccessor(function(d, colorScale) {
-        var accessor = colorScale.getAccessor(d.custom.circle.name()),
+        var accessor, value;
+        if(_.isObject(d)) {
+          value = d.custom.circle.name();
+        } else {
+          value = d;
+        }
+        accessor = colorScale.getAccessor(value);
         color = colorScale.scale()(accessor);
         return color;
+      })
+      .data(config.data)
+      .groupSort(function(a, b) {
+        var orderA = VariableService.getVariable(a.name).nameOrder(),
+        orderB = VariableService.getVariable(b.name).nameOrder();
+
+        if(orderA < orderB) { return 1; }
+        else if(orderA > orderA) { return -1; }
+        return 0;
       })
       .onClick(function(d) {
         var config = {
@@ -155,15 +178,12 @@ angular.module('plotter.vis.plotting.profile-histogram',
         };
         // draw a new one
         PlotService.drawHistogram(config, $scope.window.handler());
-
       })
-      .yAxisDisabled(true)
-      .legendDisabled(true)
       .render();
     };
 
     var updateChart = function($scope, config) {
-      $scope.histogram
+      $scope.chart
       .data(config.data)
       .render();
     };
@@ -222,10 +242,7 @@ angular.module('plotter.vis.plotting.profile-histogram',
         }
       });
 
-      var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
-      });
-
-      $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind);
+      $scope.deregisters.push(reRenderUnbind, redrawUnbind);
 
       $scope.$on('$destroy', function() {
         _.each($scope.deregisters, function(unbindFn) {

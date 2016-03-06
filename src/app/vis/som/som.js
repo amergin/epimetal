@@ -24,11 +24,11 @@ angular.module('plotter.vis.som', [
     col: 'window.grid.position.col'
   };
 
-  var emitResize = function($element) {
-    dc.events.trigger(function() {
-      $rootScope.$emit('gridster.resize', $element);
-    }, 200);
-  };
+  // var emitResize = function($element) {
+  //   dc.events.trigger(function() {
+  //     $rootScope.$emit('gridster.resize', $element);
+  //   }, 200);
+  // };
 
   $scope.gridOptions = {
     pushing: true,
