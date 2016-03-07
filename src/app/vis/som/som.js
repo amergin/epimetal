@@ -61,9 +61,9 @@ angular.module('plotter.vis.som', [
       // colWidth: 150,
       // rowHeight: '125',
       minSizeX: 2,
-      maxSizeX: 8,
+      maxSizeX: 12,
       minSizeY: 2,
-      maxSizeY: 8,
+      maxSizeY: 12,
       maxRows: 50,
       resizable: {
        enabled: true,

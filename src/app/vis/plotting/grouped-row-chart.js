@@ -115,7 +115,7 @@ function GroupedRowChart() {
         .attr("width", "100%")
         .attr("height", "100%")
         .attr("viewBox", "0 0 550 720")
-        .attr("preserveAspectRatio", "xMinYMid meet")
+        .attr("preserveAspectRatio", "xMaxYMin meet")
         .call(_tooltip);
       // defineBodyClip(_svg);
     }
