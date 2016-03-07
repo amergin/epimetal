@@ -18,7 +18,7 @@ angular.module('services.dataset', ['services.notify',
   var that = this;
   that.sets = {};
   that.variables = [];
-  that.colorScale = ColorScaleFactory.createCategory20();
+  that.colorScale = ColorScaleFactory.createCustom1();
   that.classedVariables = {};
   that.variableCache = {};
 

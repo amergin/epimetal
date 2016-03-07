@@ -21,10 +21,14 @@ angular.module('services.color-scale', [
       return obj;
     };
 
-    priv.init = function(scale, domain) {
+    priv.init = function(scale, domain, call) {
       obj.scale(scale);
       priv.domain(domain);
-      obj.scale(scale().domain(priv.domain()));
+      if(call === false) {
+        obj.scale(scale.domain(priv.domain()));
+      } else {
+        obj.scale(scale().domain(priv.domain()));
+      }
 
       // init every ind to false
       priv.used = _.chain(domain)
@@ -99,7 +103,7 @@ angular.module('services.color-scale', [
     };
 
     obj.init = function() {
-      priv.init(d3.scale.category20c, _.range(0,10));
+      priv.init(d3.scale.category20c, _.range(0,10), true);
       return obj;
     };
 
@@ -124,7 +128,7 @@ angular.module('services.color-scale', [
     };
 
     obj.init = function() {
-      priv.init(d3.scale.category20, _.range(0,10));
+      priv.init(d3.scale.category20, _.range(0,10), true);
       return obj;
     };
 
@@ -149,7 +153,7 @@ angular.module('services.color-scale', [
     };
 
     obj.init = function() {
-      priv.init(d3.scale.category10, _.range(0,10));
+      priv.init(d3.scale.category10, _.range(0,10), true);
       return obj;
     };
 
@@ -161,6 +165,33 @@ angular.module('services.color-scale', [
 
     return obj;
   }
+
+  function CustomColorScale1() {
+    BaseColorScale.call(this);
+    var obj = this.obj,
+    colors = ['#E32579', '#180638', '#348AA7', '#525174', '#F09DB2', '#006D9C', '#BCE784', '#5DD39E'],
+    priv = _.extend(this.privates, {
+
+    });
+
+    obj.type = function() {
+      return "custom1";
+    };
+
+    obj.init = function() {
+      priv.init(d3.scale.ordinal().range(colors), _.range(0,9), false);
+      return obj;
+    };
+
+    obj.get = function() {
+      return _.extend(priv.get(), {
+        type: obj.type()
+      });
+    };
+
+    return obj;
+  }
+
 
 
   return {
@@ -177,6 +208,12 @@ angular.module('services.color-scale', [
     createCategory10: function() {
       return new Cat10ColorScale()
       .init();
-    }    
+    },
+
+    createCustom1: function() {
+      return new CustomColorScale1()
+      .init();
+    }
+
   };
 });
