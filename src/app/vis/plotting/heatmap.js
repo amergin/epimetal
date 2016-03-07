@@ -572,10 +572,21 @@ function CustomScale() {
     _.each(priv.coordinates, function(coord) {
       correlation = coord.corr;
       if(correlation > 0) {
-        priv.interpolated[getName(coord)] = (thre) + (1-thre) * ( correlation - priv.upper.min ) / (priv.upper.max - priv.upper.min);
+        if(priv.upper.min == priv.upper.max) {
+          // only one number in the upper -> full color -> interp = 1
+          priv.interpolated[getName(coord)] = 1;
+        }
+        else {
+          priv.interpolated[getName(coord)] = (thre) + (1-thre) * ( correlation - priv.upper.min ) / (priv.upper.max - priv.upper.min);
+        }
       } 
       else if(correlation < 0) {
-        priv.interpolated[getName(coord)] = -(thre) - (1-thre) * ( correlation - priv.lower.min ) / (priv.lower.max - priv.lower.min);
+        if(priv.upper.min == priv.upper.max) {
+          // only one number in the lower -> full color -> interp = 0
+          priv.interpolated[getName(coord)] = -1;
+        } else {
+          priv.interpolated[getName(coord)] = -(thre) - (1-thre) * ( correlation - priv.lower.min ) / (priv.lower.max - priv.lower.min);
+        }
       }
     });
   }
