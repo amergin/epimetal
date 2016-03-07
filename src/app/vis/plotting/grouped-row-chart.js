@@ -366,6 +366,7 @@ function GroupedRowChart() {
       axesG
       .selectAll(".zero.axis")
       .data([_xExtent])
+      .transition().ease("sin-out")
       .attr("transform", function() {
         return "translate(" + (xStart() + _xScale(0)) + "," + yEnd() + ")";
       });
@@ -463,6 +464,9 @@ function GroupedRowChart() {
       _bodyG.selectAll("g.group")
       .selectAll(".group-rect")
       .data(function(d) { return d.groups; })
+      .sort(function(a,b) {
+        return d3.ascending(a.name, b.name);
+      })
       .enter()
       .append("rect")
       .attr("class", "group-rect")
@@ -495,21 +499,26 @@ function GroupedRowChart() {
       // update
       _bodyG.selectAll("g.group")
       .selectAll(".group-rect")
+      .data(function(d) { return d.groups; })
+      .sort(function(a,b) {
+        return d3.ascending(a.name, b.name);
+      })
+      .transition().ease("sin-out")
       .attr("width", function(d) {
         return Math.abs( _xScale(d.value) - _xScale(0) );
       })
       .style("fill", function(d) {
         return _colorAccessor(d, _colors);
       })
-      // .transition().ease("linear")
-      .transition().ease("linear")
+      .transition().ease("sin-out")
       .attr("x", function(d) {
         return _xScale( Math.min(0, d.value) );
       })
-      // .transition().ease("linear")
+      .transition().ease("sin-out")
       .attr("y", function(d) {
         return _y1Scale(d.name);
       })
+      .transition().ease("sin-out")
       .attr("height", function(d) {
         return _y1Scale.rangeBand();
       });
