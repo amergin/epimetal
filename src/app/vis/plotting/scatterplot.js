@@ -168,12 +168,14 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
 
   $scope.createAxisCanvas = function(element, w, h, m, xExtent, yExtent, xRange, yRange, zIndex, varX, varY) {
-    function drawLine(start, end) {
+    function drawLine(start, end, width, color) {
       ctx.beginPath();
       ctx.moveTo(start.x, start.y);
       ctx.lineTo(end.x, end.y);
-      ctx.lineWidth = "1.0";
-      ctx.strokeStyle = "black";
+      ctx.lineWidth = width;
+
+      var stroke = color ? color : "black";
+      ctx.strokeStyle = stroke;
       ctx.stroke();
     }
 
@@ -230,7 +232,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
     return ctx;
 
     function addRegressionLine() {
-      function mapData() {
+      function mapDataSingle() {
         var samples = $scope.dimension.top(Infinity),
         data = _.chain(samples)
         .filter(function(d) {
@@ -247,34 +249,91 @@ angular.module('plotter.vis.plotting.scatterplot', [
         return data;
       }
 
+      function mapDataGrouped() {
+        var samples = $scope.dimension.top(Infinity),
+        data = _.chain(samples)
+        .filter(function(d) {
+          var xVal = d.variables[varX.id],
+          yVal = d.variables[varY.id];
+          return (!isNaN(+xVal) && !isNaN(+yVal)) && 
+          (xVal !== constants.nanValue && yVal !== constants.nanValue);
+        })
+        .groupBy(function(d) {
+          return d.dataset;
+        })
+        .map(function(array, dset) {
+          return [dset, _.map(array, function(d) {
+            return [d.variables[varX.id], d.variables[varY.id]];
+          })];
+        })
+        .object()
+        .value();
+        return data;
+      }
+
       function point(coord) {
         return {
           x: xscale(coord[0]), y: yscale(coord[1])
         };
       }
 
-      var data = mapData();
+      function drawSingleLine(data, color, addLabel) {
+        function getClippedPoint(x, y) {
+          var retX, retY;
+          if(y < yExtent[0]) {
+            // y = ax + b, y=min => x = (y-b)/a
+            retX = (yExtent[0] - regressionLine.equation[1]) / regressionLine.equation[0];
+            retY = yExtent[0];
+          }
+          else if(y > yExtent[1]) {
+            retX = (yExtent[1] - regressionLine.equation[1]) / regressionLine.equation[0];
+            retY = yExtent[1];
+          } 
+          else {
+            retX = x;
+            retY = y;
+          }
+          return point([retX, retY]);
+        }
+        if(!data.length) { return; }
 
-      if(!data.length) { return; }
+        var regressionLine = regression('linear', data);
 
-      var regressionLine = regression('linear', data);
+        if(!regressionLine.equation.length) { return; }
 
-      if(!regressionLine.equation.length) { return; }
+        var y1 = regressionLine.equation[0] * xExtent[0] + regressionLine.equation[1],
+        y2 = regressionLine.equation[0] * xExtent[1] + regressionLine.equation[1],
+        startPoint = getClippedPoint(xExtent[0], y1),
+        endPoint = getClippedPoint(xExtent[1], y2),
+        label = regressionLine.string;
 
-      var y1 = regressionLine.equation[0] * xExtent[0] + regressionLine.equation[1],
-      y2 = regressionLine.equation[0] * xExtent[1] + regressionLine.equation[1],
-      clippedY1 = (y1 < yExtent[0]) ? yExtent[0] : y1,
-      clippedY2 = (y2 > yExtent[1]) ? yExtent[1] : y2,
-      startPoint = point([xExtent[0], clippedY1]),
-      endPoint = point([xExtent[1], clippedY2]),
-      label = regressionLine.string;
+        drawLine(startPoint, endPoint, "1.5", color);
 
-      drawLine(startPoint, endPoint);
+        if(addLabel) {
+          addLabelText(label,
+            { x: 0, y: 0},
+            { x: w - m[3] - m[1] - 10, y: m[0] }, 
+            0, 'middle');
+        }
+      }
 
-      addLabelText(label,
-        { x: 0, y: 0},
-        { x: w - m[3] - m[1] - 10, y: m[0] }, 
-        0, 'middle');
+      var data, color, addLabel = false;
+
+      if($scope.window.pooled()) {
+        data = mapDataSingle();
+        color = "grey";
+        addLabel = true;
+
+        drawSingleLine(data, color, addLabel);
+      } else {
+        // separate lines for each dataset
+        data = mapDataGrouped();
+        _.each(data, function(array, name) {
+          color = DatasetFactory.getSet(name).color();
+          drawSingleLine(array, color, addLabel);
+        });
+      }
+
     }
 
     function addAxes() {
@@ -344,7 +403,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
       }, {
         x: origin.x,
         y: origin.y
-      });
+      }, "1.0");
       addLabelText(varYLabel, {
         x: 0,
         y: 0
@@ -362,8 +421,8 @@ angular.module('plotter.vis.plotting.scatterplot', [
         {
           x: w - d3.round(0.5 * m[1]),
           y: origin.y
-        } //y: h - d3.round(0.75 * m[2])}
-      );
+        }, //y: h - d3.round(0.75 * m[2])}
+        "1.0");
       addLabelText(varXLabel, {
           x: 0,
           y: 4
