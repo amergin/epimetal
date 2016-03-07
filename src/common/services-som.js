@@ -64,6 +64,11 @@ angular.module('services.som', [
   this.bmus = [];
   this.trainSamples = [];
   that.inProgress = false;
+  that.description = {
+    'datasets': [],
+    'variables': [],
+    'N': 0
+  };
   
   VariableService.getVariables(SOM_DEFAULT_TRAIN_VARS).then(function(vars) {
     that.trainVariables = vars;
@@ -81,6 +86,12 @@ angular.module('services.som', [
       if(vars[i].type() == 'custom') { return true; }
     }
     return false;
+  }
+
+  function clearDescription() {
+    that.description['N'] = 0;
+    that.description['variables'] = [];
+    that.description['datasets'] = [];
   }
 
   service.inProgress = function() {
@@ -104,6 +115,12 @@ angular.module('services.som', [
   service.rows = function(x) {
     if (!arguments.length) { return _size.rows; }
     _size.rows = x;
+    return service;
+  };
+
+  service.description = function(x) {
+    if(!arguments.length) { return that.description; }
+    that.description = x;
     return service;
   };
 
@@ -305,6 +322,7 @@ angular.module('services.som', [
           epoch: somObject.epoch,
           rows: somObject.rows,
           cols: somObject.cols,
+          description: that.description,
           hash: getHash(data.samples, rawTrainVarNames, somObject.rows, somObject.cols)
         }, { cache: false })
         .then(function succFn(response) {
@@ -319,6 +337,28 @@ angular.module('services.som', [
       }
 
       function doTrain(data, defer) {
+        function description(n) {
+          function activeDsetNames() {
+            return _.chain(DatasetFactory.getSets())
+            .filter(function(dset) { 
+              return dset.active(); 
+            })
+            .map(function(dset) {
+              return dset.name();
+            })
+            .value();
+          }
+
+          function trainVariables() {
+            return _.map(service.trainVariables(), function(v) { return v.name(); });
+          }
+          service.description({
+            'datasets': activeDsetNames(),
+            'variables': trainVariables(),
+            'N': n
+          });
+        }
+
         TaskHandlerService.circleSpin(true);
         NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'info');
         SOMComputeService.create(service.rows(), service.columns(), data.samples, data.columns)
@@ -330,6 +370,9 @@ angular.module('services.som', [
             NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
             that.bmus = SOMComputeService.get_formatter_bmus(that.som);
             that.dimensionService.addBMUs(that.bmus);
+
+
+            description(that.som.N);
 
             TabService.lock(false);
             that.inProgress = false;
@@ -425,6 +468,9 @@ angular.module('services.som', [
       that._dbId = id;
       that.bmus = SOMComputeService.get_formatter_bmus(that.som);
       that.dimensionService.addBMUs(that.bmus);
+
+      service.description(result.data.description || {});
+
       $rootScope.$emit('dataset:SOMUpdated', that.som);
 
       TabService.lock(false);

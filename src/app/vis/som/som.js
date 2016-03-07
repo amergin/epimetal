@@ -12,6 +12,18 @@ angular.module('plotter.vis.som', [
   .constant('SOM_DEFAULT_SIZE_Y', 3)
   .constant('SOM_DEFAULT_PLANES', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'])
 
+
+.filter('prettifyArray', function() {
+  function prettify(array) {
+    if(!array || !array.length || !_.isArray(array)) {
+      return "(none)";
+    } else {
+      return array.join(", ");
+    }
+  }
+  return prettify;
+})
+
 .controller('SOMContentCtrl', function SOMContentCtrl($scope, $rootScope, contentWindowHandler, SOM_DEFAULT_SIZE_X, SOM_DEFAULT_SIZE_Y, dc, _) {
 
   $scope.windowHandler = contentWindowHandler;
@@ -61,7 +73,7 @@ angular.module('plotter.vis.som', [
 
 })
 
-.controller('SOMSideCtrl', function SOMSideCtrl($scope, sideWindowHandler, PlotService, SOM_DEFAULT_PLANES, _) {
+.controller('SOMSideCtrl', function SOMSideCtrl($scope, sideWindowHandler, SOMService, PlotService, SOM_DEFAULT_PLANES, _) {
   $scope.windowHandler = sideWindowHandler;
   $scope.windows = $scope.windowHandler.get();
 
@@ -75,6 +87,10 @@ angular.module('plotter.vis.som', [
         }, bottomWindowHandler);
       });
     }
+  };
+
+  $scope.description = function() {
+    return SOMService.description();
   };
 
   $scope.itemMapper = {

@@ -57,6 +57,7 @@ class SOMTrain(Document):
 	epoch = IntField(required=True, min_value=1)
 	rows = IntField(required=True, min_value=1)
 	cols = IntField(required=True, min_value=1)
+	description = DictField(required=True)
 
 	meta = {
 		'indexes': [

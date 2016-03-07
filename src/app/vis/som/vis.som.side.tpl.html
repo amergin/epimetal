@@ -1,3 +1,9 @@
+<div class="well well-sm">
+	<h4>Self-Organizing Map properties</h4>
+	<p><mark>N = {{description().N}}</mark> samples</p>
+	<p>Datasets: <mark>{{description().datasets | prettifyArray}}</mark></p>
+	<p>Train variables: <mark>{{description().variables.length}}</mark></p>
+</div>
 <div gridster="gridOptions">
     <ul>
         <li gridster-item="itemMapper" ng-repeat="window in windows track by window.object.id()" id="pl-win-som-{{window.object.id()}}" pl-grid-window pl-window="window">

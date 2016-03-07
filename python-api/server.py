@@ -354,6 +354,11 @@ def createSOMTrain():
 	def legalDistance(var):
 		return isinstance(var, float) and (0 < var < 10)
 
+	def legalDescription(desc):
+		return desc.get('N') is not None and \
+		len(desc.get('variables', [])) > 0 and \
+		len(desc.get('datasets', [])) > 0
+
 	def legalNumber(var):
 		return isinstance(var, int) and (var > 0)
 
@@ -374,6 +379,7 @@ def createSOMTrain():
 		rows = payload.get('rows', -1)
 		cols = payload.get('cols', -1)
 		epoch = payload.get('epoch', -1)
+		description = payload.get('description', {})
 
 		somDocId = None
 
@@ -387,7 +393,8 @@ def createSOMTrain():
 		legalArray(codebook) and \
 		legalArray(variables) and \
 		variablesExist(variables) and \
-		legalArray(distances):
+		legalArray(distances) and \
+		legalDescription(description):
 			somHash = somHash.encode('utf8')
 			# see if it already exists
 			try:
@@ -406,7 +413,8 @@ def createSOMTrain():
 				# not found, create from scratch
 				somDoc = SOMTrain(somHash=somHash, bmus=bmus, weights=getFloatArray(weights), codebook=getFloatArray(codebook), variables=variables, \
 					distances=getFloatArray(distances), 
-					neighdist=neighdist, epoch=epoch, rows=rows, cols=cols)
+					neighdist=neighdist, epoch=epoch, rows=rows, cols=cols,
+					description=description)
 				somDoc.save()
 				somDocId = str(somDoc.id)
 				response = flask.jsonify({
