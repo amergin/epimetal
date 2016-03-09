@@ -6,11 +6,12 @@ angular.module('plotter.vis.plotting.scatterplot', [
 ])
 
 .constant('SCATTERPLOT_POOLING_COLOR', 'black')
+.constant('SCATTERPLOT_POOLING_REGRESSION_LINE_COLOR', 'grey')
 
 .controller('ScatterPlotController', function ScatterPlotController($scope, 
   DatasetFactory, DimensionService, 
-  constants, SCATTERPLOT_POOLING_COLOR, GRID_WINDOW_PADDING, 
-  d3, _) {
+  constants, SCATTERPLOT_POOLING_COLOR, SCATTERPLOT_POOLING_REGRESSION_LINE_COLOR,
+  GRID_WINDOW_PADDING, d3, _) {
 
   $scope.dimensionService = $scope.window.handler().getDimensionService();
   $scope.dimensionInst = $scope.dimensionService.getXYDimension(
@@ -179,13 +180,14 @@ angular.module('plotter.vis.plotting.scatterplot', [
       ctx.stroke();
     }
 
-    function addLabelText(text, start, trans, rotate, align) {
+    function addLabelText(text, start, trans, rotate, align, color) {
       ctx.textAlign = "center";
       ctx.textBaseline = align;
       ctx.save();
       ctx.translate(trans.x, trans.y);
       ctx.rotate(rotate);
-      ctx.fillStyle = "black";
+      var textColor = color ? color : "black";
+      ctx.fillStyle = textColor;
       ctx.font = "11px sans-serif";
       ctx.fillText(text, start.x, start.y);
       ctx.restore();
@@ -228,10 +230,10 @@ angular.module('plotter.vis.plotting.scatterplot', [
     yscale.domain(yExtent).range(yRange);
 
     addAxes();
-    addRegressionLine();
+    addRegression();
     return ctx;
 
-    function addRegressionLine() {
+    function addRegression() {
       function mapDataSingle() {
         var samples = $scope.dimension.top(Infinity),
         data = _.chain(samples)
@@ -277,7 +279,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
         };
       }
 
-      function drawSingleLine(data, color, addLabel) {
+      function drawSingleLine(data, color, addLabel, i) {
         function getClippedPoint(x, y) {
           var retX, retY;
           if(y < yExtent[0]) {
@@ -295,6 +297,11 @@ angular.module('plotter.vis.plotting.scatterplot', [
           }
           return point([retX, retY]);
         }
+
+        function hasNaNs(point) {
+          return _.isNaN(+point.x) || _.isNaN(+point.y);
+        }
+
         if(!data.length) { return; }
 
         var regressionLine = regression('linear', data);
@@ -307,30 +314,37 @@ angular.module('plotter.vis.plotting.scatterplot', [
         endPoint = getClippedPoint(xExtent[1], y2),
         label = regressionLine.string;
 
+        if(hasNaNs(startPoint) || hasNaNs(endPoint)) { 
+          return;
+        }
+
         drawLine(startPoint, endPoint, "1.5", color);
 
         if(addLabel) {
           addLabelText(label,
-            { x: 0, y: 0},
-            { x: w - m[3] - m[1] - 10, y: m[0] }, 
-            0, 'middle');
+            { x: 0, y: 0 + i * 10},
+            { x: w - m[3] - m[1] - 10, y: m[0] + i * 10 }, 
+            0, 
+            'end',
+            color
+            );
         }
       }
 
-      var data, color, addLabel = false;
+      var data, color, addLabel = true, i = 0;
 
       if($scope.window.pooled()) {
         data = mapDataSingle();
-        color = "grey";
-        addLabel = true;
+        color = SCATTERPLOT_POOLING_REGRESSION_LINE_COLOR;
 
-        drawSingleLine(data, color, addLabel);
+        drawSingleLine(data, color, addLabel, i);
       } else {
         // separate lines for each dataset
         data = mapDataGrouped();
         _.each(data, function(array, name) {
           color = DatasetFactory.getSet(name).color();
-          drawSingleLine(array, color, addLabel);
+          drawSingleLine(array, color, addLabel, i);
+          ++i;
         });
       }
 
