@@ -1,48 +1,33 @@
 web:
  build: ./
- dockerfile: web-Dockerfile
- container_name: web
+ command: "nginx"
  volumes:
-  - /plotter/build
-  - /plotter/bin
-
-http:
- build: ./python-api
- dockerfile: http-Dockerfile
+  - ./src:/plotter/src
+ ports:
+  - "30303:80"
  links:
-  - db
   - api
- ports:
-  - "9090:80"
- volumes:
-  - /var/log/nginx
- volumes_from:
-  - web
-
-db:
- image: mongo:latest
- container_name: db
- ports:
- - "35153:27017"
- volumes_from:
- - db-data:rw
- command: --smallfiles
-
-db-data:
- image: mongo:latest
- command: --break-mongo
- container_name: db-data
- volumes:
-  - /data/db
 
 api:
  build: ./python-api
- dockerfile: api-Dockerfile
- container_name: api
- command: /run.sh start
+ command: "/run.sh load"
  volumes:
   - /var/log/api
  expose:
   - "8080"
  links:
   - db
+
+mongodata:  
+  image: mongo:latest
+  volumes:
+    - /data/db
+  command: --break-mongo
+
+db:
+ image: mongo:latest
+ volumes_from:
+  - mongodata
+ command: --smallfiles
+
+
