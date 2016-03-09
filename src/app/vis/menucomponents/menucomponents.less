@@ -1,5 +1,44 @@
+/****************
+  MENUBAR 
+  *************/
+
+  .pl-header {
+  padding-left: 10px;
+}
+
+.pl-header .navbar {
+  top: 5px;
+  border: 0;
+  border-radius: 0;
+  -webkit-box-shadow: 0px 0px 7px 0px rgba(0,0,0,0.27);
+  -moz-box-shadow: 0px 0px 7px 0px rgba(0,0,0,0.27);
+  box-shadow: 0px 0px 7px 0px rgba(0,0,0,0.27);
+}
+
+
+.navbar .navbar-right .btn {
+  margin-right: 10px;
+  margin-top: 10px;
+}
+
+.navbar-nav > li > a {
+  font-weight: bold;
+}
+
+.navbar-right > li {
+  a {
+    //margin-left: 30px;
+    //margin-right: 30px;
+    background-color: @btn-primary-bg;
+    color: @btn-primary-color !important;
+  }
+  a:hover {
+    background-color: darken(@btn-primary-bg, 10%) !important;
+  }
+}
+
 /********************
-  SIDEBAR
+  SIDEBAR 
  *********************/
 
 /* Plot div configurations */
@@ -90,3 +129,60 @@ mentio-menu {
     display: inline-block;
     vertical-align: middle;
 }
+
+
+.pl-sidenav {
+  padding: 5px 20px 5px 20px;
+  z-index: 100;
+}
+
+.pl-sidenav .container-fluid {
+  padding: 0;
+  background: white;
+  box-shadow: 0px 0px 7px 0px rgba(0,0,0,0.27);
+}
+
+.pl-sidenav hr {
+  border: 0;
+}
+
+.pl-sidenav .panel {
+  border: 0;
+  padding: 10px;
+  background: white;
+  box-shadow: none;
+  margin-bottom: 0;
+}
+
+.pl-sidenav .panel-heading {
+  background: white;
+  border: 0;
+  padding: 5px 0;
+}
+
+.pl-sidenav table td {
+  font-size: 12px;
+}
+
+.pl-sidenav .btn-secondary {
+  background: white;
+  box-shadow: none;
+  padding-top: 10px;
+  font-size: 12px;
+  color: #888;
+  font-weight: bold;
+}
+
+#dataset-db tr td {
+  border-top: 1px solid white;
+  font-size: 13px;
+}
+
+#dataset-db th {
+  font-size: 11px;
+  color: #444;
+  font-weight: bold;
+}
+
+
+

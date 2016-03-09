@@ -58,36 +58,50 @@
 
 /*resizable grips*/
 .handle-se { 
-  width: 10px; 
-  height: 10px; 
-  background-color: darkgrey; 
-  border: 1px solid #727272;
+  width: 20px; 
+  height: 20px; 
+  background: repeating-linear-gradient(135deg, #fff 0px, #fff 19px, #ddd 20px, #ddd 40px);
+  border: 0;
   position: absolute;
-  bottom: 10px;
-  right:10px;
+  bottom: 0px;
+  right:0px;
   cursor: se-resize;
   z-index: 200; /* keep above 100 so it's not under canvas'es */  
 }
 
 .gridster-item {
+
   background-color: white;
+-webkit-box-shadow: 0px 0px 7px 0px rgba(0,0,0,0.27);
+-moz-box-shadow: 0px 0px 7px 0px rgba(0,0,0,0.27);
+box-shadow: 0px 0px 7px 0px rgba(0,0,0,0.27);
 }
 
 .gridster-item .handle {
   .action-btn {
     padding-top: 5px;
+    color: #888;
   }
-  padding-left: 10px;
+  padding-left: 2px;
   padding-right: 10px;
   height: 25px;
-  background-color: #BFBEBB; //#E6E4E1;
+  background-color: #f0f0f0;
 
   .ctrl-close {
     position: absolute;
-    right: 10px;
+    right: 5px;
     top: 0px;
   }
 
+}
+
+
+.gridster-item .handle span {
+  font-size: 14px;
+  top: 2px;
+  position: relative;
+  font-weight: bold;
+  color: #888;
 }
 
   .ctrl {
@@ -107,10 +121,10 @@
   display: block;
   cursor: default;
   float: left;
-  border: 2px solid #333;
-  border-color: hsla(0, 0%, 0%, 0.3);
+  /*border: 2px solid #333;*/
+  /*border-color: hsla(0, 0%, 0%, 0.3);
   -webkit-border-radius: 4px 4px 4px 4px;
-  border-radius: 4px 4px 4px 4px;
+  border-radius: 4px 4px 4px 4px;*/
   overflow: hidden;
 }
 

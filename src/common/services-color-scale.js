@@ -169,7 +169,7 @@ angular.module('services.color-scale', [
   function CustomColorScale1() {
     BaseColorScale.call(this);
     var obj = this.obj,
-    colors = ['#E32579', '#180638', '#348AA7', '#525174', '#F09DB2', '#006D9C', '#BCE784', '#5DD39E'],
+    colors = [ '#75d3e6', '#ff7b61','#ffdb4a', '#bcf07d', '#F09DB2', '#006D9C', '#BCE784', '#5DD39E'],
     priv = _.extend(this.privates, {
 
     });

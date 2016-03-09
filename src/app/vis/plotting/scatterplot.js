@@ -29,7 +29,7 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
   $scope.initGroup();
 
-  $scope.window.headerText(['Scatter plot of', $scope.window.variables().x.labelName() + ", " + $scope.window.variables().y.labelName()]);
+  $scope.window.headerText(['', $scope.window.variables().x.labelName() + " vs. " + $scope.window.variables().y.labelName()]);
   $scope.window.resetButton(false);
 
   $scope._calcCanvasAttributes = function() {

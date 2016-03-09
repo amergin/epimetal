@@ -291,7 +291,7 @@ angular.module('plotter.vis.plotting.histogram',
     };
 
     // share information with the plot window
-    $scope.window.headerText(['Histogram of', $scope.window.variables().labelName()]);
+    $scope.window.headerText(['', $scope.window.variables().labelName()]);
 
     $scope.computeExtent = function() {
       // remove older ones

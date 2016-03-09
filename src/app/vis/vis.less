@@ -2,7 +2,7 @@
  @import 'plotting/plotting.less';
  @import 'windowing/windowing.less';
  @import 'menucomponents/menucomponents.less';
- @import 'explore/explore.less';
+  @import 'explore/explore.less';
  @import 'som/som.less';
 
 * {
@@ -16,22 +16,6 @@
   OTHER
  *********************/
 
-.navbar-nav > li > a {
-	font-weight: bold;
-}
-
-.navbar-right > li {
-	a {
-		//margin-left: 30px;
-		//margin-right: 30px;
-		background-color: @btn-primary-bg;
-		color: @btn-primary-color !important;
-	}
-	a:hover {
-		background-color: darken(@btn-primary-bg, 10%) !important;
-	}
-}
-
 
 .fa {
 	margin-left: 5px;
@@ -41,6 +25,43 @@
 .menu-block {
 	min-height: 10%;
 }
+
+
+
+body {
+  padding-top: 5px;
+  background: #ecebe7;
+}
+
+
+.btn-primary {
+  background: #a9419c;
+  border: 0;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+  margin-bottom: 0;
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
+
+.panel-title {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 17px;
+  color: #444;
+  text-align: left;
+  padding: 3px 0;
+  font-weight: bold;
+  text-transform: lowercase;
+  font-variant: small-caps;
+  border-bottom: 1px solid #444;
+}
+
+
+
+
+
 
 /* Flexbox layout */
 
@@ -83,7 +104,7 @@ body {
     -webkit-align-content: flex-start;
     -ms-flex-line-pack: start;
     align-content: flex-start;
-    -webkit-align-items: flex-start;
+    -webkit-align-items: flex-stafrt;
     -ms-flex-align: start;
     align-items: flex-start;
 
@@ -92,6 +113,7 @@ body {
     align-self: stretch;
 
     width: 100%;
+    height: 100%;
 
    /* -webkit-flex: 9 3 auto;
     -ms-flex: 9 3 auto;
@@ -119,6 +141,8 @@ body {
 }
 
 .pl-sidenav {
+
+  overflow-y: auto;
   /*-webkit-box-flex: 0;
   -webkit-flex: 0 0 20%;
       -ms-flex: 0 0 20%;
@@ -240,6 +264,8 @@ body {
     -ms-flex-align: start;
     align-items: flex-start;
 
+    overflow:auto;
+
 
 /*  -webkit-box-flex: 8;
   -webkit-flex: 8 0 auto;
@@ -297,3 +323,5 @@ body {
 .yellow {
   background-color: yellow;
 }
+
+ 
