@@ -1,6 +1,7 @@
 angular.module('plotter.vis.som', [
   'plotter.vis.plotting',
   'plotter.vis.som.circle-filter-control',
+  'plotter.vis.som.trainvariables',
   'services.dataset',
   'services.notify',
   'services.som',
@@ -73,9 +74,11 @@ angular.module('plotter.vis.som', [
 
 })
 
-.controller('SOMSideCtrl', function SOMSideCtrl($scope, sideWindowHandler, SOMService, PlotService, SOM_DEFAULT_PLANES, _) {
+.controller('SOMSideCtrl', function SOMSideCtrl($scope, $templateCache, $compile, sideWindowHandler, SOMService, PlotService, SOM_DEFAULT_PLANES, _) {
   $scope.windowHandler = sideWindowHandler;
   $scope.windows = $scope.windowHandler.get();
+
+  var _trainScope = $scope.$new(true);
 
   $scope.checkDefaults = function() {
     if ($scope.windows.length === 0) {
