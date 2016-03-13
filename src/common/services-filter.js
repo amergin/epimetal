@@ -20,7 +20,7 @@ angular.module('services.filter', [
     var _somDimensionInst = _activeDimensionService.getSOMDimension();
     var _somDimension = _somDimensionInst.get();
 
-    var _colorScale = ColorScaleFactory.createCategory10();
+    var _colorScale = ColorScaleFactory.createCustom2();
 
     var _bmusLookup = {};
 

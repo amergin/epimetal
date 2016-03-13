@@ -128,7 +128,7 @@ angular.module('services.color-scale', [
     };
 
     obj.init = function() {
-      priv.init(d3.scale.category20, _.range(0,10), true);
+      priv.init(d3.scale.category20, _.range(0,20), true);
       return obj;
     };
 
@@ -179,7 +179,7 @@ angular.module('services.color-scale', [
     };
 
     obj.init = function() {
-      priv.init(d3.scale.ordinal().range(colors), _.range(0,9), false);
+      priv.init(d3.scale.ordinal().range(colors), _.range(0,colors.length), false);
       return obj;
     };
 
@@ -192,7 +192,32 @@ angular.module('services.color-scale', [
     return obj;
   }
 
+  function CustomColorScale2() {
+    BaseColorScale.call(this);
+    var obj = this.obj,
+    // override this array to your liking
+    colors = d3.scale.category10().range(),
+    priv = _.extend(this.privates, {
 
+    });
+
+    obj.type = function() {
+      return "custom1";
+    };
+
+    obj.init = function() {
+      priv.init(d3.scale.ordinal().range(colors), _.range(0,colors.length), false);
+      return obj;
+    };
+
+    obj.get = function() {
+      return _.extend(priv.get(), {
+        type: obj.type()
+      });
+    };
+
+    return obj;
+  }
 
   return {
     createCategory20c: function() {
@@ -212,6 +237,11 @@ angular.module('services.color-scale', [
 
     createCustom1: function() {
       return new CustomColorScale1()
+      .init();
+    },
+
+    createCustom2: function() {
+      return new CustomColorScale2()
       .init();
     }
 
