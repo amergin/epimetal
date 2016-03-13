@@ -532,6 +532,11 @@ angular.module('plotter.vis.plotting.som', [
   var linkFn = function($scope, ele, iAttrs) {
 
     function initDropdown() {
+      if($scope.window.dropdown().length > 0) {
+        // already initialized
+        return;
+      }
+
       var selector = _.template('#<%= id %> <%= element %>'),
         id = $scope.element.parent().attr('id');
 
@@ -570,7 +575,7 @@ angular.module('plotter.vis.plotting.som', [
           initDropdown();
         },
         function errFn(res) {
-          if (res !== 'not_needed') { return; }
+          if (res == 'not_needed') { return; }
           NotifyService.addTransient('Plane computation failed', res, 'error');
         }, 
         notify)
@@ -598,6 +603,7 @@ angular.module('plotter.vis.plotting.som', [
           function succFn(plane) {
             $scope.window.extra({ plane: plane });
             $scope.redraw();
+            initDropdown();
           },
           function errFn(res) {
             NotifyService.addTransient('Plane computation failed', res, 'danger');
