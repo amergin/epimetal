@@ -158,6 +158,7 @@ angular.module('plotter.vis.plotting.boxplot',
           bottom: 20,
           left: 40
         })
+        .yAxisLabel(config.variable.axisLabel())
         .elasticX(true)
         .elasticY(false)
         .width($scope.getWidth(config.element))
@@ -233,7 +234,7 @@ angular.module('plotter.vis.plotting.boxplot',
         dimension: $scope.dimension,
         reduced: $scope.reduced,
         chartGroup: constants.groups.histogram.nonInteractive,
-        variable: $scope.window.variables().name()
+        variable: $scope.window.variables()
       };
 
     } else {
@@ -245,7 +246,7 @@ angular.module('plotter.vis.plotting.boxplot',
         dimension: $scope.dimension,
         reduced: $scope.reduced,
         chartGroup: constants.groups.histogram.nonInteractive,
-        variable: $scope.window.variables().name(),
+        variable: $scope.window.variables(),
         callback: $scope.initExistingFilters
       };
       drawFunction = $scope.drawDefault;
