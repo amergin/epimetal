@@ -58,7 +58,8 @@ class DataLoader( object ):
 					split = name.split(TOPGROUP_SEPARATOR)
 					topGroup = split[0].strip()
 					groupName = split[1].strip()
-				return HeaderGroup.objects.get_or_create(name=groupName, defaults={ 'name': groupName, 'topgroup': topGroup, 'order': _getNewGroupOrder() })
+				return HeaderGroup.objects.get_or_create(name=groupName, \
+					defaults={ 'name': groupName, 'topgroup': topGroup, 'order': _getNewGroupOrder() })
 
 			def _getSample(name):
 				return HeaderSample.objects(name=name)
@@ -136,6 +137,7 @@ class DataLoader( object ):
 		with open( self.file ) as fi:
 			header = None
 			datasetKey = self.cfg.getDataLoaderVar('dataset_identifier')
+			defaultDatasetName = self.cfg.getDataLoaderVar('dataset_default')
 			sampleidKey = self.cfg.getDataLoaderVar('sampleid_identifier')
 			for lineNo, line in enumerate(fi):
 				if( lineNo == 0):
@@ -156,15 +158,17 @@ class DataLoader( object ):
 
 				valuesDict = dict( zip( header, values ) )
 
-				dataset = valuesDict[datasetKey]
+				dataset = valuesDict.get(datasetKey, defaultDatasetName)
 				checkHeaderAndSampleDimensions(header, valuesDict, lineNo)
 
 				variables = {}
 				for key, value in valuesDict.iteritems():
 					if key == datasetKey or key == sampleidKey:
 						continue
-					# print "ffloat call = ", valuesDict[key]
-					variables[key.encode('ascii')] = ffloat( float(valuesDict[key]) )
+					try:
+						variables[key.encode('ascii')] = ffloat( float(valuesDict[key]) )
+					except ValueError:
+						variables[key.encode('ascii')] = ffloat( float('NaN') )
 				sample = Sample(dataset=dataset, sampleid=valuesDict[sampleidKey], variables=variables)
 				sample.save()
 
