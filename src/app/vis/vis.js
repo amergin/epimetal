@@ -265,6 +265,15 @@ angular.module('plotter.vis', [
         }, winHandler);
       }
 
+      function postBoxplot(variables) {
+        _.each(variables, function(v) {
+          PlotService.drawBoxplot({
+            variable: v,
+            somSpecial: false
+          }, winHandler);
+        });
+      }
+
       switch (config.type) {
         case 'histogram':
           postHistogram(config.selection);
@@ -277,8 +286,11 @@ angular.module('plotter.vis', [
         case 'heatmap':
           postHeatmap(config.selection);
           break;
-      }
 
+        case 'boxplot':
+          postBoxplot(config.selection);
+          break;
+      }
     });
   };
 

@@ -8,6 +8,7 @@ angular.module('plotter.vis.plotting',
   'plotter.vis.plotting.profile-histogram',
   'plotter.vis.plotting.regression',
   'plotter.vis.plotting.classedbarchart',
+  'plotter.vis.plotting.boxplot',
   'services.dimensions', 
   'services.dataset',
   'services.variable',
@@ -49,6 +50,10 @@ angular.module('plotter.vis.plotting',
 
         case 'regression-plot':
           callFn = that.drawRegression;
+          break;
+
+        case 'boxplot':
+          callFn = that.drawBoxplot;
           break;
 
         default:
@@ -303,6 +308,50 @@ angular.module('plotter.vis.plotting',
       .variables(config.variables)
       .size({ x: REGRESSION_DEFAULT_X, y: REGRESSION_DEFAULT_Y })
       .extra({ source: config.source });
+    };
+
+    this.drawBoxplot = function(config, windowHandler) {
+      var draw = function(config, windowHandler) {
+        var gridWindow = windowHandler.add();
+
+        gridWindow
+        .figure('pl-boxplot')
+        .variables(config.variable)
+        .extra({ somSpecial: config.somSpecial });
+      };
+
+      var defer = $q.defer();
+
+      var promises = [];
+      var plottingDataPromise = DatasetFactory.getVariableData([config.variable], windowHandler);
+      promises.push(plottingDataPromise);
+
+      if( config.somSpecial ) {
+        // need from primary as well
+        var primaryHandler = windowHandler.getService().getPrimary();
+        var primaryPromise = DatasetFactory.getVariableData([config.variable], primaryHandler);
+        promises.push(primaryPromise);
+      }
+
+      var dim = DimensionService.getPrimary();
+      var samp = dim.getSampleDimension();
+
+      $q.all(promises).then(function successFn(res) {
+          // draw the figure
+          NotifyService.closeModal();
+          draw(config, windowHandler);
+          defer.resolve();
+        },
+        function errorFn(variable) {
+          NotifyService.closeModal();
+
+          var title = 'Variable ' + variable + ' could not be loaded\n',
+          message = 'Please check the selected combination is valid for the selected datasets.',
+          level = 'error';
+          NotifyService.addTransient(title, message, level);
+          defer.reject();
+        });
+      return defer.promise;
     };
 
 });

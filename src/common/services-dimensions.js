@@ -140,8 +140,6 @@ angular.module('services.dimensions', [
         return dimensions[key];
       };
 
-
-
       this.getVariableBMUDimension = function() {
         var creationFn = function(d) {
           return {
@@ -722,6 +720,39 @@ angular.module('services.dimensions', [
           return p;
         };
 
+        dimensionGroup.reduce({
+          add: reduceAdd,
+          remove: reduceRemove,
+          initial: reduceInitial
+        });
+        return dimensionGroup;
+      };
+
+      this.getReducedBoxplot = function(dimensionGroup, variable) {
+        var reduceAdd = function(p, v) {
+          var variableVal = +v.variables[variable.name()];
+          if (_.isNaN(variableVal) || variableVal == constants.nanValue) {
+            // pass
+          } else {
+            p.splice(d3.bisectLeft(p, variableVal), 0, variableVal);
+          }
+          return p;
+        };
+
+        var reduceRemove = function(p, v) {
+          var variableVal = +v.variables[variable.name()];
+          if (_.isNaN(variableVal) || variableVal == constants.nanValue) {
+            // pass
+          } else {
+            p.splice(_.indexOf(p, variableVal, true), 1);
+          }
+          return p;
+        };
+
+        var reduceInitial = function() {
+          var p = [];
+          return p;
+        };
         dimensionGroup.reduce({
           add: reduceAdd,
           remove: reduceRemove,

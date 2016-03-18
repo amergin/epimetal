@@ -3,7 +3,7 @@
 		<tab select="selectTab(0)">
 			<tab-heading>Histogram</tab-heading>
 			<h1>Histogram</h1>
-			<div class="multiple-variable-selection" re-selection="histogram.selection" re-mode="'multi'"></div>		
+			<div class="multiple-variable-selection" re-selection="histogram.selection" re-mode="'multi'"></div>	
 		</tab>
 		<tab select="selectTab(1)">
 			<tab-heading>Scatterplot</tab-heading>
@@ -22,6 +22,11 @@
 				  <button type="button" class="btn btn-primary" ng-click="separateHeatmaps(false)" ng-class="{ 'active': !separateHeatmaps() }">One combined heat map</button>
 				</div>
 			</div>
+		</tab>
+		<tab select="selectTab(3)">
+			<tab-heading>Box plot</tab-heading>
+			<h1>Box plot</h1>
+			<div class="multiple-variable-selection" re-selection="boxplot.selection" re-mode="'multi'"></div>	
 		</tab>
 	</tabset>
 	<div class="row col-sm-12 text-center">

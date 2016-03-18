@@ -32,6 +32,9 @@ angular.module('plotter.vis.menucomponents.new-graphmenu',
 
         case 2:
         return { 'type': 'heatmap', 'data': $scope.heatmap.selection };
+
+        case 3:
+        return { 'type': 'boxplot', 'data': $scope.boxplot.selection };
       }
     }
 
@@ -54,6 +57,10 @@ angular.module('plotter.vis.menucomponents.new-graphmenu',
       selection: []
     };
 
+    $scope.boxplot = {
+      selection: []
+    };
+
     // controllers of the menu dialog:
     $scope.canSubmit = function() {
       var selection = getSelection();
@@ -63,7 +70,11 @@ angular.module('plotter.vis.menucomponents.new-graphmenu',
       else if($scope.tab.ind === 1) {
         return _.size(selection.data.x) > 0 &&
         _.size(selection.data.y) > 0;
-      } else if($scope.tab.ind === 2) {
+      } 
+      else if($scope.tab.ind === 2) {
+        return selection.data.length > 0;
+      }
+      else if($scope.tab.ind === 3) {
         return selection.data.length > 0;
       }
     };
@@ -100,6 +111,15 @@ angular.module('plotter.vis.menucomponents.new-graphmenu',
             error = true;
           }
         }
+
+        else if(selection.type == 'boxplot') {
+          dimensionCount = DimensionService.getPrimary().availableDimensionsCount();
+          if(dimensionCount < selection.data.length) {
+            NotifyService.addSticky('Too many selected variables', 'Please select a maximum of ' + dimensionCount + ' variables. You can free variables by first closing unnecessary figure windows on this tab.', 
+              'error', { referenceId: 'graphinfo' });
+            error = true;
+          }
+        }        
         return error;
       }
 
@@ -134,6 +154,9 @@ angular.module('plotter.vis.menucomponents.new-graphmenu',
       },
       {
         label: 'Heatmap'
+      },
+      {
+        label: 'Boxplot'
       }
     ];
 
