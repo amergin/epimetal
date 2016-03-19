@@ -34,6 +34,9 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
         },
         'planes': function() {
           return $scope.selection.planes.length >= 1;
+        },
+        'boxplots': function() {
+          return $scope.selection.boxplots.length >= 1;
         }
       };
 
@@ -112,7 +115,19 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
               PlotService.drawProfileHistogram({ name: prof.name, variables: prof.variables }, contentHandler);
             });
           }
+        },
+
+        'boxplots': {
+          getData: function() {
+            return $scope.selection.boxplots;
+          },
+          action: function(variables) {
+            _.each(variables, function(variable) {
+              PlotService.drawBoxplot({ variable: variable, somSpecial: true }, contentHandler);
+            });
+          }
         }
+
       };
 
       var data = lookup[$scope.selectedTab].getData();

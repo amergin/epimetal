@@ -557,17 +557,9 @@ angular.module('plotter.vis.plotting.classedbarchart',
       $scope.deregisters.push(redrawUnbind);
     }
 
-    function setState() {
-      var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
-      });
-
-      $scope.deregisters.push(gatherStateUnbind);
-    }
-
     setResize();
     setRerender();
     setRedraw();
-    setState();
     setResizeElement();
 
     $scope.$on('$destroy', function() {

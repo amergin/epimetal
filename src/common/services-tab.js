@@ -202,6 +202,9 @@ angular.module('services.tab', [
           SideNavService.somRefreshButton(true);
         }
       } else {
+        // do check if state has been loaded but no default windows exist
+        checkDefaultPlanes();
+
         $log.debug("...There is NO change, do nothing.");
         SideNavService.somRefreshButton(false);
       }

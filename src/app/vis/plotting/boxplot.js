@@ -25,6 +25,20 @@ angular.module('plotter.vis.plotting.boxplot',
     return _.sum($scope.totalGroup.all(), function(d) { return d.value.valueOf(); });
   }
 
+  function initSOMSpecial() {
+    $scope.primary = $injector.get('DimensionService').getPrimary();
+    $scope.totalDimensionInst = $scope.primary.getDimension($scope.window.variables());
+    $scope.totalDimension = $scope.totalDimensionInst.get();
+    $scope.dimensionInst = $scope.dimensionService.getSOMDimension($scope.window.variables());
+    $scope.dimension = $scope.dimensionInst.get();
+
+    $scope.colorScale = $injector.get('FilterService').getSOMColorScale();
+
+    $scope.groupInst = $scope.dimensionInst.groupDefault();
+    $scope.dimensionService.getReducedBoxplotBMU($scope.groupInst, $scope.window.variables());
+    $scope.reduced = $scope.groupInst.get();
+  }
+
   function initDefault() {
     $scope.dimensionInst = $scope.dimensionService.getDatasetDimension();
     $scope.dimension = $scope.dimensionInst.get();
@@ -36,6 +50,7 @@ angular.module('plotter.vis.plotting.boxplot',
   }
 
     if( $scope.isSpecial() ) {
+      initSOMSpecial();
     } else {
       initDefault();
     }
@@ -59,6 +74,33 @@ angular.module('plotter.vis.plotting.boxplot',
 
     };
 
+    $scope.filterSOM = function(group) {
+      return {
+        'all': function() {
+          var lookup = {},
+          isInsideFilter = false,
+          id;
+          _.each(group.all(), function(grp) {
+            _.forEach(FilterService.getSOMFilters(), function(filter) {
+              id = filter.name();
+              isInsideFilter = filter.contains(grp.key);
+              if(isInsideFilter) {
+                if(!lookup[id]) { lookup[id] = []; }
+                lookup[id] = lookup[id].concat(grp.value.values);
+              }
+            });
+          });
+
+          return _.map(lookup, function(array, name) {
+            return {
+              'key': name,
+              'value': array
+            };
+          });
+        }
+      };
+    };
+
     $scope.getHeight = function(ele) {
       return ele.height() - GRID_WINDOW_PADDING;
     };
@@ -77,62 +119,44 @@ angular.module('plotter.vis.plotting.boxplot',
         .attr("height", "100%");
       };
 
-      var plainchart = function() {
-        $scope.chart = dc.rowChart(config.element[0], config.chartGroup)
+      function plainchart() {
+        $scope.chart = dc.boxPlot(config.element[0], config.chartGroup)
         .margins({
-          top: 0,
-          right: 20,
-          bottom: 40,
-          left: 20
+          top: 25,
+          right: 10,
+          bottom: 20,
+          left: 40
         })
+        .yAxisLabel(config.variable.axisLabel())
         .elasticX(true)
-        .label(function(d) {
-          var name = _.capitalize(d.key.name),
-          arr = [name, ", count: ", d.value.count],
-          label = d.value.type == 'total' ? undefined : " (circle " + d.value.circle.name() + ")";
-          arr.push(label);
-          return arr.join("");
-        })
-        .title(function(d) {
-          var label = d.value.type == 'total' ? undefined : 'Circle: ' + d.value.circle.name(),
-          arr = [label,
-          'Category: ' + d.key.name,
-          'Count: ' + d.value.count];
-          return arr.join("\n");
-        })
-        .renderTitleLabel(false)
-        .titleLabelOffsetX(5)
+        .elasticY(true)
+        .yAxisPadding('15%')
         .width($scope.getWidth(config.element))
         .height($scope.getHeight(config.element))
-        // .width(config.size.width)
-        // .height(config.size.height)
-        // .x(d3.scale.linear().domain(config.extent))
         .renderLabel(true)
         .dimension(config.dimension)
-        .group(config.reduced)
-        //.group(config.filter(config.reduced))
-        .valueAccessor(function(d) {
-          return d.value.count;
+        .colorAccessor(function(d) {
+          return d.key.dataset;
         })
+        .group(config.filter(config.reduced))
+        // .keyAccessor(function(d) {
+        //   return d.key;
+        // })
+        // .valueAccessor(function(d) {
+        //   return d.value;
+        // })
         .colors(config.colorScale.scale())
         .colorAccessor(function(d) {
-          var type = d.value.type;
-          if(type == 'circle') {
-            return d.value.circle.name();
-          } else {
-            return '9';
-          }
+          return config.colorScale.getAccessor(d.key);
         })
+        .tickFormat(constants.tickFormat);
         // .on("postRender", resizeSVG)
         // .on("postRedraw", resizeSVG)
-        .ordering(function(d) {
-          return d.value.type == 'total' ? 'total|' : d.value.circle.id() + "|" + d.key.name;
-        });
 
-        // disable filtering
-        $scope.chart.onClick = function() {};
+        $scope.chart.filter = function() {};
 
-      };
+        $scope.chart.yAxis().tickFormat(constants.tickFormat);
+      }
 
       plainchart();
 
@@ -151,7 +175,6 @@ angular.module('plotter.vis.plotting.boxplot',
 
       function plainchart() {
         $scope.chart = dc.boxPlot(config.element[0], config.chartGroup)
-        // .gap(10)
         .margins({
           top: 25,
           right: 10,
@@ -160,7 +183,8 @@ angular.module('plotter.vis.plotting.boxplot',
         })
         .yAxisLabel(config.variable.axisLabel())
         .elasticX(true)
-        .elasticY(false)
+        .elasticY(true)
+        .yAxisPadding('10%')
         .width($scope.getWidth(config.element))
         .height($scope.getHeight(config.element))
         .renderLabel(true)
@@ -229,7 +253,7 @@ angular.module('plotter.vis.plotting.boxplot',
       config = {
         element: $scope.element,
         // extent: $scope.extent,
-        filter: $scope.filterSOMSpecial,
+        filter: $scope.filterSOM,
         colorScale: $scope.colorScale,
         dimension: $scope.dimension,
         reduced: $scope.reduced,
@@ -292,8 +316,8 @@ angular.module('plotter.vis.plotting.boxplot',
 
       $scope.chart.width(width);
       $scope.chart.height(height);
-      $scope.chart.redraw();
-      // $scope.chart.render();
+      // $scope.chart.redraw();
+      $scope.chart.render();
 
       setSize();
     }
@@ -339,10 +363,28 @@ angular.module('plotter.vis.plotting.boxplot',
       $scope.deregisters.push(redrawUnbind);
     }
 
+    function setDerivedAdd() {
+      var derivedAddUnbind = $rootScope.$on('dataset:derived:add', function(eve, set) {
+        $scope.chart.render();
+      });
+
+      $scope.deregisters.push(derivedAddUnbind);
+    }
+
+    function setDerivedRemove() {
+      var derivedRemoveUnbind = $rootScope.$on('dataset:derived:remove', function(eve, set) {
+        $scope.chart.render();
+      });
+
+      $scope.deregisters.push(derivedRemoveUnbind);
+    }
+
     setResize();
     setRerender();
     setRedraw();
     setResizeElement();
+    setDerivedAdd();
+    setDerivedRemove();
 
     $scope.$on('$destroy', function() {
       console.log("destroying boxplot for", $scope.window.variables().name());

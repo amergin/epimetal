@@ -761,6 +761,93 @@ angular.module('services.dimensions', [
         return dimensionGroup;
       };
 
+
+      this.getReducedBoxplotBMU = function(dimensionGroup, variable) {
+        var getKey = function(samp) {
+          return [samp.originalDataset || samp.dataset, samp.sampleid].join("|");
+        };
+
+        function hasBeenAdded(key, samp, p) {
+          var value = p.samples[key];
+          return !_.isUndefined(value) && (value > 0);
+        }
+
+        function add(key, p) {
+          var val = p.samples[key];
+          p.samples[key] = _.isUndefined(val) ? 1 : ++val;
+        }
+
+        function remove(key, p) {
+          p.samples[key] -= 1;
+        }
+
+        var bmuStrId = function(bmu) {
+          if (!bmu || !bmu.x || !bmu.y) {
+            return constants.nanValue + "|" + constants.nanValue;
+          }
+          return bmu.x + "|" + bmu.y;
+        };
+
+        var reduceAdd = function(p, v) {
+          if (_.isEmpty(v.bmus) || _.isUndefined(v.bmus)) {
+            return p;
+          }
+          var variableVal = +v.variables[variable.name()];
+          if (_.isNaN(variableVal) || constants.nanValue == variableVal) {
+            // pass
+          } else {
+            var key = getKey(v),
+            added = hasBeenAdded(key, v, p);
+            add(key, p);
+            if (added) {
+              //pass
+            } else {
+              // add, don't be confused by the splice fn
+              p.values.splice(d3.bisectLeft(p, variableVal), 0, variableVal);
+            }
+          }
+          return p;
+        };
+
+        var reduceRemove = function(p, v) {
+          // typically when service is restarted and bmu's have not yet
+          // been received (som computation pending)
+          if (_.isEmpty(v.bmus) || _.isUndefined(v.bmus)) {
+            return p;
+          }
+          var variableVal = +v.variables[variable.name()];
+          if (_.isNaN(variableVal) || variableVal == constants.nanValue) {
+            // pass
+          } 
+          else {
+            var key = getKey(v);
+            remove(key, p);
+            var sampsLeft = hasBeenAdded(key, v, p);
+            if(!sampsLeft) {
+              p.values.splice(_.indexOf(p, variableVal, true), 1);
+            }
+          }
+          return p;
+        };
+
+        var reduceInitial = function() {
+          var p = {
+            samples: {},
+            values: []
+          };
+          return p;
+        };
+
+        dimensionGroup.reduce({
+          add: reduceAdd,
+          remove: reduceRemove,
+          initial: reduceInitial
+        });
+        return dimensionGroup;
+      };
+
+
+
       this.getReducedGroupHistoDistributions = function(dimensionGroup, variable) {
         var getKey = function(samp) {
           return [samp.originalDataset || samp.dataset, samp.sampleid].join("|");
