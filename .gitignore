@@ -22,3 +22,7 @@ python-api/*
 !python-api/*.config
 !python-api/*.py
 !python-api/*.json
+!docs/
+docs/*
+!docs/requirements.txt
+!docs/project/

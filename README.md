@@ -1,7 +1,5 @@
 # Plotter
 
-***
+## Introduction
 
-## Overview
-
-Reusable single-page plotting application using DC.js and Angular.js. 
+Plotter is a modern single-page web application for real-time visualization and analysis of data.
