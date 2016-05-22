@@ -1,9 +1,10 @@
 import os
 from mongoengine import connect, Document, DynamicDocument
 from mongoengine.fields import StringField, ListField
+from mongoengine.queryset import DoesNotExist
 import sys
 from config import Config
-from orm_models import Sample, HeaderSample, HeaderGroup
+from orm_models import Sample, HeaderSample, HeaderGroup, ExploreSettings, SOMSettings, ProfileHistogram
 import json
 import math
 import re
@@ -35,12 +36,96 @@ class DataLoader( object ):
 		self.cfg = Config(config)
 		self.file = fileName
 		connect( db=self.cfg.getMongoVar('db'), alias='samples', host=self.cfg.getMongoVar('host'), port=int(self.cfg.getMongoVar('port')), w=1 )
+		connect( db=self.cfg.getMongoVar('settings_db'), alias='db_settings', host=self.cfg.getMongoVar('host'), port=int(self.cfg.getMongoVar('port')), w=1 )
 		# has 'C|' in the beginning
 		self.classVarRegex = re.compile('(C\|)(.+)', re.IGNORECASE)
 
 	def load(self):
-		self._loadSamples()
+		print "[Info] Starting to load samples"
+		#self._loadSamples()
 		print "[Info] Loading complete"
+		self._setViewSettings()
+		print "[Info] Default settings have been set"
+
+	def _setViewSettings(self):
+		def exploreSettings():
+			def getDocument():
+				doc = ExploreSettings.objects.first()
+				return doc or ExploreSettings(histograms=[])
+			histogramVars = self.cfg.getDataLoaderVar("explore_default_histograms", True)
+			settings = getDocument()
+			saveList = list()
+
+			for variable in histogramVars:
+				escapedVar = _getEscapedVar(variable)
+				try:
+					varFromDb = HeaderSample.objects.get(name=escapedVar)
+					saveList.append(varFromDb.name)
+				except DoesNotExist, e:
+					raise ValueError("Trying to set variable %s as one of the variables. Error: this variable has not been imported to the database." %variable)
+
+			settings.histograms = saveList
+			settings.save()
+
+		def somSettings():
+			def getSettingDoc():
+				return SOMSettings.objects().first() or SOMSettings(profiles=[])
+
+			def getCheckedVariables(variables):
+				ret = list()
+				for variable in variables:
+					escapedVar = _getEscapedVar(variable)
+					try:
+						varFromDb = HeaderSample.objects.get(name=escapedVar)
+						ret.append(varFromDb.name)
+					except DoesNotExist, e:
+						raise ValueError("Trying to set variable %s as one of the variables. Error: this variable has not been imported to the database." %variable)
+				return ret
+
+			def setProfiles(settings):
+				def clearProfiles():
+					ProfileHistogram.objects.all().delete()
+
+				def getVariablesFromRegex(regex):
+					variables = HeaderSample.objects(name=re.compile(regex, re.IGNORECASE))
+					return [v.name for v in variables]
+
+				clearProfiles()
+
+				confProfiles = self.cfg.getDataLoaderVar("som_profiles", True)
+				for profile in confProfiles:
+					name = profile.get('name')
+					regex = profile.get('regex', None)
+					# regex = None
+					variables = None
+					if regex:
+						profileDoc.regex = regex
+						variables = getVariablesFromRegex(regex)
+					else:
+						variables = getCheckedVariables(profile.get('variables'))
+					profileDoc = ProfileHistogram(name=name, variables=variables)
+					profileDoc.save()
+
+					settings.profiles.append(profileDoc)
+				settings.save()
+
+			def setInputVariables(settings):
+				variables = self.cfg.getDataLoaderVar("som_input_variables", True)
+				checkedVariables = getCheckedVariables(variables)
+
+				settings.inputVariables = checkedVariables
+				settings.save()
+
+
+			settings = getSettingDoc()
+
+			setProfiles(settings)
+			setInputVariables(settings)
+
+
+		exploreSettings()
+		somSettings()
+
 
 	def _modifyHeader(self, headerList):
 		def _createHeaderObjects(headerList):
@@ -117,7 +202,6 @@ class DataLoader( object ):
 
 		# create new header info if necessary
 		_createHeaderObjects(header)
-
 
 	def _loadSamples(self):
 		def ffloat(f):

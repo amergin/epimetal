@@ -46,6 +46,28 @@ class HeaderSample(Document):
 	'db_alias': 'samples'		
 	}
 
+class ExploreSettings(Document):
+	histograms = ListField(StringField(unique=True, required=True))
+	meta = {
+	'db_alias': 'db_settings'
+	}
+
+class ProfileHistogram(Document):
+	variables = ListField(StringField(unique=True, required=True))
+	name = StringField(unique=True, required=True)
+	regex = StringField(required=False)
+	meta = {
+	'db_alias': 'db_settings'
+	}
+
+class SOMSettings(Document):
+	profiles = ListField(ReferenceField('ProfileHistogram', required=True, reverse_delete_rule=CASCADE))
+	inputVariables = ListField(StringField(unique=True, required=True))
+
+	meta = {
+	'db_alias': 'db_settings'
+	}
+
 class SOMTrain(Document):
 	bmus = ListField(FloatField(min_value=0), required=True)
 	weights = ListField(FloatField(), required=True)
