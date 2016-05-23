@@ -69,10 +69,11 @@ angular.module('services.som', [
     'variables': [],
     'N': 0
   };
-  
-  VariableService.getVariables(SOM_DEFAULT_TRAIN_VARS).then(function(vars) {
+
+  VariableService.getSOMDefaultInputVariables().then(function(vars) {
     that.trainVariables = vars;
   });
+  
   that.dimensionService = undefined;
   that.sampleDimension = undefined;
 

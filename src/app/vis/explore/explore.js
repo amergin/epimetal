@@ -11,7 +11,6 @@ angular.module('plotter.vis.explore',
   'ext.dc'    
   ])
 
-.constant('EXPLORE_DEFAULT_HISTOGRAMS', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'])
 .constant('EXPLORE_DEFAULT_SIZE_X', 3)
 .constant('EXPLORE_DEFAULT_SIZE_Y', 3)
 

@@ -4,36 +4,22 @@ angular.module('services.variable',
   ])
 
 .constant('VARIABLE_GET_URL', '/API/headers/NMR_results')
-
-.constant('SOM_DEFAULT_PROFILES', [
-  { 
-    'name': 'Total lipids',
-    'variables': [],
-    // variables ending with '-L'
-    'regex': /^((?:[a-z|-]+)-L)$/i
-  },
-  {
-    'name': 'Fatty acids',
-    'variables': ['TotFA', 'UnSat', 'DHA', 'LA', 'FAw3', 'FAw6', 'PUFA', 'MUFA', 'SFA', 'DHAtoFA', 'LAtoFA', 'FAw3toFA', 'FAw6toFA', 'PUFAtoFA', 'MUFAtoFA', 'SFAtoFA']
-  },
-  {
-    'name': 'Small molecules',
-    'variables': ['Glc', 'Lac', 'Pyr', 'Cit', 'Glol', 'Ala', 'Gln', 'His', 'Ile', 'Leu', 'Val', 'Phe', 'Tyr', 'Ace', 'AcAce', 'bOHBut', 'Crea', 'Alb', 'Gp']
-  }
-])
-
+.constant('EXPLORE_DEFAULT_HISTOGRAMS_URL', '/API/settings/explore/histograms')
+.constant('SOM_DEFAULT_INPUT_VARIABLES_URL', '/API/settings/som/input')
+.constant('SOM_DEFAULT_PROFILES_URL', '/API/settings/som/profiles')
 .constant('CUSTOM_VAR_GROUP_NUMBER', -1)
 
+
 .factory('VariableService', function VariablesService(NotifyService, $q, $http, $log, math, constants,
-  VARIABLE_GET_URL, SOM_DEFAULT_PROFILES, CUSTOM_VAR_GROUP_NUMBER) {
+  VARIABLE_GET_URL, CUSTOM_VAR_GROUP_NUMBER,
+  EXPLORE_DEFAULT_HISTOGRAMS_URL, SOM_DEFAULT_PROFILES_URL, SOM_DEFAULT_INPUT_VARIABLES_URL) {
 
   var service = {};
 
   var _classedVariables = {},
   _variableCache = {},
-  _groupCache = {};
-
-  var initVariables = _.once(function() {
+  _groupCache = {},
+  _initVariablesPromise = _.once(function() {
 
     function initCustomGroup() {
       _groupCache[CUSTOM_VAR_GROUP_NUMBER] = {
@@ -75,7 +61,7 @@ angular.module('services.variable',
     return defer.promise;
   });
 
-  initVariables();
+  _initVariablesPromise();
 
   service.isClassVariable = function(v) {
     return !_.isUndefined(_classedVariables[v]);
@@ -92,14 +78,14 @@ angular.module('services.variable',
   service.getVariables = function(list) {
     var defer = $q.defer();
     if(!arguments.length) { 
-      initVariables().then(function(res) {
+      _initVariablesPromise().then(function(res) {
         defer.resolve(_.values(_variableCache));
       }, function errFn() {
         defer.reject();
       });
     }
     else {
-      initVariables().then(function(res) {
+      _initVariablesPromise().then(function(res) {
         var mapped = _.map(list, function(v) {
           return _variableCache[v];
         });
@@ -215,28 +201,65 @@ angular.module('services.variable',
     });
   };
 
-  service.getProfiles = _.once(function() {
-    function pickVariables(list) {
-      return _.map(list, function(v) {
-        return _variableCache[v];
+  function pickVariables(list) {
+    return _.map(list, function(v) {
+      return _variableCache[v];
+    });
+  }
+
+  service.getExploreDefaultHistograms = function() {
+    var defer = $q.defer();
+    $http.get(EXPLORE_DEFAULT_HISTOGRAMS_URL, {
+        cache: true
+      })
+    .then(function succFn(result) {
+      return defer.resolve(pickVariables(result.data.result.variables));
+    }, function errFn() {
+      defer.reject(); 
+    });
+    return defer.promise;
+  };
+
+  service.getSOMDefaultInputVariables = function() {
+    var defer = $q.defer();
+
+    _initVariablesPromise().then(function() {
+      $http.get(SOM_DEFAULT_INPUT_VARIABLES_URL, {
+        cache: true
+      })
+      .then(function succFn(result) {
+        return defer.resolve(pickVariables(result.data.result.variables));
+      }, function errFn() {
+        defer.reject();
       });
-    }
-    var variables = _.values(_variableCache),
-    profiles = _.map(SOM_DEFAULT_PROFILES, function(profile) {
-      if(profile.regex) {
-        return _.assign(profile, {
-          'variables': _.filter(variables, function(d) {
-            return profile.regex.test(d.name());
-          })
-        });
-      } else {
+    });
+
+    return defer.promise;
+  };
+
+  service.getSOMDefaultProfiles = function() {
+    function mapResult(profiles) {
+      return _.map(profiles, function(profile) {
         return _.assign(profile, {
           'variables': pickVariables(profile.variables)
         });
-      }
+      });
+    }
+
+    var defer = $q.defer();
+
+    _initVariablesPromise().then(function() {
+      $http.get(SOM_DEFAULT_PROFILES_URL, {
+        cache: true
+      })
+      .then(function succFn(result) {
+        return defer.resolve(mapResult(result.data.result.profiles));
+      }, function errFn() {
+        defer.reject();
+      });
     });
-    return profiles;
-  });
+    return defer.promise;
+  };
 
   return service;
 

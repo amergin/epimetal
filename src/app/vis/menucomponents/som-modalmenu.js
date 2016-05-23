@@ -9,10 +9,13 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
 
     $scope.selection = {
       planes: [],
-      profiles: angular.copy(VariableService.getProfiles()),
+      profiles: [],
       distributions: []
     };
 
+    VariableService.getSOMDefaultProfiles().then(function(profiles) {
+      $scope.selection.profiles = angular.copy(profiles);
+    });
 
     $scope.selectedTab = 'planes';
 

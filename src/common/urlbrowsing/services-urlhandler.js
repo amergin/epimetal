@@ -296,10 +296,9 @@ angular.module('services.urlhandler', [
 
     function loadDefaultView() {
       var drawExplore = function(defer) {
-        var exploreHandler = WindowHandler.get('vis.explore'),
-          defaultHistograms = $injector.get('EXPLORE_DEFAULT_HISTOGRAMS');
+        var exploreHandler = WindowHandler.get('vis.explore');
 
-        VariableService.getVariables(defaultHistograms).then(function(variables) {
+        VariableService.getExploreDefaultHistograms().then(function(variables) {
           DatasetFactory.getVariableData(variables, exploreHandler, { getRawData: true })
             .then(function succFn(res) {
               _.each(variables, function(variable) {
@@ -313,6 +312,7 @@ angular.module('services.urlhandler', [
               defer.reject();
             });
         });
+
       };
 
       var selectDatasets = function() {
