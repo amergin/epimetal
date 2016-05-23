@@ -42,7 +42,7 @@ class DataLoader( object ):
 
 	def load(self):
 		print "[Info] Starting to load samples"
-		#self._loadSamples()
+		self._loadSamples()
 		print "[Info] Loading complete"
 		self._setViewSettings()
 		print "[Info] Default settings have been set"
@@ -85,6 +85,9 @@ class DataLoader( object ):
 			def setProfiles(settings):
 				def clearProfiles():
 					ProfileHistogram.objects.all().delete()
+					settingsDoc = SOMSettings.objects.first()
+					if settingsDoc:
+						settingsDoc.profiles = []
 
 				def getVariablesFromRegex(regex):
 					variables = HeaderSample.objects(name=re.compile(regex, re.IGNORECASE))

@@ -11,7 +11,7 @@ from flask.ext.mongoengine import MongoEngine
 
 import json
 
-from orm_models import Sample, HeaderSample, HeaderGroup, BrowsingState, SOMTrain, SOMPlane
+from orm_models import Sample, HeaderSample, HeaderGroup, BrowsingState, SOMTrain, SOMPlane, ExploreSettings, SOMSettings, ProfileHistogram
 
 from pymongo import ReadPreference
 
@@ -44,6 +44,12 @@ register_connection(
 register_connection(
 	'som', 
 	name=config.getMongoVar('somdb'),
+	host=config.getMongoVar('host'),
+	port=int( config.getMongoVar('port') ) )
+
+register_connection(
+	'db_settings', 
+	name=config.getMongoVar('settings_db'),
 	host=config.getMongoVar('host'),
 	port=int( config.getMongoVar('port') ) )
 
@@ -105,12 +111,9 @@ def variablesExistObject(obj):
 	elif isinstance(obj, dict):
 		array = flatten(obj.values())
 
-	print "variablesExistObject, obj = ", obj
-	print "variablesExistObject array=", array
 	for variable in array:
 		if variable.get('type') == 'db':
 			if not variable.get('name') in variables:
-				print "falsy var = ", variable
 				return False
 		else:
 			# custom is not processed, TODO
@@ -136,6 +139,85 @@ def legalSOMHash(var):
 	else:
 		return False
 
+@app.route( config.getFlaskVar('prefix') + 'settings/explore/histograms', methods=['GET'])
+def exploreHistograms():
+	try:
+		doc = ExploreSettings.objects.first()
+		resp = flask.jsonify({
+			'success': 'true',
+			'query': request.path,
+			'result': { 
+				'variables': doc.histograms
+			}
+		})
+		resp.status_code = 200 # OK
+		return resp
+
+	except DoesNotExist, e:
+		resp = flask.jsonify({
+		'success': 'true',
+		'query': request.path,
+		'result': { 'message': 'Settings document not found.' }
+		})
+		resp.status_code = 500
+		return resp	
+
+@app.route( config.getFlaskVar('prefix') + 'settings/som/input', methods=['GET'])
+def somInput():
+	try:
+		doc = SOMSettings.objects.first()
+		resp = flask.jsonify({
+			'success': 'true',
+			'query': request.path,
+			'result': { 
+				'variables': doc.inputVariables
+			}
+		})
+		resp.status_code = 200 # OK
+		return resp
+
+	except DoesNotExist, e:
+		resp = flask.jsonify({
+		'success': 'true',
+		'query': request.path,
+		'result': { 'message': 'Settings document not found.' }
+		})
+		resp.status_code = 500
+		return resp	
+
+@app.route( config.getFlaskVar('prefix') + 'settings/som/profiles', methods=['GET'])
+def somProfiles():
+	def getProfiles(profiles):
+		def getProfile(pro):
+			print "pro=", pro
+			print "pro.variables=", pro.variables
+			return {
+				'variables': pro.variables,
+				'name': pro.name
+			}
+		return [getProfile(pro) for pro in profiles]
+
+	try:
+		doc = SOMSettings.objects.first()
+
+		resp = flask.jsonify({
+			'success': 'true',
+			'query': request.path,
+			'result': {
+				'profiles': getProfiles(doc.profiles)
+			}
+		})
+		resp.status_code = 200 # OK
+		return resp
+
+	except DoesNotExist, e:
+		resp = flask.jsonify({
+		'success': 'true',
+		'query': request.path,
+		'result': { 'message': 'Settings document not found.' }
+		})
+		resp.status_code = 500
+		return resp	
 
 @app.route( config.getFlaskVar('prefix') + 'headers/NMR_results', methods=['GET'])
 def headers():
@@ -547,11 +629,6 @@ def postState():
 				else:
 					return legalSOM(somId)
 
-			#print "filters=", isArray(state.get('filters'))
-			#print "handlers=", validHandlers(state.get('handlers', []))
-			#print "selection=", legalArray(state.get('selection'))
-			#print "size=", validSize(state)
-
 			return isArray(state.get('filters')) and \
 			validHandlers(state.get('handlers', [])) and \
 			legalArray(state.get('selection')) and \
@@ -626,30 +703,11 @@ def postState():
 					return False
 			return atLeastOneSet
 
-		# def validDatasets(common):
-		# 	def validDataset(ds):
-		# 		name = ds.get('name', '')
-		# 		if not legalString(name):
-		# 			return False
-		# 		else:
-		# 			return Sample.objects.filter(dataset=name).count() > 0
-
-		# 	dsets = common.get('datasets', [])
-		# 	for dset in dsets:
-		# 		if not validDataset(dset):
-		# 			return False
-		# 	return True
-
 		def validMenu(common):
 			return isinstance(common.get('menu', None), dict)
 
 		def validVariables(common):
 			return variablesExistObject(common.get('variables', []))
-
-		#print "active = ", validActive(common)
-		#print "validDatasets = ", validDatasets(common)
-		#print "menu = ", validMenu(common)
-		#print "vars = ", validVariables(common)
 
 		return validActive(common) and \
 		validDatasets(common) and \
@@ -736,16 +794,6 @@ def getBulk():
 		resp.status_code = 400
 		return resp
 
-	# def getSamples(samples):
-	# 	dicts = []
-	# 	for sample in [ob.to_mongo() for ob in samples]:
-	# 		# this is SON instance
-	# 		dictionary = sample.to_dict()
-	# 		# remove id so it's serializable
-	# 		dictionary.pop('_id', None)
-	# 		dicts.append(dictionary)
-	# 	return dicts
-
 	try:
 		payload = request.get_json()
 		dataset = payload.get('dataset')
@@ -765,47 +813,6 @@ def getBulk():
 	except 	Exception, e:
 		print e
 		return getError()
-
-# @app.route( config.getFlaskVar('prefix') + 'list/<variable>/in/<dataset>', methods=['GET'] )
-# def variable(variable, dataset):
-# 	if not Header.objects.first().variables.get(variable):
-# 		response = flask.jsonify({
-# 			'success': 'false',
-# 			'query': request.path,
-# 			'result': { 'error': 'No such sample.' }
-# 		})
-# 		response.status_code = 400
-# 		return response
-
-# 	results = Sample.objects.filter(dataset=dataset).only('sampleid', 'variables.'+variable)
-# 	if not results.count():
-# 		response = flask.jsonify({
-# 			'success': 'false',
-# 			'query': request.path,
-# 			'result': { 'error': 'No such dataset.' }
-# 		})
-# 		response.status_code = 400
-# 		return response
-
-# 	d = dict()
-# 	try:
-# 		for res in results:
-# 			d[res.sampleid] = res.variables[variable]
-# 		response = flask.jsonify({
-# 			'success': 'true',
-# 			'query': request.path,
-# 			'result': { 'values': d }
-# 		})
-# 		response.status_code = 200
-# 		return response
-# 	except:
-# 		response = flask.jsonify({
-# 			'success': 'false',
-# 			'query': request.path,
-# 			'result': { 'error': 'Unexpected error.' }
-# 		})
-# 		response.status_code = 400
-# 		return response
 
 if __name__ == '__main__':
 	config = Config('setup.config')
