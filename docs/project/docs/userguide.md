@@ -107,7 +107,7 @@ In the case of separate heatmaps sfor each dataset, if the dataset which is used
 The heatmap cells can be clicked to draw the corresponding scatter plot of the two variables.
 
 ### P value cut-off
-By default, Plotter utilizes the Bonferroni correction to determine the p value cut-off value. Heat map cells exceeding the cut-off value are assigned in white color. You can disable the cut-off effect by selecting `Toggle correlation cutoff of p < value`.
+To avoid Type I error, a Bonferroni adjustment is applied, displaying the adjusted alpha level as the cut-off value. Heat map cells having a p value that exceeds the adjusted alpha level are displayed in white color. You can disable the Bonferroni adjustment by clicking on `Toggle correlation cutoff of p < value` on the upper-left settings menu. This will update the heat map to show all pairwise correlation colors regardless of their respective p value and whether they meet the cut-off criterion.
 
 ### Default color scale
 
@@ -121,9 +121,9 @@ By clicking `Toggle color scale stretching` in the figure window options, Plotte
 
 * 100% red at r = 0.99
 * 25% red at r = 0.85
-* white at r = 0 or beyond p value cut-off
+* white at r = 0 or beyond the p value cut-off
 * 25% blue at r = -0.25
-* 100 blue at r = -0.35
+* 100% blue at r = -0.35
 
 ## Box plot
 
