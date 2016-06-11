@@ -107,7 +107,7 @@ In the case of separate heatmaps sfor each dataset, if the dataset which is used
 The heatmap cells can be clicked to draw the corresponding scatter plot of the two variables.
 
 ### P value cut-off
-To avoid Type I error, a Bonferroni adjustment is applied, displaying the adjusted alpha level as the cut-off value. Heat map cells having a p value that exceeds the adjusted alpha level are displayed in white color. You can disable the Bonferroni adjustment by clicking on `Toggle correlation cutoff of p < value` on the upper-left settings menu. This will update the heat map to show all pairwise correlation colors regardless of their respective p value and whether they meet the cut-off criterion.
+The Bonferroni adjustment is is used to maintain a familywise error Type I error rate of 0.05. The displayed cut-off value is the adjusted alpha level. Heat map cells having a p value that exceeds the adjusted alpha level are displayed in white color. You can disable the Bonferroni adjustment by clicking on `Toggle correlation cutoff of p < value` on the upper-left settings menu. This will update the heat map to show all pairwise correlation colors regardless of their respective p value and whether they meet the cut-off criterion.
 
 ### Default color scale
 
