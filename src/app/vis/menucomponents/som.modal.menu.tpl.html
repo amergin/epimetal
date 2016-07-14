@@ -1,9 +1,8 @@
-<div>
-	<tabset>
+<div class="modal-tabset-wrapper">
+	<tabset class="modal-tabset">
 		<tab select="selectTab('profiles')" >
 			<tab-heading>Profiles</tab-heading>
-			<h1>Predefined profiles</h1>
-			<div class="row">
+			<div class="row som-profiles-container">
 				<div class="col-sm-8" ng-repeat="profile in selection.profiles track by $index" style="margin-bottom: 20px;">
 					<div class="input-group">
 					    <span class="input-group-addon">
@@ -26,17 +25,14 @@
 		</tab>
 		<tab select="selectTab('distributions')">
 			<tab-heading>Distributions</tab-heading>
-			<h1>Distributions</h1>
 			<div class="multiple-variable-selection" re-selection="selection.distributions" re-mode="'multi'"></div>
 		</tab>
 		<tab select="selectTab('planes')">
 			<tab-heading>Planes</tab-heading>
-			<h1>Create a new SOM component plane</h1>
 			<div class="multiple-variable-selection" re-selection="selection.planes" re-mode="'multi'"></div>
 		</tab>
 		<tab select="selectTab('boxplots')">
 			<tab-heading>Box plot</tab-heading>
-			<h1>Create a new Box plot</h1>
 			<div class="multiple-variable-selection" re-selection="selection.boxplots" re-mode="'multi'"></div>
 		</tab>
 	</tabset>

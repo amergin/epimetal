@@ -1,4 +1,4 @@
-<div class="container-fluid" ng-switch="mode">
+<div class="container-fluid multiple-variable-selection-fields" ng-switch="mode">
 	<div class="row">
 		<div ng-switch-when="multi">
 			<div class="col-sm-12 panel panel-default">
@@ -52,10 +52,10 @@
 </div>
 
 
-<div ng-switch="inputIsDefined()">
+<div ng-switch="inputIsDefined()" class="multiple-variable-selection-columns-container">
 
 	<!-- Show table when text in input field -->
-	<div ng-switch-when="true" class="am-fade">
+	<div ng-switch-when="true" class="am-fade search-results-wrapper">
 		<table class="table table-striped">
 			<thead>
 				<tr>

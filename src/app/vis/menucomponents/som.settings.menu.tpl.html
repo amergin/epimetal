@@ -1,13 +1,11 @@
-<div>
-	<tabset>
+<div class="modal-tabset-wrapper">
+	<tabset class="modal-tabset">
 		<tab select="selectTab(0)">
 			<tab-heading>Input variables</tab-heading>
-			<h1>Input variables</h1>
 			<div class="multiple-variable-selection" re-selection="selection" re-mode="'multi'"></div>		
 		</tab>
 		<tab select="selectTab(1)">
-			<tab-heading>Size</tab-heading>
-			<h1>SOM Size</h1>
+			<tab-heading>SOM Size</tab-heading>
 			<div class="col-sm-6">
 			    <div ng-repeat="size in sizes track by $index" class="input-group">
 			      <span class="input-group-addon">
