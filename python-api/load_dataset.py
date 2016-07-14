@@ -9,6 +9,7 @@ import json
 import math
 import re
 import csv
+import time
 
 LINE_SEPARATOR = "\t"
 TOPGROUP_SEPARATOR = ":"
@@ -35,6 +36,9 @@ class DataLoader( object ):
 	def __init__(self, config, fileName):
 		self.cfg = Config(config)
 		self.file = fileName
+		
+		time.sleep(10)
+				
 		connect( db=self.cfg.getMongoVar('db'), alias='samples', host=self.cfg.getMongoVar('host'), port=int(self.cfg.getMongoVar('port')), w=1 )
 		connect( db=self.cfg.getMongoVar('settings_db'), alias='db_settings', host=self.cfg.getMongoVar('host'), port=int(self.cfg.getMongoVar('port')), w=1 )
 		# has 'C|' in the beginning
