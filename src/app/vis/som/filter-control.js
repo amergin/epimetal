@@ -41,6 +41,10 @@ angular.module('plotter.vis.som.circle-filter-control', [
 
   update();
 
+  $scope.circleOrder = function(filt) {
+    return 'circle_' + filt.name();
+  };
+
   $scope.circleName = null;
 
   $scope.createCircle = function(name) {

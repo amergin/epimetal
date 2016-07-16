@@ -63,17 +63,57 @@ function GroupedRowChart() {
     .html(_tooltipAccessor);
 
   function renderLegend(bodyG) {
-    // enter on legend group
-    var legend = bodyG.selectAll(".legend")
-    .data(_legendNames.slice().sort())
+    // enter
+    var legend = _bodyG.selectAll("g.legend")
+    .data(_legendNames)
+    // .sort(function(a,b) {
+    //   return d3.ascending(a,b);
+    // })
     .enter()
     .append("g")
     .attr("class", "legend")
     .attr("transform", function(d, i) { 
       return "translate(0," + i * 20 + ")"; 
+    })
+    .on("mouseover", function(d) {
+      // hide other legends
+      var overEl = this,
+      overName = d;
+
+      _bodyG.selectAll("g.legend").filter(function(d,i) {
+        return (this !== overEl);
+      })
+      .transition()
+      .style("opacity", "0");
+
+      // hide other group-rect's
+      _bodyG.selectAll("rect.group-rect").filter(function(d,i) {
+        return d.name !== overName;
+      })
+      .transition()
+      .style("opacity", "0");
+
+    })
+    .on("mouseout", function(d) {
+      // show other legends
+      var overEl = this,
+      overName = d;
+
+      _bodyG.selectAll("g.legend").filter(function(d,i) {
+        return (this !== overEl);
+      })
+      .transition()
+      .style("opacity", "1");
+
+      // show other group-rect's
+      _bodyG.selectAll("rect.group-rect").filter(function(d,i) {
+        return d.name !== overName;
+      })
+      .transition()
+      .style("opacity", "1");
+
     });
 
-    // inside group: rectangle
     legend
     .append("rect")
     .attr("x", xEnd() + _legendWidth - 18)
@@ -83,8 +123,8 @@ function GroupedRowChart() {
       return _colorAccessor(d, _colors);
     });
 
-    // inside group: text
-    legend.append("text")
+    legend
+    .append("text")
     .attr("x", function() {
       return xEnd() + _legendWidth - 27;
     })
@@ -93,19 +133,76 @@ function GroupedRowChart() {
     .style("text-anchor", "end")
     .text(function(d) { return d; });
 
-    // update on group
-    // should be no actions?
- 
-   // exit
+    // update
+    _bodyG.selectAll("g.legend")
+    .select("text")
+    .text(function(d) { return d; });
+
+    _bodyG.selectAll("g.legend")
+    .select("rect")
+    .style("fill", function(d) {
+      return _colorAccessor(d, _colors);
+    });
+
+    // exit
     bodyG
-    .selectAll(".legend")
-    .data(_legendNames.slice().sort())
+    .selectAll("g.legend")
+    .data(_legendNames)
+    // .sort(function(a,b) {
+    //   return d3.ascending(a,b);
+    // })
     .exit()
     .transition()
     .duration(300)
     .style("opacity", 0)
     .remove();
+
   }
+
+  // function renderLegend(bodyG) {
+  //   // enter on legend group
+  //   var legend = bodyG.selectAll(".legend")
+  //   .data(_legendNames.slice().sort())
+  //   .enter()
+  //   .append("g")
+  //   .attr("class", "legend")
+  //   .attr("transform", function(d, i) { 
+  //     return "translate(0," + i * 20 + ")"; 
+  //   });
+
+  //   // inside group: rectangle
+  //   legend
+  //   .append("rect")
+  //   .attr("x", xEnd() + _legendWidth - 18)
+  //   .attr("width", 18)
+  //   .attr("height", 18)
+  //   .style("fill", function(d) {
+  //     return _colorAccessor(d, _colors);
+  //   });
+
+  //   // inside group: text
+  //   legend.append("text")
+  //   .attr("x", function() {
+  //     return xEnd() + _legendWidth - 27;
+  //   })
+  //   .attr("y", 9)
+  //   .attr("dy", ".35em")
+  //   .style("text-anchor", "end")
+  //   .text(function(d) { return d; });
+
+  //   // update on group
+  //   // should be no actions?
+ 
+  //  // exit
+  //   bodyG
+  //   .selectAll(".legend")
+  //   .data(_legendNames.slice().sort())
+  //   .exit()
+  //   .transition()
+  //   .duration(300)
+  //   .style("opacity", 0)
+  //   .remove();
+  // }
 
   _chart.render = function() {
     if (!_svg) {
@@ -463,9 +560,8 @@ function GroupedRowChart() {
       // enter
       _bodyG.selectAll("g.group")
       .selectAll(".group-rect")
-      .data(function(d) { return d.groups; })
-      .sort(function(a,b) {
-        return d3.ascending(a.name, b.name);
+      .data(function(d) { 
+        return d.groups; 
       })
       .enter()
       .append("rect")
@@ -499,9 +595,8 @@ function GroupedRowChart() {
       // update
       _bodyG.selectAll("g.group")
       .selectAll(".group-rect")
-      .data(function(d) { return d.groups; })
-      .sort(function(a,b) {
-        return d3.ascending(a.name, b.name);
+      .data(function(d) { 
+        return d.groups; 
       })
       .transition().ease("sin-out")
       .attr("width", function(d) {
@@ -526,7 +621,9 @@ function GroupedRowChart() {
       // remove
       _bodyG.selectAll("g.group")
       .selectAll(".group-rect")
-      .data(function(d) { return d.groups; })
+      .data(function(d) { 
+        return d.groups; 
+      })
       .exit()
       .remove();
     }
