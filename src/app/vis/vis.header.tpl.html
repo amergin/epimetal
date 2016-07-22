@@ -13,9 +13,14 @@
       <a href ui-sref="{{ 'vis.' + tab.name }}({ state: undefined })" eat-click-if="!tabChangeEnabled(tab)" role="tab" data-toggle="tab">{{tab.title}}</a>
     </li>
   </ul>
-  <ul class="nav navbar-nav navbar-right navbar-vertical-align">
-    <div pl-task-handler></div>
+  <ul class="nav navbar-nav navbar-right">
     <div pl-link-creator></div>
+  </ul>
+  <ul class="nav navbar-nav navbar-right">
+    <div pl-task-cancel></div>
+  </ul>  
+  <ul class="nav navbar-nav navbar-right">
+    <div pl-task-progress-indicator></div>
   </ul>
 </div>
 </nav>

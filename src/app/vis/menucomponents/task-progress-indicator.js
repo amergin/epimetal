@@ -1,12 +1,7 @@
-angular.module('plotter.vis.menucomponents.task-handler', 
+angular.module('plotter.vis.menucomponents.task-progress-indicator', 
   ['services.task-handler'])
 
-.controller('TaskHandlerController', function TaskHandlerController($scope, TaskHandlerService) {
-
-  $scope.visible = function() {
-
-    return TaskHandlerService.hasTasks();
-  };
+.controller('TaskProgressIndicatorCtrl', function TaskProgressIndicator($scope, TaskHandlerService) {
 
   $scope.circleSpinMax = function() {
     return TaskHandlerService.circleSpinMax.apply(this, arguments);
@@ -18,10 +13,6 @@ angular.module('plotter.vis.menucomponents.task-handler',
 
   $scope.circleSpinValue = function(x) {
     return TaskHandlerService.circleSpinValue.apply(this, arguments);
-  };
-
-  $scope.cancel = function() {
-    TaskHandlerService.cancelAll();
   };
 
   $scope.getCircleInlineCSS = function(radius) {
@@ -36,12 +27,12 @@ angular.module('plotter.vis.menucomponents.task-handler',
 })
 
 // directive for heatmap form
-.directive('plTaskHandler', function plTaskHandler() {
+.directive('plTaskProgressIndicator', function plTaskHandler() {
   return {
     restrict: 'A',
     replace: true,
-    controller: 'TaskHandlerController',
-    templateUrl: 'vis/menucomponents/task-handler.tpl.html',
+    controller: 'TaskProgressIndicatorCtrl',
+    templateUrl: 'vis/menucomponents/task-progress-indicator.tpl.html',
     link: function (scope, elm, attrs) {
       scope.element = elm;
     }

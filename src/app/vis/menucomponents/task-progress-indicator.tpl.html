@@ -1,6 +1,7 @@
-<div>
+<div class="pl-task-progress-indicator">
 	<div
 		ng-show="circleSpin()"
+		class="navbar-btn"
 	    round-progress
 	    max="circleSpinMax()"
 	    current="circleSpinValue()"
@@ -15,5 +16,4 @@
 	    iterations="100"
 	    animation="easeInOutQuart">
 	</div>
-	<button type="button" class="btn btn-danger" ng-show="visible()" ng-click="cancel()">Cancel computation tasks {{test()}}</button>
 </div>
