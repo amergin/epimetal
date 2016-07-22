@@ -15,7 +15,7 @@ The third container is the *database container* that runs a MongoDB instance. It
 
 These instructions presume your host system has Docker, Docker-compose and Git client installed. 
 
-* Install Docker on your by following [these instructions](https://docs.docker.com/engine/installation/).
+* Install Docker by following [these instructions](https://docs.docker.com/engine/installation/).
 
 * Install The Docker-compose package by following the [manufacturer's instructions](https://docs.docker.com/engine/installation/).
 
@@ -52,11 +52,11 @@ Look for the line containing
 command: "/run.sh load"
 ```
 
-The run script initializes the database (populates the DB from TSV file provided) with the command `load`. This is the correct behaviour when you are installing Plotter. In case you later on want to re-compile the Docker instance and preserve any modifications made to the database in the mean time, be sure to change `load` to `start`. Otherwise, the database will be re-initialized and any modifications done to the database will be lost.
+The run script initializes the database (populates the database from a TSV file provided) with the command `load`. This is the correct behaviour when you are installing Plotter. In case you later on want to re-compile the Docker instance and preserve any modifications made to the database in the mean time, be sure to change `load` to `start`. Otherwise, the database will be re-initialized and any modifications done to the database will be lost.
 
 ## 4. Add sample file and meta data file
 
-During the compilation phase, Plotter looks for a file `api-docker/samples.tsv`. This file needs to be a properly formatted tab separated values (TSV) file. The first row indicates the variable names (columns). By default, Plotter assumes the first row contains variables `sampleid` and `datasetname` to uniquely identify each sample. If this is not the case and the variables are named differently, modify `python-api/setup.config`  with a text editor of your choosing and modify the following lines:
+During the compilation phase, Plotter looks for a file `python-api/api-docker/samples.tsv`. This file needs to be a properly formatted tab separated values (TSV) file. The first row indicates the variable names (columns). By default, Plotter assumes the first row contains variables `sampleid` and `datasetname` to uniquely identify each sample. If this is not the case and the variables are named differently, modify `python-api/setup.config`  with a text editor of your choosing and modify the following lines:
 
 ```
 dataset_identifier=datasetname
@@ -69,7 +69,7 @@ This setup file also contains a row
 dataset_default=default
 ```
 
-This tells Plotter to use the name `default` in case the sample does not have a variable indicating the dataset name.
+This tells Plotter to use the name `default` in case the imported samples do not have a variable indicating the dataset name.
 
 ### Variable metadata
 
