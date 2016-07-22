@@ -159,51 +159,6 @@ function GroupedRowChart() {
 
   }
 
-  // function renderLegend(bodyG) {
-  //   // enter on legend group
-  //   var legend = bodyG.selectAll(".legend")
-  //   .data(_legendNames.slice().sort())
-  //   .enter()
-  //   .append("g")
-  //   .attr("class", "legend")
-  //   .attr("transform", function(d, i) { 
-  //     return "translate(0," + i * 20 + ")"; 
-  //   });
-
-  //   // inside group: rectangle
-  //   legend
-  //   .append("rect")
-  //   .attr("x", xEnd() + _legendWidth - 18)
-  //   .attr("width", 18)
-  //   .attr("height", 18)
-  //   .style("fill", function(d) {
-  //     return _colorAccessor(d, _colors);
-  //   });
-
-  //   // inside group: text
-  //   legend.append("text")
-  //   .attr("x", function() {
-  //     return xEnd() + _legendWidth - 27;
-  //   })
-  //   .attr("y", 9)
-  //   .attr("dy", ".35em")
-  //   .style("text-anchor", "end")
-  //   .text(function(d) { return d; });
-
-  //   // update on group
-  //   // should be no actions?
- 
-  //  // exit
-  //   bodyG
-  //   .selectAll(".legend")
-  //   .data(_legendNames.slice().sort())
-  //   .exit()
-  //   .transition()
-  //   .duration(300)
-  //   .style("opacity", 0)
-  //   .remove();
-  // }
-
   _chart.render = function() {
     if (!_svg) {
       _svg = d3.select(_element).append("svg")

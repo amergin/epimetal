@@ -471,6 +471,8 @@ angular.module('services.dataset', ['services.notify',
         }
 
         // shallow copy, otherwise this will mess up other datasets that have this sample
+        // this is the most heavy operation in creating derived datasets
+        // _.extend or _.clone aren't any better
         copySample = angular.extend({}, samp);//angular.copy(samp);
         setOrigin(copySample, samp);
         // copySample.originalDataset = samp.dataset;
@@ -716,6 +718,7 @@ angular.module('services.dataset', ['services.notify',
           return filter.contains(sample.bmus);
         });
       }
+      var p1 = performance.now();
       var DimensionService = $injector.get('DimensionService'),
         primary, secondary, sampleDimension, samples,
         hasCircles = !_.isUndefined(circles) && _.size(circles) > 0;
@@ -730,6 +733,8 @@ angular.module('services.dataset', ['services.notify',
         sampleDimension = primary.getSampleDimension();
         samples = sampleDimension.get().top(Infinity);
       }
+      var p2 = performance.now();
+      console.log("getSamples", p2-p1);      
       return samples;
     }
 
@@ -744,12 +749,16 @@ angular.module('services.dataset', ['services.notify',
       primary = DimensionService.getPrimary(),
       dataWasAdded;
 
+    var p1 = performance.now();
     var derived = new DerivedDataset()
       .name(config.name)
       .size(samples.length)
       .color(config.color || that.colorScale.useColor(config.name))
       .samples(samples)
       .active(config.setActive);
+
+    var p2 = performance.now();
+    console.log("creation", p2-p1);        
 
     if (circles) {
       // deselectOthers();
