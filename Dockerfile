@@ -8,13 +8,14 @@ RUN apt-get update && apt-get install -y \
     wget \
     curl \
     nginx \
-    subversion 
+    subversion \
+    python-pip
 
 # install node
 RUN curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
 RUN apt-get install -y nodejs
 
-#clean up
+# clean up
 RUN apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -38,5 +39,10 @@ RUN grunt build
 ADD python-api/http-docker/nginx.conf /etc/nginx/nginx.conf
 RUN chown -R www-data:www-data /var/lib/nginx
 RUN chown -R www-data:www-data /plotter
+
+# compile the documentation
+RUN pip install mkdocs
+WORKDIR /plotter/docs/project
+RUN mkdocs build
 
 EXPOSE 80 443
