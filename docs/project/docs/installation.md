@@ -17,7 +17,7 @@ These instructions presume your host system has Docker, Docker-compose and Git c
 
 * Install Docker by following [these instructions](https://docs.docker.com/engine/installation/).
 
-* Install The Docker-compose package by following the [manufacturer's instructions](https://docs.docker.com/engine/installation/).
+* Install The Docker-compose package by following the [manufacturer's instructions](https://docs.docker.com/compose/install/).
 
 * Install the Git client. [More information here](https://git-scm.com/downloads).
 
@@ -111,3 +111,37 @@ Start the previously compiled containers by issuing
 ## 7. Test your installation
 
 If everything went fine and you did not see any error messages, you should now have a running instance. Test it by pointing your browser to `http://localhost:30303` which is the default. If you changed the default port in [step 3](installation.md#web-server-port), change the URL accordingly.
+
+## 8. Additional configuration
+
+### Password-protecting your instance
+
+In certain cases it may be desirable to protect your instance with a username/password combination. To do this, first install `htpasswd` on your operating system, or use a online-generator.
+
+In the `plotter` directory, issue the following command:
+
+`$ htpasswd -c .htpasswd username`.
+
+Replace `username` with a user name of your choosing. Then enter a password you wish to use for the authentication. You can supply additional users by repeating the process without the `c` switch: 
+
+`$ htpasswd .htpasswd another_user`.
+
+Htpasswd then creates a file named `.htpasswd` in the directory. Using a text editor of your choice, open the `python-api/http-docker/nginx.conf` file. There should be three sections that start with the word `location` and enclose settings inside curly brackets. Inside each of these sections add the lines
+
+```
+auth_basic "Restricted";
+auth_basic_user_file /etc/nginx/.htpasswd;
+```
+
+Next, open the file `Dockerfile` in the plotter root directory using a text editor. Look for the line 
+
+```
+# Add Nginx configuration
+```
+After this line, add the line
+
+```
+ADD ./.htpasswd /etc/nginx/.htpasswd
+```
+
+Test that the instance is password-protected by building the image (as explained in step [5.](installation.md#5-compile-the-docker-containers)) and starting it up.

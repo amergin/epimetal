@@ -3,11 +3,11 @@
 ## Technical requirements
 
 ### Device
-Plotter is intended to be used on a desktop device rather than a tabler or a smartphone.
+Plotter is intended to be used on a desktop device rather than a tablet or a smartphone.
 
 ### Browser
 
-Plotter is tested against most modern desktop web browsers. [Google Chrome](http://google.com/chrome) is highly recommended. Internet Explorer versions prior to 11 are not supported. Mobile browsers such as as those used in smartphones and tablets are discouraged for performance and usability reasons.
+Plotter is tested against most modern desktop web browsers. Latest version of [Google Chrome](http://google.com/chrome) is highly recommended. Internet Explorer versions prior to 11 are not supported. Mobile browsers such as as those used in smartphones and tablets are discouraged for performance and usability reasons.
 
 ## Navigation
 
