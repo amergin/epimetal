@@ -79,7 +79,8 @@ angular.module('services.notify', [
         backdrop: true, //'static',
         keyboard: false,
         templateUrl: templateUrl,
-        windowClass: 'modal-wide'
+        windowClass: 'modal-wide',
+        placement: 'top'
       };
       angular.extend(applyConfig, config);
 

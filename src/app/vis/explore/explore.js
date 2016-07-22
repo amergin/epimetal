@@ -61,9 +61,4 @@ angular.module('plotter.vis.explore',
 .controller('ExploreMenuCtrl', function ExploreMenuCtrl($scope, datasets, variables, windowHandler) {
   console.log("menu ctrl");
   $scope.windowHandler = windowHandler;
-})
-
-.run(function runExplore($templateCache) {
-  // overwrite default template for modal; allow wider setup with custom css
-  $templateCache.put('modal/modal.tpl.html', $templateCache.get('notify.modal-wide.tpl.html'));
 });

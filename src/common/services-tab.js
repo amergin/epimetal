@@ -173,8 +173,14 @@ angular.module('services.tab', [
         }
       };
 
-      var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', 
-        diagScope, { controller: 'ModalCtrl' });
+      var promise = NotifyService.addClosableModal(
+        'vis/menucomponents/new.modal.tpl.html', 
+        diagScope, 
+        { 
+          controller: 'ModalCtrl',
+          windowClass: 'modal-normal',
+          placement: 'top'          
+        });
 
       return promise;
     }
