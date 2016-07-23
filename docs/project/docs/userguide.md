@@ -16,7 +16,17 @@ The application is divided to a side menu, a header bar, and a content section.
 ### Header bar
 The header bar contains links to three views of this application: [Explore and filter](userguide.md#explore-and-filter), [Self-Organizing Maps](userguide.md#self-organizing-maps) and [Regression analysis & associations](userguide.md#regression-analysis-associations).
 
-The right-hand side of the header bar contains a **Link this menu** button. This button can be used to save the current state of the application you see. The link provided on the opening pop-over can be used to share the contents to other collaborators. Please note that the link provided is not a permanent link and the links are not guaranteed to work after 30 days.
+The right-hand side of the header bar contains a **Link this view** button. This button opens a menu to save the current state of the application that is currently displayed. The link provided on the opening pop-over can be used to share the contents to other collaborators. Please note that the link provided is not a permanent link and there is no guarantee that the link is functional after 30 days.
+
+![Link this view](img/create_link.png)
+
+*Link this view opened.*
+
+Whenever time-consuming computations are being made, two indicators appear on the right-hand side of the header bar. These computations include the training of Self-Organized Map, creating or updating a heat map, and regression analysis. The left-hand side indicator is a round progress bar. By pressing on the `Cancel tasks` button, any active computations are cancelled. As a consequence, any figures depending on this task will be closed.
+
+![Task actions](img/navbar_task_actions.png)
+
+*Circular progress bar and a button for cancelling the computation.*
 
 ### Side menu
 The side menu content varies based on the active view and state of the application. To increase the width of the actual page contents, the menu can be hidden by pressing **Hide this menu**.
@@ -31,11 +41,63 @@ Static datasets are preloaded from the database, and in the default view they ar
 The user can choose to operate on a specific subset of samples by first creating several filters. Then, this active sample set can be "frozen" as a dynamic dataset by naming it on the **Make a new dataset** field and then pressing the **Create dataset** button. The resulting dataset is then added to the list of datasets. Dynamically created datasets can be deleted as opposed to datasets originating from database which are static.
 
 #### Filters
-The side menu displays a list of active filters if there are any. On the [Explore and filter](userguide.md#explore-and-filter) view, histograms can be filtered by clicking and dragging over the figure.  These filters are only active on the current view and are removed when the view changes. If you wish to keep the active selection created with filters, you can freeze the sample selection by creating a new dataset as described in [datasets](userguide.md#datasets).
+The side menu displays a list of active filters if there are any. 
 
-On the [Self-Organizing Maps](userguide.md#self-organizing-maps) view filters are called *circle filters*. By default two circle filters are created, named A and B. They are placed over the SOM planes on a random coordinate. The circle filter can be moved by dragging it with a mouse. The filters can be created and removed as needed: to create a circle filter, first name it by filling the text field under `Manage circle filters` and then press **Create circle**. Any existing figures on the left content planes will be updated on creation to reflect the new circle filter.
+##### Explore and filter
+On the [Explore and filter](userguide.md#explore-and-filter) view, histograms can be filtered by clicking and dragging over the figure.  These filters are only active on the current view and are removed when you navigate between views. If you wish to keep the active selection created with filters, you can freeze the sample selection by creating a new dataset as described in [datasets](userguide.md#datasets).
 
-Circle filters can also be used to create a dynamic dataset. To do this, first select any circle filters whose samples you like to be added to the dataset on the *Active filters* section of the side menu by clicking on its checkbox. Then, supply a unique descriptive name for the dataset under the *Make a new dataset* field and press **Create dataset**. Any duplicate samples (meaning the circle filters intersect) are added only once. The created dataset then appears on the dataset list. The newly-created dataset is inactive by default.
+![Example of applied range filters](img/histogram_filters.png)
+
+*Two figure windows that each have a range filter applied.*
+
+The corresponding active filter list as it would be displayed on the side menu:
+
+![Active filter list containing two range filters](img/active_filter_list.png)
+
+*Active menu displaying the two active filters from previous figure.*
+
+
+##### Self-Organizing Maps
+On the [Self-Organizing Maps view](userguide.md#self-organizing-maps) filters are called *circle filters*. By default two circle filters are created, named A and B. They are placed over the SOM planes on a random coordinate. Circle filters can be moved by dragging them.
+
+![Example SOM plane with three circle filters](img/circle_filters.png)
+
+*Example SOM plane with three circle filters.*
+
+The active filters are displayed on the side menu:
+
+![Active list showing circle filters](img/circle_filter_list.png)
+
+*Active list showing circle filters.*
+
+
+ A circle filter can also be resized by dragging the circle filter from its edge.
+
+![Resizing a circle filter](img/circle_filter_resize.png)
+
+*Resizing a circle filter.*
+
+The filters can be created and removed as needed: to create a circle filter, first name it by filling the text field under `Manage circle filters` and then press **Create circle**. Any existing figures on the view will be updated on creation to reflect the new circle filter.
+
+Circle filters can also be used to create a dynamic dataset. To do this, first select any circle filters whose samples are to be added to the dataset on the *Active filters* section of the side menu by clicking on its checkbox. 
+
+![Creating a dataset from circle filters](img/dataset_from_circle_filter_step1.png)
+
+***Creating a dataset from circle filters, step 1**: Select the filters that encircle the selection of samples you want to include.*
+
+Then, supply a unique descriptive name for the dataset under the *Make a new dataset* field and press **Create dataset**. 
+
+![Creating a dataset from circle filters](img/dataset_from_circle_filter_step2.png)
+
+***Creating a dataset from circle filters, step 2**: name your selection.*
+
+Any duplicate samples (i.e. the circle filters intersect) are added only once. The created dataset then appears on the dataset list. The newly-created dataset is inactive by default.
+
+![Creating a dataset from circle filters](img/dataset_from_circle_filter_step3.png)
+
+***Creating a dataset from circle filters, step 3**: the resulting dynamic dataset is now displayed on the dataset list. Lengthy names are truncated, as in this case.*
+
+
 
 # Views
 ##Explore and filter
@@ -51,6 +113,9 @@ New figures can be added by clicking on the **Create a new graph** button and se
 ### Figure windows
 The windows can be resized, dragged and removed from the canvas as user chooses. A cogwheel on the top-left of the window contains a set of options for the window. These available options vary based on the displayed figure type. For instance, [a histogram](userguide.md#histogram) can be exported either in SVG or PNG format through this dropdown.
 
+![Figure window settings dropdown](img/window_export.png)
+
+*Settings dropdown for figure window opened up. Two options are available for this histogram: export the figure in PNG or SVG format.*
 
 ##Self-Organizing Maps
 When entering this view, the application either calculates a Self-Organizing Map (SOM) or uses a pre-calculated result if one is available. The SOM is calculated based on the active samples and the train variables.
@@ -89,9 +154,17 @@ Note that due to technical limitations the regression windows cannot be dragged 
 
 Histograms can be drawn either on the [Explore and filter](userguide.md#explore-and-filter) or the [Self-Organizing Maps](userguide.md#som) view.
 
-On *Explore and filter* view the histogram is drawn based on the active set of samples. User can select a range sample values to explore further by clicking and dragging over the figure area. This creates a **range filter** that is displayed on the [side menu](userguide.md#side-menu).
+On *Explore and filter* view the histogram is drawn based on the active set of samples. User can select a range sample values to explore further by clicking and dragging over the figure area. On a quantitative variable, this creates a **range filter** that is displayed on the [side menu](userguide.md#side-menu).
+
+![Explore histogram of quantitative variable](img/explore_histogram.png)
+
+*Example of histogram of a quantitative variable. A range filter is active.*
 
 On *Self-Organizing Maps* view the histogram sample data is sourced from the samples that are selected with circle filters. In addition, a third histogram is placed on background of the stacked figure to signify **all the samples** that have been used in the SOM computation.
+
+![SOM histogram](img/som_histogram.png)
+
+*SOM histogram displaying four colors: three colors (orange, dark blue, green) indicating circle filters listed earlier, and a fourth color (light blue) showing all samples that have been included in the SOM training.*
 
 ## Scatter plot
 A scatter plot contains the dots originating from each active dataset. The top-right corner of the figure contains the regression line equations.
@@ -202,6 +275,10 @@ The profile histogram is a grouped row chart that calculates a separate bar for 
 
 (mean<sub>variable within the circle selection</sub> - mean<sub>variable subgroup</sub>) / (std<sub>all samples</sub> * constant)
 
+![Example of profile histogram](img/profile_histogram.png)
+
+*Example of Fatty acids profile histogram, three circle filters are active. The cursor is on top of the MUFA variable, showing a tooltip that contains the mean score of the variable, standard deviation, and sample count of the filter.*
+
 ## Regression box plots
 
 On the resulting figure, the selected variables are grouped according to the variable group and its respective ordering number. 
@@ -222,7 +299,18 @@ Selected variables appear as chips on the free text search field and can be remo
 
 ## User-defined variables
 
-Plotter supports creating custom variables and drawing figures that depend on them. To create a custom variable, select User-defined variables > Create a new variable. Start by uniquely naming the variable. Note that the name cannot overlap with previously created variables. On the mathematical expression field, start by typing the colon character (`:`) after which a dropdown list is presented to that is filtered as you type. Select the variable by either clicking on it or by pressing `Enter`. The selected variable is then modified to contain brackets (`[variable]`).
+Plotter supports creating custom variables and drawing figures that depend on them. To create a custom variable, select User-defined variables > Create a new variable. Start by uniquely naming the variable. Note that the name cannot overlap with previously created variables. On the mathematical expression field, start by typing the colon character (`:`) after which a dropdown list is presented to that is filtered as you type. 
+
+![Adding a variable on the mathematical expression field](img/user_defined_variable_dropdown.png)
+
+*Adding a variable to an expression. In this case, the user is searching for a variable named `Weight`. When `:w` is typed, a scrollable dropdown appears displaying variables that have that string in it's name or description.*
+
+Select the variable by either clicking on it or by pressing `Enter`. The selected variable is then modified to contain brackets (`[variable]`).
+
+![Selected variable in the expression field](img/user_defined_variable_selected.png)
+
+*Variable `Weight` that was selected in the previous screenshot.*
+
 
 The mathematical expression can contain several variables and supports the usual operations like addition (`+`), subtraction (`-`), division (`/`), multiplication (`*`) and others. Parentheses can also be used as necessary. Most common mathematical functions are also provided; for a list of available functions see the [Math.js documentation](http://mathjs.org/docs/reference/functions.html). Please note that referring to a custom variable inside another custom variable expresssion is not supported at this time.
 
