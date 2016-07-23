@@ -43,7 +43,7 @@ The user can choose to operate on a specific subset of samples by first creating
 #### Filters
 The side menu displays a list of active filters if there are any. 
 
-##### Explore and filter
+##### Explore and filter view
 On the [Explore and filter](userguide.md#explore-and-filter) view, histograms can be filtered by clicking and dragging over the figure.  These filters are only active on the current view and are removed when you navigate between views. If you wish to keep the active selection created with filters, you can freeze the sample selection by creating a new dataset as described in [datasets](userguide.md#datasets).
 
 ![Example of applied range filters](img/histogram_filters.png)
@@ -57,7 +57,7 @@ The corresponding active filter list as it would be displayed on the side menu:
 *Active menu displaying the two active filters from previous figure.*
 
 
-##### Self-Organizing Maps
+##### Self-Organizing Map view
 On the [Self-Organizing Maps view](userguide.md#self-organizing-maps) filters are called *circle filters*. By default two circle filters are created, named A and B. They are placed over the SOM planes on a random coordinate. Circle filters can be moved by dragging them.
 
 ![Example SOM plane with three circle filters](img/circle_filters.png)
@@ -152,7 +152,7 @@ Note that due to technical limitations the regression windows cannot be dragged 
 
 ## Histogram
 
-Histograms can be drawn either on the [Explore and filter](userguide.md#explore-and-filter) or the [Self-Organizing Maps](userguide.md#som) view.
+Histograms can be drawn either on the [Explore and filter](userguide.md#explore-and-filter) or the [Self-Organizing Maps](userguide.md#self-organizing-maps) view.
 
 On *Explore and filter* view the histogram is drawn based on the active set of samples. User can select a range sample values to explore further by clicking and dragging over the figure area. On a quantitative variable, this creates a **range filter** that is displayed on the [side menu](userguide.md#side-menu).
 
@@ -200,7 +200,7 @@ By clicking `Toggle color scale stretching` in the figure window options, Plotte
 
 ## Box plot
 
-A box plot can drawn either on the [Explore and filter](userguide.md#explore-and-filter) or the [Self-Organizing Maps](userguide.md#som) view. 
+A box plot can drawn either on the [Explore and filter](userguide.md#explore-and-filter) or the [Self-Organizing Maps](userguide.md#self-organizing-maps) view. 
 
 On *Explore and filter* view, the data source is the active sample selection consisting of datasets. 
 
@@ -208,7 +208,7 @@ On *Self-Organizing Maps* view, the data originates from subselection of samples
 
 ## Profile histogram
 
-A profile histogram can be drawn on the [Self-Organizing Maps](userguide.md#som) view. Currently three distinct predefined histograms are available:
+A profile histogram can be drawn on the [Self-Organizing Maps](userguide.md#self-organizing-maps) view. Currently three distinct predefined histograms are available:
 
 Total lipids:
 
