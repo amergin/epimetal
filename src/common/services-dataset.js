@@ -83,6 +83,10 @@ angular.module('services.dataset', ['services.notify',
         return dset;
       };
 
+      dset.idName = function() {
+        return SparkMD5.hash(dset.name());
+      };
+
       dset.size = function(x) {
         if (!arguments.length) {
           return priv.size;
