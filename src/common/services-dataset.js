@@ -718,7 +718,7 @@ angular.module('services.dataset', ['services.notify',
           return filter.contains(sample.bmus);
         });
       }
-      var p1 = performance.now();
+      // var p1 = performance.now();
       var DimensionService = $injector.get('DimensionService'),
         primary, secondary, sampleDimension, samples,
         hasCircles = !_.isUndefined(circles) && _.size(circles) > 0;
@@ -733,8 +733,8 @@ angular.module('services.dataset', ['services.notify',
         sampleDimension = primary.getSampleDimension();
         samples = sampleDimension.get().top(Infinity);
       }
-      var p2 = performance.now();
-      console.log("getSamples", p2-p1);      
+      // var p2 = performance.now();
+      // console.log("getSamples", p2-p1);      
       return samples;
     }
 
@@ -749,7 +749,7 @@ angular.module('services.dataset', ['services.notify',
       primary = DimensionService.getPrimary(),
       dataWasAdded;
 
-    var p1 = performance.now();
+    // var p1 = performance.now();
     var derived = new DerivedDataset()
       .name(config.name)
       .size(samples.length)
@@ -757,8 +757,8 @@ angular.module('services.dataset', ['services.notify',
       .samples(samples)
       .active(config.setActive);
 
-    var p2 = performance.now();
-    console.log("creation", p2-p1);        
+    // var p2 = performance.now();
+    // console.log("creation", p2-p1);        
 
     if (circles) {
       // deselectOthers();
