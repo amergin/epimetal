@@ -181,13 +181,16 @@ angular.module('plotter.vis', [
   $scope.tabs = [{
     'title': 'Explore and filter',
     'name': 'explore'
-  }, {
-    'title': 'Self-organizing maps',
-    'name': 'som'
-  }, {
-    'title': 'Regression analysis & associations',
+  }, 
+  {
+    'title': 'Regression analysis',
     'name': 'regression'
-  }];
+  },
+  {
+    'title': 'SOM: multivariate nonlinear analysis',
+    'name': 'som'
+  }, 
+  ];
 
   function getTabInd() {
     var state = TabService.activeState();
