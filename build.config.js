@@ -84,7 +84,7 @@ module.exports = {
       'vendor/dcjs/dc-develop.js',
       'vendor/d3-tip/index.js',
       // Utilities
-      'vendor/lodash/lodash.min.js',
+      'vendor/lodash/lodash.js',
       // core framework for UI
       'vendor/angular-strap/dist/angular-strap.js',
       'vendor/angular-strap/dist/angular-strap.tpl.js',
