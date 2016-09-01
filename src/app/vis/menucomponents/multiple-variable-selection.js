@@ -544,10 +544,22 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     };
 
     $scope.selectAll = function(selection) {
-      _.each(selection, function(item) {
-        if($scope.getType(item) == 'continues') { return; }
-        addVariable(item);
-        // $scope.updateSelection(item);
+      function selectArray(array) {
+        _.each(array, function(item) {
+          addVariable(item);
+        });
+      }
+
+      var items;
+
+      _.each(selection, function(iteratee) {
+        if($scope.getType(iteratee) == 'continues') {
+          items = _.chain(iteratee).values().first().value();
+          selectArray(items);
+        }
+        else {
+          addVariable(iteratee);
+        }
       });
     };
 
