@@ -73,13 +73,11 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
   $scope._createCanvas = function(set, zIndex) {
 
-    // spaces to underscores
-    var name = set.name();
     var data = $scope.group.all().filter(function(d) {
-      return (d.value.counts[name] > 0) && d.key.valueOf() !== constants.nanValue;
-    });
-    var color = $scope.window.pooled() ? SCATTERPLOT_POOLING_COLOR : set.color();
-    var canvas = $scope.createCanvas(
+      return (d.value.counts[set.name()] > 0) && d.key.valueOf() !== constants.nanValue;
+    }),
+    color = $scope.window.pooled() ? SCATTERPLOT_POOLING_COLOR : set.color(),
+    canvas = $scope.createCanvas(
       // $scope.element,
       $scope.wrapper,
       $scope.width,
@@ -93,9 +91,10 @@ angular.module('plotter.vis.plotting.scatterplot', [
       $scope.window.variables().x.labelName(),
       $scope.window.variables().y.labelName(),
       data,
-      name,
+      set,
       color
     );
+
     $scope.canvases[set.name()] = {
       'zindex': zIndex,
       'canvas': canvas
@@ -451,14 +450,12 @@ angular.module('plotter.vis.plotting.scatterplot', [
 
   $scope.createCanvas = function(element, w, h, m, xExtent,
     yExtent, xRange, yRange, zIndex, varX,
-    varY, data, dataset, datasetColor) {
+    varY, data, dset, datasetColor) {
     // top-right-bottom-left
     var last = [], // last [x,y,color] pairs
       xscale = d3.scale.linear(), // x scale
-      yscale = d3.scale.linear(); // yscale
-
-    // sanitize name and use it as an id
-    var identifier = dataset.replace(/\s/g, '_');
+      yscale = d3.scale.linear(), // yscale
+      identifier = dset.idName();
 
     // create canvas element
     var c = document.createElement('canvas');
