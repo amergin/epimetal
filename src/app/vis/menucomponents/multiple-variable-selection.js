@@ -522,17 +522,30 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     };
 
     $scope.majoritySelected = function(selection) {
-      var noVars = 0,
-      cache = getCacheField(),
-      counts = _.countBy(selection, function(v) { 
-        var type = $scope.getType(v);
-        if(type == 'terminates') {
-          ++noVars;
-          return cache[v.id] && cache[v.id].selected === true;
+      function compare(v) {
+        if(cache[v.id] && cache[v.id].selected === true) {
+          ++counts.selected;
         }
-        return false;
+      }
+
+      var counts = {
+        display: 0,
+        selected: 0
+      },
+      cache = getCacheField();
+      _.each(selection, function(v) {
+        var type = $scope.getType(v);
+        ++counts.display;
+        if(type == 'terminates') {
+          compare(v);
+        } else if(type == 'continues') {
+          var subvars = _.chain(v).values().first().value();
+          _.each(subvars, function(subvar) {
+            compare(subvar);
+          });
+        }
       });
-      return (counts.true || 0) / noVars > 0.5;
+      return counts.selected / counts.display > 0.5;
     };
 
     $scope.canSelectMultiple = function() {
@@ -550,11 +563,9 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
         });
       }
 
-      var items;
-
       _.each(selection, function(iteratee) {
         if($scope.getType(iteratee) == 'continues') {
-          items = _.chain(iteratee).values().first().value();
+          var items = _.chain(iteratee).values().first().value();
           selectArray(items);
         }
         else {
@@ -565,9 +576,15 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 
     $scope.deselectAll = function(selection) {
       _.each(selection, function(item) {
-        if($scope.getType(item) == 'continues') { return; }
-        removeVariable(item);
-        // $scope.updateSelection(item);
+        if($scope.getType(item) == 'continues') { 
+          var subitems = _.chain(item).values().first().value();
+          _.each(subitems, function(subitem) {
+            removeVariable(subitem);
+          });
+        }
+        else {
+          removeVariable(item);
+        }
       });
     };
 
@@ -648,7 +665,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 
     $scope.selectedHasVariables = function(selection) {
       var counts = _.countBy(selection, function(i) { return $scope.getType(i); });
-      return counts.terminates > 0;
+      return counts.terminates > 0 || counts.continues > 0;
     };
 
     $scope.selectInfo = function(variable) {
