@@ -16,7 +16,13 @@ angular.module('plotter.vis.menucomponents.window-action',
 .controller('WindowActionController', function WindowActionController($scope, WindowHandler) {
 
   $scope.visible = function() {
-    return true;
+    return _.any(WindowHandler.getVisible(), function(handler) {
+      if(handler.getName() !== 'vis.som.plane') {
+        return handler.get().length > 0;
+      } else {
+        return false;
+      }
+    });
   };
 
   $scope.close = function() {
