@@ -62,7 +62,7 @@ angular.module('plotter.vis.plotting.heatmap',
         .undefinedColor(HEATMAP_UNDEFINED_COLOR),
 
         calculator: function(d) {
-          if($scope.filtered) {
+          if($scope.isFiltered()) {
             if( !_.isUndefined(d.key.pvalue) && d.key.pvalue > $scope.limit ) {
               return d3.rgb('white');
             }
@@ -78,7 +78,7 @@ angular.module('plotter.vis.plotting.heatmap',
           .range(['blue', 'white', 'red']),
 
           accessor: function(d) {
-            if($scope.filtered) {
+            if($scope.isFiltered()) {
               if( !_.isUndefined(d.key.pvalue) && d.key.pvalue > $scope.limit ) {
                 return 0;
               }
@@ -94,19 +94,21 @@ angular.module('plotter.vis.plotting.heatmap',
     initColorScale();
     initCrossfilter();
 
+    $scope.isFiltered = function() {
+      return $scope.window.extra().filtered;
+    };
+
     $scope.window.resetButton(false);
 
     $scope.format = d3.format('.2g');
-    $scope.filtered = true; // p-value limiting
     $scope.limitDisp = null;
 
-    $scope.window.extra().filtered = true;
+    $scope.window.extra().filtered = false;
 
     $scope.$watch(function() {
       return $scope.window.extra().filtered;
     }, function(newVal, oldVal) {
       if( newVal != oldVal ) {
-        $scope.filtered = newVal;
         $scope.updateHeader();
         $scope.heatmap.render();
       }
@@ -120,7 +122,7 @@ angular.module('plotter.vis.plotting.heatmap',
       if(contains) {
         header.splice(-1);
       }
-      if($scope.filtered) {
+      if($scope.isFiltered()) {
         header.push('p < ' + $scope.limitDisp);
       } else {
         //nothing
