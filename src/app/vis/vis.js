@@ -377,7 +377,7 @@ angular.module('plotter.vis', [
     var diagScope = $rootScope.$new(true);
 
     diagScope.config = {
-      title: 'Create a regression view',
+      title: 'Create a regression forest plot',
       template: 'vis/menucomponents/new.regression.tpl.html',
       actions: {
         submit: 'Compute regression',
