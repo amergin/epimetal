@@ -252,6 +252,14 @@ angular.module('services.window', [
           };
         }
 
+        function getPlaneHighlight(cfg) {
+          return {
+            'text': '<i class="fa fa-adjust"></i> Toggle hexagon highlighting',
+            'click': _.wrap(cfg.callback, doCallback),
+            'type': cfg.type
+          };
+        }        
+
         function getPooling(cfg) {
           return {
             'text': '<i class="fa fa-adjust"></i> Toggle figure pooling',
@@ -274,6 +282,9 @@ angular.module('services.window', [
 
           case 'pooling':
             return getPooling(cfg);
+
+          case 'plane-highlight':
+            return getPlaneHighlight(cfg);
         }
       }
 

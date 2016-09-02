@@ -14,8 +14,9 @@ angular.module('plotter.vis.plotting.som', [
 })
 
 .constant('SOM_FILTER_TEXT_LENGTH', 3)
+.constant('HEXAGON_BORDER_COLOR', '#fff')
 
-.controller('SOMController', function SOMController($scope, $timeout, $rootScope, FilterService, SOM_PLANE_MARGINS, SOM_FILTER_TEXT_LENGTH, d3, _) {
+.controller('SOMController', function SOMController($scope, $timeout, $rootScope, FilterService, SOM_PLANE_MARGINS, SOM_FILTER_TEXT_LENGTH, HEXAGON_BORDER_COLOR, d3, _) {
 
   $scope.getHeight = function(ele) {
     return ele.height();
@@ -24,6 +25,8 @@ angular.module('plotter.vis.plotting.som', [
   $scope.getWidth = function(ele) {
     return ele.width();
   };
+
+  $scope.highlightHexagons = false; // controlled through dropdown
 
   $scope.updateElementSize = function() {
     $scope.width = $scope.getWidth($scope.element);
@@ -86,7 +89,18 @@ angular.module('plotter.vis.plotting.som', [
     FilterService.updateCircleFilters();
   };
 
-  $scope.drawSOMPlane = function(config) { //plane, element, width, height, margins) {
+  $scope.drawSOMPlane = function(config) {
+    function removeCircleHighlights(circle) {
+
+      var color = circle.color();
+
+      // match element by unique circle color; 
+      // try better matching type next time
+      svg.selectAll('.hexagon.selected[stroke="' + color + '"]')
+      // remove status class and restore default color
+      .classed("selected", false)
+      .attr("stroke", HEXAGON_BORDER_COLOR);
+    }
 
     var plane = config.plane,
       element = config.element,
@@ -174,7 +188,7 @@ angular.module('plotter.vis.plotting.som', [
         return "M" + d.x + "," + d.y + hexbin.hexagon();
       })
       .attr("stroke", function(d, i) {
-        return "#fff";
+        return HEXAGON_BORDER_COLOR;
       })
       .attr("stroke-width", "1px")
       .style("fill", function(d, i) {
@@ -235,6 +249,70 @@ angular.module('plotter.vis.plotting.som', [
       return hexRadius * y * 1.5;
     };
 
+    var resolveAreaCells = function(circleInst) {
+      function highlightHexagon(hexagon, circleInstance) {
+        if(!$scope.highlightHexagons) { return; }
+        // find the one node
+        svg.selectAll('.hexagon').filter( function(d,i) { 
+          return d.i == hexagon.j && d.j == hexagon.i;
+        })
+        .classed('selected', true)
+        .attr('stroke', circleInstance.color());
+      }
+
+      var hexagonInsideCircle = function(hexpoint, circleInst) {
+        var threshold = 3,
+
+          howManyPoints = _.chain(hexagonPoints)
+          .map(function(hp) {
+            // absolute pixel mapping: account for the offset from hexpoint origin
+            var pointAbs = {
+              x: hexpoint.xp + hp.x,
+              y: hexpoint.yp + hp.y
+            };
+            var euclidianDistance = Math.sqrt(Math.pow(pointAbs.x - circleInst.position().x, 2) + Math.pow(pointAbs.y - circleInst.position().y, 2));
+            return euclidianDistance < circleInst.radius();
+          })
+          // reject if not true (=hexpoint inside the circle)
+          .reject(function(m) {
+            return !m;
+          }).value()
+          // get how many point hits were discovered
+          .length;
+        return howManyPoints >= threshold;
+      };
+
+      $scope.resolveAllCircles = function() {
+        _.each(FilterService.getSOMFilters(), function(filter) {
+          resolveAreaCells(filter);
+        });
+      };
+
+      $scope.removeAllCircleHighlights = function() {
+        _.each(FilterService.getSOMFilters(), function(filter) {
+          removeCircleHighlights(filter);
+        });
+      };
+
+      console.log("resolveAreaCells called");
+
+      var hexagons = [];
+
+      removeCircleHighlights(circleInst);
+
+      _.each(points, function(hexpoint) {
+        if (hexagonInsideCircle(hexpoint, circleInst)) {
+          hexagons.push(hexpoint);
+          highlightHexagon(hexpoint, circleInst);
+        }
+      });
+
+      $timeout(function() {
+        $scope.updateFilter(hexagons, circleInst.id());
+      });
+
+    };
+
     var addCircle = function(circle, origin, size) {
 
       var circleId = circle.id();
@@ -247,61 +325,6 @@ angular.module('plotter.vis.plotting.som', [
           max: hexRadius * (size.m - 1)
         }
       };
-
-      var resolveAreaCells = function(circle, event) {
-        // var highlightHexagon = function(hexagon) {
-        //   // // find the one node
-        //   svg.selectAll('.hexagon').filter( function(d,i) { 
-        //     return d.i == hexagon.j && d.j == hexagon.i;
-        //   }).classed('selected', true);
-        // };
-
-        // var removeHighlights = function() {
-        //   svg.selectAll('.hexagon.selected').classed('selected', false);
-        // };
-
-        var hexagonInsideCircle = function(hexpoint, circle) {
-          var threshold = 3,
-            howManyPoints = _.chain(hexagonPoints)
-            .map(function(hp) {
-              // absolute pixel mapping: account for the offset from hexpoint origin
-              var pointAbs = {
-                x: hexpoint.xp + hp.x,
-                y: hexpoint.yp + hp.y
-              };
-              var euclidianDistance = Math.sqrt(Math.pow(pointAbs.x - circle.x, 2) + Math.pow(pointAbs.y - circle.y, 2));
-              return euclidianDistance < circle.r;
-            })
-            // reject if not true (=hexpoint inside the circle)
-            .reject(function(m) {
-              return !m;
-            }).value()
-            // get how many point hits were discovered
-            .length;
-          return howManyPoints >= threshold;
-        };
-
-        console.log("resolveAreaCells called");
-        // removeHighlights();
-
-        var hexagons = [];
-        _.each(points, function(hexpoint) {
-          if (hexagonInsideCircle(hexpoint, circle)) {
-            hexagons.push(hexpoint);
-            // highlightHexagon(hexpoint);
-          }
-        });
-
-        $timeout(function() {
-          $scope.updateFilter(hexagons, circleId);
-        });
-
-      };
-
-      var resolveArea = _.debounce(resolveAreaCells, 150, {
-        leading: false,
-        trailing: true
-      });
 
       var innerDragMove = function(d) {
         var x = Math.max(-hexRadius, Math.min(width + margin.left - margin.right, d3.event.x)),
@@ -329,17 +352,19 @@ angular.module('plotter.vis.plotting.som', [
         });
         circle.position(d);
 
-        $rootScope.$emit('som:circleFilter:move', null, $scope.window.id(), d);
+        $rootScope.$emit('som:circleFilter:move', circle, $scope.window.id(), d);
       };
 
       var innerCircleDrag = d3.behavior.drag()
         .origin(Object)
         .on("drag", innerDragMove)
         .on("dragend", function(d) {
-          resolveArea(d, d3.event);
+          var circleInst = FilterService.getSOMFilter(d.id);
+          resolveArea(circleInst);
+          //resolveArea(d); //, d3.event);
         });
 
-      $rootScope.$on('som:circleFilter:move', function(eve, circleId, winId, d) {
+      $rootScope.$on('som:circleFilter:move', function(eve, instance, winId, d) {
         if (winId === $scope.window.id()) {
           return;
         }
@@ -367,6 +392,12 @@ angular.module('plotter.vis.plotting.som', [
             t.y = d.y;
             return t.y;
           });
+
+        if($scope.highlightHexagons) {
+          resolveArea(instance);
+          return;
+        }
+
       });
 
       $rootScope.$on('som:circleFilter:resize', function(eve, circleId, winId, d) {
@@ -381,6 +412,10 @@ angular.module('plotter.vis.plotting.som', [
             t.r = d.r;
             return t.r;
           });
+
+        var circleInstance = FilterService.getSOMFilter(d.id);
+        circleInstance.radius(d.r);
+        resolveArea(circleInstance);
       });
 
 
@@ -448,10 +483,13 @@ angular.module('plotter.vis.plotting.som', [
             t.r = newRadius;
             return t.r;
           });
-          circle.radius(newRadius);
 
-          resolveArea(d, d3.event);
-          $rootScope.$emit('som:circleFilter:resize', null, $scope.window.id(), d);
+          // if highlight is in place, resolve as well to get highlighting
+          if($scope.highlightHexagons) {
+            resolveArea(circle);
+          }
+
+          $rootScope.$emit('som:circleFilter:resize', circle, $scope.window.id(), d);
         });
 
       var outerCircle = circleAnchor.append('circle')
@@ -476,11 +514,17 @@ angular.module('plotter.vis.plotting.som', [
         .attr('cursor', 'ew-resize')
         .call(outerCircleDrag);
 
-      // resolve initial
-      resolveArea(innerCircle.data()[0], null);
+      // wrap to reduce unnecessary calls
+      var resolveArea = _.debounce(resolveAreaCells, 150, {
+        leading: false,
+        trailing: true
+      });
+
+      //var innerCircleInst = FilterService.getSOMFilter(innerCircle.data()[0].id);
       // place initial position & radius
       circle.position(innerCircle.data()[0]);
       circle.radius(innerCircle.data()[0].r);
+      resolveArea(circle);
 
     };
     // addcircle
@@ -489,6 +533,8 @@ angular.module('plotter.vis.plotting.som', [
       var selector = '.circle-container#' + filter.id(),
         circle = d3.select($scope.element[0]).select(selector);
 
+      removeCircleHighlights(filter);
+
       circle.remove();
     }
 
@@ -496,6 +542,7 @@ angular.module('plotter.vis.plotting.som', [
       return FilterService.getSOMFilters();
     }, function(newArray, oldArray) {
       if (newArray.length > oldArray.length) {
+        // adding a new circle
         var filter = _.last(newArray);
         addCircle(filter, filter.position() || {
           x: circleX(filter.origin().x),
@@ -504,6 +551,7 @@ angular.module('plotter.vis.plotting.som', [
         $scope.window.extra().plane.size
         );
       } else if (newArray.length < oldArray.length) {
+        // removing a circle
         _.chain(oldArray)
           .select(function(item) {
             return !_.findWhere(newArray, item);
@@ -561,6 +609,21 @@ angular.module('plotter.vis.plotting.som', [
         source: 'svg',
         window: $scope.window
       });
+
+      $scope.window.addDropdown({
+        type: "plane-highlight",
+        scope: $scope,
+        callback: function() {
+          // toggle highlighting
+          $scope.highlightHexagons = !$scope.highlightHexagons;
+
+          if($scope.highlightHexagons === true) {
+            $scope.resolveAllCircles();
+          } else {
+            $scope.removeAllCircleHighlights();
+          }
+        }
+      });      
 
     }
 
