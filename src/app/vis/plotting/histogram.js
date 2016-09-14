@@ -541,7 +541,7 @@ angular.module('plotter.vis.plotting.histogram',
         }
 
         function custom(filters, filter) {
-          $injector.get('FilterService').removeFilter(filt);
+          $injector.get('FilterService').removeFilter(filter);
           $injector.get('WindowHandler').reRenderVisible({ compute: true, action: 'filter:remove', omit: 'histogram' });
           $scope.resetButton(false);
         }

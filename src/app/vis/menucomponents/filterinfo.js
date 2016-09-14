@@ -3,6 +3,7 @@ angular.module('plotter.vis.menucomponents.filterinfo',
   'services.filter', 
   'mgcrea.ngStrap.alert',
   'ext.d3',
+  'ext.dc',
   'ext.lodash'
   ])
 
@@ -17,7 +18,7 @@ angular.module('plotter.vis.menucomponents.filterinfo',
   }
 )
 
-.controller('FilterInfoController', function FilterInfoController($scope, $timeout, $log, $injector, DimensionService, FilterService, $state, NotifyService, TabService, DatasetFactory, SOMService, d3, _) {
+.controller('FilterInfoController', function FilterInfoController($scope, $timeout, $log, $injector, DimensionService, FilterService, $state, NotifyService, TabService, DatasetFactory, SOMService, d3, dc, _) {
     var numFormat = d3.format('.2e');
     var dimensionService = DimensionService.getPrimary();
 
@@ -38,21 +39,6 @@ angular.module('plotter.vis.menucomponents.filterinfo',
     $scope.somCheckboxToggle = function(filter) {
       console.log(filter);
     };
-
-    // $scope.canSubmitDerived = function() {
-    //   function som() {
-    //     var hasFilters = _.any($scope.somCheckbox, function(val, key) { return val; });
-    //     return hasFilters && $scope.derivedInput;
-    //   }
-    //   function explore() {
-    //     return $scope.derivedInput;
-    //   }
-
-    //   var stateName = $state.current.name;
-    //   if(stateName == 'vis.som') { return som(); }
-    //   else if(stateName == 'vis.explore') { return explore(); }
-
-    // };
 
     $scope.formatNumber = function(num) {
       return numFormat(num);
@@ -181,6 +167,84 @@ angular.module('plotter.vis.menucomponents.filterinfo',
         return false;
       }
       return true;
-    };    
+    }; 
+
+    $scope.editRangeFilterCallback = function(filter, result) {
+      $log.info("range filter edit", filter, result);
+    };
+
+    $scope.minExtent = function(filter) {
+      return filter.chart().x().domain()[0];
+    };
+
+    $scope.maxExtent = function(filter) {
+      return filter.chart().x().domain()[1];
+    };
+
+    $scope.rangeFilterLookup = {};
+    var rangePrecisionFormat = d3.format(".3g");
+
+    function getRangeFilterValue(filter) {
+      return $scope.rangeFilterLookup[filter.variable().id];
+    }
+
+    function getRangeLocationInd(location) {
+      return (location == 'lower') ? 0 : 1;
+    }
+
+    function getRangeLocationNotInd(location) {
+      return (location == 'lower') ? 1 : 0;
+    }
+
+    $scope.getRangeFilterMin = function(filter) {
+      return filter.chart().x().domain()[0];
+    };
+
+    $scope.getRangeFilterMax = function(filter) {
+      return filter.chart().x().domain()[1];
+    };
+
+    $scope.initRangeFilter = function(filter, location) {
+      var obj = $scope.rangeFilterLookup[filter.variable().id] || {},
+      ind = getRangeLocationInd(location);
+      obj[location] = +rangePrecisionFormat(filter.payload()[ind]);
+      $scope.rangeFilterLookup[filter.variable().id] = obj;
+    };
+
+    $scope.setRangeFilter = function(filter, location) {
+      $log.info("setting", filter, location);
+      var value = getRangeFilterValue(filter)[location],
+      ind = getRangeLocationInd(location);
+      if(isNaN(value) || !isFinite(value)) {
+        // restore old value to field
+        $scope.rangeFilterLookup[filter.variable().id][location] = 
+        +rangePrecisionFormat(filter.payload()[ind]);
+        return;
+      }
+      else {
+        // update the filter and redraw with new info
+
+        var lower, upper, payloadFilter, chart;
+        if(location == 'lower') {
+          upper = filter.payload()[1];
+          lower = value;
+        } else if(location == 'upper') {
+          lower = filter.payload()[0];
+          upper = value;
+        }
+
+        payloadFilter = new dc.filters.RangedFilter(lower, upper);
+        chart = filter.chart();
+        chart.filter(null);
+        chart.filter(payloadFilter);
+        $injector.get('WindowHandler').redrawVisible();
+
+
+        /*filter.payload()[ind] = +rangePrecisionFormat(value);
+        filter.chart().filter(filter.payload());
+        $injector.get('WindowHandler').redrawVisible(); */
+      }
+    };
+
 
 });
