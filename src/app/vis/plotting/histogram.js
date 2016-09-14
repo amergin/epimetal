@@ -860,6 +860,7 @@ angular.module('plotter.vis.plotting.histogram',
               if(!$scope.isSpecial()) {
                 $scope.computeExtent();
                 $scope.renderFigure();
+                $scope.redrawFigure();
               }
             }
             else {

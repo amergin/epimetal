@@ -104,21 +104,24 @@ angular.module('plotter.vis.menucomponents.new-regressionmenu',
       $scope.selection.association.length > 0;
     };
 
+    // target variable = outcome variable
+    // association variables = exposure variables
+    // adjust variables = covariates
     $scope.submit = function() {
       var error = false;
       if( assocAndAdjustOverlapping() ) {
         NotifyService.addSticky('Incorrect variable combination', 
-          'Association variables and adjust variables overlap. Please modify the selection.', 'error',  { referenceId: 'regressioninfo' });
+          'Exposure variables and covariates overlap. Please modify the selection.', 'error',  { referenceId: 'regressioninfo' });
         error = true;
       }
       if( assocIncludesTargetVar() ) {
         NotifyService.addSticky('Incorrect variable combination', 
-          'The target variable is included in the association variables. Please modify the selection.', 'error', { referenceId: 'regressioninfo' });
+          'The outcome variable is included in the exposure variables. Please modify the selection.', 'error', { referenceId: 'regressioninfo' });
         error = true;
       }
       if( adjustIncludesTarget() ) {
         NotifyService.addSticky('Incorrect variable combination', 
-          'The target variable is included in the adjust variables. Please modify the selection.', 'error', { referenceId: 'regressioninfo' });
+          'The outcome variable is included in the covariates. Please modify the selection.', 'error', { referenceId: 'regressioninfo' });
         error = true;
       }
       if(RegressionService.inProgress()) {

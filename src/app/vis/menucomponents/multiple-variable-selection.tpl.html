@@ -34,16 +34,16 @@
 			<div class="col-sm-12 panel panel-default">
 				<div class="panel-body">
 					<div class="input-group">
-						<span class="input-group-addon">Target variable</span>
-						<tags-input ng-model="payload.target" key-property="id" text="filter.target" ng-focus="setFocus('target')" template="vis/menucomponents/tag.tpl.html" placeholder="Target variable - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)" max-tags="1"></tags-input>
+						<span class="input-group-addon">Outcome variable</span>
+						<tags-input ng-model="payload.target" key-property="id" text="filter.target" ng-focus="setFocus('target')" template="vis/menucomponents/tag.tpl.html" placeholder="Outcome variable - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)" max-tags="1"></tags-input>
 					</div>
 					<div class="input-group">
-						<span class="input-group-addon">Association variables</span>
-						<tags-input ng-model="payload.association" key-property="id" text="filter.association" ng-focus="setFocus('association')" template="vis/menucomponents/tag.tpl.html" placeholder="Association variables - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)"></tags-input>
+						<span class="input-group-addon">Exposure variables</span>
+						<tags-input ng-model="payload.association" key-property="id" text="filter.association" ng-focus="setFocus('association')" template="vis/menucomponents/tag.tpl.html" placeholder="Exposure variables - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)"></tags-input>
 					</div>
 					<div class="input-group">
-						<span class="input-group-addon">Adjust variables</span>
-						<tags-input ng-model="payload.adjust" key-property="id" text="filter.adjust" ng-focus="setFocus('adjust')" template="vis/menucomponents/tag.tpl.html" placeholder="Adjust variables - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)"></tags-input>
+						<span class="input-group-addon">Covariates</span>
+						<tags-input ng-model="payload.adjust" key-property="id" text="filter.adjust" ng-focus="setFocus('adjust')" template="vis/menucomponents/tag.tpl.html" placeholder="Covariates - Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)"></tags-input>
 					</div>					
 				</div>
 			</div>
