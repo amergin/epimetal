@@ -13,7 +13,7 @@ angular.module('plotter.vis.plotting.histogram',
 .constant('HISTOGRAM_WIDTH', 450)
 .constant('HISTOGRAM_HEIGHT', 375)
 .constant('HISTOGRAM_POOLING_COLOR', '#000000')
-.constant('HISTOGRAM_SOM_TOTAL_COLOR', '#00b300')
+.constant('HISTOGRAM_SOM_TOTAL_COLOR', '#000000')
 
 .controller('HistogramPlotController', function HistogramPlotController($scope, $rootScope, DatasetFactory, constants, $state, $injector, $timeout, $log, HISTOGRAM_POOLING_COLOR, GRID_WINDOW_PADDING, d3, dc, _) {
 
@@ -21,171 +21,9 @@ angular.module('plotter.vis.plotting.histogram',
       return $scope.window.extra().somSpecial || false;
     };
 
-    // $scope.poolFigure = function poolFigure() {
-    //   $log.info("Pooling requested");
-
-    //   // empty composite chart contents
-    //   $scope.histogram.resetSvg();
-
-    //   var dcGroup = $scope.isSpecial() ? constants.groups.histogram.nonInteractive : constants.groups.histogram.interactive,
-    //   element = $scope.element,
-    //   colorScale = $scope.colorScale;
-
-    //   // create a separate bar chart
-    //   $scope.stacked = dc.barChart(element[0], dcGroup)
-    //   .width( $scope.getWidth(element) )
-    //   .height( $scope.getHeight(element) )
-    //   .centerBar(true)
-    //   .barPadding(0.15)
-    //   .brushOn(true)
-    //   .dimension($scope.dimension)
-    //   .linearColors([HISTOGRAM_POOLING_COLOR])
-    //   .x(d3.scale.linear().domain($scope.extent).range([0, $scope.noBins]))
-    //   .elasticY(true)
-    //   .elasticX(false)
-    //   .renderTitle(false)
-    //   .xUnits(function(low, high) {
-    //     var width = $scope.getWidth(element);
-    //     return Math.round($scope.xUnitsScale(width));
-    //   })
-    //   .margins({
-    //     top: 15,
-    //     right: 10,
-    //     bottom: 30,
-    //     left: 40
-    //   })
-    //   .xAxisLabel($scope.window.variables().axisLabel())
-    //   .addFilterHandler(function(filters, filter) {
-    //     function defaultFn(filters, filter) {
-    //       filters.push(filter);
-    //       console.log("filters after appending = ", filters);
-    //       return filters;
-    //     }
-
-    //     function custom(filters, filter) {
-    //       // adding a filter may be actually shifting it to another position
-    //       var current = _.find($injector.get('FilterService').getFilters(), function(filt) {
-    //         return filt.type() == 'range' && filt.chart() == $scope.histogram;
-    //       });
-
-    //       console.log("current = ", current);
-
-    //       if(current) {
-    //         // shifted
-    //         console.log("shifted", current);
-    //         current.payload(filter);
-    //       } else {
-    //         // new
-    //         var filt = new HistogramFilter()
-    //         .chart($scope.histogram)
-    //         .variable($scope.window.variables())
-    //         .windowid($scope.window.id())
-    //         .payload(filter);
-
-    //         var added = $injector.get('FilterService').addFilter(filt);
-    //         console.log("new filter", added, filt);
-    //       }
-    //       $scope.resetButton(true);
-    //       $injector.get('WindowHandler').reRenderVisible({ compute: true, action: 'filter:add', omit: 'histogram' });
-    //     }
-
-    //     console.log("called addFilter, ", filters.length, arguments);
-    //     custom.apply(this, arguments);
-    //     return defaultFn.apply(this, arguments);
-    //   })
-    //   .removeFilterHandler(function(filters, filter) {
-    //     function defaultFn(filters, filter) {
-    //       for (var i = 0; i < filters.length; i++) {
-    //         if (filters[i] <= filter && filters[i] >= filter) {
-    //           filters.splice(i, 1);
-    //           break;
-    //         }
-    //       }
-    //       return filters;
-    //     }
-
-    //     function custom(filters, filter) {
-    //       $injector.get('FilterService').removeFilter(filt);
-    //       $injector.get('WindowHandler').reRenderVisible({ compute: true, action: 'filter:remove', omit: 'histogram' });
-    //       $scope.resetButton(false);
-    //     }
-
-    //     console.log("removeFilterHandler called", arguments);
-    //     custom.apply(this, arguments);
-    //     return defaultFn.apply(this, arguments);
-    //   })
-    //   .resetFilterHandler(function(filters) {
-    //     console.log("resetFilterHandler called", arguments);
-    //     _.each(filters, function(filter) {
-    //       $injector.get('FilterService').removeFilterByPayload(filter);
-    //     });
-    //     $injector.get('WindowHandler').reRenderVisible({ compute: true, action: 'filter:reset', omit: 'histogram' });
-    //     $scope.resetButton(false);
-    //     return [];
-    //   })
-    //   // .on('renderlet', function(chart) {
-    //   //   if( $scope.window.pooled() ) {
-    //   //     d3.selectAll( $(config.element).find('rect.bar:not(.deselected)') )
-    //   //     .attr("class", 'bar pooled')
-    //   //     .attr("fill", HISTOGRAM_POOLING_COLOR);
-    //   //   }
-    //   // })
-    //   .on('preRedraw', function(chart) {
-    //     chart.rescale();
-    //   })
-    //   .on('preRender', function(chart) {
-    //     chart.rescale();
-    //   });
-
-    //   // set x axis format
-    //   $scope.stacked
-    //   .xAxis()
-    //   .ticks(7)
-    //   .tickFormat(constants.tickFormat);
-
-
-    //   var first = true;
-
-    //   _.each($scope.groups, function(instance, groupName) {
-    //       var name = instance.name(),
-    //       valueAccessor = instance.type() == 'circle' ? instance.id() : instance.name(),
-    //       filteredGroup = $scope.filterOnSet($scope.reduced, name, true);
-
-    //       if(first) {
-    //         // first stack must be group
-    //         $scope.stacked
-    //         .group(filteredGroup, name)
-    //         // and it must have an accessor
-    //         .valueAccessor(function(d) {
-    //           return d.value.counts[groupName];
-    //         });
-
-    //         first = false;
-    //       } else {
-    //         $scope.stacked.stack(filteredGroup, name, function(d) {
-    //           return d.value.counts[groupName];
-    //         });
-    //       }
-
-    //   });
-
-    //   $scope.stacked.render();
-    // };
-
     $scope.renderFigure = function() {
       $scope.updateChartSize($scope.histogram);
       $scope.histogram.render();
-      // if($scope.window.pooled()) {
-      //   if(!$scope.stacked) {
-      //     $scope.poolFigure();
-      //   } else {
-      //     $scope.updateChartSize($scope.stacked);
-      //     $scope.stacked.render();
-      //   }
-      // } else {
-      //   $scope.updateChartSize($scope.histogram);
-      //   $scope.histogram.render();        
-      // }
     };
 
     $scope.updateChartSize = function updateSize(chart) {
@@ -214,12 +52,6 @@ angular.module('plotter.vis.plotting.histogram',
         if(newVal) {
           $scope.updateChartSize($scope.stacked);
           $scope.stacked.render();
-          // if(!$scope.stacked) {
-          //   $scope.poolFigure();
-          // } else {
-          //   $scope.updateChartSize($scope.stacked);
-          //   $scope.stacked.render();
-          // }
         } else {
           $scope.updateChartSize($scope.histogram);
           $scope.histogram.render();
@@ -343,7 +175,7 @@ angular.module('plotter.vis.plotting.histogram',
 
       // update individual charts to the newest info about the bins
       _.each($scope.barCharts, function(chart, name) {
-        if(name === 'total') {
+        if(name === 'total' || name == 'kde') {
           chart.group($scope.filterOnSet($scope.totalReduced, name), name);
         } else {
           chart.group($scope.filterOnSet($scope.reduced, name), name);
@@ -373,54 +205,108 @@ angular.module('plotter.vis.plotting.histogram',
     // see https://github.com/dc-js/dc.js/wiki/FAQ#filter-the-data-before-its-charted
     // this used to filter to only the one set & limit out NaN's
     $scope.filterOnSet = function(group, name, pooled) {
+      function normalHistogramsOrTotal(group, name) {
+        return group.all().filter(function(d) {
+          var notNaN = (Math.ceil(d.key) != constants.nanValue);
+          if(pooled === true) {
+            return notNaN && (d.value.counts[name] >= 0);
+          } else {
+            return notNaN && (d.value.counts[name] > 0);
+          }
+        });
+      }
+
+      function circles(group, name) {
+        var ret = _.chain(group.all())
+        .reject(function(grp) { return grp.key == constants.nanValue; })
+        .map(function(grp) {
+          var lookup = {};
+
+          // for each bmu coordinate
+          _.each(grp.value.counts, function(countObj, id) {
+            if( id == 'total' ) { return; } // continue
+            var circles = $injector.get('FilterService').inWhatCircles(countObj.bmu);
+
+            // that may exist in many circle filters
+            _.each(circles, function(circleId) {
+              if( !lookup[circleId] ) { lookup[circleId] = 0; }
+              // add the amount info
+              lookup[circleId] = lookup[circleId] + countObj.count;
+            });
+
+          });
+          return {
+            key: grp.key,
+            value: {
+              counts: angular.extend(lookup, { total: grp.value.counts.total })
+            }
+          };
+        })
+        .reject(function(grp) { 
+          if(pooled === true) {
+            return false;
+          } else {
+            return grp.value.counts[name] === 0;
+          }
+        })
+        .value();
+
+        return ret;        
+      }
+
       return {
         'all': function() {
-          if( $scope.isSpecial() && name != 'total' ) {
-            var ret = _.chain(group.all())
-            .reject(function(grp) { return grp.key == constants.nanValue; })
-            .map(function(grp) {
-              var lookup = {};
-
-              // for each bmu coordinate
-              _.each(grp.value.counts, function(countObj, id) {
-                if( id == 'total' ) { return; } // continue
-                var circles = $injector.get('FilterService').inWhatCircles(countObj.bmu);
-
-                // that may exist in many circle filters
-                _.each(circles, function(circleId) {
-                  if( !lookup[circleId] ) { lookup[circleId] = 0; }
-                  // add the amount info
-                  lookup[circleId] = lookup[circleId] + countObj.count;
-                });
-
-              });
-              return {
-                key: grp.key,
-                value: {
-                  counts: angular.extend(lookup, { total: grp.value.counts.total })
-                }
-              };
-            })
-            .reject(function(grp) { 
-              if(pooled === true) {
-                return false;
-              } else {
-                return grp.value.counts[name] === 0;
-              }
-            })
-            .value();
-
-            return ret;
-          } else {
+          var scale, smoothing;
+          if(($scope.isSpecial() && name == 'total') || !$scope.isSpecial()) {
             // normal histograms or total
-            return group.all().filter(function(d) {
-              var notNaN = (Math.ceil(d.key) != constants.nanValue);
-              if(pooled === true) {
-                return notNaN && (d.value.counts[name] >= 0);
-              } else {
-                return notNaN && (d.value.counts[name] > 0);
-              }
-            });
+            return normalHistogramsOrTotal(group, name);
+          }
+          else if($scope.isSpecial() && name == "total-kde") {
+            scale = ($scope.extent[1] - $scope.extent[0]) / $scope.noBins;
+            smoothing = ssci.smooth.kernel2()
+            .kernel("Gaussian")
+            // use the previous fn to have the NaN's filtered out
+            .data(normalHistogramsOrTotal(group, 'total'))
+            .x(function(d) {
+              return d.key;
+            })
+            .y(function(d) {
+              return d.value.counts.total;
+            })
+            .scale(scale)
+            .diff(0.10);
+
+            smoothing();
+
+            return smoothing.output();
+          }
+          // circles
+          else if($scope.isSpecial() && name != 'total' && !_.endsWith(name, '-kde') ) {
+            return circles(group, name);
+          }
+          // circle kde lines
+          else if($scope.isSpecial() && _.endsWith(name, '-kde')) {
+            var originalName = name.slice(0, name.length-4),
+            circleId = _.find($scope.FilterService.getSOMFilters(), function(filt) {
+              return filt.name() == originalName;
+            }).id();
+            scale = ($scope.extent[1] - $scope.extent[0]) / $scope.noBins;
+            smoothing = ssci.smooth.kernel2()
+            .kernel("Gaussian")
+            // use the previous fn to have the NaN's filtered out
+            .data(circles(group, originalName))
+            .x(function(d) {
+              return d.key;
+            })
+            .y(function(d) {
+              return d.value.counts[circleId] || 0;
+            })
+            .scale(scale)
+            .diff(0.10);
+
+            smoothing();
+
+            return smoothing.output();
           }
         }
       };
@@ -587,7 +473,6 @@ angular.module('plotter.vis.plotting.histogram',
 
       // 2. for each of the additional stacks, create a child chart
       _.each(config.groups, function(instance, ind) {
-
         var name = instance.name(),
         valueAccessor = instance.type() == 'circle' ? instance.id() : instance.name(); 
 
@@ -604,23 +489,49 @@ angular.module('plotter.vis.plotting.histogram',
           return config.colorScale.getAccessor(name);
         });
 
-        /* chart.getColor = function(d) {
-          console.log("d", d);
-          return DatasetFactory.getSet(name).color();
-        }; */
-
-
         $scope.barCharts[name] = chart;
         charts.push(chart);
+
+        if( $scope.isSpecial() ) {
+          // add kde line for each circle instance
+
+          var kdeName = name + "-kde";
+
+          chart = dc.lineChart($scope.histogram)
+          .interpolate("basis") 
+          .colorAccessor(function(d) {
+            return config.colorScale.getAccessor(name);
+          })
+          .brushOn(false)
+          .xyTipsOn(false)
+          .clipPadding(10)
+          .elasticY(true)
+          .dimension(config.dimension)
+          .group(config.filter(config.reduced, kdeName), kdeName)
+          .mouseZoomable(false)
+          .keyAccessor(function(d) {
+            // from ssci output
+            return d[0];
+          })
+          .valueAccessor(function(d) {
+            // from ssci output
+            return d[1];
+          });
+          //.legend(dc.legend().x(350).y(350).itemHeight(13).gap(5).horizontal(1).legendWidth(100).itemWidth(70));
+
+          $scope.barCharts[name + "-kde"] = chart;
+          charts.push(chart);
+        }
+
       });
 
       if( $scope.isSpecial()  ) {
-        var name = 'total';
-        var chart = dc.barChart($scope.histogram)
+        // total
+        name = 'total';
+        chart = dc.barChart($scope.histogram)
         .centerBar(true)
         .barPadding(0.15)
-        .linearColors([HISTOGRAM_SOM_TOTAL_COLOR])
-        .brushOn(true)
+        .brushOn(false)
         .dimension($scope.totalDimension)
         .group(config.filter($scope.totalReduced, name), name)
         .colorAccessor(function(d) {
@@ -631,11 +542,13 @@ angular.module('plotter.vis.plotting.histogram',
         });
 
         $scope.barCharts[name] = chart;
-        charts.push(chart);
+        charts.push(chart);        
 
-        // total to background
-        charts.reverse();
       }
+
+      // total & kde to background
+      charts.reverse();
+
 
       // 3. compose & render the composite chart
 
@@ -721,10 +634,41 @@ angular.module('plotter.vis.plotting.histogram',
           $scope.histogram.compose(currentChildren);
         }
 
+        function addKdeChart() {
+          var kdeName = filter.name() + "-kde",
+          chart = dc.lineChart($scope.histogram)
+          .interpolate("basis")
+          .colorAccessor(function(d) {
+            return config.colorScale.getAccessor(filter.name());
+          })
+          .brushOn(false)
+          .xyTipsOn(false)
+          .clipPadding(10)
+          .elasticY(true)
+          .dimension(config.dimension)
+          .group(config.filter(config.reduced, kdeName), kdeName)
+          .mouseZoomable(false)
+          .keyAccessor(function(d) {
+            // from ssci output
+            return d[0];
+          })
+          .valueAccessor(function(d) {
+            // from ssci output
+            return d[1];
+          });
+
+          var currentChildren = $scope.histogram.children();
+
+          $scope.barCharts[kdeName] = chart;
+          currentChildren.push(chart);
+          $scope.histogram.compose(currentChildren);
+        }
+
         if(!$scope.isSpecial()) { return; }
 
         $scope.computeExtent();
         addChart();
+        addKdeChart();
         $scope.histogram.render();
       });
 
@@ -733,8 +677,10 @@ angular.module('plotter.vis.plotting.histogram',
           var currentChildren = $scope.histogram.children(),
           name = filter.name(),
           chart = $scope.barCharts[name];
+          kdeChart = $scope.barCharts[name + "-kde"];
 
           _.remove(currentChildren, chart);
+          _.remove(currentChildren, kdeChart);
           $scope.histogram.compose(currentChildren);
         }
         if(!$scope.isSpecial()) { return; }
