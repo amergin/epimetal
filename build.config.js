@@ -108,6 +108,9 @@ module.exports = {
       'vendor/ment.io/dist/mentio.js',
       'vendor/mathjs/dist/math.js',
       'vendor/regression-js/src/regression.js',
+      'vendor/angularjs-slider/dist/rzslider.js',
+      'vendor/ssci/distrib/ssci.js',
+      'vendor/big.js/big.js',
       // 'vendor/angular-workers/dist/angular-workers.js',
       'vendor/angular-svg-round-progressbar/build/roundProgress.js',
       // this is a hack to allow the subdirectories to be copied
@@ -120,6 +123,7 @@ module.exports = {
       'vendor/angular-growl-2/build/angular-growl.min.css',
       'vendor/ngprogress/ngProgress.css',
       'vendor/angular-resizable/angular-resizable.min.css',
+      'vendor/angularjs-slider/src/rzslider.css',
       // preserve this order:
       'vendor/ng-tags-input/ng-tags-input.min.css',
       'vendor/ng-tags-input/ng-tags-input.bootstrap.min.css'
