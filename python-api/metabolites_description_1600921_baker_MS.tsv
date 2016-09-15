@@ -233,7 +233,7 @@ Crea	Creatinine	mmol/l	Fluid balance
 Alb	Albumin	signal area	Fluid balance
 Gp	Glycoprotein acetyls, mainly a1-acid glycoprotein	mmol/l	Inflammation
 Age	Patient age	years	Clinical data
-Gender	Patient gender	C|1=male|2=female	Clinical data
+Gender	Patient gender	|C|1=male|2=female	Clinical data
 BMI	Body Mass Index	kg/m2	Clinical data
 Weight	Patient weight	kg	Clinical data
 Height	Patient height	m	Clinical data
@@ -252,7 +252,7 @@ tag_polysaccharides	Polysaccarides	NA	Tags
 tag_low_protein_content	Low protein content	NA	Tags
 tag_plasma_sample	Plasma sample	NA	Tags
 tag_high_ethanol	Ethanol	NA	Tags
-|regex|dhCer_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Dihydroceramide	
+|regex|dhCer_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Dihydroceramide
 |regex|Cer_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Ceramide	nmmol/l
 |regex|MHC_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Monohexosylceramide
 |regex|THC_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Trihexosylceramide
@@ -273,7 +273,6 @@ tag_high_ethanol	Ethanol	NA	Tags
 |regex|COH_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Cholesterol
 |regex|DG_\d{1,3}:\d_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Diacylglycerol
 |regex|TG_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Triaclyglycerol
-
 TG	Triglycerides	mmol/l	Mass spectrometry: Total measures
 TC	Triglycerides	mmol/l	Mass spectrometry: Total measures
 LDL_C	Total cholesterol in LDL	mmol/l	Mass spectrometry: Total measures
