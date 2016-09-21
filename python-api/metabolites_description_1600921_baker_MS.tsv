@@ -253,7 +253,7 @@ tag_low_protein_content	Low protein content	NA	Tags
 tag_plasma_sample	Plasma sample	NA	Tags
 tag_high_ethanol	Ethanol	NA	Tags
 |regex|dhCer_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Dihydroceramide
-|regex|Cer_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Ceramide	nmmol/l
+|regex|Cer_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Ceramide
 |regex|MHC_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Monohexosylceramide
 |regex|THC_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Trihexosylceramide
 |regex|SM_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Sphingomyelin
@@ -283,9 +283,9 @@ Waist	Waist circumference	cm	Clinical data
 W_H_ratio	Waist-hip ratio	NA	Clinical data
 FastingInsulin	Fasting insulin	mU/l	Mass spectrometry: Glycolysis related metabolites
 HOMA	Homeostatic model assessment	NA	Mass spectrometry: Glycolysis related metabolites
-2h_glucose Glucose after 2 hours	mmol/l	Mass spectrometry: Glycolysis related metabolites
-Glucose_AUC0120 Glucose area under the curve, 0, 120 minutes	nmol/l	Mass spectrometry: Glycolysis related metabolites
-Insulin_AUC0120 Insulin area under the curve, 0, 120 minutes	nmol/l	Mass spectrometry: Glycolysis related metabolites
+2h_glucose	Glucose after 2 hours	mmol/l	Mass spectrometry: Glycolysis related metabolites
+Glucose_AUC0120	Glucose area under the curve, 0, 120 minutes	nmol/l	Mass spectrometry: Glycolysis related metabolites
+Insulin_AUC0120	Insulin area under the curve, 0, 120 minutes	nmol/l	Mass spectrometry: Glycolysis related metabolites
 MatsudaSI	Insulin sensitivity index	nmol/l	Mass spectrometry: Glycolysis related metabolites
 Leptin	Leptin	ng/ml	Mass spectrometry: Other metabolites
 NEFA	Non-esterified fatty acids	mEq/l	Mass spectrometry: Other metabolites
