@@ -97,7 +97,8 @@ def dictSubset(dictionary, keys):
 def variablesExist(array):
 	variables = Sample.objects.first().variables
 	for variable in array:
-		if not variables.get(variable):
+		if variables.get(variable) is None:
+			print "variable NOT defined = ", variable
 			return False
 	return True
 
@@ -340,6 +341,12 @@ def createPlane():
 		plane = payload.get('plane', None)
 		som = payload.get('som', '')
 
+		print "legalVariable=", legalVariable(variable), \
+		"variablesExist([variable])=", variablesExist([variable]), \
+		"legalPlane(plane)=", legalPlane(plane), \
+		"legalSOM=", legalSOM(som)
+
+
 		if legalVariable(variable) and \
 		variablesExist([variable]) and \
 		legalPlane(plane) and \
@@ -465,6 +472,20 @@ def createSOMTrain():
 
 		somDocId = None
 
+		print "legalDistance(neighdist)=", legalDistance(neighdist)
+		print "legalString(somHash)=", legalString(somHash)
+		print "legalNumber(epoch)=", legalNumber(epoch)
+		print "legalNumber(rows)=", legalNumber(rows)
+		print "legalNumber(cols)=", legalNumber(cols)
+		print "legalArray(bmus)=", legalArray(bmus)
+		print "legalArray(weights)=", legalArray(weights)
+		print "legalArray(codebook)=", legalArray(codebook)
+		print "legalArray(variables)=", legalArray(variables)
+		print "variablesExist(variables)=", variablesExist(variables)
+		print "legalArray(distances)=", legalArray(distances)
+		print"legalArray(distances)=", legalDescription(description)
+
+
 		if legalDistance(neighdist) and \
 		legalString(somHash) and \
 		legalNumber(epoch) and \
@@ -559,9 +580,9 @@ def postState():
 		return resp
 
 	def validRegression(regression):
-		print "1 = ", isinstance(regression, dict)
-		print "2 = ", isinstance(regression.get('selected'), dict)
-		print "3 = ", variablesExistObject(regression.get('selected'))
+		#print "1 = ", isinstance(regression, dict)
+		#print "2 = ", isinstance(regression.get('selected'), dict)
+		#print "3 = ", variablesExistObject(regression.get('selected'))
 
 		return isinstance(regression, dict) and \
 		isinstance(regression.get('selected'), dict) and \
