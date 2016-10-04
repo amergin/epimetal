@@ -187,7 +187,7 @@ angular.module('plotter.vis', [
     'name': 'regression'
   },
   {
-    'title': 'SOM: multivariate nonlinear analysis',
+    'title': 'SOM',
     'name': 'som'
   }, 
   ];
