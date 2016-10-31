@@ -32,9 +32,10 @@ angular.module('plotter.vis.regression', [
     margins: [10, 10],
     outerMargin: true,
     draggable: {
-      enabled: false,
+      enabled: true,
       // handle: '.handle'
     },
+    sparse: true,
     // defaultSizeX: 16,
     // defaultSizeY: 40,
     columns: 16 * 10,
