@@ -12,6 +12,10 @@ import csv
 import time
 import copy
 
+DATASET_VARIABLE_GROUP_NAME = 'Dataset variables'
+DATASET_VARIABLE_SAMPLE_DESC = 'Variable indicating whether the sample is a member of the named dataset'
+DATASET_VARIABLE_PREFIX = 'dataset_'
+
 # Utilities, not part of the class
 def _getEscapedVar(var):
 	# escape '/'
@@ -52,7 +56,7 @@ class DataLoader( object ):
 		self._loadSamples()
 		print "[Info] Loading complete"
 		self._setViewSettings()
-		print "[Info] Default settings have been set"
+		print "[Info] View settings have been set"
 
 	def _setViewSettings(self):
 		def exploreSettings():
@@ -136,15 +140,35 @@ class DataLoader( object ):
 		exploreSettings()
 		somSettings()
 
+	def _datasetVariablesEnabled(self):
+		return self.cfg.getDataLoaderVar('dataset_variables') == 'true'
+
+	def _getDatasetVariableGroup(self):
+		return HeaderGroup.objects.get(name=DATASET_VARIABLE_GROUP_NAME)
 
 	def _modifyHeader(self, headerList):
+		def _getNewGroupOrder():
+			sortedGroups = HeaderGroup.objects.order_by('-order')
+			if not sortedGroups:
+				return 1
+			else:
+				return sortedGroups.limit(1)[0].order + 1
+
+
+		# creates base definitions for dataset variables if the setting has been
+		# enabled in the config
+		def _createDatasetVariableGroup():
+			# create the new group for dataset variables
+			print "[Info] Creating dataset variable group"
+			try:
+				HeaderGroup.objects.get(name=DATASET_VARIABLE_GROUP_NAME)
+			except DoesNotExist, e:
+				group = HeaderGroup(name=DATASET_VARIABLE_GROUP_NAME, \
+					order = _getNewGroupOrder() \
+				)
+				group.save()
+
 		def _createHeaderObjects(headerList):
-			def _getNewGroupOrder():
-				sortedGroups = HeaderGroup.objects.order_by('-order')
-				if not sortedGroups:
-					return 1
-				else:
-					return sortedGroups.limit(1)[0].order + 1
 
 			def _checkDimensions(headerList, lineList, lineNo):
 				if len(headerList) != len(lineList):
@@ -160,10 +184,19 @@ class DataLoader( object ):
 					groupName = split[1].strip()
 				#print "getGroup=", groupName, "topgroup=", topGroup, "name=", name
 				#print "input=", groupName, "topgroup=", topGroup, "name=", name
-				res = HeaderGroup.objects.get_or_create(name=groupName, \
-					defaults={ 'name': groupName, 'topgroup': topGroup, 'order': _getNewGroupOrder() })
+				#res = HeaderGroup.objects.get_or_create(name=groupName, \
+				#	defaults={ 'name': groupName, 'topgroup': topGroup, 'order': _getNewGroupOrder() })
 				#print "getgroup result = ", res
-				return res
+				#return res
+				try:
+					return HeaderGroup.objects.get(name=groupName)
+				except DoesNotExist, e:
+					group = HeaderGroup(name=groupName, \
+						topgroup=topGroup, \
+						order=_getNewGroupOrder() \
+					)
+					group.save()
+					return group
 
 
 			def _getSample(name):
@@ -256,7 +289,7 @@ class DataLoader( object ):
 
 				#print "rowDict=", rowDict
 				#print "after fetch=", rowDict
-				group, created = _getGroup( rowDict.get('group') )
+				group = _getGroup( rowDict.get('group') )
 				samp = _getSample(rowDict.get('name'))
 				if not samp:
 					# account for the case the group is matched more than
@@ -281,12 +314,33 @@ class DataLoader( object ):
 		# omit sampleid & dataset
 		datasetKey = self.cfg.getDataLoaderVar('dataset_identifier')
 		sampleidKey = self.cfg.getDataLoaderVar('sampleid_identifier')
-		header = filter(lambda a: (a != sampleidKey and a != datasetKey), headerList)
+		filteredHeaderList = filter(lambda a: (a != sampleidKey and a != datasetKey), headerList)
 
 		# create new header info if necessary
-		_createHeaderObjects(header)
+		_createHeaderObjects(filteredHeaderList)
+		if self._datasetVariablesEnabled():
+			_createDatasetVariableGroup()
 
 	def _loadSamples(self):
+		def checkDatasetVariable(name):
+			prependedName = DATASET_VARIABLE_PREFIX + name
+			try:
+				result = HeaderSample.objects.get(name=prependedName)
+			except DoesNotExist, e:
+				# does not exist, so create it
+				group = self._getDatasetVariableGroup()
+				sample = HeaderSample(name=prependedName, \
+					group=group, \
+					classed=False, \
+					unit='NA', \
+					desc=DATASET_VARIABLE_SAMPLE_DESC \
+					)
+				sample.save()
+
+				# create a reference of it to the group as well
+				group.update(push__variables=sample)
+
+
 		def ffloat(f):
 			if not isinstance(f,float):
 				return f
@@ -295,6 +349,18 @@ class DataLoader( object ):
 			if math.isinf(f):
 				return 'inf'
 			return f
+
+		def setDatasetVariables(currentDataset, variables):
+			# 1. fetch all the dataset variables loaded
+			datasetGroup = self._getDatasetVariableGroup()
+			prependedCurrentDataset = DATASET_VARIABLE_PREFIX + currentDataset
+			for variable in datasetGroup.variables:
+				# variable.name is already prepended in creation
+				if variable.name == prependedCurrentDataset:
+					variables[variable.name] = 1
+				else:
+					variables[variable.name] = 0
+			return variables
 
 		def checkHeaderAndSampleDimensions(headerList, valuesDict, lineNo):
 			if len(headerList) != len(valuesDict):
@@ -331,6 +397,8 @@ class DataLoader( object ):
 				# check every column is provided on this line
 				checkHeaderAndSampleDimensions(header, valuesDict, lineNo)
 
+				checkDatasetVariable(dataset)
+
 				variables = {}
 				for key, value in valuesDict.iteritems():
 					# dataset and samplename or not numeric; skip
@@ -341,6 +409,11 @@ class DataLoader( object ):
 					except ValueError:
 						variables[key.encode('ascii')] = ffloat( float('NaN') )
 				#print "values=", valuesDict, sampleidKey
+
+				# add the dataset variable, if enabled, to the bunch:
+				if self._datasetVariablesEnabled():
+					setDatasetVariables(dataset, variables)
+
 				sample = Sample(dataset=dataset, sampleid=valuesDict[sampleidKey], variables=variables)
 				sample.save()
 

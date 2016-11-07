@@ -119,7 +119,6 @@ def variablesExistObject(obj):
 		else:
 			# custom is not processed, TODO
 			pass
-	#print "returns true"
 	return True
 
 def legalSOM(var):
@@ -190,8 +189,6 @@ def somInput():
 def somProfiles():
 	def getProfiles(profiles):
 		def getProfile(pro):
-			print "pro=", pro
-			print "pro.variables=", pro.variables
 			return {
 				'variables': pro.variables,
 				'name': pro.name
@@ -341,10 +338,12 @@ def createPlane():
 		plane = payload.get('plane', None)
 		som = payload.get('som', '')
 
+		'''
 		print "legalVariable=", legalVariable(variable), \
 		"variablesExist([variable])=", variablesExist([variable]), \
 		"legalPlane(plane)=", legalPlane(plane), \
 		"legalSOM=", legalSOM(som)
+		'''
 
 
 		if legalVariable(variable) and \
@@ -472,7 +471,7 @@ def createSOMTrain():
 
 		somDocId = None
 
-		print "legalDistance(neighdist)=", legalDistance(neighdist)
+		'''print "legalDistance(neighdist)=", legalDistance(neighdist)
 		print "legalString(somHash)=", legalString(somHash)
 		print "legalNumber(epoch)=", legalNumber(epoch)
 		print "legalNumber(rows)=", legalNumber(rows)
@@ -483,7 +482,7 @@ def createSOMTrain():
 		print "legalArray(variables)=", legalArray(variables)
 		print "variablesExist(variables)=", variablesExist(variables)
 		print "legalArray(distances)=", legalArray(distances)
-		print"legalArray(distances)=", legalDescription(description)
+		print"legalArray(distances)=", legalDescription(description)'''
 
 
 		if legalDistance(neighdist) and \
@@ -820,7 +819,21 @@ def getBulk():
 		dataset = payload.get('dataset')
 		variables = payload.get('variables')
 
-		if not( dataset and variables) or not( ( isinstance( dataset, str ) or isinstance( dataset, unicode ) ) and isinstance( variables, list ) ):
+		datasetCorrectType = ( isinstance( dataset, str ) or isinstance( dataset, unicode ) )
+		variablesCorrectType = isinstance( variables, list )
+		correctVariables = variablesExist(variables)
+
+		#if not( dataset and variables) or not \
+		#( ( isinstance( dataset, str ) or isinstance( dataset, unicode ) ) and isinstance( variables, list ) )
+		#	return getError()
+
+		print "datasetCorrectType=", datasetCorrectType
+		print "variablesCorrectType=", variablesCorrectType
+		print "correctVariables", correctVariables
+
+		if not ( dataset and variables) or not \
+		(datasetCorrectType and variablesCorrectType) or not \
+		correctVariables:
 			return getError()
 		else:
 			samples = Sample.objects.filter(dataset=dataset).only(*_getModifiedParameters(variables))
