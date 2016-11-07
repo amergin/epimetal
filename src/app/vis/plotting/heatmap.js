@@ -500,17 +500,7 @@ angular.module('plotter.vis.plotting.heatmap',
         }
       });
 
-      var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
-        var retObj = _.chain($scope.window)
-        .pick(['type', 'grid', 'handler', 'variables', 'handler', 'limit'])
-        .clone()
-        .extend({ coordinates: $scope.coordDim.top(Infinity) })
-        .value();
-
-        callback(retObj);
-      });
-
-      $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind);
+      $scope.deregisters.push(reRenderUnbind, redrawUnbind);
 
       $scope.$on('$destroy', function() {
         _.each($scope.deregisters, function(unbindFn) {

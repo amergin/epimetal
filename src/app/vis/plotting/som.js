@@ -678,9 +678,7 @@ angular.module('plotter.vis.plotting.som', [
           });
     });
 
-    var gatherStateUnbind = $rootScope.$on('UrlHandler:getState', function(event, callback) {});
-
-    $scope.deregisters.push(somUpdatedUnbind, gatherStateUnbind);
+    $scope.deregisters.push(somUpdatedUnbind);
 
     $scope.$on('$destroy', function() {
       _.each($scope.deregisters, function(unbindFn) {
