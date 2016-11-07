@@ -82,10 +82,10 @@ angular.module('plotter.vis.plotting',
           draw(config, windowHandler);
           defer.resolve();
         },
-        function errorFn(variable) {
+        function errorFn(res) {
           NotifyService.closeModal();
 
-          var title = 'Variable ' + variable + ' could not be loaded\n',
+          var title = 'Could not load variables\n',
           message = 'Please check the selected combination is valid for the selected datasets.',
           level = 'error';
           NotifyService.addTransient(title, message, level);
@@ -137,10 +137,10 @@ angular.module('plotter.vis.plotting',
           draw(config, windowHandler);
           defer.resolve();
         },
-        function errorFn(variable) {
+        function errorFn(res) {
           NotifyService.closeModal();
 
-          var title = 'Variable ' + variable + ' could not be loaded\n',
+          var title = 'Variable ' + config.variable.labelName() + ' could not be loaded\n',
           message = 'Please check the selected combination is valid for the selected datasets.',
           level = 'error';
           NotifyService.addTransient(title, message, level);
@@ -180,7 +180,7 @@ angular.module('plotter.vis.plotting',
       };
 
       function dispError() {
-          var title = 'Variable ' + variable + ' could not be loaded\n',
+          var title = 'Could not load variables\n',
           message = 'Please check the selected combination is valid for the selected datasets.',
           level = 'error';
           NotifyService.addTransient(title, message, level);
@@ -224,7 +224,7 @@ angular.module('plotter.vis.plotting',
             draw(config, windowHandler);
             defer.resolve();
           },
-          function errorFn(variable) {
+          function errorFn(res) {
             dispError();
             defer.reject();
           })
@@ -274,10 +274,10 @@ angular.module('plotter.vis.plotting',
           draw(config, windowHandler);
           defer.resolve();
         },
-        function errorFn(variable) {
+        function errorFn(res) {
           NotifyService.closeModal();
 
-          var title = 'Variable ' + variable + ' could not be loaded\n',
+          var title = 'Variables could not be loaded\n',
           message = 'Please check the selected combination is valid for the selected datasets.',
           level = 'error';
           NotifyService.addTransient(title, message, level);
