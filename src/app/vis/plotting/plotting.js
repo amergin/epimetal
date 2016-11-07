@@ -342,10 +342,10 @@ angular.module('plotter.vis.plotting',
           draw(config, windowHandler);
           defer.resolve();
         },
-        function errorFn(variable) {
+        function errorFn(res) {
           NotifyService.closeModal();
 
-          var title = 'Variable ' + variable + ' could not be loaded\n',
+          var title = 'Variable ' + config.variable.labelName() + ' could not be loaded\n',
           message = 'Please check the selected combination is valid for the selected datasets.',
           level = 'error';
           NotifyService.addTransient(title, message, level);
