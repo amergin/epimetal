@@ -53,8 +53,10 @@ angular.module('plotter.vis.plotting.regression',
   };
 
   $scope.updateChart = function($scope, data) {
-    $scope.chart
-    .data(data);
+    if(data) {
+      $scope.chart
+      .data(data);
+    }
 
     var height = $scope.chart.estimatedHeight(),
     width = REGRESSION_WIDTH;
@@ -137,11 +139,52 @@ angular.module('plotter.vis.plotting.regression',
       }
     });
 
-    var gatherStateUnbind =  $rootScope.$on('UrlHandler:getState', function(event, callback) {
 
-    });
+    /* function renderWithNewDimensions() {
+      function setSize() {
+        $scope.size = angular.copy($scope.window.size()); 
+      }
 
-    $scope.deregisters.push(reRenderUnbind, redrawUnbind, gatherStateUnbind);
+      $scope.updateChart($scope);
+      setSize();
+    }
+
+    function setResize() {
+      function setSize() {
+        $scope.size = angular.copy($scope.window.size()); 
+      }
+
+      var resizeUnbind = $scope.$on('gridster-item-transition-end', function(item) {
+        function gridSizeSame() {
+          return _.isEqual($scope.size, $scope.window.size());
+        }
+        if(!gridSizeSame()) {
+          renderWithNewDimensions();
+        }
+      });
+
+      setSize();
+      $scope.deregisters.push(resizeUnbind);
+    }
+
+    setResize();
+
+    function setResizeElement() {
+      var renderThr = _.debounce(function() {
+        renderWithNewDimensions();
+      }, 150, { leading: false, trailing: true });
+
+      var resizeUnbind = $scope.$on('gridster-resized', function(sizes, gridster) {
+        var isVisible = _.contains($injector.get('WindowHandler').getVisible(), $scope.window.handler());
+        if(!isVisible) { return; }
+        renderThr();
+      });
+    }
+
+    setResizeElement();
+    */
+
+    $scope.deregisters.push(reRenderUnbind, redrawUnbind);
 
     $scope.$on('$destroy', function() {
       _.each($scope.deregisters, function(unbindFn) {
