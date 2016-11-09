@@ -24,15 +24,6 @@ angular.module('plotter', [
       interactive: 'histogram.filters',
       nonInteractive: 'histogram.nofilters'
     }
-  },
-  som: {
-    websocket: {
-      api: {
-        som: '/ws/som',
-        plane: '/ws/plane'
-      },
-      url: 'ws://' + window.location.host //'ws://localhost:6565'
-    }
   }
 })
 
