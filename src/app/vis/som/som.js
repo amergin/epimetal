@@ -37,11 +37,71 @@ angular.module('plotter.vis.som', [
     col: 'window.grid.position.col'
   };
 
-  // var emitResize = function($element) {
-  //   dc.events.trigger(function() {
-  //     $rootScope.$emit('gridster.resize', $element);
-  //   }, 200);
-  // };
+  /*$scope.gridOptions = {
+    pushing: true,
+    floating: true,
+    swapping: true,
+    margins: [10, 10],
+    outerMargin: true,
+    draggable: {
+      enabled: true,
+      handle: '.handle'
+    },
+    defaultSizeX: SOM_DEFAULT_SIZE_X,
+    defaultSizeY: SOM_DEFAULT_SIZE_Y,
+    columns: 4 * 3,
+    width: 'auto',
+    colWidth: 'auto',
+    rowHeight: 'match',
+    minSizeX: 2,
+    maxSizeX: 8,
+    minSizeY: 2,
+    maxSizeY: 8,
+    maxRows: 50,
+    resizable: {
+     enabled: true,
+     handles: ['se']
+      }
+    };*/
+
+  $scope.gridOptions = {
+    pushing: true,
+    floating: true,
+    swapping: true,
+    margins: [10, 10],
+    outerMargin: true,
+    draggable: {
+      enabled: true,
+      handle: '.handle'
+    },
+    defaultSizeX: SOM_DEFAULT_SIZE_X,
+    defaultSizeY: SOM_DEFAULT_SIZE_Y,
+    columns: 4 * 3,
+    width: 'auto',
+    colWidth: 'auto',
+    rowHeight: 'match',
+    // colWidth: 150,
+    // rowHeight: '125',
+    minSizeX: 2,
+    maxSizeX: 8,
+    minSizeY: 2,
+    maxSizeY: 8,
+    maxRows: 50,
+    resizable: {
+     enabled: true,
+     handles: ['se']
+      }
+    };
+
+
+  /* 
+  $scope.itemMapper = {
+    sizeX: 'window.grid.size.x',
+    sizeY: 'window.grid.size.y',
+    row: 'window.grid.position.row',
+    col: 'window.grid.position.col'
+  };
+
 
   $scope.gridOptions = {
     pushing: true,
@@ -71,9 +131,11 @@ angular.module('plotter.vis.som', [
        handles: ['se']
         }
       };
+    */
 
-})
+});
 
+/*
 .controller('SOMSideCtrl', function SOMSideCtrl($scope, $templateCache, $compile, sideWindowHandler, SOMService, PlotService, SOM_DEFAULT_PLANES, _) {
   $scope.windowHandler = sideWindowHandler;
   $scope.windows = $scope.windowHandler.get();
@@ -127,4 +189,4 @@ angular.module('plotter.vis.som', [
   };
 
 
-});
+}); */

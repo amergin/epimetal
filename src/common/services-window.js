@@ -12,6 +12,7 @@ angular.module('services.window', [
           reference: null,
           type: null,
           privFn: null,
+          hidden: false,
           id: null,
           variables: null,
           pooled: false,
@@ -82,6 +83,25 @@ angular.module('services.window', [
         }
         priv.circleSpin.value = x;
         return obj;
+      };
+
+      obj.toggleVisibility = function() {
+        priv.hidden = !priv.hidden;
+        return obj;
+      };
+
+      obj.hide = function() {
+        priv.hidden = true;
+        return obj;
+      };
+
+      obj.show = function() {
+        priv.hidden = false;
+        return obj;
+      };
+
+      obj.hidden = function() {
+        return priv.hidden;
       };
 
       obj.spin = function(x) {
@@ -715,7 +735,7 @@ angular.module('services.window', [
       }).value();
     },
     getSecondary: function() {
-      return this.get('vis.som.plane');
+      return this.get('vis.som');
     },
     getAll: function() {
       return _handlers;

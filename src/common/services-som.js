@@ -200,7 +200,7 @@ angular.module('services.som', [
 
     that.trainVariables = variables;
     // recompute
-    var windowHandler = WindowHandler.get('vis.som.plane');
+    var windowHandler = WindowHandler.get('vis.som');
     service.getSOM(windowHandler);
     return service;
   };

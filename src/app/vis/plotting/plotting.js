@@ -63,14 +63,25 @@ angular.module('plotter.vis.plotting',
       return callFn.apply(this, Array.prototype.slice.call(arguments,1));
     };
 
+    function showAllSameTypeWindows(windowHandler, type) {
+      _.each(windowHandler.get(), function(win) {
+        if(win.object.figure() == type) {
+          win.object.show();
+        }
+      });
+    }
+
     this.drawScatter = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
-        var gridWindow = windowHandler.add();
+        var gridWindow = windowHandler.add(),
+        type = 'pl-scatterplot';
 
         gridWindow
-        .figure('pl-scatterplot')
+        .figure(type)
         .variables(config.variables)
         .pooled(config.pooled || false);
+
+        showAllSameTypeWindows(windowHandler, type);
       };
 
       var defer = $q.defer();
@@ -113,6 +124,8 @@ angular.module('plotter.vis.plotting',
         .variables(config.variable)
         .pooled(config.pooled)
         .extra({ somSpecial: config.somSpecial, filterEnabled: canFilter });
+
+        showAllSameTypeWindows(windowHandler, 'pl-' + type);
       };
 
       var defer = $q.defer();
@@ -168,15 +181,17 @@ angular.module('plotter.vis.plotting',
 
     this.drawHeatmap = function(config, windowHandler) {
       var draw = function(cfg, windowHandler) {
-        var gridWindow = windowHandler.add();
+        var gridWindow = windowHandler.add(),
+        type = 'pl-heatmap';
 
         gridWindow
-        .figure('pl-heatmap')
+        .figure(type)
         .variables(cfg.variables)
         .size(getScale(cfg.variables.length))
         .pooled(false)
         .extra({ separate: cfg.separate, dataset: cfg.dataset });
 
+        showAllSameTypeWindows(windowHandler, type);
       };
 
       function dispError() {
@@ -252,11 +267,15 @@ angular.module('plotter.vis.plotting',
 
     this.drawProfileHistogram = function(config, windowHandler) {
       var draw = function() {
-        var gridWindow = windowHandler.add();
-        gridWindow.figure('pl-profile-histogram')
+        var gridWindow = windowHandler.add(),
+        type = 'pl-profile-histogram';
+
+        gridWindow.figure(type)
         .size({ x: 4, y: 6 })
         .variables(config.variables)
         .extra({ name: config.name });
+
+        showAllSameTypeWindows(windowHandler, type);
       };
 
       var defer = $q.defer();
@@ -291,33 +310,43 @@ angular.module('plotter.vis.plotting',
 
     this.drawSOM = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
-        var gridWindow = windowHandler.add(config);
+        var gridWindow = windowHandler.add(config),
+        type = 'pl-somplane';
 
         gridWindow
-        .figure('pl-somplane')
+        .figure(type)
         .variables(config.variable);
+
+        showAllSameTypeWindows(windowHandler, type);
       };
 
       draw(config, windowHandler);
     };
 
     this.drawRegression = function(config, windowHandler) {
-      var gridWindow = windowHandler.add();
+      var gridWindow = windowHandler.add(),
+      type = 'pl-regression';
+
       gridWindow
-      .figure('pl-regression')
+      .figure(type)
       .variables(config.variables)
       .size({ x: REGRESSION_DEFAULT_X, y: REGRESSION_DEFAULT_Y })
       .extra({ source: config.source });
+
+      showAllSameTypeWindows(windowHandler, type);
     };
 
     this.drawBoxplot = function(config, windowHandler) {
       var draw = function(config, windowHandler) {
-        var gridWindow = windowHandler.add();
+        var gridWindow = windowHandler.add(),
+        type = 'pl-boxplot';
 
         gridWindow
-        .figure('pl-boxplot')
+        .figure(type)
         .variables(config.variable)
         .extra({ somSpecial: config.somSpecial });
+
+        showAllSameTypeWindows(windowHandler, type);
       };
 
       var defer = $q.defer();

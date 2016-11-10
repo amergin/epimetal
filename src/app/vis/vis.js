@@ -55,10 +55,10 @@ angular.module('plotter.vis', [
         var exploreHandler = WindowHandler.create('vis.explore');
         exploreHandler.setDimensionService(DimensionService.get('vis.explore'));
 
-        var somBottomHandler = WindowHandler.create('vis.som.plane');
-        somBottomHandler.setDimensionService(somDim);
+        //var somBottomHandler = WindowHandler.create('vis.som.plane');
+        //somBottomHandler.setDimensionService(somDim);
 
-        var somContentHandler = WindowHandler.create('vis.som.content');
+        var somContentHandler = WindowHandler.create('vis.som');//.content');
         somContentHandler.setDimensionService(somDim);
 
         var regressionHandler = WindowHandler.create('vis.regression');
@@ -112,34 +112,32 @@ angular.module('plotter.vis', [
   var som = {
     name: 'vis.som',
     url: 'som',
-    // parent: 'vis',
-    // abstract: true,
     reloadOnSearch: false,
     data: {
       pageTitle: 'Self-organizing maps | Visualization'
     },
     resolve: {
       // bottom portion of the page only!
-      sideWindowHandler: function(WindowHandler, DimensionService) {
+      /*sideWindowHandler: function(WindowHandler, DimensionService) {
         return WindowHandler.get('vis.som.plane');
-      },
+      },*/
 
       contentWindowHandler: function(WindowHandler, DimensionService) {
-        return WindowHandler.get('vis.som.content');
+        return WindowHandler.get('vis.som');
       }
     },
     views: {
-      'som@vis': {
+      /*'som@vis': {
         templateUrl: 'vis/som/vis.som.tpl.html'
-      },
-      'content@vis.som': {
+      },*/
+      'som@vis': {
         templateUrl: 'vis/som/vis.som.content.tpl.html',
         controller: 'SOMContentCtrl'
-      },
+      }/* ,
       'side@vis.som': {
         templateUrl: 'vis/som/vis.som.side.tpl.html',
         controller: 'SOMSideCtrl'
-      }      
+      } */     
     },
     deepStateRedirect: true,
     sticky: true
@@ -366,7 +364,7 @@ angular.module('plotter.vis', [
       .columns(selection.size.cols);
 
       if(sizeChanged) { 
-        var somHandler = WindowHandler.get('vis.som.plane');
+        var somHandler = WindowHandler.get('vis.som');//.plane');
         SOMService.getSOM(somHandler); // no use to wait results
       }
     });

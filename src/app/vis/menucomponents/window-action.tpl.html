@@ -4,8 +4,27 @@
   </div>
 
   <div ng-switch="visible()">
-
     <div ng-switch-when="true" class="text-center">
+      <table class="table table-hover table-condensed" id="dataset-db">
+        <thead>
+          <tr>
+            <th class="col-sm-2">Visible</th>
+            <th class="col-sm-8">Type</th>
+            <th class="col-sm-2">Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="(type, payload) in windowTypes track by $index" ng-click="toggleWindowTypeVisiblity(type)" class="ctrl">
+            <td class="col-sm-2">
+              <input type="checkbox" ng-click="toggleWindowTypeVisiblity(type)" noclick ng-checked="payload.visible" />
+            </td>
+            <td class="col-sm-8">{{payload.name}}</td>
+            <td class="col-sm-2">{{payload.count}}</td>
+          </tr>
+        </tbody>
+      </table>
+
+
       <button type="button" class="btn btn-primary btn-warning" ng-click="close()" ng-show="visible()">Clear all plots</button>
     </div>
 

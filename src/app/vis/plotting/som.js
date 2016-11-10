@@ -73,7 +73,7 @@ angular.module('plotter.vis.plotting.som', [
     }
     
     if($scope.window.extra() && $scope.window.extra().plane) {
-      $scope.window.headerText(['Self-organizing map of', $scope.window.variables().name(), getPvalueString()]);
+      $scope.window.headerText(['SOM of', $scope.window.variables().name(), getPvalueString()]);
     }
   }
 

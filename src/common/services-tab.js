@@ -97,7 +97,7 @@ angular.module('services.tab', [
   function checkDefaultPlanes() {
     var SOMService = $injector.get('SOMService'),
       PlotService = $injector.get('PlotService'),
-      planeHandler = WindowHandler.get('vis.som.plane');
+      planeHandler = WindowHandler.get('vis.som');
 
       VariableService.getVariables(SOMService.defaultPlanes()).then(function(planeVars) {
         if (planeHandler.get().length === 0) {
@@ -225,7 +225,7 @@ angular.module('services.tab', [
   _service.doComputeSOM = function(callback) {
     function startComputation() {
       var SOMService = $injector.get('SOMService'),
-      somPlaneHandler = WindowHandler.get('vis.som.plane');
+      somPlaneHandler = WindowHandler.get('vis.som');
 
       // WindowHandler.spinAllVisible();
       SOMService.getSOM(somPlaneHandler).then(function succFn() {

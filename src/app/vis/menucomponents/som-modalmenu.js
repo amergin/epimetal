@@ -77,8 +77,8 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
         return false;
       }
 
-      var contentHandler = WindowHandler.get('vis.som.content'),
-      planeHandler = WindowHandler.get('vis.som.plane');
+      var contentHandler = WindowHandler.get('vis.som'),
+      planeHandler = contentHandler,
       lookup = {
         'planes': {
           getData: function() {
@@ -87,9 +87,9 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
           action: function(variables) {
             _.each(variables, function(variable) {
                 PlotService.drawSOM({ 
-                  variable: variable, 
-                  prepend: true,
-                  prependMode: 'vertical' 
+                  variable: variable 
+                  //prepend: true,
+                  //prependMode: 'vertical' 
                 }, planeHandler);
             });
           } 

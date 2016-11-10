@@ -47,8 +47,7 @@ angular.module('services.urlhandler', [
         var state = new PlSOMBrowsingState()
         .injector($injector)
         .windowHandlers([
-          WindowHandler.get('vis.som.content'),
-          WindowHandler.get('vis.som.plane')
+          WindowHandler.get('vis.som'),
         ])
         .filters(FilterService.getSOMFilters())
         .selection(SOMService.trainVariables())
@@ -107,7 +106,7 @@ angular.module('services.urlhandler', [
       current = DimensionService.get('vis.som');
 
       DimensionService.restart(current, primary).then(function succFn(res) {
-        SOMService.getSOM( WindowHandler.get('vis.som.plane') ).then(function succFn() {
+        SOMService.getSOM( WindowHandler.get('vis.som') ).then(function succFn() {
           doStart();
         });
       });
@@ -250,12 +249,12 @@ angular.module('services.urlhandler', [
         SOMService.columns(browse.size().columns);
         // SOM object can be empty as well, which is valid
         if(!browse.som().hashId) {
-          SOMService.getSOM( WindowHandler.get('vis.som.plane') )
+          SOMService.getSOM( WindowHandler.get('vis.som') )
           .then(function succFn() {
             if(callback) { callback(); }
           });
         } else {
-          SOMService.getSOM( WindowHandler.get('vis.som.plane'), browse.som().hashId )
+          SOMService.getSOM( WindowHandler.get('vis.som'), browse.som().hashId )
           .then(function succFn() {
             if(callback) { callback(); }
           });

@@ -136,7 +136,7 @@ angular.module('services.regression.ww', [
 
     function fetchCircles(windowHandler) {
       var def = $q.defer();
-      var somHandler = windowHandler.getService().get('vis.som.plane');
+      var somHandler = windowHandler.getService().get('vis.som');
       DatasetFactory.getVariableData(variables, somHandler)
         .then(function succFn(res) {
           var ret = getSOMData(somHandler);
