@@ -14,7 +14,8 @@ angular.module('plotter.vis.explore',
 .constant('EXPLORE_DEFAULT_SIZE_X', 3)
 .constant('EXPLORE_DEFAULT_SIZE_Y', 3)
 
-.controller('ExploreController', function ExploreController(VariableService, $scope, $rootScope, windowHandler, EXPLORE_DEFAULT_SIZE_X, EXPLORE_DEFAULT_SIZE_Y, dc) {
+.controller('ExploreController', function ExploreController(VariableService, $scope, $timeout, 
+  $rootScope, windowHandler, EXPLORE_DEFAULT_SIZE_X, EXPLORE_DEFAULT_SIZE_Y, dc) {
   console.log("explore ctrl");
 
   $scope.windowHandler = windowHandler;

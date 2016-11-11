@@ -18,10 +18,13 @@ angular.module('plotter.vis.menucomponents.window-action',
   function verboseWindowType(figureName) {
     switch(figureName) {
       case 'pl-somplane':
-        return 'Self-Organizing Map';
+        return 'SOM';
 
       case 'pl-histogram':
         return 'Histogram';
+
+      case 'pl-classed-bar-chart':
+        return 'Class variable';
 
       case 'pl-boxplot':
         return 'Box plot';
@@ -44,6 +47,17 @@ angular.module('plotter.vis.menucomponents.window-action',
   }
 
   $scope.windowTypes = {};
+
+  $scope.closeWindowType = function(type) {
+    _.chain(WindowHandler.getVisible()[0].get())
+    .filter(function(win) {
+      return win.object.figure() == type;
+    })
+    .each(function(win) {
+      win.object.remove();
+    })
+    .value();
+  };
 
   $scope.toggleWindowTypeVisiblity = function(type) {
 

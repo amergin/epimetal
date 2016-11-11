@@ -8,24 +8,35 @@
       <table class="table table-hover table-condensed" id="dataset-db">
         <thead>
           <tr>
-            <th class="col-sm-2">Visible</th>
-            <th class="col-sm-8">Type</th>
+            <th class="col-sm-1">Visible</th>
+            <th class="col-sm-6">Type</th>
             <th class="col-sm-2">Count</th>
+            <th class="col-sm-3 text-center">Close</th>
           </tr>
         </thead>
         <tbody>
           <tr ng-repeat="(type, payload) in windowTypes track by $index" ng-click="toggleWindowTypeVisiblity(type)" class="ctrl">
-            <td class="col-sm-2">
+            <td class="col-sm-1">
               <input type="checkbox" ng-click="toggleWindowTypeVisiblity(type)" noclick ng-checked="payload.visible" />
             </td>
-            <td class="col-sm-8">{{payload.name}}</td>
-            <td class="col-sm-2">{{payload.count}}</td>
+            <td class="col-sm-6">{{payload.name}}</td>
+            <td class="col-sm-2 text-center">{{payload.count}}</td>
+            <td class="col-sm-3 text-center">
+                <i class="fa fa-lg fa-times-circle" ng-click="closeWindowType(type)" noclick></i>
+            </td>
           </tr>
         </tbody>
+        <tfoot>
+          <tr>
+            <td class="col-sm-1"></td>
+            <td class="col-sm-6"></td>
+            <td class="col-sm-2"></td>
+            <td class="col-sm-3 text-center ctrl" ng-click="close()">
+              <button type="button" class="btn btn-secondary btn-xs">Close all</button>
+            </td>
+          </tr>
+        </tfoot>
       </table>
-
-
-      <button type="button" class="btn btn-primary btn-warning" ng-click="close()" ng-show="visible()">Clear all plots</button>
     </div>
 
     <div ng-switch-when="false" class="text-center">
