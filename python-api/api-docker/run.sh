@@ -1,6 +1,8 @@
 #!/bin/sh
 
 LOAD_SCRIPT=/api/load_dataset.py
+CONFIG=/api/setup.config
+FLUSH_SCRIPT=/api/flush_database.py
 WORK_DIR=/api
 SAMPLES=/load/samples.tsv
 SUPERVISORD=/usr/bin/supervisord
@@ -16,6 +18,12 @@ load() {
     echo 'Loading samples FAILED, aborting.'
     exit
   fi
+}
+
+flush() {
+  echo 'Removing all entries from database!' >&2
+  python $FLUSH_SCRIPT $CONFIG --yes
+  echo 'Removal complete.' >&2
 }
 
 start() {
@@ -41,11 +49,15 @@ stop() {
 
 case "$1" in
   load)
+    flush
     load
     start
     ;;
   start)
     start
+    ;;
+  flush)
+    flush
     ;;
   stop)
     stop
@@ -55,5 +67,5 @@ case "$1" in
     start
     ;;
   *)
-    echo "Usage: $0 {start|stop|restart|load}"
+    echo "Usage: $0 {start|stop|restart|load|flush}"
 esac

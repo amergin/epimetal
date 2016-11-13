@@ -6,12 +6,12 @@ from config import Config
 import re
 
 KEYBOARD_REGEX = '(C\|)(?:.+)'
+AUTOMATED_STRING = '--yes'
 
 class Flusher(object):
 	def __init__(self, config):
 		self.cfg = Config(config)
 		self.client = connect(db=self.cfg.getMongoVar('db'), host=self.cfg.getMongoVar('host'), port=int(self.cfg.getMongoVar('port')), w=1)
-		print self.client
 
 	def getSampleCollections(self):
 		db = self.client[self.cfg.getMongoVar('db')]
@@ -40,15 +40,23 @@ def main():
 	# Assume config file name if not provided
 	configFile = 'setup.config'
 	tsvFile = None
+	automated = False
 
 	if( len(sys.argv) < 2 ):
 		print "[Error] Invalid parameters provided."
-		print "Valid parameters: script.py setup.config"
+		print "Valid parameters: script.py setup.config ", "[", AUTOMATED_STRING, "]"
 		sys.exit(-1)
 
 	if( len(sys.argv) is 2 ):
 		configFile = sys.argv[1]
 		print "[Info] Setup file chosen as %s" %configFile
+
+	if( len(sys.argv) is 3 ):
+		auto = sys.argv[2]
+		if auto == AUTOMATED_STRING:
+			automated = True
+			print "[Info] Automated switch supplied. Will not ask for confirmation."
+
 
 	if not os.access( configFile, os.R_OK ):
 		print "[Error] could not read configuration file. EXIT"
@@ -65,10 +73,11 @@ def main():
 	print "[Info] Collections currently in the SOM database: %s" % ", ".join(somCollections)
 	print "[Info] Collections currently in the settings database: %s" % ", ".join(settingsCollections)
 
-	regex = re.compile('(yes)', re.IGNORECASE)
+	if not automated:
+		regex = re.compile('(yes)', re.IGNORECASE)
 
-	while not regex.search(keypress()):
-		pass
+		while not regex.search(keypress()):
+			pass
 
 	flusher.flush()
 
