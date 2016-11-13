@@ -352,6 +352,19 @@ angular.module('plotter.vis.plotting.boxplot',
       });
     }
 
+    function setGridRedraw() {
+      var redrawUnbind = $rootScope.$on('grid-window.redraw', function(event, gridWindow) {
+        if(gridWindow === $scope.window) {
+          $timeout(function() {
+            $scope.chart.height($scope.getHeight($scope.element));
+            $scope.chart.width($scope.getWidth($scope.element));
+            $scope.chart.redraw();
+          });
+        }
+      });
+      $scope.deregisters.push(redrawUnbind);
+    }
+
     function setRedraw() {
       var redrawUnbind = $rootScope.$on('window-handler.redraw', function(event, winHandler) {
         if( winHandler == $scope.window.handler() ) {
@@ -382,6 +395,7 @@ angular.module('plotter.vis.plotting.boxplot',
     setResize();
     setRerender();
     setRedraw();
+    setGridRedraw();
     setResizeElement();
     setDerivedAdd();
     setDerivedRemove();

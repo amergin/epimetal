@@ -798,6 +798,19 @@ angular.module('plotter.vis.plotting.histogram',
 
       setResizeElement();
 
+      function setGridRedraw() {
+        var redrawUnbind = $rootScope.$on('grid-window.redraw', function(event, gridWindow) {
+          if(gridWindow === $scope.window) {
+            $timeout(function() {
+              renderWithNewDimensions();
+            });
+          }
+        });
+        $scope.deregisters.push(redrawUnbind);
+      }
+
+      setGridRedraw();
+
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
         if( winHandler == $scope.window.handler() ) {
           if( config.omit == 'histogram' ) { return; }

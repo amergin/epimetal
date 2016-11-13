@@ -225,6 +225,19 @@ angular.module('plotter.vis.plotting.profile-histogram',
 
       $scope.deregisters = [];
 
+      function setGridRedraw() {
+        var redrawUnbind = $rootScope.$on('grid-window.redraw', function(event, gridWindow) {
+          if(gridWindow === $scope.window) {
+            $timeout(function() {
+              updateChart($scope, { data: $scope.formGroups($scope.groups) });
+            });
+          }
+        });
+        $scope.deregisters.push(redrawUnbind);
+      }
+
+      setGridRedraw();
+
       var reRenderUnbind = $rootScope.$on('window-handler.rerender', function(event, winHandler, config) {
         if( winHandler == $scope.window.handler() ) {
           if( config.omit == 'histogram' ) { return; }

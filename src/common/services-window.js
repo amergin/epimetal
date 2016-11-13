@@ -4,7 +4,7 @@ angular.module('services.window', [
   'ext.lodash'
 ])
 
-.factory('WindowHandler', function WindowHandlerFn($injector, $rootScope, usSpinnerService, $state, EXPORT_FILENAME_MAX_LENGTH, DatasetFactory, _) {
+.factory('WindowHandler', function WindowHandlerFn($injector, $log, $rootScope, usSpinnerService, $state, EXPORT_FILENAME_MAX_LENGTH, DatasetFactory, _) {
 
   function GridWindow() {
       var obj = {},
@@ -85,8 +85,14 @@ angular.module('services.window', [
         return obj;
       };
 
+      function emitShowWindow(obj) {
+        var $rootScope = obj.injector().get('$rootScope');
+        $rootScope.$emit('grid-window.redraw', obj);
+      }
+
       obj.toggleVisibility = function() {
         priv.hidden = !priv.hidden;
+        if(priv.hidden === false) { emitShowWindow(obj); }
         return obj;
       };
 
@@ -97,11 +103,17 @@ angular.module('services.window', [
 
       obj.show = function() {
         priv.hidden = false;
+        emitShowWindow(obj);
         return obj;
       };
 
-      obj.hidden = function() {
-        return priv.hidden;
+      obj.hidden = function(x) {
+        if(!arguments.length) {
+          return priv.hidden;
+        }
+        priv.hidden = x;
+        if(priv.hidden === false) { emitShowWindow(obj); }
+        return obj;
       };
 
       obj.spin = function(x) {
@@ -477,7 +489,8 @@ angular.module('services.window', [
           variables: getVariables(),
           pooled: obj.pooled(),
           position: obj.position(),
-          size: obj.size()
+          size: obj.size(),
+          hidden: obj.hidden()
         };
       };
 
@@ -699,7 +712,8 @@ angular.module('services.window', [
           .pooled(win.pooled || false)
           .variables(variables)
           .size(win.size)
-          .position(win.position);
+          .position(win.position)
+          .hidden(win.hidden);
 
           // overwrite the state id and keep the old one
           win.oldId = win.id;

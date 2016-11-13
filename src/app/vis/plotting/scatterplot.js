@@ -614,6 +614,20 @@ angular.module('plotter.vis.plotting.scatterplot', [
     }
     setResize();
 
+    function setGridRedraw() {
+      var redrawUnbind = $rootScope.$on('grid-window.redraw', function(event, gridWindow) {
+        if(gridWindow === $scope.window) {
+          $timeout(function() {
+            renderWithNewDimensions();
+          });
+        }
+      });
+      $scope.deregisters.push(redrawUnbind);
+    }
+
+    setGridRedraw();
+
+
     function setResizeElement() {
       var renderThr = _.debounce(function() {
         renderWithNewDimensions();
