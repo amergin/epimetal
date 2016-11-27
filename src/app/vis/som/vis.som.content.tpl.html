@@ -1,6 +1,6 @@
 <div gridster="gridOptions">
     <ul>
-        <li gridster-item="itemMapper" ng-repeat="window in windows track by window.object.id()" id="pl-win-som-up-{{window.object.id()}}" pl-grid-window pl-window="window" ng-hide="window.object.hidden()">
+        <li gridster-item="itemMapper" ng-repeat="window in windows track by window.object.id()" id="pl-win-som-up-{{window.object.id()}}" pl-grid-window pl-window="window" ng-if="!window.object.hidden()">
         </li>
     </ul>
 </div>
