@@ -43,6 +43,7 @@ angular.module('plotter.vis.plotting.som', [
     $rootScope.$emit('som:circleFilter:resize', circleInst, $scope.window.id());
   })
   .highlightColor(HEXAGON_BORDER_COLOR)
+  .allowedCircleEdge(1.5)
   .circleTruncateLength(SOM_FILTER_TEXT_LENGTH)
   .circleIsUpdatedCallback(function(hexagons, circleInst) {
     $timeout(function() {

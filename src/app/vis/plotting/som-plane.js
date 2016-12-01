@@ -370,14 +370,15 @@ function SOMPlane() {
         }]);
 
       var innerDragMove = function(d) {
-        var hexRadius = priv.hexRadius,
+        var edgeLimit = obj.allowedCircleEdge() * priv.hexRadius,
+        //var hexRadius = priv.hexRadius,
         width = priv.fitWidth,
         height = priv.fitHeight,
         margin = priv.margins,
         d3 = obj.injections().d3;
 
-        var x = Math.max(-hexRadius, Math.min(width + margin.left - margin.right, d3.event.x)),
-          y = Math.max(-hexRadius, Math.min(height - margin.top - margin.bottom + hexRadius, d3.event.y));
+        var x = Math.max(-edgeLimit, Math.min(width + margin.left - margin.right, d3.event.x)),
+          y = Math.max(-edgeLimit, Math.min(height - margin.top - margin.bottom + edgeLimit, d3.event.y));
 
         d.x = x;
         d.y = y;
@@ -604,7 +605,9 @@ function SOMPlane() {
       priv.hexWidth = hexWidth;
 
       //Set the new height and width of the SVG based on the max possible
-      width = MapColumns * hexRadius * Math.sqrt(3);
+      //#Columns * sqrt(3) * hexRadius + sqrt(3)/2 * hexRadius
+      width = MapColumns * Math.sqrt(3) * hexRadius + Math.sqrt(3)/2;
+      //width = MapColumns * hexRadius * Math.sqrt(3);
       height = MapRows * 1.5 * hexRadius + 0.5 * hexRadius;
 
       // store for later use
