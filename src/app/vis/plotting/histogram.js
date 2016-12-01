@@ -799,7 +799,7 @@ angular.module('plotter.vis.plotting.histogram',
       setResizeElement();
 
       function setGridRedraw() {
-        var redrawUnbind = $rootScope.$on('grid-window.redraw', function(event, gridWindow) {
+        var redrawUnbind = $rootScope.$on('grid-window.show', function(event, gridWindow) {
           if(gridWindow === $scope.window) {
             $timeout(function() {
               renderWithNewDimensions();

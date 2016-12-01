@@ -226,7 +226,7 @@ angular.module('plotter.vis.plotting.profile-histogram',
       $scope.deregisters = [];
 
       function setGridRedraw() {
-        var redrawUnbind = $rootScope.$on('grid-window.redraw', function(event, gridWindow) {
+        var redrawUnbind = $rootScope.$on('grid-window.show', function(event, gridWindow) {
           if(gridWindow === $scope.window) {
             $timeout(function() {
               updateChart($scope, { data: $scope.formGroups($scope.groups) });

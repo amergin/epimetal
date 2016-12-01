@@ -121,6 +121,12 @@ function SOMPlane() {
     function highlightHexagon(hexagon, circleInstance) {
       if(!obj.highlight()) { return; }
 
+      var found = priv.svg.selectAll('.hexagon').filter( function(d,i) { 
+        return d.i == hexagon.j && d.j == hexagon.i;
+      });
+
+      console.log("highlightHexagon found = ", found);
+
       // find the one node
       priv.svg.selectAll('.hexagon').filter( function(d,i) { 
         return d.i == hexagon.j && d.j == hexagon.i;
@@ -571,6 +577,18 @@ function SOMPlane() {
     return obj;
   };
 
+  // call when the item is being hidden, to trigger
+  // the exit pattern
+  obj.hide = function() {
+    /* priv.svg.selectAll('g.hexagon-container')
+    .data(priv.hexbin(priv.points))
+    .exit()
+    .remove(); */
+
+    priv.svg.remove();
+    priv.svg = null;
+  };
+
   // renders a SOM plane when called.
   obj.render = function() {
 
@@ -605,8 +623,7 @@ function SOMPlane() {
       priv.hexWidth = hexWidth;
 
       //Set the new height and width of the SVG based on the max possible
-      //#Columns * sqrt(3) * hexRadius + sqrt(3)/2 * hexRadius
-      width = MapColumns * Math.sqrt(3) * hexRadius + Math.sqrt(3)/2;
+      width = MapColumns * Math.sqrt(3) * hexRadius + Math.sqrt(3)/2 * hexRadius;
       //width = MapColumns * hexRadius * Math.sqrt(3);
       height = MapRows * 1.5 * hexRadius + 0.5 * hexRadius;
 
@@ -624,6 +641,8 @@ function SOMPlane() {
         .y(function(d) {
           return d.yp;
         });
+
+      priv.hexbin = hexbin;
 
       //Calculate the center positions of each hexagon  
       var points = [];
@@ -670,7 +689,8 @@ function SOMPlane() {
         .attr('class', 'hexagon-container')
         .selectAll(".hexagon")
         .data(hexbin(points))
-        .enter().append("path")
+        .enter()
+        .append("path")
         .attr("class", "hexagon")
         .attr("d", function(d) {
           return "M" + d.x + "," + d.y + hexbin.hexagon();
@@ -751,10 +771,14 @@ function SOMPlane() {
 
       // 1. the plane element
       obj.element().empty();
+      priv.svg = null;
     }
 
     doAddPlane();
     doAddCircles();
+    if(obj.highlight()) {
+      resolveAllAreaCells();
+    }
   };
 
   return obj;

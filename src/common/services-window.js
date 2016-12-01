@@ -87,17 +87,24 @@ angular.module('services.window', [
 
       function emitShowWindow(obj) {
         var $rootScope = obj.injector().get('$rootScope');
-        $rootScope.$emit('grid-window.redraw', obj);
+        $rootScope.$emit('grid-window.show', obj);
+      }
+
+      function emitHideWindow(obj) {
+        var $rootScope = obj.injector().get('$rootScope');
+        $rootScope.$emit('grid-window.hide', obj);        
       }
 
       obj.toggleVisibility = function() {
         priv.hidden = !priv.hidden;
+        if(priv.hidden === true) { emitHideWindow(obj); }
         if(priv.hidden === false) { emitShowWindow(obj); }
         return obj;
       };
 
       obj.hide = function() {
         priv.hidden = true;
+        emitHideWindow(obj);
         return obj;
       };
 

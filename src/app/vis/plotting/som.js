@@ -62,8 +62,9 @@ angular.module('plotter.vis.plotting.som', [
       return radius * (rows - 1);
     }
   })
-  //.plane($scope.window.extra().plane)
-  .highlight(false);
+  .highlight($scope.window.extra().highlight || false);
+  // don't render here, plane data not yet
+  // available
 
   // watch the header info for possible changes
   // and update accordingly
@@ -125,7 +126,7 @@ angular.module('plotter.vis.plotting.som', [
 
 })
 
-.directive('plSomplane', function plSomplane($injector, $rootScope, SOMService, NotifyService, $timeout, _) {
+.directive('plSomplane', function plSomplane($injector, $rootScope, SOMService, NotifyService, $timeout, _, d3) {
 
   function linkFn($scope, ele, iAttrs) {
 
@@ -167,6 +168,7 @@ angular.module('plotter.vis.plotting.som', [
           // invert the current value
           var highlightHexagons = !$scope.plane.highlight(),
           doRender = true;
+          $scope.window.extra().highlight = highlightHexagons;
 
           // feed it back to the instance, triggering update
           $scope.plane.highlight(highlightHexagons, doRender);
@@ -232,7 +234,7 @@ angular.module('plotter.vis.plotting.som', [
 
         $scope.deregisters.push(unbind);
       });
-    }    
+    }
 
     function setSOMUpdated() {
       var unbind = $rootScope.$on('dataset:SOMUpdated', function(event, som) {
@@ -309,8 +311,22 @@ angular.module('plotter.vis.plotting.som', [
       $scope.plane.render();
     }
 
-    function setGridRedraw() {
-      var redrawUnbind = $rootScope.$on('grid-window.redraw', function(event, gridWindow) {
+    function setGridHide() {
+      var unbind = $rootScope.$on('grid-window.hide', function(event, gridWindow) {
+        // hide means basically to remove all contents and redo from scratch when
+        // shown again
+        if(gridWindow === $scope.window) {
+          $timeout(function() {
+            $scope.plane.hide();
+            //d3.select($scope.element[0]).selectAll('svg').remove();
+          });
+        }
+      });
+      $scope.deregisters.push(unbind);      
+    }
+
+    function setGridShow() {
+      var redrawUnbind = $rootScope.$on('grid-window.show', function(event, gridWindow) {
         if(gridWindow === $scope.window) {
           $timeout(function() {
             doPlaneRender();
@@ -337,7 +353,8 @@ angular.module('plotter.vis.plotting.som', [
 
     setResize();
     setResizeElement();
-    setGridRedraw();
+    setGridShow();
+    setGridHide();
     //setRedraw();
 
     $scope.$on('$destroy', function() {

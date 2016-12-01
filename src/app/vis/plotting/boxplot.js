@@ -353,7 +353,7 @@ angular.module('plotter.vis.plotting.boxplot',
     }
 
     function setGridRedraw() {
-      var redrawUnbind = $rootScope.$on('grid-window.redraw', function(event, gridWindow) {
+      var redrawUnbind = $rootScope.$on('grid-window.show', function(event, gridWindow) {
         if(gridWindow === $scope.window) {
           $timeout(function() {
             $scope.chart.height($scope.getHeight($scope.element));
