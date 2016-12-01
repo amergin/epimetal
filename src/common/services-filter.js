@@ -8,7 +8,7 @@ angular.module('services.filter', [
 
 .constant('SOM_MAX_FILTERS', 5)
   .factory('FilterService', function FilterService($injector, $rootScope, 
-    WindowHandler, ColorScaleFactory,
+    WindowHandler, ColorScaleFactory, SOMService,
     SOM_MAX_FILTERS, d3, _, lodashEq) {
 
     var DimensionService = $injector.get('DimensionService');

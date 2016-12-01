@@ -1,9 +1,12 @@
+// inspired by 
+// http://www.visualcinnamon.com/2013/07/self-organizing-maps-creating-hexagonal.html
 function SOMPlane() {
 
   var obj = this.obj = {},
   priv = this.priv = {
     threshold: 3,
-    highlight: false
+    highlight: false,
+    allowedCircleEdge: 0.5
   };
 
   // config fn's:
@@ -16,6 +19,15 @@ function SOMPlane() {
   obj.plane = function(x) {
     if(!arguments.length) { return priv.plane; }
     priv.plane = x; 
+    return obj;
+  };
+
+  // how many times the hex radius are you allowed to offset
+  // the circle filter on the plane edge from the valid
+  // hex x,y points?
+  obj.allowedCircleEdge = function(x) {
+    if(!arguments.length) { return priv.allowedCircleEdge; }
+    priv.allowedCircleEdge = x;
     return obj;
   };
 
@@ -120,7 +132,11 @@ function SOMPlane() {
     function hexagonInsideCircle(hexpoint, circleInst) {
       var threshold = obj.highlightThreshold(),
       hexagonPoints = priv.hexagonPoints,
-
+      circleOrigin = {
+        x: translateRelativeToPixelX(circleInst.origin().x),
+        y: translateRelativeToPixelY(circleInst.origin().y)
+      },
+      radiusInPx = translateRelativeToPixel(circleInst.radius()),
       howManyPoints = _.chain(hexagonPoints)
       .map(function(hp) {
         // absolute pixel mapping: account for the offset from hexpoint origin
@@ -128,8 +144,9 @@ function SOMPlane() {
           x: hexpoint.xp + hp.x,
           y: hexpoint.yp + hp.y
         };
-        var euclidianDistance = Math.sqrt(Math.pow(pointAbs.x - circleInst.position().x, 2) + Math.pow(pointAbs.y - circleInst.position().y, 2));
-        return euclidianDistance < circleInst.radius();
+
+        var euclidianDistance = Math.sqrt(Math.pow(pointAbs.x - circleOrigin.x, 2) + Math.pow(pointAbs.y - circleOrigin.y, 2));
+        return euclidianDistance < radiusInPx;
       })
       // reject if not true (=hexpoint inside the circle)
       .reject(function(m) {
@@ -153,10 +170,7 @@ function SOMPlane() {
       }
     });
 
-    var $timeout = priv.injections['$timeout'];
-    $timeout(function() {
-      obj.circleIsUpdatedCallback()(hexagons, circleInst);
-    });
+    obj.circleIsUpdatedCallback()(hexagons, circleInst);
   }
 
   obj.circleIsUpdatedCallback = function(fn) {
@@ -183,28 +197,33 @@ function SOMPlane() {
     return obj;
   };
 
-  obj.moveCircle = function(circleInst, d) {
+  obj.moveCircle = function(circleInst) {
+
+    var pixelX = translateRelativeToPixelX(circleInst.origin().x),
+    pixelY = translateRelativeToPixelY(circleInst.origin().y),
+    id = circleInst.id();
+
     priv.svg.selectAll('circle').filter(function(a) {
-        return a.id == d.id;
+        return a.id == id; //d.id;
       })
       .attr('cx', function(t) {
-        t.x = d.x;
+        t.x = pixelX; //d.x;
         return t.x;
       })
       .attr('cy', function(t) {
-        t.y = d.y;
+        t.y = pixelY; //d.y;
         return t.y;
       });
 
     priv.svg.selectAll('text.circle-filter').filter(function(a) {
-        return a.id == d.id;
+        return a.id == id; //d.id;
       })
       .attr('x', function(t) {
-        t.x = d.x;
+        t.x = pixelX; //d.x;
         return t.x;
       })
       .attr('y', function(t) {
-        t.y = d.y;
+        t.y = pixelY; //d.y;
         return t.y;
       });
 
@@ -215,12 +234,16 @@ function SOMPlane() {
     return obj;
   };
 
-  obj.resizeCircle = function(circleInst, d) {
+  obj.resizeCircle = function(circleInst) {
+    var circleRadiusRel = circleInst.radius(),
+    newRadiusInPx = translateRelativeToPixel(circleRadiusRel),
+    id = circleInst.id();
+
     priv.svg.selectAll('circle').filter(function(a) {
-      return a.id == d.id;
+      return a.id == id; //== d.id;
     })
     .attr('r', function(t) {
-      t.r = d.r;
+      t.r = newRadiusInPx;
       return t.r;
     });
 
@@ -231,10 +254,12 @@ function SOMPlane() {
       // and need to update the colors accordingly
       resolveAllCircles();
     }
+    else {
+      // set by the caller, do not set again
+      //circleInstance.radius(d.r);
+      resolveAreaCells(circleInst);
+    }
 
-    var circleInstance = _getCircleInstance(d.id);
-    circleInstance.radius(d.r);
-    resolveAreaCells(circleInstance);
   };
 
   function _getCircleInstance(id) {
@@ -255,12 +280,6 @@ function SOMPlane() {
     return translatePixelToRelativeX(pixel);
 
     // divide the width into n columns -> pixel scale
-    /*
-    var width = priv.fitWidth,
-    widthPerColumn = width / obj.plane().size.n;
-    // pixel scale -> relative scale
-    return translatePixelToRelativeX(widthPerColumn * x);
-    */
   }
 
   function translatePointToRelativeY(y) {
@@ -271,11 +290,8 @@ function SOMPlane() {
 
     // 2. pixel to relative scale
     return translatePixelToRelativeY(pixel);
-    /*var height = priv.fitHeight,
-    heightPerRow = height / obj.plane().size.m;
-    // pixel scale -> relative scale
-    return translatePixelToRelativeY(heightPerRow * y); */
   }
+
 
   function translatePointToPixelX(x) {
     return priv.hexRadius * x * 1.75;
@@ -303,6 +319,21 @@ function SOMPlane() {
   function translatePixelToRelativeY(y) {
     var height = priv.fitHeight;
     return y / height;
+  }
+
+  function translatePixelToRelative(val) {
+    // agree that the relative measurement
+    // is bound to width. Could as well be
+    // height.
+    var width = priv.fitWidth,
+    hexRadius = priv.hexRadius;
+    return val / (width + obj.allowedCircleEdge() * hexRadius * 2);
+  }
+
+  function translateRelativeToPixel(val) {
+    var width = priv.fitWidth,
+    hexRadius = priv.hexRadius;
+    return val * (width + obj.allowedCircleEdge() * hexRadius * 2);
   }
 
   /* function circleX(x) {
@@ -339,18 +370,17 @@ function SOMPlane() {
       },
       svg = priv.svg,
       origin = {
-        relX: translatePointToRelativeX(circle.origin().x),
-        relY: translatePointToRelativeY(circle.origin().y),
-        x: translatePointToPixelX(circle.origin().x),
-        y: translatePointToPixelY(circle.origin().y)
-      };
-      console.log("origin is = ", origin);
-      /*
-      origin = circle.position() || {
-        x: circleX(circle.origin().x),
-        y: circleY(circle.origin().y)
-      };
-      */
+        x: translateRelativeToPixelX(circle.origin().x),
+        y: translateRelativeToPixelY(circle.origin().y),
+      },
+      radiusInPx;
+      if(circle.radius()) {
+        radiusInPx = translateRelativeToPixel(circle.radius());
+      } else {
+        radiusInPx = _circleConfig.radius.normal;
+      }
+
+      console.log("origin (px) = ", origin, "radius (px) = ", radiusInPx);
 
       var circleAnchor = svg.append('g')
         .attr('class', function(d) {
@@ -360,11 +390,9 @@ function SOMPlane() {
           return circle.id();
         })
         .data([{
-          relX: origin.relX,
-          relY: origin.relY,
           x: origin.x,
           y: origin.y,
-          r: circle.radius() || _circleConfig.radius.normal,
+          r: radiusInPx,
           id: circle.id()
         }]);
 
@@ -378,59 +406,44 @@ function SOMPlane() {
         var x = Math.max(-hexRadius, Math.min(width + margin.left - margin.right, d3.event.x)),
           y = Math.max(-hexRadius, Math.min(height - margin.top - margin.bottom + hexRadius, d3.event.y));
 
-        d.relX = translatePixelToRelativeX(x);
-        d.relY = translatePixelToRelativeY(y);
-
         d.x = x;
         d.y = y;
 
-        console.log("relX aftter innerDragMove = ", d);
-
         innerCircle.attr("cx", function(d) {
-          var ret = translateRelativeToPixelX(d.relX);
-          console.log("cx inner = ", ret);
-          return ret;
-        }); //d.x);
+          return d.x;
+        });
         innerCircle.attr("cy", function(d) {
-          var ret = translateRelativeToPixelY(d.relY);
-          console.log("cy inner = ", ret);
-          return ret;
-        }); //d.y);
+          return d.y;
+        });
         outerCircle.attr('cx', function(t) {
-          t.relX = d.relX;
-          console.log("outer cx returning = ", x);
-          return x;
-          //return translateRelativeToPixelX(t.relX);
-          //t.x = x;
-          //return t.x;
+          t.x = x;
+          return t.x;
         });
         outerCircle.attr('cy', function(t) {
-          t.relY = d.relY;
-          console.log("outer cy returning = ", y);
-          return y;
-          //return translateRelativeToPixelY(t.relY);
-          //t.y = y;
-          //return t.y;
+          t.y = y;
+          return t.y;
         });
         circleText.attr('x', function(t) {
-          t.relX = d.relX;
-          console.log("text x = ", x);
-          return x;
-          //return translateRelativeToPixelX(t.relX);
-          //t.x = x;
-          //return t.x;
+          t.x = x;
+          return t.x;
         });
         circleText.attr('y', function(t) {
-          t.relY = d.relY;
-          console.log("text y =", y);
-          return y;
-          //return translateRelativeToPixelY(t.relY);
-          //t.y = y;
-          //return t.y;
+          t.y = y;
+          return t.y;
         });
-        circle.position(d);
 
-        obj.circleMoveCallback()(circle, d);
+        // tell the position for the circle instance
+        // in relative scale
+        circle.origin({
+          x: translatePixelToRelativeX(d.x),
+          y: translatePixelToRelativeY(d.y)          
+        });
+        //circle.position(d);
+
+        // notify the other circles that the 
+        // circle has been moved and they
+        // need to be moved as well
+        obj.circleMoveCallback()(circle); //, d);
       };
 
       var innerCircleDrag = d3.behavior.drag()
@@ -438,8 +451,10 @@ function SOMPlane() {
         .on("drag", innerDragMove)
         .on("dragend", function(d) {
           if(obj.highlight()) {
+            // all circles
             resolveAllCircles();
           } else {
+            // only one circle
             var circleInst = _getCircleInstance(d.id);
             resolveAreaCells(circleInst);
           }
@@ -447,12 +462,10 @@ function SOMPlane() {
 
       var innerCircle = circleAnchor.append('circle')
         .attr('cx', function(d) {
-          return translateRelativeToPixelX(d.relX);
-          //return d.x;
+          return d.x;
         })
         .attr('cy', function(d) {
-          return translateRelativeToPixelY(d.relY);
-          //return d.y;
+          return d.y;
         })
         .attr('r', function(d) {
           return d.r;
@@ -464,23 +477,22 @@ function SOMPlane() {
       var circleText = circleAnchor
         .append('text')
         .attr('x', function(d) {
-          return translateRelativeToPixelX(d.relX);
-          //return d.x;
+          return d.x;
         })
         .attr('y', function(d) {
-          return translateRelativeToPixelY(d.relY);
-          //return d.y;
+          return d.y;
         })
         .attr('text-anchor', 'middle')
         .attr('alignment-baseline', 'middle')
         .attr('class', 'circle-filter noselect')
         .style('fill', circle.color())
         .text(function() {
-          var limit = obj.circleTruncateLength();
-          if(circle.name().length > limit) {
-            return circle.name().substring(0, limit) + "...";
+          var limit = obj.circleTruncateLength(),
+          name = circle.name();
+          if(name.length > limit) {
+            return name.substring(0, limit) + "...";
           } else {
-            return circle.name();
+            return name;
           }
         })
         .call(innerCircleDrag);
@@ -488,33 +500,14 @@ function SOMPlane() {
 
       var outerCircleDrag = d3.behavior.drag()
         .on("drag", function(d) {
-          var direction, newRadius,
-          pixelX = translateRelativeToPixelX(d.relX),
-          pixelY = translateRelativeToPixelY(d.relY);
+          var direction, newRadius;
 
-          var x = Math.abs(d3.event.x -pixelX),
-          y = Math.abs(d3.event.y - pixelY);
+          var x = Math.abs(d3.event.x -d.x),
+          y = Math.abs(d3.event.y - d.y);
           direction = (x >= y) ? x : y;
 
           newRadius = Math.max(_circleConfig.radius.min, Math.min(direction, _circleConfig.radius.max));
 
-          console.log("circle resize triggered with: ",
-            "direction = ", direction == x ? 'x' : 'y', 
-            "d = ", d,
-            "pixelX = ", pixelX, 
-            "pixelY = ", pixelY, 
-            "oldRadius = ", d.r, 
-            "newRadius = ", newRadius
-          );
-
-          /*
-          var x = Math.abs(d3.event.x - d.x); // - d.x);
-          var y = Math.abs(d3.event.y - d.y); //d.y);
-          direction = (x >= y) ? x : y;
-
-          newRadius = Math.max(_circleConfig.radius.min, Math.min(direction, _circleConfig.radius.max));
-
-          */
           d.r = newRadius;
           outerCircle.attr('r', newRadius);
           innerCircle.attr('r', function(t) {
@@ -530,25 +523,24 @@ function SOMPlane() {
             resolveAreaCells(circle);
           }
 
-          obj.circleResizeCallback()(circle, d);
+          var newRadiusInRel = translatePixelToRelative(newRadius);
+          circle.radius(newRadiusInRel);
+
+          obj.circleResizeCallback()(circle);
         });
 
       var outerCircle = circleAnchor.append('circle')
         .data([{
-          relX: origin.relX,
-          relY: origin.relY,
           x: origin.x,
           y: origin.y,
-          r: (circle.radius() || _circleConfig.radius.normal) + 3,
+          r:  radiusInPx + 3, // slightly larger
           id: circle.id()
         }])
         .attr('cx', function(d) {
-          return translateRelativeToPixelX(d.relX);
-          //return d.x;
+          return d.x;
         })
         .attr('cy', function(d) {
-          return translateRelativeToPixelY(d.relY);
-          //return d.y;
+          return d.y;
         })
         .attr('r', function(d) {
           return d.r;
@@ -560,8 +552,12 @@ function SOMPlane() {
         .call(outerCircleDrag);
 
         // place initial position & radius
-        circle.position(innerCircle.data()[0]);
-        circle.radius(innerCircle.data()[0].r);
+        circle.origin({
+          x: translatePixelToRelativeX(origin.x),
+          y: translatePixelToRelativeY(origin.y)
+        });
+        circle.radius(translatePixelToRelative(radiusInPx));
+
         resolveAreaCells(circle);
     }
 

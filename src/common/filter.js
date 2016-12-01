@@ -47,21 +47,38 @@ function CircleFilter() {
       injector: null,
       radius: undefined,
       count: 0,
-      position: undefined,
-      origin: {
-        x: 0,
-        y: 0
-      }
+      origin: {}
     }),
     filter = this.filter;
 
+  // picks an origin in point scale and translates it into
+  // relative scale.
   function initOrigin() {
-    var SOMService = filter.injector().get('SOMService');
-    priv.origin.x = _.random(1, SOMService.columns() - 1);
-    priv.origin.y = _.random(1, SOMService.rows() - 1);
+    var SOMService = filter.injector().get('SOMService'),
+    columns = SOMService.columns(),
+    rows = SOMService.rows();
+
+    // in relative scale, the domain for mapping hex points
+    // is (0,0) -> (1,1).
+    priv.origin = {
+      x: _.random(1, columns - 1) / columns,
+      y: _.random(1, rows - 1) / rows
+    };
   }
 
-  // initOrigin();
+  function checkValueIsInRelativeScale(value) {
+    var inRange = _.inRange(value, 0, 1);
+    if(inRange) {
+      // all is ok
+      return;
+    } else {
+      if(value == 1) {
+        // upper limit is also acceptable
+        return;
+      }
+      throw new Error('Tried to submit value that is not in range [0,1]! value = ' + value);
+    }
+  }
 
   filter.init = function() {
     initOrigin();
@@ -96,11 +113,22 @@ function CircleFilter() {
     return filter;
   };
 
-  filter.origin = function(x) {
-    if (!arguments.length) {
-      return priv.origin;
-    }
-    priv.origin = x;
+  filter.initialOrigin = function(obj) {
+    if(!arguments.length) { return priv.initialOrigin; }
+    priv.initialOrigin = obj;
+    return filter;
+  };
+
+  // accepts an object with x,y coordinate
+  // in relative scale. The hex coordinates are
+  // mapped to value domain of [0,1]. Note that
+  // the value may also be outside this domain
+  // in the case the circle is placed on the outskirts
+  // of the plane, not on top of the hex planes.
+  filter.origin = function(obj) {
+    if (!arguments.length) { return priv.origin; }
+    console.log("Circle " + filter.name(), "sets origin to", obj);
+    priv.origin = obj;
     return filter;
   };
 
@@ -118,6 +146,7 @@ function CircleFilter() {
     if (!arguments.length) {
       return priv.radius;
     }
+    checkValueIsInRelativeScale(radius);
     priv.radius = radius;
     return filter;
   };
@@ -127,18 +156,6 @@ function CircleFilter() {
       return priv.count;
     }
     priv.count = x;
-    return filter;
-  };
-
-  filter.position = function(position) {
-    if (!arguments.length) {
-      return priv.position;
-    }
-    if(position === undefined) {
-      // pass
-    } else {
-      priv.position = _.pick(position, 'x', 'y');
-    }
     return filter;
   };
 
@@ -164,8 +181,7 @@ function CircleFilter() {
       origin: filter.origin(),
       color: filter.color(),
       type: filter.type(),
-      radius: filter.radius(),
-      position: filter.position()
+      radius: filter.radius()
     };
   };
 
@@ -177,7 +193,6 @@ function CircleFilter() {
     filter.color(state.color);
     filter.origin(state.origin);
     filter.radius(state.radius);
-    filter.position(state.position);
     return filter;
   };
 

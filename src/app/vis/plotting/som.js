@@ -8,8 +8,8 @@ angular.module('plotter.vis.plotting.som', [
 
 .constant('SOM_PLANE_MARGINS', {
   top: 20,
-  bottom: 20,
   right: 30,
+  bottom: 20,
   left: 30
 })
 
@@ -34,20 +34,21 @@ angular.module('plotter.vis.plotting.som', [
   })
   .injections({
     '_': _,
-    'd3': d3,
-    '$timeout': $timeout
+    'd3': d3
   })
-  .circleMoveCallback(function(circleInst, d) {
-    $rootScope.$emit('som:circleFilter:move', circleInst, $scope.window.id(), d);
+  .circleMoveCallback(function(circleInst) {
+    $rootScope.$emit('som:circleFilter:move', circleInst, $scope.window.id());
   })
-  .circleResizeCallback(function(circleInst, d) {
-    $rootScope.$emit('som:circleFilter:resize', circleInst, $scope.window.id(), d);
+  .circleResizeCallback(function(circleInst) {
+    $rootScope.$emit('som:circleFilter:resize', circleInst, $scope.window.id());
   })
   .highlightColor(HEXAGON_BORDER_COLOR)
   .circleTruncateLength(SOM_FILTER_TEXT_LENGTH)
   .circleIsUpdatedCallback(function(hexagons, circleInst) {
-    circleInst.hexagons(hexagons);
-    FilterService.updateCircleFilters();
+    $timeout(function() {
+      circleInst.hexagons(hexagons);
+      FilterService.updateCircleFilters();
+    });
   })
   .circleRadiusSettings({
     normal: function(radius, columns, rows) {
@@ -210,23 +211,23 @@ angular.module('plotter.vis.plotting.som', [
     $scope.deregisters = [];
 
     function setMoveCircle() {
-      var unbind = $rootScope.$on('som:circleFilter:move', function(eve, circleInst, winId, d) {
+      var unbind = $rootScope.$on('som:circleFilter:move', function(eve, circleInst, winId) {
         if (winId === $scope.window.id()) {
           return;
         }
-        $scope.plane.moveCircle(circleInst, d);
+        $scope.plane.moveCircle(circleInst);
 
         $scope.deregisters.push(unbind);
       });
     }
 
     function setResizeCircle() {
-      var unbind = $rootScope.$on('som:circleFilter:resize', function(eve, circleInst, winId, d) {
+      var unbind = $rootScope.$on('som:circleFilter:resize', function(eve, circleInst, winId) {
         if (winId === $scope.window.id()) {
           return;
         }
 
-        $scope.plane.resizeCircle(circleInst, d);
+        $scope.plane.resizeCircle(circleInst);
 
         $scope.deregisters.push(unbind);
       });
