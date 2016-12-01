@@ -785,8 +785,6 @@ function SOMPlane() {
 
       // 1. the plane element
       obj.element().empty();
-      //obj.element().empty();
-      //priv.svg = null;
     }
 
     doAddPlane();

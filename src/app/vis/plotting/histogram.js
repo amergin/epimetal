@@ -380,7 +380,7 @@ angular.module('plotter.vis.plotting.histogram',
       .addFilterHandler(function(filters, filter) {
         function defaultFn(filters, filter) {
           filters.push(filter);
-          console.log("filters after appending = ", filters);
+          //console.log("filters after appending = ", filters);
           return filters;
         }
 
@@ -390,8 +390,8 @@ angular.module('plotter.vis.plotting.histogram',
             return filt.type() == 'range' && filt.chart() == $scope.histogram;
           });
 
-          console.log("current = ", current);
-
+          //console.log("current = ", current);
+          $scope.dimensionInst.addCustomFilter();
           if(current) {
             // shifted
             console.log("shifted", current);
@@ -405,7 +405,7 @@ angular.module('plotter.vis.plotting.histogram',
             .payload(filter);
 
             var added = $injector.get('FilterService').addFilter(filt);
-            console.log("new filter", added, filt);
+            //console.log("new filter", added, filt);
           }
           $scope.resetButton(true);
           $injector.get('WindowHandler').reRenderVisible({ compute: true, action: 'filter:add', omit: 'histogram' });
@@ -428,6 +428,7 @@ angular.module('plotter.vis.plotting.histogram',
 
         function custom(filters, filter) {
           $injector.get('FilterService').removeFilter(filter);
+          $scope.dimensionInst.removeCustomFilter();
           $injector.get('WindowHandler').reRenderVisible({ compute: true, action: 'filter:remove', omit: 'histogram' });
           $scope.resetButton(false);
         }
@@ -443,6 +444,7 @@ angular.module('plotter.vis.plotting.histogram',
         });
         $injector.get('WindowHandler').reRenderVisible({ compute: true, action: 'filter:reset', omit: 'histogram' });
         $scope.resetButton(false);
+        $scope.dimensionInst.setCustomFilterCount(0);
         return [];
       })
       // .on('renderlet', function(chart) {

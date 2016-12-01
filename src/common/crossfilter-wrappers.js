@@ -12,6 +12,7 @@ function CrossfilterDimension() {
     _obj = {},
     _filterFn = null,
     _oldFilterFn = null,
+    _noCustomFilters = 0,
     _sticky = false,
     _filters = null; // only for som
 
@@ -157,6 +158,27 @@ function CrossfilterDimension() {
     return _obj;
   };
 
+  _obj.addCustomFilter = function() {
+    ++_noCustomFilters;
+    return _obj;
+  };
+
+  _obj.removeCustomFilter = function() {
+    --_noCustomFilters;
+    return _obj;
+  };
+
+  _obj.setCustomFilterCount = function(x) {
+    _noCustomFilters = x;
+    return _obj;
+  };
+
+  _obj.hasFilters = function() {
+    return _noCustomFilters > 0 || _obj.filter();
+  };
+
+  // for filter functions, not chart
+  // custom filters
   _obj.filter = function(filter) {
     if (!arguments.length) {
       return _filterFn;
@@ -180,9 +202,18 @@ function CrossfilterDimension() {
 
   _obj.decrement = function() {
     --_count;
-    if (_count < 1 && !_obj.sticky()) {
+    if(_count < 1) {
+      if(_obj.sticky()) {
+        // don't remove
+        return _obj;
+      }
+      if(_obj.hasFilters()) {
+        console.log("Dimension has a filter although count is", _count, " -> keeping the filter");
+        return _obj;
+      }
       destroy();
-    } else {
+    }
+    else {
       return _obj;
     }
   };
@@ -233,6 +264,10 @@ function CrossfilterGroup() {
   _obj.decrement = function() {
     --_count;
     if (_count < 1) {
+      /* if(_dimension.filter()) {
+        console.log("Decrement: Group -> dimension has filter -> keeping the group.");
+        return _obj;
+      } */
       destroy();
     } else {
       return _obj;
@@ -277,7 +312,6 @@ function CrossfilterGroup() {
 
   _obj.destroy = function() {
     destroy();
-    destructFn();
   };
 
   _obj.injector = function(x) {

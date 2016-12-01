@@ -318,8 +318,7 @@ angular.module('plotter.vis.plotting.som', [
         if(gridWindow === $scope.window) {
           $timeout(function() {
             $scope.plane
-            .hide()
-            .element($scope.element);
+            .hide();
           });
         }
       });

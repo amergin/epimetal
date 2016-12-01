@@ -56,9 +56,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
 
     _.each(existing, function(filter) {
       var group = _.find(groups, function(grp) { 
-        var key = _.omit(grp.key),
-        match = _.matches(filter.payload());
-        return match(key);
+        return filter.payload().valueOf() == grp.key.valueOf();
       });
 
       filter.chart(chart);
@@ -118,7 +116,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
     });
 
     // share information with the plot window
-    $scope.window.headerText(['Histogram of', $scope.window.variables().name(), '']);
+    $scope.window.headerText(['', $scope.window.variables().name(), '']);
     $scope.filterButton(false);
 
     // see https://github.com/dc-js/dc.js/wiki/FAQ#filter-the-data-before-its-charted
@@ -364,6 +362,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
               .windowid($scope.window.id())
               .payload(filter);
 
+              $scope.dimensionInst.addCustomFilter();
               $injector.get('FilterService').addFilter(instance);
               $injector.get('WindowHandler').reRenderVisible({ omit: 'histogram', compute: true });
               $scope.filterButton(true);
@@ -391,6 +390,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
               if(hideButton) {
                 $scope.filterButton(false);
               }
+              $scope.dimensionInst.removeCustomFilter();
               $injector.get('WindowHandler').reRenderVisible({ omit: 'histogram', compute: true });
             });
           }
@@ -402,6 +402,7 @@ angular.module('plotter.vis.plotting.classedbarchart',
           _.each(filters, function(filter) {
             $injector.get('FilterService').removeFilterByPayload(filter);
           });
+          $scope.dimensionInst.setCustomFilterCount(0);
           return [];
         });
 
