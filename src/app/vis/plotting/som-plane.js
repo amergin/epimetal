@@ -204,26 +204,26 @@ function SOMPlane() {
     id = circleInst.id();
 
     priv.svg.selectAll('circle').filter(function(a) {
-        return a.id == id; //d.id;
+        return a.id == id;
       })
       .attr('cx', function(t) {
-        t.x = pixelX; //d.x;
+        t.x = pixelX;
         return t.x;
       })
       .attr('cy', function(t) {
-        t.y = pixelY; //d.y;
+        t.y = pixelY;
         return t.y;
       });
 
     priv.svg.selectAll('text.circle-filter').filter(function(a) {
-        return a.id == id; //d.id;
+        return a.id == id;
       })
       .attr('x', function(t) {
-        t.x = pixelX; //d.x;
+        t.x = pixelX;
         return t.x;
       })
       .attr('y', function(t) {
-        t.y = pixelY; //d.y;
+        t.y = pixelY;
         return t.y;
       });
 
@@ -240,7 +240,7 @@ function SOMPlane() {
     id = circleInst.id();
 
     priv.svg.selectAll('circle').filter(function(a) {
-      return a.id == id; //== d.id;
+      return a.id == id;
     })
     .attr('r', function(t) {
       t.r = newRadiusInPx;
@@ -272,27 +272,7 @@ function SOMPlane() {
     return circleInst;
   }
 
-  function translatePointToRelativeX(x) {
-    // 1. get point -> pixel scale
-    var pixel = translatePointToPixelX(x);
-
-    // 2. pixel to relative scale
-    return translatePixelToRelativeX(pixel);
-
-    // divide the width into n columns -> pixel scale
-  }
-
-  function translatePointToRelativeY(y) {
-    var height = priv.fitHeight;
-
-    // 1. get point -> pixel scale
-    var pixel = translatePointToPixelY(y);
-
-    // 2. pixel to relative scale
-    return translatePixelToRelativeY(pixel);
-  }
-
-
+  /* 
   function translatePointToPixelX(x) {
     return priv.hexRadius * x * 1.75;
   }
@@ -300,6 +280,7 @@ function SOMPlane() {
   function translatePointToPixelY(y) {
     return priv.hexRadius * y * 1.5;
   }
+  */
 
   function translateRelativeToPixelX(x) {
     var width = priv.fitWidth;
@@ -335,14 +316,6 @@ function SOMPlane() {
     hexRadius = priv.hexRadius;
     return val * (width + obj.allowedCircleEdge() * hexRadius * 2);
   }
-
-  /* function circleX(x) {
-      return priv.hexRadius * x * 1.75;
-  }
-
-  function circleY(y) {
-      return priv.hexRadius * y * 1.5;
-  } */
 
   obj.addCircle = function(circle) {
     function doAdd() {
@@ -380,7 +353,7 @@ function SOMPlane() {
         radiusInPx = _circleConfig.radius.normal;
       }
 
-      console.log("origin (px) = ", origin, "radius (px) = ", radiusInPx);
+      //console.log("origin = ", origin, "radius (px) = ", radiusInPx);
 
       var circleAnchor = svg.append('g')
         .attr('class', function(d) {
@@ -438,12 +411,11 @@ function SOMPlane() {
           x: translatePixelToRelativeX(d.x),
           y: translatePixelToRelativeY(d.y)          
         });
-        //circle.position(d);
 
         // notify the other circles that the 
         // circle has been moved and they
         // need to be moved as well
-        obj.circleMoveCallback()(circle); //, d);
+        obj.circleMoveCallback()(circle);
       };
 
       var innerCircleDrag = d3.behavior.drag()
@@ -654,8 +626,6 @@ function SOMPlane() {
       var points = [];
       for (var i = 0; i < MapRows; i++) {
         for (var j = 0; j < MapColumns; j++) {
-          //var xp = hexRadius * j * 1.75,
-          //yp = hexRadius * i * 1.5;
           points.push({
             "xp": hexRadius * j * 1.75,
             "yp": hexRadius * i * 1.5,
@@ -712,8 +682,6 @@ function SOMPlane() {
           });
           return cell.color;
         });
-      // .on("mouseover", mover)
-      // .on("mouseout", mout);
 
       // add labels
       priv.svg.append("g")
@@ -777,7 +745,8 @@ function SOMPlane() {
 
     if(priv.svg) {
       // has been previously rendered: need to remove 
-      // contents
+
+      // 1. the plane element
       obj.element().empty();
     }
 
