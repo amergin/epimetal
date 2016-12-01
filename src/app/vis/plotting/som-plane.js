@@ -585,8 +585,16 @@ function SOMPlane() {
     .exit()
     .remove(); */
 
+    //priv.svg.remove();
+    //priv.svg = null;
+
+    return obj;
+  };
+
+  obj.remove = function() {
     priv.svg.remove();
     priv.svg = null;
+    return obj;
   };
 
   // renders a SOM plane when called.
@@ -706,6 +714,12 @@ function SOMPlane() {
           return cell.color;
         });
 
+      priv.svg
+      .selectAll('g.hexagon-container')
+      .data(hexbin(points))
+      .exit()
+      .remove();
+
       // add labels
       priv.svg.append("g")
         .attr('class', 'label-container')
@@ -771,7 +785,8 @@ function SOMPlane() {
 
       // 1. the plane element
       obj.element().empty();
-      priv.svg = null;
+      //obj.element().empty();
+      //priv.svg = null;
     }
 
     doAddPlane();

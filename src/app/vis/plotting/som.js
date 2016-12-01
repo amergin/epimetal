@@ -317,8 +317,9 @@ angular.module('plotter.vis.plotting.som', [
         // shown again
         if(gridWindow === $scope.window) {
           $timeout(function() {
-            $scope.plane.hide();
-            //d3.select($scope.element[0]).selectAll('svg').remove();
+            $scope.plane
+            .hide()
+            .element($scope.element);
           });
         }
       });
