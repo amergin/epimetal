@@ -15,7 +15,7 @@ hashids==1.0.3
 html5lib==0.999
 itsdangerous==0.24
 meld3==0.6.10
-mongoengine==0.8.8
+mongoengine==0.10.7
 pymongo==2.7.1
 requests==2.2.1
 simplejson==3.5.3
