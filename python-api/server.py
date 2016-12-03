@@ -27,13 +27,28 @@ app = Flask(__name__)
 config = Config('setup.config')
 app.config['DEBUG'] = True
 app.config['SECRET_KEY'] = os.urandom(24)
-app.config['MONGODB_SETTINGS'] = {
-	'db': config.getMongoVar('db'),
-	'alias': 'samples',
-	'HOST': config.getMongoVar('host'),
-	'PORT': int( config.getMongoVar('port') ),
-	'read_preference': ReadPreference.PRIMARY_PREFERRED
-}
+app.config['MONGODB_SETTINGS'] = [
+	{
+		'DB': config.getMongoVar('db'),
+		'ALIAS': 'samples',
+		'HOST': config.getMongoVar('host'),
+		'PORT': int( config.getMongoVar('port') ),
+		'READ_PREFERENCE': ReadPreference.PRIMARY_PREFERRED
+	},
+	{
+		'db': config.getMongoVar('somdb'),
+		'ALIAS': 'som',
+		'HOST': config.getMongoVar('host'),
+		'PORT': int( config.getMongoVar('port') )
+	},
+	{
+		'db': config.getMongoVar('settings_db'),
+		'ALIAS': 'db_settings',
+		'HOST': config.getMongoVar('host'),
+		'PORT': int( config.getMongoVar('port') )
+	},
+
+]
 
 register_connection(
 	'samples', 
