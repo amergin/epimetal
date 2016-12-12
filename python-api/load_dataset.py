@@ -3,7 +3,7 @@ from mongoengine import connect, Document, DynamicDocument
 from mongoengine.fields import StringField, ListField
 from mongoengine.queryset import DoesNotExist
 import sys
-from config import Config
+from config import JSONConfig
 from orm_models import Sample, HeaderSample, HeaderGroup, ExploreSettings, SOMSettings, ProfileHistogram
 import json
 import math
@@ -35,16 +35,20 @@ def _getEscapedHeader(headerList):
 
 
 class DataLoader( object ):
-	def __init__(self, config, fileName):
-		self.cfg = Config(config)
+	def __init__(self, configFile, fileName):
+		self.cfg = JSONConfig(configFile)
 		self.dataFile = fileName
-		self.columnSeparator = self.cfg.getDataLoaderVar("column_separator")
-		self.topgroupSeparator = self.cfg.getDataLoaderVar("topgroup_separator")
+
+		dataloaderSettings = self.cfg.getVar("dataLoader")
+		self.columnSeparator = dataloaderSettings.get("columnSeparator", "\t").encode("ascii", "ignore")
+		print type(self.columnSeparator)
+		self.topgroupSeparator = dataloaderSettings.get("topgroupSeparator", ":")
 		
 		time.sleep(10)
-				
-		connect( db=self.cfg.getMongoVar('db'), alias='samples', host=self.cfg.getMongoVar('host'), port=int(self.cfg.getMongoVar('port')), w=1 )
-		connect( db=self.cfg.getMongoVar('settings_db'), alias='db_settings', host=self.cfg.getMongoVar('host'), port=int(self.cfg.getMongoVar('port')), w=1 )
+
+		dbSettings = self.cfg.getVar("database")
+		connect( db=dbSettings.get("samples").get("name"), alias='samples', host=dbSettings.get("samples").get("host"), port=dbSettings.get("samples").get("port"), w=1 )
+		connect( db=dbSettings.get("settings").get("name"), alias='db_settings', host=dbSettings.get("settings").get("host"), port=dbSettings.get("settings").get("port"), w=1 )
 		# has 'C|' in the beginning
 		self.classVarRegex = re.compile('(\|C\|)(.+)', re.IGNORECASE)
 		self.regVarPattern = "|regex|"
@@ -63,7 +67,7 @@ class DataLoader( object ):
 			def getDocument():
 				doc = ExploreSettings.objects.first()
 				return doc or ExploreSettings(histograms=[])
-			histogramVars = self.cfg.getDataLoaderVar("explore_default_histograms", True)
+			histogramVars = self.cfg.getVar("dataLoader", "views").get("explore").get("defaultHistograms")
 			settings = getDocument()
 			saveList = list()
 
@@ -106,7 +110,7 @@ class DataLoader( object ):
 
 				clearProfiles()
 
-				confProfiles = self.cfg.getDataLoaderVar("som_profiles", True)
+				confProfiles = self.cfg.getVar("dataLoader", "views").get("som").get("defaultProfiles")
 				for profile in confProfiles:
 					name = profile.get('name')
 					regex = profile.get('regex', None)
@@ -124,7 +128,7 @@ class DataLoader( object ):
 				settings.save()
 
 			def setInputVariables(settings):
-				variables = self.cfg.getDataLoaderVar("som_input_variables", True)
+				variables = self.cfg.getVar("dataLoader", "views").get("som").get("defaultInputVariables")
 				checkedVariables = getCheckedVariables(variables)
 
 				settings.inputVariables = checkedVariables
@@ -141,7 +145,7 @@ class DataLoader( object ):
 		somSettings()
 
 	def _datasetVariablesEnabled(self):
-		return self.cfg.getDataLoaderVar('dataset_variables') == 'true'
+		return self.cfg.getVar("dataLoader", "createDatasetVariables") == True
 
 	def _getDatasetVariableGroup(self):
 		return HeaderGroup.objects.get(name=DATASET_VARIABLE_GROUP_NAME)
@@ -228,8 +232,8 @@ class DataLoader( object ):
 						return payload.get('row')
 				return None
 
-			metadataFileName = self.cfg.getDataLoaderVar('metadata_file')
-			separator = self.cfg.getDataLoaderVar('column_separator')
+			metadataFileName = self.cfg.getVar("dataLoader", "metadataFile")
+			separator = self.cfg.getVar("dataLoader", "columnSeparator")
 			metaHeaderDict = dict()
 			metaHeaderRegexDict = dict()
 
@@ -239,7 +243,7 @@ class DataLoader( object ):
 				header = []
 
 				#print "delim=", separator, type(separator), len(separator)
-				for no, line in enumerate(csv.reader(tsv, delimiter="\t")):
+				for no, line in enumerate(csv.reader(tsv, delimiter=self.columnSeparator)): #"\t")):
 					if( no is 0 ):
 						header = line
 						continue
@@ -312,8 +316,8 @@ class DataLoader( object ):
 					pass
 
 		# omit sampleid & dataset
-		datasetKey = self.cfg.getDataLoaderVar('dataset_identifier')
-		sampleidKey = self.cfg.getDataLoaderVar('sampleid_identifier')
+		datasetKey = self.cfg.getVar("dataLoader", "dataset").get("identifierColumn")
+		sampleidKey = self.cfg.getVar("dataLoader", "sampleIdColumn")
 		filteredHeaderList = filter(lambda a: (a != sampleidKey and a != datasetKey), headerList)
 
 		# create new header info if necessary
@@ -369,13 +373,13 @@ class DataLoader( object ):
 
 		with open(self.dataFile) as fi:
 			header = None
-			datasetKey = self.cfg.getDataLoaderVar('dataset_identifier')
-			sampleidKey = self.cfg.getDataLoaderVar('sampleid_identifier')
-			defaultDatasetName = self.cfg.getDataLoaderVar('dataset_default')
+			datasetKey = self.cfg.getVar("dataLoader", "dataset").get("identifierColumn")
+			sampleidKey = self.cfg.getVar("dataLoader", "sampleIdColumn")
+			defaultDatasetName = self.cfg.getVar("dataLoader", "dataset").get("defaultName", "default")
 			for lineNo, line in enumerate(fi):
 				if( lineNo == 0):
 					# header
-					header = line.strip().split("\t")#self.columnSeparator)
+					header = line.strip().split(self.columnSeparator) #"\t"
 					self._modifyHeader(header)
 					header = _getEscapedHeader(header)
 					continue
@@ -388,7 +392,7 @@ class DataLoader( object ):
 					continue
 
 				# normal line
-				values = line.strip().split("\t")#self.columnSeparator)
+				values = line.strip().split(self.columnSeparator)
 
 				valuesDict = dict( zip( header, values ) )
 
@@ -420,16 +424,16 @@ class DataLoader( object ):
 
 def main():
 	# Assume config file name if not provided
-	configFile = 'setup.config'
+	configFile = 'setup.json'
 	tsvFile = None
 
 	if( len(sys.argv) < 2 or len(sys.argv) > 3):
 		print "[Error] Invalid parameters provided."
-		print "Valid parameters: script.py samples.tsv [setup.config]"
+		print "Valid parameters: script.py samples.tsv [setup.json]"
 		sys.exit(-1)
 
 	elif( len( sys.argv ) is 2 ):
-		print "[Info] Assume config file is located at setup.config"
+		print "[Info] Assume config file is located at setup.json"
 		tsvFile = sys.argv[1]
 
 	elif( len( sys.argv) is 3):

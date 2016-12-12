@@ -2,7 +2,7 @@ import os
 import sys
 from mongoengine import connect
 from mongoengine.connection import _get_db
-from config import Config
+from config import JSONConfig
 import re
 
 KEYBOARD_REGEX = '(C\|)(?:.+)'
@@ -10,25 +10,30 @@ AUTOMATED_STRING = '--yes'
 
 class Flusher(object):
 	def __init__(self, config):
-		self.cfg = Config(config)
-		self.client = connect(db=self.cfg.getMongoVar('db'), host=self.cfg.getMongoVar('host'), port=int(self.cfg.getMongoVar('port')), w=1)
+		self.cfg = JSONConfig(config)
+		self.client = connect( \
+			db=self.cfg.getVar("database", "samples").get("name"), \
+			host=self.cfg.getVar("database","samples").get("host"), \
+			port=self.cfg.getVar("database", "samples").get("port"), \
+			w=1 \
+		)
 
 	def getSampleCollections(self):
-		db = self.client[self.cfg.getMongoVar('db')]
+		db = self.client[self.cfg.getVar("database", "samples").get("name")]
 		return db.collection_names(include_system_collections=False)
 
 	def getSOMCollections(self):
-		db = self.client[self.cfg.getMongoVar('somdb')]
+		db = self.client[self.cfg.getVar("database", "som").get("name")]
 		return db.collection_names(include_system_collections=False)
 
 	def getSettingsCollections(self):
-		db = self.client[self.cfg.getMongoVar('settings_db')]
+		db = self.client[self.cfg.getVar("database", "settings").get("name")]
 		return db.collection_names(include_system_collections=False)
 
 	def flush(self):
-		self.client.drop_database(self.cfg.getMongoVar('db'))
-		self.client.drop_database(self.cfg.getMongoVar('somdb'))
-		self.client.drop_database(self.cfg.getMongoVar('settings_db'))
+		self.client.drop_database(self.cfg.getVar("database", "samples").get("name"))
+		self.client.drop_database(self.cfg.getVar("database", "som").get("name"))
+		self.client.drop_database(self.cfg.getVar("database", "settings").get("name"))
 		print "[Info] Flush complete"
 
 def main():
@@ -38,25 +43,26 @@ def main():
 		return confirm
 
 	# Assume config file name if not provided
-	configFile = 'setup.config'
+	configFile = 'setup.json'
 	tsvFile = None
 	automated = False
 
-	if( len(sys.argv) < 2 ):
+	noArguments = len(sys.argv)
+
+	if( noArguments < 2 ):
 		print "[Error] Invalid parameters provided."
-		print "Valid parameters: script.py setup.config ", "[", AUTOMATED_STRING, "]"
+		print "Valid parameters: script.py setup.json ", "[", AUTOMATED_STRING, "]"
 		sys.exit(-1)
 
-	if( len(sys.argv) is 2 ):
+	elif ( noArguments >= 2 ):
 		configFile = sys.argv[1]
 		print "[Info] Setup file chosen as %s" %configFile
 
-	if( len(sys.argv) is 3 ):
-		auto = sys.argv[2]
-		if auto == AUTOMATED_STRING:
-			automated = True
-			print "[Info] Automated switch supplied. Will not ask for confirmation."
-
+		if( noArguments is 3 ):
+			auto = sys.argv[2]
+			if auto == AUTOMATED_STRING:
+				automated = True
+				print "[Info] Automated switch supplied. Will not ask for confirmation."
 
 	if not os.access( configFile, os.R_OK ):
 		print "[Error] could not read configuration file. EXIT"

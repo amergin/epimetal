@@ -1,32 +1,26 @@
 import ConfigParser
 import os
 import json
+import sys
 
-# Handles run configuration operations
-class Config( object ):
-	def __init__(self, configFile ):
-		self.cfg = self._getConfig(configFile)
-		self._checkValidity()
+import json
 
-	def _getConfig(self,configFile):
-		config = ConfigParser.RawConfigParser()
-		config.read(configFile)
-		return config
+class JSONConfig(object):
+	def __init__(self, configFile):
+		self.file = configFile
+		try:
+			with open(self.file) as file:
+				self.data = json.load(file)
+		except:
+			print "[Error] Could not open configuration file %s." % configFile
+			sys.exit(-1)
 
-	def _checkValidity(self):
-		#sys.exit(-1)
-		pass
-
-	def getJSONVariable(self, category, var):
-		raw = self.cfg.get(category, var)
-		return json.loads(raw)
-
-	def getDataLoaderVar(self,var, useJson=False):
-		raw = self.cfg.get("data_loader", var)
-		return json.loads(raw) if useJson else raw
-
-	def getFlaskVar(self,var):
-		return self.cfg.get("flask", var)
-
-	def getMongoVar(self,var):
-		return self.cfg.get("mongodb",var)
+	def getVar(self, category, param = None):
+		value = None
+		if param is None:
+			value = self.data.get(category)
+		else:
+			value = self.data.get(category).get(param)
+			if value is None:
+				raise ValueError("[Error] Could not read config category = " + category + ", variable = " + param)
+		return value
