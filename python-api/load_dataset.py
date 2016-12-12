@@ -17,18 +17,20 @@ DATASET_VARIABLE_SAMPLE_DESC = 'Variable indicating whether the sample is a memb
 DATASET_VARIABLE_PREFIX = 'dataset_'
 
 # Utilities, not part of the class
-def _getEscapedVar(var):
-	# escape '/'
-	escapedVar = re.sub(r'\/', 'to', var)
-	# escape '%'
-	escapedVar = re.sub(r'%', 'prc', escapedVar)
-	# probably others too, but except some sanity in the input!
+def _getEscapedVar(cfg, var):
+	escapedVariables = cfg.getVar('dataLoader', "variables").get("escape", [])
+	escapedVar = var
+	for entry in escapedVariables:
+		regex = entry.get('regex')
+		replaceWith = entry.get('replaceWith')
+		escapedVar = re.sub(regex, replaceWith, escapedVar)
+
 	return escapedVar
 
-def _getEscapedHeader(headerList):
+def _getEscapedHeader(cfg, headerList):
 	ret = []
 	for header in headerList:
-		ret.append( _getEscapedVar(header) )
+		ret.append( _getEscapedVar(cfg, header) )
 	return ret
 
 
@@ -40,9 +42,7 @@ class DataLoader( object ):
 		self.dataFile = fileName
 
 		dataloaderSettings = self.cfg.getVar("dataLoader")
-		self.columnSeparator = dataloaderSettings.get("columnSeparator", "\t").encode("ascii", "ignore")
-		print type(self.columnSeparator)
-		self.topgroupSeparator = dataloaderSettings.get("topgroupSeparator", ":")
+		self.topgroupSeparator = dataloaderSettings.get("metadata").get("topGroupSeparator", ":").encode("ascii", "ignore")
 		
 		time.sleep(10)
 
@@ -72,7 +72,7 @@ class DataLoader( object ):
 			saveList = list()
 
 			for variable in histogramVars:
-				escapedVar = _getEscapedVar(variable)
+				escapedVar = _getEscapedVar(self.cfg, variable)
 				try:
 					varFromDb = HeaderSample.objects.get(name=escapedVar)
 					saveList.append(varFromDb.name)
@@ -89,7 +89,7 @@ class DataLoader( object ):
 			def getCheckedVariables(variables):
 				ret = list()
 				for variable in variables:
-					escapedVar = _getEscapedVar(variable)
+					escapedVar = _getEscapedVar(self.cfg, variable)
 					try:
 						varFromDb = HeaderSample.objects.get(name=escapedVar)
 						ret.append(varFromDb.name)
@@ -232,19 +232,19 @@ class DataLoader( object ):
 						return payload.get('row')
 				return None
 
-			metadataFileName = self.cfg.getVar("dataLoader", "metadataFile")
-			separator = self.cfg.getVar("dataLoader", "columnSeparator")
+			metadataFileName = self.cfg.getVar("dataLoader", "metadata").get("file")
+			metadataSeparator = self.cfg.getVar("dataLoader", "metadata").get("columnSeparator").encode("ascii", "ignore")
 			metaHeaderDict = dict()
 			metaHeaderRegexDict = dict()
 
 			# 1. read all metadata from file and form a dictionary from those details
 			# assume header contains: [name, desc, unit, group]
-			with open(metadataFileName, 'r') as tsv:
+			with open(metadataFileName, 'r') as source:
 				header = []
 
 				#print "delim=", separator, type(separator), len(separator)
-				for no, line in enumerate(csv.reader(tsv, delimiter=self.columnSeparator)): #"\t")):
-					if( no is 0 ):
+				for no, line in enumerate(csv.reader(source, delimiter=metadataSeparator)):
+					if(no is 0):
 						header = line
 						continue
 
@@ -261,7 +261,7 @@ class DataLoader( object ):
 					else:
 						metaHeaderDict[name] = rowDict
 						# rewrite variable name: might contain escaped chars
-						rowDict['name'] = _getEscapedVar(name)
+						rowDict['name'] = _getEscapedVar(self.cfg, name)
 					#print "metadata rowdict=", rowDict
 
 			#2. Add only variables that are actually loaded into the database from the TSV file
@@ -317,8 +317,12 @@ class DataLoader( object ):
 
 		# omit sampleid & dataset
 		datasetKey = self.cfg.getVar("dataLoader", "dataset").get("identifierColumn")
-		sampleidKey = self.cfg.getVar("dataLoader", "sampleIdColumn")
+		sampleidKey = self.cfg.getVar("dataLoader", "dataSource").get("sampleIdColumn")
+
+		print "before filter = ", headerList
 		filteredHeaderList = filter(lambda a: (a != sampleidKey and a != datasetKey), headerList)
+
+		print "after filter=", filteredHeaderList
 
 		# create new header info if necessary
 		_createHeaderObjects(filteredHeaderList)
@@ -326,6 +330,13 @@ class DataLoader( object ):
 			_createDatasetVariableGroup()
 
 	def _loadSamples(self):
+		# removes "-characters from header if they are present
+		def _removeExtraCharactersFromHeader(checkList):
+			resultList = []
+			for var in checkList:
+				resultList.append(var.replace('"', ""))
+			return resultList
+
 		def checkDatasetVariable(name):
 			prependedName = DATASET_VARIABLE_PREFIX + name
 			try:
@@ -371,17 +382,20 @@ class DataLoader( object ):
 				print '[Error] Header and line lengths must agree, error at line %i' %lineNo
 				sys.exit(-1)
 
-		with open(self.dataFile) as fi:
+		dataSourceSeparator = self.cfg.getVar("dataLoader", "dataSource").get("columnSeparator").encode("ascii", "ignore")
+
+		with open(self.dataFile) as dataSource:
 			header = None
 			datasetKey = self.cfg.getVar("dataLoader", "dataset").get("identifierColumn")
-			sampleidKey = self.cfg.getVar("dataLoader", "sampleIdColumn")
+			sampleidKey = self.cfg.getVar("dataLoader", "dataSource").get("sampleIdColumn")
 			defaultDatasetName = self.cfg.getVar("dataLoader", "dataset").get("defaultName", "default")
-			for lineNo, line in enumerate(fi):
+			for lineNo, line in enumerate(dataSource):
 				if( lineNo == 0):
 					# header
-					header = line.strip().split(self.columnSeparator) #"\t"
+					header = line.strip().split(dataSourceSeparator)
+					header = _removeExtraCharactersFromHeader(header)
 					self._modifyHeader(header)
-					header = _getEscapedHeader(header)
+					header = _getEscapedHeader(self.cfg, header)
 					continue
 
 				line = line.strip()
@@ -392,7 +406,7 @@ class DataLoader( object ):
 					continue
 
 				# normal line
-				values = line.strip().split(self.columnSeparator)
+				values = line.strip().split(dataSourceSeparator)
 
 				valuesDict = dict( zip( header, values ) )
 
