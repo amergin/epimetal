@@ -256,8 +256,8 @@ SBP	Systolic blood pressure	mmHg	Clinical data
 DBP	Diastolic blood pressure	mmHg	Clinical data
 SysBP	Systolic blood pressure	mmHg	Clinical data
 DiasBP	Diastolic blood pressure	mmHg	Clinical data
-T1DM	Type 1 Diabetes	NA	Clinical data
-T2DM	Type 2 Diabetes	NA	Clinical data
+T1DM	Type 1 Diabetes	|C|1=No|2=Yes|NaN=(Not available)	Clinical data
+T2DM	Type 2 Diabetes	|C|1=No|2=Yes|NaN=(Not available)	Clinical data
 fPGlucose	Fasting glucose	mmol/l	Clinical data
 fsChol	Fasting cholesterol	mmol/l	Clinical data
 fsChol.HDL	Fasting HDL	mmol/l	Clinical data
