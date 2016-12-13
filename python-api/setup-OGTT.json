@@ -80,17 +80,17 @@
 	"database": {
 		"samples": {
 			"name": "samples",
-			"host": "localhost",
+			"host": "db",
 			"port": 27017
 		},
 		"settings": {
 			"name": "settings",
-			"host": "localhost",
+			"host": "db",
 			"port": 27017
 		},
 		"som": {
 			"name": "som",
-			"host": "localhost",
+			"host": "db",
 			"port": 27017
 		}
 	}
