@@ -11,8 +11,6 @@ angular.module('plotter.vis.som', [
 
 .constant('SOM_DEFAULT_SIZE_X', 3)
   .constant('SOM_DEFAULT_SIZE_Y', 3)
-  .constant('SOM_DEFAULT_PLANES', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'])
-
 
 .filter('prettifyArray', function() {
   function prettify(array) {

@@ -16,14 +16,6 @@ angular.module('services.som', [
 })
 .constant('SOM_MIN_SAMPLE_COUNT', 10)
 .constant('SOM_DEFAULT_THREADS', 4)
-.constant('SOM_DEFAULT_PLANES', ['Serum-C', 'Serum-TG', 'HDL-C', 'LDL-C', 'Glc'])
-.constant('SOM_DEFAULT_TRAIN_VARS', ['XXL-VLDL-L', 'XL-VLDL-L', 'L-VLDL-L', 'M-VLDL-L',
-  'S-VLDL-L', 'XS-VLDL-L', 'IDL-L', 'L-LDL-L',
-  'M-LDL-L', 'S-LDL-L', 'XL-HDL-L', 'L-HDL-L',
-  'M-HDL-L', 'S-HDL-L', 'Serum-C', 'Serum-TG',
-  'HDL-C', 'LDL-C', 'Glc', 'Cit', 'Phe', 'Gp', 'Tyr',
-  'FAw3toFA', 'FAw6toFA', 'SFAtoFA'
-])
 .constant('SOM_TRAIN_GET_URL', '/API/som/<%= hash %>')
 .constant('SOM_TRAIN_POST_URL', '/API/som')
 .constant('SOM_PLANE_GET_URL', '/API/som/plane/<%= somHash %>/<%= variable %>')
@@ -55,7 +47,7 @@ angular.module('services.som', [
 .factory('SOMService', function SOMService(SOMComputeService, VariableService, WindowHandler, $timeout, 
   $injector, $rootScope, NotifyService, $http, $log, $q, DatasetFactory, TabService,
   d3, _, lodashEq,
-  SOM_DEFAULT_SIZE, SOM_DEFAULT_PLANES, SOM_DEFAULT_TRAIN_VARS, SOM_MIN_SAMPLE_COUNT, 
+  SOM_DEFAULT_SIZE, SOM_MIN_SAMPLE_COUNT, 
   SOM_TRAIN_GET_URL, SOM_TRAIN_POST_URL, SOM_PLANE_GET_URL, SOM_PLANE_POST_URL) {
 
   var that = this;
@@ -63,6 +55,7 @@ angular.module('services.som', [
   this.som = {};
   this.bmus = [];
   this.trainSamples = [];
+  this.defaultPlanes = [];
   that.inProgress = false;
   that.description = {
     'datasets': [],
@@ -140,7 +133,16 @@ angular.module('services.som', [
   };
 
   service.defaultPlanes = function() {
-    return SOM_DEFAULT_PLANES;
+    var defer = $q.defer();
+
+    VariableService.getSOMDefaultPlanes().then(function succFn(vars) {
+      that.defaultPlanes = vars;
+      defer.resolve(vars);
+    }, function errFn(res) {
+      defer.reject(res);
+    });
+
+    return defer.promise;
   };
 
   service.cancelled = function(x) {

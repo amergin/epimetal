@@ -99,15 +99,19 @@ angular.module('services.tab', [
       PlotService = $injector.get('PlotService'),
       planeHandler = WindowHandler.get('vis.som');
 
-      VariableService.getVariables(SOMService.defaultPlanes()).then(function(planeVars) {
-        if (planeHandler.get().length === 0) {
-          // no planes
-          _.each(planeVars, function(variable) {
-            PlotService.drawSOM({
-              variable: variable
-            }, planeHandler);
-          });
-        }
+      SOMService.defaultPlanes().then(function succFn(defaultPlanes) {
+        VariableService.getVariables(defaultPlanes).then(function(planeVars) {
+          if (planeHandler.get().length === 0) {
+            // no planes
+            _.each(planeVars, function(variable) {
+              PlotService.drawSOM({
+                variable: variable
+              }, planeHandler);
+            });
+          }
+        });
+      }, function errFn(res) {
+        $log.debug("Failed to fetch default planes.");
       });
   }
 
