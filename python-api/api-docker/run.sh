@@ -1,7 +1,7 @@
 #!/bin/sh
 
 LOAD_SCRIPT=/api/load_dataset.py
-CONFIG=/api/setup.config
+CONFIG=/api/setup.json
 FLUSH_SCRIPT=/api/flush_database.py
 WORK_DIR=/api
 SAMPLES=/load/samples.tsv

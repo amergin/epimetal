@@ -134,11 +134,20 @@ class DataLoader( object ):
 				settings.inputVariables = checkedVariables
 				settings.save()
 
+			def setDefaultPlanes(settings):
+				variables = self.cfg.getVar("dataLoader", "views").get("som").get("defaultPlanes")
+				checkedVariables = getCheckedVariables(variables)
+
+				settings.planes = checkedVariables
+				settings.save()
+
+
 
 			settings = getSettingDoc()
 
 			setProfiles(settings)
 			setInputVariables(settings)
+			setDefaultPlanes(settings)
 
 
 		exploreSettings()
@@ -237,7 +246,7 @@ class DataLoader( object ):
 			metaHeaderDict = dict()
 			metaHeaderRegexDict = dict()
 
-			# 1. read all metadata from file and form a dictionary from those details
+			# 1. read all metadata from file and form a dictionary from those details.
 			# assume header contains: [name, desc, unit, group]
 			with open(metadataFileName, 'r') as source:
 				header = []
@@ -260,8 +269,13 @@ class DataLoader( object ):
 						}
 					else:
 						metaHeaderDict[name] = rowDict
+						#print "escape = ", name, _getEscapedVar(self.cfg, name)
 						# rewrite variable name: might contain escaped chars
-						rowDict['name'] = _getEscapedVar(self.cfg, name)
+						#rowDict['name'] = _getEscapedVar(self.cfg, name)
+						escapedName = _getEscapedVar(self.cfg, name)
+						rowDict['name'] = escapedName
+						#print "row=", metaHeaderDict[name]
+
 					#print "metadata rowdict=", rowDict
 
 			#2. Add only variables that are actually loaded into the database from the TSV file
@@ -272,10 +286,10 @@ class DataLoader( object ):
 			for variable in headerList:
 				rowDict = metaHeaderDict.get(variable)
 				#print "var=", variable, "dict=", rowDict
+
 				# if variable is not found, it might be matched
 				# with one of the regex's
 				if not rowDict:
-					#print "could not for var=", variable
 					rowDict = getVarRegex(metaHeaderRegexDict, variable)
 					# no metadata for the variable, error
 					if not rowDict:
@@ -284,15 +298,16 @@ class DataLoader( object ):
 					else:
 						# don't modify the original
 						rowDict = copy.deepcopy(rowDict)
-						rowDict['name'] = variable
+						rowDict['name'] = _getEscapedVar(self.cfg, variable)
+
+				#test
+				#rowDict = copy.deepcopy(rowDict)
 
 				# check if desc contains self match pattern
 				if hasSelfRegex(rowDict.get('desc')):
 					#print "var=", variable, "desc has regex"
 					rowDict['desc'] = variable
 
-				#print "rowDict=", rowDict
-				#print "after fetch=", rowDict
 				group = _getGroup( rowDict.get('group') )
 				samp = _getSample(rowDict.get('name'))
 				if not samp:
@@ -319,10 +334,7 @@ class DataLoader( object ):
 		datasetKey = self.cfg.getVar("dataLoader", "dataset").get("identifierColumn")
 		sampleidKey = self.cfg.getVar("dataLoader", "dataSource").get("sampleIdColumn")
 
-		print "before filter = ", headerList
 		filteredHeaderList = filter(lambda a: (a != sampleidKey and a != datasetKey), headerList)
-
-		print "after filter=", filteredHeaderList
 
 		# create new header info if necessary
 		_createHeaderObjects(filteredHeaderList)
@@ -423,7 +435,8 @@ class DataLoader( object ):
 					if key == datasetKey or key == sampleidKey:
 						continue
 					try:
-						variables[key.encode('ascii')] = ffloat( float(valuesDict[key]) )
+						filteredCharacters = valuesDict[key].replace('"', "").replace("'", "")
+						variables[key.encode('ascii')] = ffloat( float( filteredCharacters ) )
 					except ValueError:
 						variables[key.encode('ascii')] = ffloat( float('NaN') )
 				#print "values=", valuesDict, sampleidKey

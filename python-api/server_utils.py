@@ -1,5 +1,7 @@
 import sys
 
+import random
+
 from orm_models import Sample, SOMTrain
 from mongoengine.queryset import DoesNotExist
 from hashids import Hashids

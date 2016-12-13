@@ -11,8 +11,9 @@ class JSONConfig(object):
 		try:
 			with open(self.file) as file:
 				self.data = json.load(file)
-		except:
+		except Exception, e:
 			print "[Error] Could not open configuration file %s." % configFile
+			print e
 			sys.exit(-1)
 
 	def getVar(self, category, param = None):

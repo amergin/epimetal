@@ -1,0 +1,97 @@
+{
+	"dataLoader": {
+		"variables": {
+			"escape": [
+				{
+					"regex": "\/",
+					"replaceWith": "to"
+				},
+				{
+					"regex": "%",
+					"replaceWith": "prc"
+				},
+				{
+					"regex": "0\\.5h",
+					"replaceWith": "30min"
+				},
+				{
+					"regex": "\\.",
+					"replaceWith": "-"
+				},
+				{
+					"regex": "1h",
+					"replaceWith": "60min"
+				},
+				{
+					"regex": "2h",
+					"replaceWith": "120min"
+				}
+			]
+		},
+		"dataSource": {
+			"columnSeparator": ",",
+			"sampleIdColumn": "ID"
+		},
+		"metadata": {
+			"file": "metabolites_description_161212_OGTT.tsv",
+			"columnSeparator": "\t",
+			"topGroupSeparator": ":"
+		},
+		"dataset": {
+			"identifierColumn": "datasetname",
+			"defaultName": "OGTT"
+		},
+		"createDatasetVariables": true,
+		"views": {
+			"explore": {
+				"defaultHistograms": ["Serum.TG_2h", "Serum.TG_1h", "Serum.TG_0.5h", "Serum.TG_Ref"]
+			},
+			"som": {
+				"defaultProfiles": [
+					{
+						"name": "Fatty acids",
+						"variables": ["TotFA_Ref","DHA_Ref","LA_Ref","FAw3_Ref","FAw6_Ref","PUFA_Ref", "MUFA_Ref","SFA_Ref","DHA.FA_Ref","LA.FA_Ref","FAw3.FA_Ref","FAw6.FA_Ref","PUFA.FA_Ref","MUFA.FA_Ref" ,"SFA.FA_Ref"]
+					},
+					{
+						"name": "Total lipids",
+					    "regex": ".*-L_Ref\\b"
+					},
+					{
+					    "name": "Small molecules",
+					    "variables": ["Glc_Ref", "Lac_Ref", "Pyr_Ref", "Cit_Ref", "Ala_Ref", "Gln_Ref", "His_Ref", "Ile_Ref", "Leu_Ref", "Val_Ref", "Phe_Ref", "Tyr_Ref", "Ace_Ref", "AcAce_Ref", "bOHBut_Ref", "Crea_Ref", "Alb_Ref", "Gp_Ref"]
+					},
+					{
+					    "name": "Clinical variables",
+					    "variables": ["AGE", "Sex", "BMI", "SysBP", "DiasBP", "T1DM", "T2DM", "fPGlucose", "fsChol", "fsPI", "fsUrea", "fsInsulin", "fsChol.HDL", "fsChol.LDL"]
+					}
+				],
+				"defaultInputVariables": ["XXL.VLDL.L_Ref", "XL.VLDL.L_Ref", "L.VLDL.L_Ref", "M.VLDL.L_Ref", "S.VLDL.L_Ref", "XS.VLDL.L_Ref", "IDL.L_Ref", "L.LDL.L_Ref", "M.LDL.L_Ref", "S.LDL.L_Ref", "XL.HDL.L_Ref", "L.HDL.L_Ref", "M.HDL.L_Ref", "S.HDL.L_Ref", "Serum.C_Ref", "NonHDL_Ref", "Remnant.C_Ref", "VLDL.C_Ref", "LDL.C_Ref", "HDL.C_Ref", "HDL2.C_Ref", "HDL3.C_Ref", "Serum.TG_Ref", "VLDL.TG_Ref", "IDL.TG_Ref", "LDL.TG_Ref", "HDL.TG_Ref", "SM_Ref", "TotPG_Ref", "VLDL.D_Ref", "LDL.D_Ref", "HDL.D_Ref", "ApoB_Ref", "ApoA1_Ref", "TotFA_Ref", "SFA_Ref", "MUFA_Ref", "PUFA_Ref", "FAw6_Ref", "LA_Ref", "FAw3_Ref", "DHA_Ref", "SFA.FA_Ref", "MUFA.FA_Ref", "PUFA.FA_Ref", "FAw6.FA_Ref", "LA.FA_Ref", "FAw3.FA_Ref", "DHA.FA_Ref", "Ala_Ref", "Gln_Ref", "Gly_Ref", "Ile_Ref", "Leu_Ref", "Val_Ref", "Phe_Ref", "Tyr_Ref", "His_Ref", "Glc_Ref", "Lac_Ref", "Pyr_Ref", "Cit_Ref", "Glol_Ref", "AcAce_Ref", "bOHBut_Ref", "Crea_Ref", "Alb_Ref", "Ace_Ref", "Gp_Ref"],
+				"defaultPlanes": ["Serum.C_Ref", "Serum.TG_Ref", "HDL.C_Ref", "LDL.C_Ref", "Glc_Ref"]
+			}
+		}
+	},
+	"http": {
+		"api": {
+			"prefix": "/API/",
+			"host": "localhost",
+			"port": 8080
+		}
+	},
+	"database": {
+		"samples": {
+			"name": "samples",
+			"host": "localhost",
+			"port": 27017
+		},
+		"settings": {
+			"name": "settings",
+			"host": "localhost",
+			"port": 27017
+		},
+		"som": {
+			"name": "som",
+			"host": "localhost",
+			"port": 27017
+		}
+	}
+}

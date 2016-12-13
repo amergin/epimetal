@@ -63,6 +63,7 @@ class ProfileHistogram(Document):
 class SOMSettings(Document):
 	profiles = ListField(ReferenceField('ProfileHistogram', required=True, reverse_delete_rule=CASCADE))
 	inputVariables = ListField(StringField(unique=True, required=True))
+	planes = ListField(StringField(unique=True, required=True))
 
 	meta = {
 	'db_alias': 'db_settings'

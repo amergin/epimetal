@@ -23,7 +23,6 @@ from pymongo import ReadPreference
 import io
 from base64 import b64decode
 
-import random
 from hashids import Hashids
 import hashlib
 import time
@@ -137,6 +136,29 @@ def getInitializedFlask(config):
 			})
 			resp.status_code = 500
 			return resp	
+
+	@app.route( API_PREFIX + 'settings/som/planes', methods=['GET'])
+	def somPlanes():
+		try:
+			doc = SOMSettings.objects.first()
+			resp = flask.jsonify({
+				'success': 'true',
+				'query': request.path,
+				'result': { 
+					'variables': doc.planes
+				}
+			})
+			resp.status_code = 200 # OK
+			return resp
+
+		except DoesNotExist, e:
+			resp = flask.jsonify({
+			'success': 'true',
+			'query': request.path,
+			'result': { 'message': 'Settings document not found.' }
+			})
+			resp.status_code = 500
+			return resp
 
 	@app.route( API_PREFIX + 'settings/som/profiles', methods=['GET'])
 	def somProfiles():
