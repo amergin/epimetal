@@ -215,6 +215,11 @@ angular.module('plotter.vis', [
     return SideNavService.isOpen();
   };
 
+  $scope.getDocUrl = function() {
+    // origin includes port number
+    return window.location.origin + '/documentation';
+  };
+
   console.log("header ctrl");
 })
 
