@@ -10,8 +10,9 @@ SUPERVISORD=/usr/bin/supervisord
 PIDFILE=/var/run/api.pid
 
 load() {
-  echo 'Loading samples…' >&2
   cd $WORK_DIR
+  sleep 7
+  echo 'Loading samples…' >&2
   if python $LOAD_SCRIPT $SAMPLES; then
     echo 'Samples loaded.' >&2
   else
@@ -21,6 +22,7 @@ load() {
 }
 
 flush() {
+  sleep 5
   echo 'Removing all entries from database!' >&2
   python $FLUSH_SCRIPT $CONFIG --yes
   echo 'Removal complete.' >&2
@@ -67,5 +69,5 @@ case "$1" in
     start
     ;;
   *)
-    echo "Usage: $0 {start|stop|restart|load|flush}"
+    echo "Usage: $0 {start|stop|load|flush}"
 esac
