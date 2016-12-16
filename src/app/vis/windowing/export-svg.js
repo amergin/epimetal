@@ -54,7 +54,7 @@ function SVGExport(element) {
         value=cSSStyleDeclarationComputed.getPropertyValue(key);
         widthIsAuto = (key == 'width') && (value == 'auto');
         heightIsAuto = (key == 'height') && (value == 'auto');
-        if (value!==emptySvgDeclarationComputed.getPropertyValue(key) && key != 'font-family' && !widthIsAuto && !heightIsAuto) {
+        if (value!==emptySvgDeclarationComputed.getPropertyValue(key) && !widthIsAuto && !heightIsAuto) {
           computedStyleStr+=key+":"+value+";";
         }
       }

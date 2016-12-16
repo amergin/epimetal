@@ -84,7 +84,8 @@ angular.module('plotter.vis.windowing', ['services.window',
   }
 
   function getSelection() {
-    return angular.element('body').find($scope.selector);
+    return angular.element('body').find($scope.selector + ":not(.round-progress)");
+    //return angular.element('body').find($scope.selector); 
   }
 
   function getWidth(ele) {
