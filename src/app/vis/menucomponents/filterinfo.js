@@ -110,6 +110,10 @@ angular.module('plotter.vis.menucomponents.filterinfo',
         .value();
       }
 
+      function clearField() {
+        $scope.derivedInput = '';
+      }
+
       if(!name || !name.length) {
         NotifyService.addTransient('Error', 'Please name the dataset you are creating.', 'error', { referenceId: 'datasetinfo' });
         return;
@@ -138,6 +142,8 @@ angular.module('plotter.vis.menucomponents.filterinfo',
         config.setActive = circles ? false : true;
         DatasetFactory.createDerived(config);
         TabService.check();
+
+        clearField();
       }
       catch(err) {
         $log.error(err.stack);
