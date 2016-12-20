@@ -218,14 +218,18 @@ Let's look at an example configuration:
       }
     ],
     "defaultInputVariables": ["XXL-VLDL-L","XL-VLDL-L","L-VLDL-L","M-VLDL-L","S-VLDL-L","XS-VLDL-L","IDL-L","L-LDL-L","M-LDL-L","S-LDL-L","XL-HDL-L","L-HDL-L","M-HDL-L","S-HDL-L","Serum-C","Serum-TG","HDL-C","LDL-C","Glc","Cit","Phe","Gp","Tyr","FAw3toFA","FAw6toFA","SFAtoFA"],
-    "defaultPlanes":  ["Serum-C", "Serum-TG", "HDL-C", "LDL-C", "Glc"]
+    "defaultPlanes":  ["Serum-C", "Serum-TG", "HDL-C", "LDL-C", "Glc"],
+    "pivot": {
+      "enabled": true,
+      "defaultVariable": "Gender"
+    }
   }
 }
 ```
 
 In the `explore` section of the view settings, the field `defaultHistograms` instructs the software to display the named five variables if the user loads the Explore and filter view, and the followed URL does not contain a state that is to be loaded. These variables must be loaded during the import phase. 
 
-In the `som` section of the view settings, there are three fields. 
+In the `som` section of the view settings, there are four fields:
 
 * `defaultProfiles` field takes an array containing objects that define which [profile histograms](userguide.md#profile-histogram) to display in the software. Each object should contain a `name` for the figure, and an array of variable names that are used in the figure (the field `variables`). Alternatively, you can use a regular expression to match the used variables by replacing the `variables` field with `regex` field holding a valid pattern.
 
@@ -233,6 +237,7 @@ In the `som` section of the view settings, there are three fields.
 
 * `defaultPlanes` field takes an array containing strings of variable names. These variables describe which SOM planes are displayed by default the the user.
 
+* The `pivot` section controls whether to use pivoting in the SOM training. If the `enabled` parameter is set to `true`, the variable named in `defaultPivotVariable` is used in all SOM computations. Note that this can be overridden on a session-by-session basis from user interface. Please also note that **the chosen variable must have values that are coercible to number for each sample** in the data source. A typical pivot variable would be the variable indicating patient's gender.
 
 ## 5. Compile the Docker containers
 
