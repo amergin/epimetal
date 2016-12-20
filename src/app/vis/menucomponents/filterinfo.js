@@ -173,14 +173,6 @@ angular.module('plotter.vis.menucomponents.filterinfo',
       $log.info("range filter edit", filter, result);
     };
 
-    $scope.minExtent = function(filter) {
-      return filter.chart().x().domain()[0];
-    };
-
-    $scope.maxExtent = function(filter) {
-      return filter.chart().x().domain()[1];
-    };
-
     $scope.rangeFilterLookup = {};
     var rangePrecisionFormat = d3.format(".3g");
 
@@ -197,11 +189,11 @@ angular.module('plotter.vis.menucomponents.filterinfo',
     }
 
     $scope.getRangeFilterMin = function(filter) {
-      return filter.chart().x().domain()[0];
+      return filter.chart().x().domain()[0] * 0.9;
     };
 
     $scope.getRangeFilterMax = function(filter) {
-      return filter.chart().x().domain()[1];
+      return filter.chart().x().domain()[1] * 1.10;
     };
 
     $scope.initRangeFilter = function(filter, location) {
