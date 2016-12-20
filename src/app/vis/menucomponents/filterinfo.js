@@ -173,8 +173,8 @@ angular.module('plotter.vis.menucomponents.filterinfo',
       $log.info("range filter edit", filter, result);
     };
 
-    $scope.truncateMiddle = function(str) {
-      return Utils.truncateMiddle(str, 8, "..");
+    $scope.truncateMiddle = function(str, length) {
+      return Utils.truncateMiddle(str, length, "..");
     };
 
     $scope.rangeFilterLookup = {};

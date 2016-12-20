@@ -31,6 +31,10 @@ angular.module('plotter.vis.menucomponents.dataset',
     return set.type() == 'derived';
   };
 
+  $scope.truncateMiddle = function(str, length) {
+    return Utils.truncateMiddle(str, length, "..");
+  };
+
   $scope.canToggle = function() {
     return !TabService.lock();
   };
