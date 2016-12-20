@@ -173,6 +173,10 @@ angular.module('plotter.vis.menucomponents.filterinfo',
       $log.info("range filter edit", filter, result);
     };
 
+    $scope.truncateMiddle = function(str) {
+      return Utils.truncateMiddle(str, 8, "..");
+    };
+
     $scope.rangeFilterLookup = {};
     var rangePrecisionFormat = d3.format(".3g");
 
