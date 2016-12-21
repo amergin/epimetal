@@ -354,24 +354,53 @@ angular.module('plotter.vis', [
       }
     };
 
-    var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', 
-      diagScope, { controller: 'ModalCtrl' });
-
-    promise.then(function succFn(selection) {
-      // update input variables
-      SOMService.trainVariables(selection.variables);
-
-      var sizeChanged = (SOMService.columns() !== selection.size.cols) || 
-      (SOMService.rows() !== selection.size.rows);
+    function doSize(size) {
+      var changed = (SOMService.columns() !== size.cols) || 
+      (SOMService.rows() !== size.rows);
       // update SOM size
       SOMService
-      .rows(selection.size.rows)
-      .columns(selection.size.cols);
+      .rows(size.rows)
+      .columns(size.cols);
 
-      if(sizeChanged) { 
+      if(changed) {
         var somHandler = WindowHandler.get('vis.som');//.plane');
         SOMService.getSOM(somHandler); // no use to wait results
       }
+    }
+
+    function doPivotVariable(v) {
+      var changed = SOMService.pivotVariable(v);
+
+      if(changed) {
+        var somHandler = WindowHandler.get('vis.som');//.plane');
+        SOMService.getSOM(somHandler); // no use to wait results        
+      }
+    }
+
+    function doTrainVariables(vars) {
+      SOMService.trainVariables(vars);
+    }
+
+
+    var promise = NotifyService.addClosableModal('vis/menucomponents/new.modal.tpl.html', 
+      diagScope, { controller: 'ModalCtrl' });
+
+    promise.then(function succFn(result) {
+
+      switch(result.activeTab) {
+        case 'size':
+        doSize(result.size);
+        break;
+
+        case 'pivotVariable':
+        doPivotVariable(result.pivotVariable);
+        break;
+
+        case 'trainVariables':
+        doTrainVariables(result.trainVariables);
+        break;
+      }
+
     });
 
   };

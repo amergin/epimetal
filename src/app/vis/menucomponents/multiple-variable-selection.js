@@ -83,6 +83,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 
         switch($scope.mode) {
           case 'multi':
+          case 'single':
           removeFrom($scope.payload);
           break;
 
@@ -285,6 +286,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       var payload = getPayloadField(),
       cache = getCacheField();
       if($scope.mode == 'multi') { multipleSelections(payload, cache); }
+      else if($scope.mode == 'single') { singleSelection(payload, cache); }
       else if($scope.mode == 'scatterplot') { singleSelection(payload, cache); }
       else if($scope.mode == 'regression') {
         if($scope.canSelectMultiple()) {
@@ -293,6 +295,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
           singleSelection(payload, cache);
         }
       }
+      console.log("after");
     };
 
     $scope.getInputField = function()  {
@@ -304,6 +307,8 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
         }
 
       } else if($scope.mode == 'multi') {
+        return $scope.filter.input;
+      } else if($scope.mode == 'single') {
         return $scope.filter.input;
       } 
       else if($scope.mode == 'regression') {
@@ -328,6 +333,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
         break;
 
         case 'multi':
+        case 'single':
         _selectedCache = value;
         break;
 
@@ -356,6 +362,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
         return _selectedCache.y;
 
         case 'multi':
+        case 'single':
         return _selectedCache;
 
         case 'regression':
@@ -385,7 +392,8 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
         break;
 
         case 'multi':
-        $scope.payload = value;
+        case 'single':
+        angular.copy(value, $scope.payload);
         break;
 
         case 'regression':
@@ -413,6 +421,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
         return $scope.payload.y;
 
         case 'multi':
+        case 'single':
         return $scope.payload;
 
         case 'regression':
@@ -549,6 +558,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     };
 
     $scope.canSelectMultiple = function() {
+      if($scope.mode == 'single') { return false; }
       if($scope.mode == 'scatterplot') { return false; }
       if($scope.mode == 'regression') {
         if($scope.focus.target) { return false; }
@@ -593,10 +603,6 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       first: null,
       second: null,
       third: null
-      // all: {
-      //   first: false,
-      //   second: false
-      // }
     };
 
     function getKeys(group) {
@@ -850,32 +856,37 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
       function multi() {
         // don't replace existing, if any
         if(!$scope.payload) {
-          $scope.payload = [];
+          angular.copy([], $scope.payload);
+        }
+      }
+
+      function single() {
+        // don't replace existing, if any
+        if(!$scope.payload) {
+          angular.copy([], $scope.payload);
         }
       }
 
       function scatterplot() {
-        $scope.payload = {
+        angular.copy({
           x: [],
           y: []
-        };
+        }, $scope.payload);
       }
 
       function regression() {
         // don't replace existing
         if(!$scope.payload) {
-          $scope.payload = {
+          $scope.payload = angular.copy({
             target: [],
             adjust: [],
             association: []
-          };
+          });
         }
       }
-      // shallow copy so that the selection is not altered even when modifications are made 
-      // and the cancelled
-      // $scope.payload = angular.copy($scope.payload);
 
-      if($scope.mode == 'multi') { multi($scope.payload); }
+      if($scope.mode == 'multi') { multi(); }
+      else if($scope.mode == 'single') { single(); }
       else if($scope.mode == 'scatterplot') { scatterplot(); }
       else if($scope.mode == 'regression') { regression(); }      
     }
@@ -884,6 +895,13 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 
     function initCache() {
       function multi() {
+        _selectedCache = {};
+        _.each($scope.payload, function(variable) {
+          addVariableToCache(variable);
+        });
+      }
+
+      function single() {
         _selectedCache = {};
         _.each($scope.payload, function(variable) {
           addVariableToCache(variable);
@@ -919,7 +937,8 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
           };
         });
       }
-      if($scope.mode == 'multi') { multi($scope.payload); }
+      if($scope.mode == 'multi') { multi(); }
+      if($scope.mode == 'single') { single(); }
       else if($scope.mode == 'scatterplot') { scatterplot(); }
       else if($scope.mode == 'regression') { regression(); }
     }
@@ -934,7 +953,7 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
     // replace: false,
     scope: {
       'payload': '=reSelection',
-      'mode': "=reMode" // either 'scatterplot' or 'multi' or 'regression'
+      'mode': "=reMode" // either 'scatterplot' or 'multi' or 'regression' or 'single'
     },
     controller: 'MultipleVariableSelectionCtrl',
     templateUrl: 'vis/menucomponents/multiple-variable-selection.tpl.html',

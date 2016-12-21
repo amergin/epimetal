@@ -16,18 +16,30 @@ angular.module('plotter.vis.menucomponents.som-settingsmenu',
     // make a shallow copy so the unsaved modifications are not propagated via reference
     $scope.selection = angular.copy(SOMService.trainVariables());
 
+    $scope.pivotVariable = angular.copy(SOMService.pivotVariable() || []);
+
     $scope.tabInd = 0;
 
     $scope.selectTab = function(ind) {
       $scope.tabInd = ind;
     };
 
+    function getTabName() {
+      var ind = $scope.tabInd;
+      if(ind === 0) { return 'trainVariables'; }
+      if(ind === 1) { return 'size'; }
+      if(ind === 2) { return 'pivotVariable'; }
+    }
+
     $scope.canSubmit = function() {
       if($scope.tabInd === 0) {
         return $scope.selection.length >= 3;
       }
-      else if($scope.tabInd == 1) {
+      else if($scope.tabInd === 1) {
         return true;
+      }
+      else if($scope.tabInd === 2) {
+        return $scope.pivotVariable.length > 0;
       }
     };
 
@@ -39,8 +51,10 @@ angular.module('plotter.vis.menucomponents.som-settingsmenu',
 
     $scope.submit = function() {
       return {
-        variables: $scope.selection,
-        size: $scope.sizes[$scope.selectedSize.ind]
+        activeTab: getTabName(),
+        trainVariables: $scope.selection,
+        size: $scope.sizes[$scope.selectedSize.ind],
+        pivotVariable: $scope.pivotVariable
       };
     };
 

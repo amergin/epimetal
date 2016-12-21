@@ -2,7 +2,7 @@
 	<tabset class="modal-tabset">
 		<tab select="selectTab(0)">
 			<tab-heading>Input variables</tab-heading>
-			<div class="multiple-variable-selection" re-selection="selection" re-mode="'multi'"></div>		
+			<div class="multiple-variable-selection" re-selection="selection" re-mode="'multi'"></div>
 		</tab>
 		<tab select="selectTab(1)">
 			<tab-heading>SOM Size</tab-heading>
@@ -18,6 +18,15 @@
 			      </div>
 			    </div>
 			</div>
+		</tab>
+		<tab select="selectTab(2)">
+			<tab-heading>Pivot variable</tab-heading>
+			<br/>
+			<div class="col-sm-offset-2 col-sm-8 well well-sm v-align">
+				<p>Please note that the pivot variable cannot contain any values that cannot be coerced into numbers.</p>
+			</div>
+
+			<div class="multiple-variable-selection" re-selection="pivotVariable" re-mode="'single'"></div>
 		</tab>
 	</tabset>
 	<div class="row col-sm-12 text-center">

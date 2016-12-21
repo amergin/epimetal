@@ -62,10 +62,27 @@ angular.module('services.som', [
     'variables': [],
     'N': 0
   };
+  that.pivotVariable = null;
+  that.pivotVariableEnabled = false;
 
   VariableService.getSOMDefaultInputVariables().then(function(vars) {
     that.trainVariables = vars;
   });
+
+  var initPivotSettings = _.once(function() {
+    var defer = $q.defer();
+
+    VariableService.getDefaultPivotSettings().then(function(settings) {
+      that.pivotVariableEnabled = settings.enabled;
+      that.pivotVariable = settings.variable;
+      defer.resolve();
+    });
+
+    return defer.promise; 
+  });
+
+  initPivotSettings();
+
   
   that.dimensionService = undefined;
   that.sampleDimension = undefined;
@@ -182,6 +199,25 @@ angular.module('services.som', [
     return service;
   };
 
+  service.pivotVariableEnabled = function(x) {
+    if(!arguments.length) { return that.pivotVariableEnabled; }
+    that.pivotVariableEnabled = x;
+    return service;
+  };
+
+  service.pivotVariable = function(variable) {
+    if(!arguments.length) { return that.pivotVariable; }
+
+    if(that.pivotVariable == variable) {
+      // same, do nothing
+      return false;
+    }
+
+    that.pivotVariable = variable;
+    $log.info("SOM pivot variable has changed", variable);
+    return true;
+  };
+
   service.trainVariables = function(variables) {
     function sameVars() {
       var inter = lodashEq.intersection(variables, that.trainVariables),
@@ -236,31 +272,43 @@ angular.module('services.som', [
 
     function getData(skipNaNs) {
       var variables = that.trainVariables,
-        retObj = {
-          samples: [],
-          columns: new Array(variables.length)
-        };
+      retObj = {
+        samples: []
+      };
 
+      if(service.pivotVariableEnabled()) {
+        variables = that.trainVariables.concat(that.pivotVariable);
+      }
+
+      var variableNames = Utils.pickVariableNames(variables);
+      retObj.columns = new Array(variables.length);
+
+      // deduplicate the sample collection used in the calculation
       var deDuplicated = _.unique(that.sampleDimension.top(Infinity), false, function(d) { 
         var arr = [];
         if(d.originalDataset) { arr = [d.originalDataset, d.sampleid]; }
         else { arr = [d.dataset, d.sampleid]; }
         return arr.join("|");
       }),
-      variableNames = Utils.pickVariableNames(variables),
       obj;
 
       /* jshint ignore:start */
       for(var ind = 0; ind < deDuplicated.length; ++ind) {
         obj = deDuplicated[ind];
         var sampValues = _.chain(obj.variables)
+          // pick only the variable names that are used
           .pick(variableNames)
+          // pick var name and value
           .map(function(val, key) {
             return [key, val];
           })
+          // sort by name
           .sortBy(_.first)
+          // pick value
           .map(_.last)
+          // get the output of this chain
           .value(),
+          // is any of the values on this sample 
           containsNaNs = _.some(sampValues, function(d) {
             return _.isNaN(+d);
           }),
@@ -286,6 +334,18 @@ angular.module('services.som', [
         });
 
       }
+
+      if(service.pivotVariableEnabled()) {
+        var pivotColumnIndex = _.chain(variableNames)
+        .sortBy(_.first)
+        .indexOf(that.pivotVariable.name())
+        .value();
+
+        // pulls = removes the pivot index from the columns, placing it
+        // on the result object
+        retObj.pivotColumn = _.pullAt(retObj.columns, pivotColumnIndex)[0];
+      }
+
       /* jshint ignore:end */
       return retObj;
     }
@@ -364,48 +424,90 @@ angular.module('services.som', [
 
         TaskHandlerService.circleSpin(true);
         NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'info');
-        SOMComputeService.create(service.rows(), service.columns(), data.samples, data.columns)
-        .then(function succFn(result) {
-          that.som = result.som;
+        if(service.pivotVariableEnabled() === true) {
+          $log.info("Creating SOM train with pivot enabled.");
 
-          // do training
-          SOMComputeService.train(that.som).then(function succFn(somObject) {
-            NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
-            that.bmus = SOMComputeService.get_formatter_bmus(that.som);
-            that.dimensionService.addBMUs(that.bmus);
+          SOMComputeService.create(service.rows(), service.columns(), data.samples, data.columns, data.pivotColumn)
+          .then(function succFn(result) {
+            that.som = result.som;
+
+            // do training
+            SOMComputeService.train(that.som).then(function succFn(somObject) {
+              NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
+              that.bmus = SOMComputeService.get_formatter_bmus(that.som);
+              that.dimensionService.addBMUs(that.bmus);
 
 
-            description(that.som.N);
+              description(that.som.N);
 
-            TabService.lock(false);
-            that.inProgress = false;
-            sendNewTrain(that.som, function callback() {
-              // this will force existing planes to redraw
-              $rootScope.$emit('dataset:SOMUpdated', that.som);
-              defer.resolve(that.som);
+              TabService.lock(false);
+              that.inProgress = false;
+              sendNewTrain(that.som, function callback() {
+                // this will force existing planes to redraw
+                $rootScope.$emit('dataset:SOMUpdated', that.som);
+                defer.resolve(that.som);
+              });
+                        
+            }, function errFn(result) {
+              var message = '(Message)';
+              NotifyService.addTransient('SOM computation failed', message, 'error');
+              TabService.lock(false);
+              that.inProgress = false;
+              defer.reject();
+            }, function notifyFn(progress) {
+              TaskHandlerService.circleSpinValue(progress);
+            })
+            .finally(function() {
+              TaskHandlerService.circleSpin(false);
+              TaskHandlerService.circleSpinValue(0);
             });
-                      
-          }, function errFn(result) {
-            var message = '(Message)';
-            NotifyService.addTransient('SOM computation failed', message, 'error');
-            TabService.lock(false);
-            that.inProgress = false;
-            defer.reject();
-          }, function notifyFn(progress) {
-            TaskHandlerService.circleSpinValue(progress);
-          })
-          .finally(function() {
-            TaskHandlerService.circleSpin(false);
-            TaskHandlerService.circleSpinValue(0);
+
           });
 
-        });
+        } else {
+          SOMComputeService.create(service.rows(), service.columns(), data.samples, data.columns)
+          .then(function succFn(result) {
+            that.som = result.som;
+
+            // do training
+            SOMComputeService.train(that.som).then(function succFn(somObject) {
+              NotifyService.addTransient('SOM computation ready', 'The submitted SOM computation is ready', 'success');
+              that.bmus = SOMComputeService.get_formatter_bmus(that.som);
+              that.dimensionService.addBMUs(that.bmus);
+
+
+              description(that.som.N);
+
+              TabService.lock(false);
+              that.inProgress = false;
+              sendNewTrain(that.som, function callback() {
+                // this will force existing planes to redraw
+                $rootScope.$emit('dataset:SOMUpdated', that.som);
+                defer.resolve(that.som);
+              });
+                        
+            }, function errFn(result) {
+              var message = '(Message)';
+              NotifyService.addTransient('SOM computation failed', message, 'error');
+              TabService.lock(false);
+              that.inProgress = false;
+              defer.reject();
+            }, function notifyFn(progress) {
+              TaskHandlerService.circleSpinValue(progress);
+            })
+            .finally(function() {
+              TaskHandlerService.circleSpin(false);
+              TaskHandlerService.circleSpinValue(0);
+            });
+
+          });
+        }
       }
 
       removePrevious();
 
-      var skipNaNs = false;
-      var data = getData(skipNaNs);
+      var skipNaNs = false,
+      data = getData(skipNaNs);
       that.trainSamples = data.samples;
 
       that.inProgress = true;     
@@ -512,13 +614,21 @@ angular.module('services.som', [
       // are within the circles get passed
       windowHandler.getDimensionService().clearFilters();
 
-      // prefetch data and store it in the dimensionservice of that particular handler
-      DatasetFactory.getVariableData(that.trainVariables, windowHandler)
-      .then(function succFn(res) {
-        doCall();
-      });
-    }
+      initPivotSettings().then(function() {
+        var variables = that.trainVariables;
+        if(service.pivotVariableEnabled()) {
+          variables = variables.concat(that.pivotVariable);
+        }
 
+        // prefetch data and store it in the dimensionservice of that particular handler
+        DatasetFactory.getVariableData(variables, windowHandler)
+        .then(function succFn(res) {
+          doCall();
+        });
+
+      });
+
+    }
     return defer.promise;
   };
 

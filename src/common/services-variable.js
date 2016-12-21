@@ -8,13 +8,14 @@ angular.module('services.variable',
 .constant('SOM_DEFAULT_INPUT_VARIABLES_URL', '/API/settings/som/input')
 .constant('SOM_DEFAULT_PROFILES_URL', '/API/settings/som/profiles')
 .constant('SOM_DEFAULT_PLANES_URL', '/API/settings/som/planes')
+.constant('SOM_DEFAULT_PIVOT_URL', '/API/settings/som/pivot')
 .constant('CUSTOM_VAR_GROUP_NUMBER', -1)
 
 
 .factory('VariableService', function VariablesService(NotifyService, $q, $http, $log, math, constants,
   VARIABLE_GET_URL, CUSTOM_VAR_GROUP_NUMBER,
   EXPLORE_DEFAULT_HISTOGRAMS_URL, SOM_DEFAULT_PROFILES_URL, SOM_DEFAULT_INPUT_VARIABLES_URL,
-  SOM_DEFAULT_PLANES_URL) {
+  SOM_DEFAULT_PLANES_URL, SOM_DEFAULT_PIVOT_URL) {
 
   var service = {};
 
@@ -248,6 +249,24 @@ angular.module('services.variable',
       return defer.resolve(result.data.result.variables);
     }, function errFn() {
       defer.reject(); 
+    });
+    return defer.promise;
+  };
+
+  service.getDefaultPivotSettings = function() {
+    var defer = $q.defer();
+    _initVariablesPromise().then(function() {
+      $http.get(SOM_DEFAULT_PIVOT_URL, {
+        cache: true
+      })
+      .then(function succFn(result) {
+        return defer.resolve({
+          'enabled': result.data.result.enabled,
+          'variable': _variableCache[result.data.result.variable]
+        });
+      }, function errFn() {
+        defer.reject(); 
+      });
     });
     return defer.promise;
   };

@@ -11,6 +11,17 @@
 			</div>
 		</div>
 
+		<div ng-switch-when="single">
+			<div class="col-sm-12 panel panel-default">
+				<div class="panel-body">
+					<div class="input-group">
+						<span class="input-group-addon">Selected variable</span>
+						<tags-input ng-model="payload" key-property="id" text="filter.input" template="vis/menucomponents/tag.tpl.html" placeholder="Type to search for a variable" replaceSpacesWithDashes="false" add-on-blur="false" add-on-paste="true" spellcheck="false" on-tag-adding="tagAdding($tag)" on-tag-removing="tagRemoving($tag)" on-tag-added="tagAdded($tag)" on-tag-removed="tagRemoved($tag)"></tags-input>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<div ng-switch-when="scatterplot">
 			<div class="col-sm-5 panel panel-default">
 				<div class="panel-body">
