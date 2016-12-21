@@ -66,7 +66,11 @@
 					}
 				],
 				"defaultInputVariables": ["XXL.VLDL.L_Ref", "XL.VLDL.L_Ref", "L.VLDL.L_Ref", "M.VLDL.L_Ref", "S.VLDL.L_Ref", "XS.VLDL.L_Ref", "IDL.L_Ref", "L.LDL.L_Ref", "M.LDL.L_Ref", "S.LDL.L_Ref", "XL.HDL.L_Ref", "L.HDL.L_Ref", "M.HDL.L_Ref", "S.HDL.L_Ref", "Serum.C_Ref", "NonHDL_Ref", "Remnant.C_Ref", "VLDL.C_Ref", "LDL.C_Ref", "HDL.C_Ref", "HDL2.C_Ref", "HDL3.C_Ref", "Serum.TG_Ref", "VLDL.TG_Ref", "IDL.TG_Ref", "LDL.TG_Ref", "HDL.TG_Ref", "SM_Ref", "TotPG_Ref", "VLDL.D_Ref", "LDL.D_Ref", "HDL.D_Ref", "ApoB_Ref", "ApoA1_Ref", "TotFA_Ref", "SFA_Ref", "MUFA_Ref", "PUFA_Ref", "FAw6_Ref", "LA_Ref", "FAw3_Ref", "DHA_Ref", "SFA.FA_Ref", "MUFA.FA_Ref", "PUFA.FA_Ref", "FAw6.FA_Ref", "LA.FA_Ref", "FAw3.FA_Ref", "DHA.FA_Ref", "Ala_Ref", "Gln_Ref", "Gly_Ref", "Ile_Ref", "Leu_Ref", "Val_Ref", "Phe_Ref", "Tyr_Ref", "His_Ref", "Glc_Ref", "Lac_Ref", "Pyr_Ref", "Cit_Ref", "Glol_Ref", "AcAce_Ref", "bOHBut_Ref", "Crea_Ref", "Alb_Ref", "Ace_Ref", "Gp_Ref"],
-				"defaultPlanes": ["Serum.C_Ref", "Serum.TG_Ref", "HDL.C_Ref", "LDL.C_Ref", "Glc_Ref"]
+				"defaultPlanes": ["Serum.C_Ref", "Serum.TG_Ref", "HDL.C_Ref", "LDL.C_Ref", "Glc_Ref"],
+        "pivot": {
+          "enabled": true,
+          "defaultVariable": "Sex"
+        }
 			}
 		}
 	},

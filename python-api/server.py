@@ -107,7 +107,7 @@ def getInitializedFlask(config):
 
 		except DoesNotExist, e:
 			resp = flask.jsonify({
-			'success': 'true',
+			'success': 'false',
 			'query': request.path,
 			'result': { 'message': 'Settings document not found.' }
 			})
@@ -130,7 +130,7 @@ def getInitializedFlask(config):
 
 		except DoesNotExist, e:
 			resp = flask.jsonify({
-			'success': 'true',
+			'success': 'false',
 			'query': request.path,
 			'result': { 'message': 'Settings document not found.' }
 			})
@@ -153,12 +153,37 @@ def getInitializedFlask(config):
 
 		except DoesNotExist, e:
 			resp = flask.jsonify({
-			'success': 'true',
+			'success': 'false',
 			'query': request.path,
 			'result': { 'message': 'Settings document not found.' }
 			})
 			resp.status_code = 500
 			return resp
+
+	@app.route( API_PREFIX + 'settings/som/pivot', methods=['GET'])
+	def somPivot():
+		try:
+			doc = SOMSettings.objects.first()
+
+			resp = flask.jsonify({
+				'success': 'true',
+				'query': request.path,
+				'result': {
+					'enabled': doc.pivotEnabled,
+					'variable': doc.pivotVariable.name
+				}
+			})
+			resp.status_code = 200 # OK
+			return resp
+
+		except DoesNotExist, e:
+			resp = flask.jsonify({
+			'success': 'false',
+			'query': request.path,
+			'result': { 'message': 'Settings document not found.' }
+			})
+			resp.status_code = 500
+			return resp	
 
 	@app.route( API_PREFIX + 'settings/som/profiles', methods=['GET'])
 	def somProfiles():
@@ -185,7 +210,7 @@ def getInitializedFlask(config):
 
 		except DoesNotExist, e:
 			resp = flask.jsonify({
-			'success': 'true',
+			'success': 'false',
 			'query': request.path,
 			'result': { 'message': 'Settings document not found.' }
 			})
@@ -244,7 +269,7 @@ def getInitializedFlask(config):
 
 		except DoesNotExist, e:
 			resp = flask.jsonify({
-			'success': 'true',
+			'success': 'false',
 			'query': request.path,
 			'result': { 'message': 'Hash not found.' }
 			})
@@ -379,7 +404,7 @@ def getInitializedFlask(config):
 
 		except DoesNotExist, e:
 			resp = flask.jsonify({
-			'success': 'true',
+			'success': 'false',
 			'query': request.path,
 			'result': { 'message': 'Hash not found.' }
 			})

@@ -86,13 +86,18 @@ class DataLoader( object ):
 			def getSettingDoc():
 				return SOMSettings.objects().first() or SOMSettings(profiles=[])
 
-			def getCheckedVariables(variables):
+			def getCheckedVariables(variablesList, getReferences=False):
 				ret = list()
-				for variable in variables:
+				for variable in variablesList:
 					escapedVar = _getEscapedVar(self.cfg, variable)
+					appendVariable = None
 					try:
 						varFromDb = HeaderSample.objects.get(name=escapedVar)
-						ret.append(varFromDb.name)
+						if getReferences == True:
+							appendVariable = varFromDb
+						else:
+							appendVariable = varFromDb.name
+						ret.append(appendVariable)
 					except DoesNotExist, e:
 						raise ValueError("Trying to set variable %s as one of the variables. Error: this variable has not been imported to the database." %variable)
 				return ret
@@ -125,29 +130,38 @@ class DataLoader( object ):
 					profileDoc.save()
 
 					settings.profiles.append(profileDoc)
-				settings.save()
 
 			def setInputVariables(settings):
 				variables = self.cfg.getVar("dataLoader", "views").get("som").get("defaultInputVariables")
 				checkedVariables = getCheckedVariables(variables)
 
 				settings.inputVariables = checkedVariables
-				settings.save()
 
 			def setDefaultPlanes(settings):
 				variables = self.cfg.getVar("dataLoader", "views").get("som").get("defaultPlanes")
 				checkedVariables = getCheckedVariables(variables)
 
 				settings.planes = checkedVariables
-				settings.save()
 
 
+			def setPivot(settings):
+				pivotSettings = self.cfg.getVar("dataLoader", "views").get("som").get("pivot")
+				enabled = pivotSettings.get("enabled", False)
+				settings.pivotEnabled = enabled
+
+				if enabled == True:
+					variable = pivotSettings.get("defaultVariable")
+					variableReference = getCheckedVariables([variable], True)
+					settings.pivotVariable = variableReference[0]
 
 			settings = getSettingDoc()
 
 			setProfiles(settings)
 			setInputVariables(settings)
 			setDefaultPlanes(settings)
+			setPivot(settings)
+
+			settings.save()
 
 
 		exploreSettings()
