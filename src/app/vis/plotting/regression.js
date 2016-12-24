@@ -33,8 +33,8 @@ angular.module('plotter.vis.plotting.regression',
       return VariableService.getGroup(order);
     })
     .header([
-      { 'title': 'Target variable', 'content': [$scope.window.extra().computation.input.target[0].labelName()] },
-      { 'title': 'Adjust variables', 'content': _.map($scope.window.extra().computation.input.adjust,
+      { 'title': 'Outcome variable', 'content': [$scope.window.extra().computation.input.target[0].labelName()] },
+      { 'title': 'Covariates', 'content': _.map($scope.window.extra().computation.input.adjust,
         function(v) { return v.labelName(); })
       }
     ])
