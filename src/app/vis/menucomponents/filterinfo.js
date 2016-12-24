@@ -52,10 +52,10 @@ angular.module('plotter.vis.menucomponents.filterinfo',
         return 'circle_' + filt.name();
 
         case 'range':
-        return 'range_' + filt.variable().name();
+        return 'range_' + filt.variable().id;
 
         case 'classed':
-        return 'classed_' + filt.variable().name();
+        return 'classed_' + filt.variable().id;
 
         default:
         return 'xxx';

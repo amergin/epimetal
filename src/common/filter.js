@@ -6,6 +6,10 @@ function BaseFilter() {
     throw new Error("not implemented");
   };
 
+  filter.trackId = function() {
+    throw new Error("not implemented");
+  };
+
   filter.isPayload = function() {
     throw new Error("not implemented");
   };
@@ -79,6 +83,10 @@ function CircleFilter() {
       throw new Error('Tried to submit value that is not in range [0,1]! value = ' + value);
     }
   }
+
+  filter.trackId = function() {
+    return filter.id();
+  };
 
   filter.init = function() {
     initOrigin();
@@ -302,6 +310,10 @@ function HistogramFilter() {
     return 'range';
   };
 
+  filter.trackId = function() {
+    return filter.variable().id;
+  };
+
   filter.get = function() {
     return _.extend(priv.get(), {
       'type': filter.type()
@@ -338,6 +350,10 @@ function ClassedBarChartFilter() {
 
   filter.type = function() {
     return 'classed';
+  };
+
+  filter.trackId = function() {
+    return filter.variable().id;
   };
 
   filter.get = function() {
