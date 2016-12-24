@@ -25,8 +25,16 @@
 			<div class="col-sm-offset-2 col-sm-8 well well-sm v-align">
 				<p>Please note that the pivot variable cannot contain any values that cannot be coerced into numbers.</p>
 			</div>
-
-			<div class="multiple-variable-selection" re-selection="pivotVariable" re-mode="'single'"></div>
+			<div class="row">
+				<div class="col-sm-12">
+					<span class="modal-setting col-sm-2">Use pivoting</span>
+					<div class="btn-group" ng-model="pivot.enabled" bs-radio-group>
+					  <label class="btn btn-default"><input type="radio" class="btn btn-default" value="false"> Disabled</label>
+					  <label class="btn btn-default"><input type="radio" class="btn btn-default" value="true"> Enabled</label>
+					</div>
+				</div>
+			</div>
+			<div class="multiple-variable-selection" re-selection="pivot.variable" re-mode="'single'"></div>
 		</tab>
 	</tabset>
 	<div class="row col-sm-12 text-center">

@@ -260,6 +260,7 @@ angular.module('services.som', [
       var sampleCount = that.sampleDimension.groupAll().value();
       if (sampleCount === 0) {
         // no samples
+
         return false;
       } else if (sampleCount < SOM_MIN_SAMPLE_COUNT) {
         NotifyService.addSticky('Error', 'Please select at least ' + SOM_MIN_SAMPLE_COUNT + ' samples.', 'error');
@@ -362,6 +363,10 @@ angular.module('services.som', [
         spark.append( _.sortBy(variables) );
         spark.append(rows);
         spark.append(cols);
+        spark.append(that.pivotVariableEnabled);
+        if(that.pivotVariableEnabled) {
+          spark.append(that.pivotVariable);
+        }
         // var p2 = performance.now();
         // console.log("hash creation took = ", p2-p1);
         return spark.end();
@@ -374,7 +379,8 @@ angular.module('services.som', [
           return; 
         }
 
-        var rawTrainVarNames = Utils.pickVariableNames(that.trainVariables);
+        var rawTrainVarNames = Utils.pickVariableNames(that.trainVariables),
+        pivotVariable = service.pivotVariable() ? service.pivotVariable().name() : undefined;
         $http.post(SOM_TRAIN_POST_URL, {
           bmus: Array.prototype.slice.call(somObject.bmus),
           weights: Array.prototype.slice.call(somObject.weights),
@@ -386,6 +392,10 @@ angular.module('services.som', [
           rows: somObject.rows,
           cols: somObject.cols,
           description: that.description,
+          pivot: {
+            enabled: service.pivotVariableEnabled(),
+            variable: pivotVariable
+          },
           hash: getHash(data.samples, rawTrainVarNames, somObject.rows, somObject.cols)
         }, { cache: false })
         .then(function succFn(response) {
@@ -576,6 +586,11 @@ angular.module('services.som', [
 
       service.description(result.data.description || {});
 
+      service.pivotVariableEnabled(result.data.pivotEnabled);
+      if(result.data.pivotEnabled) {
+        service.pivotVariable(result.data.pivotVariable);
+      }
+
       $rootScope.$emit('dataset:SOMUpdated', that.som);
 
       TabService.lock(false);
@@ -602,11 +617,13 @@ angular.module('services.som', [
     }
 
     else if(!computationNeeded()) {
+      $log.info("SOM computation deemed not needed, not doing anything.");
       $timeout(function() {
         defer.resolve('not_needed');
       }, 5);
 
     } else {
+      $log.info("Needs SOM computation, starting.");
       TabService.lock(true);
       that.inProgress = true;
 

@@ -2,7 +2,8 @@ angular.module('plotter.vis.menucomponents.som-settingsmenu',
   [
   'ext.lodash',
   'services.variable',
-  'services.dataset'
+  'services.dataset',
+  'mgcrea.ngStrap.button'
   ])
 
 .constant('SOM_SETTINGS_AVAILABLE_SIZES', [
@@ -11,12 +12,19 @@ angular.module('plotter.vis.menucomponents.som-settingsmenu',
   { rows: 9, cols: 13 }
 ])
 .controller('SOMSettingsMenuCtrl', 
-  function SOMInputMenuCtrl($scope, DatasetFactory, VariableService, SOMService, _, SOM_SETTINGS_AVAILABLE_SIZES) {
+  function SOMInputMenuCtrl($scope, DatasetFactory, VariableService, SOMService, 
+    _, SOM_SETTINGS_AVAILABLE_SIZES) {
 
     // make a shallow copy so the unsaved modifications are not propagated via reference
     $scope.selection = angular.copy(SOMService.trainVariables());
 
-    $scope.pivotVariable = angular.copy(SOMService.pivotVariable() || []);
+    VariableService.getDefaultPivotSettings().then(function succFn(settings) {
+      var defaultPivot = SOMService.pivotVariable();
+      $scope.pivot = {
+        enabled: SOMService.pivotVariableEnabled(),
+        variable: defaultPivot ? angular.copy([defaultPivot]) : angular.copy([])
+      };
+    });
 
     $scope.tabInd = 0;
 
@@ -39,7 +47,7 @@ angular.module('plotter.vis.menucomponents.som-settingsmenu',
         return true;
       }
       else if($scope.tabInd === 2) {
-        return $scope.pivotVariable.length > 0;
+        return !$scope.pivotEnabled || $scope.pivotVariable.length > 0;
       }
     };
 
@@ -50,12 +58,18 @@ angular.module('plotter.vis.menucomponents.som-settingsmenu',
     };
 
     $scope.submit = function() {
-      return {
+      var ret = {
         activeTab: getTabName(),
         trainVariables: $scope.selection,
         size: $scope.sizes[$scope.selectedSize.ind],
-        pivotVariable: $scope.pivotVariable
+        pivot: {
+          enabled: $scope.pivot.enabled,
+        }
       };
+      if($scope.pivot.variable.length > 0) {
+        ret.pivot['variable'] = $scope.pivot.variable[0];
+      }
+      return ret;
     };
 
 })

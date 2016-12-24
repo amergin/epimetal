@@ -295,7 +295,6 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
           singleSelection(payload, cache);
         }
       }
-      console.log("after");
     };
 
     $scope.getInputField = function()  {

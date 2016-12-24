@@ -368,13 +368,19 @@ angular.module('plotter.vis', [
       }
     }
 
-    function doPivotVariable(v) {
-      var changed = SOMService.pivotVariable(v);
+    function doPivot(res) {
+      var changed = false;
+      SOMService.pivotVariableEnabled(res.enabled);
 
-      if(changed) {
+      if(res.variable) {
+        changed = SOMService.pivotVariable(res.variable);
+      }
+
+      if(!res.enabled || changed) {
         var somHandler = WindowHandler.get('vis.som');//.plane');
         SOMService.getSOM(somHandler); // no use to wait results        
       }
+
     }
 
     function doTrainVariables(vars) {
@@ -393,7 +399,7 @@ angular.module('plotter.vis', [
         break;
 
         case 'pivotVariable':
-        doPivotVariable(result.pivotVariable);
+        doPivot(result.pivot);
         break;
 
         case 'trainVariables':
