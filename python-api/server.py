@@ -455,6 +455,10 @@ def getInitializedFlask(config):
 			epoch = payload.get('epoch', -1)
 			description = payload.get('description', {})
 
+			pivotSettings = payload.get('pivot', {})
+			pivotEnabled = pivotSettings.get('enabled', None)
+			pivotVariable = pivotSettings.get('variable', '')
+
 			somDocId = None
 
 			'''print "legalDistance(neighdist)=", legalDistance(neighdist)
@@ -482,6 +486,7 @@ def getInitializedFlask(config):
 			legalArray(variables) and \
 			variablesExist(variables) and \
 			legalArray(distances) and \
+			legalBool(pivotEnabled) and \
 			legalDescription(description):
 				somHash = somHash.encode('utf8')
 				# see if it already exists
@@ -502,7 +507,10 @@ def getInitializedFlask(config):
 					somDoc = SOMTrain(somHash=somHash, bmus=bmus, weights=getFloatArray(weights), codebook=getFloatArray(codebook), variables=variables, \
 						distances=getFloatArray(distances), 
 						neighdist=neighdist, epoch=epoch, rows=rows, cols=cols,
-						description=description)
+						description=description,
+						pivotEnabled=pivotEnabled)
+					if(pivotEnabled):
+						somDoc.pivotVariable = pivotVariable
 					somDoc.save()
 					somDocId = str(somDoc.id)
 					response = flask.jsonify({
@@ -519,7 +527,7 @@ def getInitializedFlask(config):
 				return getError()
 
 		except Exception, e:
-			print "exception occured", e
+			print "exception occurred", e
 			exc_type, exc_obj, exc_tb = sys.exc_info()
 			fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
 			print(exc_type, fname, exc_tb.tb_lineno)
