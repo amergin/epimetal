@@ -434,6 +434,8 @@ angular.module('services.som', [
 
         TaskHandlerService.circleSpin(true);
         NotifyService.addTransient('Starting SOM computation', 'The computation may take a while.', 'info');
+        windowHandler.spinAll();
+
         if(service.pivotVariableEnabled() === true) {
           $log.info("Creating SOM train with pivot enabled.");
 
@@ -470,6 +472,7 @@ angular.module('services.som', [
             .finally(function() {
               TaskHandlerService.circleSpin(false);
               TaskHandlerService.circleSpinValue(0);
+              windowHandler.stopAllSpins();
             });
 
           });
@@ -508,6 +511,7 @@ angular.module('services.som', [
             .finally(function() {
               TaskHandlerService.circleSpin(false);
               TaskHandlerService.circleSpinValue(0);
+              windowHandler.stopAllSpins();
             });
 
           });
