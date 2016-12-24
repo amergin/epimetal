@@ -588,7 +588,7 @@ angular.module('services.som', [
 
       service.pivotVariableEnabled(result.data.pivotEnabled);
       if(result.data.pivotEnabled) {
-        service.pivotVariable(result.data.pivotVariable);
+        service.pivotVariable(VariableService.getVariable(result.data.pivotVariable));
       }
 
       $rootScope.$emit('dataset:SOMUpdated', that.som);
