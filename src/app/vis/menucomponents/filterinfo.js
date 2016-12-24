@@ -18,7 +18,9 @@ angular.module('plotter.vis.menucomponents.filterinfo',
   }
 )
 
-.controller('FilterInfoController', function FilterInfoController($scope, $timeout, $log, $injector, DimensionService, FilterService, $state, NotifyService, TabService, DatasetFactory, SOMService, d3, dc, _) {
+.controller('FilterInfoController', function FilterInfoController($scope, $rootScope, $timeout, $log, $injector, $state,
+  DimensionService, FilterService, NotifyService, TabService, DatasetFactory, SOMService, 
+  d3, dc, _) {
     var numFormat = d3.format('.2e');
     var dimensionService = DimensionService.getPrimary();
 
@@ -247,6 +249,12 @@ angular.module('plotter.vis.menucomponents.filterinfo',
         $injector.get('WindowHandler').redrawVisible(); */
       }
     };
+
+    $rootScope.$on('histogram:filter:shift', function(event, filter) {
+      var obj = $scope.rangeFilterLookup[filter.variable().id];
+      obj['lower'] = +rangePrecisionFormat(filter.payload()[0]);
+      obj['upper'] = +rangePrecisionFormat(filter.payload()[1]);
+    });
 
 
 });

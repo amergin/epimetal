@@ -396,6 +396,8 @@ angular.module('plotter.vis.plotting.histogram',
             // shifted
             console.log("shifted", current);
             current.payload(filter);
+
+            $rootScope.$emit('histogram:filter:shift', current);
           } else {
             // new
             var filt = new HistogramFilter()
