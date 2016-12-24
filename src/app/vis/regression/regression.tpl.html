@@ -2,7 +2,7 @@
     <ul>
         <li gridster-item="itemMapper" ng-repeat="window in windows track by window.object.id()" id="pl-win-reg-{{window.object.id()}}" pl-grid-window pl-window="window" ng-if="!window.object.hidden()">
         </li>
-        <li layout="row" class="am-fade" ng-show="!windows.length">
+        <li class="am-fade col-sm-offset-3 regression-info" ng-show="!windows.length">
         	<h4 class="text-info">Please start by selecting variables to use in the computation.</h4>
         </li>
     </ul>
