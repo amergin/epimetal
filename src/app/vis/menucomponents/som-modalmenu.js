@@ -10,7 +10,8 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
     $scope.selection = {
       planes: [],
       profiles: [],
-      distributions: []
+      distributions: [],
+      boxplots: []
     };
 
     VariableService.getSOMDefaultProfiles().then(function(profiles) {
