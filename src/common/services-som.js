@@ -189,7 +189,12 @@ angular.module('services.som', [
       WindowHandler.removeAllVisible();
     }
     SOMComputeService.cancel();
+
+    var TaskHandlerService = $injector.get('TaskHandlerService');
+    TaskHandlerService.circleSpin(false);
+    TaskHandlerService.circleSpinValue(0);
     TabService.lock(false);
+
     removePrevious();
     removeQueueWindows();
     removeExistingWindows();
@@ -365,7 +370,7 @@ angular.module('services.som', [
         spark.append(cols);
         spark.append(that.pivotVariableEnabled);
         if(that.pivotVariableEnabled) {
-          spark.append(that.pivotVariable);
+          spark.append(that.pivotVariable.name());
         }
         // var p2 = performance.now();
         // console.log("hash creation took = ", p2-p1);
@@ -475,7 +480,16 @@ angular.module('services.som', [
               windowHandler.stopAllSpins();
             });
 
+          }, function errFn(result) {
+            $log.error("Pivot variable create failed, probably incorrect formatting?");
+            NotifyService.addSticky(
+              'SOM computation failed', 
+              'Please ensure the pivot variable contains values for each column.',
+              'error');
+            service.cancel();
+            defer.reject();
           });
+
 
         } else {
           SOMComputeService.create(service.rows(), service.columns(), data.samples, data.columns)
@@ -514,7 +528,15 @@ angular.module('services.som', [
               windowHandler.stopAllSpins();
             });
 
-          });
+          }, function errFn(result) {
+            $log.error("Pivot variable create failed, probably incorrect formatting?");
+            NotifyService.addSticky(
+              'SOM computation failed', 
+              'Please ensure the pivot variable contains values for each column.',
+              'error');
+            service.cancel();
+            defer.reject();
+          });          
         }
       }
 
