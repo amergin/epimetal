@@ -12,7 +12,7 @@
      <li ng-repeat="tab in tabs" ng-class="{active:$state.includes('vis.' + tab.name)}">
       <a href ui-sref="{{ 'vis.' + tab.name }}({ state: undefined })" eat-click-if="!tabChangeEnabled(tab)" role="tab" data-toggle="tab">{{tab.title}}</a>
      </li>
-     <li><a ng-href="getDocUrl()" target="_blank"><i class="fa fa-question-circle" aria-hidden="true"></i> Docs</a></li>
+     <li><a ng-href="{{getDocUrl()}}" target="_blank"><i class="fa fa-question-circle" aria-hidden="true"></i> Docs</a></li>
     </ul>
   <ul class="nav navbar-nav navbar-right">
     <div pl-link-creator></div>
