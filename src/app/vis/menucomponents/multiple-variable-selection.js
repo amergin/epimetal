@@ -244,6 +244,8 @@ angular.module('plotter.vis.menucomponents.multiple-variable-selection',
 
     function addVariable(variable) {
       var payload = getPayloadField();
+      if(_.includes(payload, variable)) { return; }
+
       var ind = payload.push(variable);
       addVariableToCache(variable, ind);
     }
