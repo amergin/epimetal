@@ -62,6 +62,7 @@ angular.module('plotter.vis.menucomponents.som-modalmenu',
           break;
 
           case 'distributions':
+          case 'boxplots':
           var dimensionCount = DimensionService.getSecondary().availableDimensionsCount();
           if(dimensionCount < selectionCount) {
             NotifyService.addSticky('Too many selected variables', 'Please select a maximum of ' + dimensionCount + ' variables. You can free variables by first closing unnecessary figure windows on this tab.', 
