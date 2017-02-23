@@ -21,7 +21,7 @@ angular.module('plotter.vis.plotting.heatmap',
   left: 95
 })
 
-.controller('HeatmapController', function($scope, constants, $injector, $timeout, CorrelationService, VariableService, HEATMAP_UNDEFINED_COLOR, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH, d3, dc, _) {
+.controller('HeatmapController', function($scope, $log, constants, $injector, $timeout, CorrelationService, VariableService, HEATMAP_UNDEFINED_COLOR, GRID_WINDOW_PADDING, HEATMAP_COLORBAR_WIDTH, d3, dc, _) {
 
   $scope.resetFilter = function() {
     $scope.heatmap.filterAll();
@@ -51,6 +51,8 @@ angular.module('plotter.vis.plotting.heatmap',
 
   function initColorScale() {
     $scope.window.extra()['colorScaleMode'] = 'stretch';
+
+    $log.debug("Color scale mode is ", $scope.window.extra()['colorScaleMode']);
 
     $scope.colorScale = {
       stretch: {
@@ -343,7 +345,7 @@ angular.module('plotter.vis.plotting.heatmap',
 
   })
 
-.directive('plHeatmap', function($injector, $rootScope, $timeout, DatasetFactory, VariableService, HEATMAP_MARGINS, HEATMAP_COLORBAR_WIDTH, _) {
+.directive('plHeatmap', function($injector, $log, $rootScope, $timeout, DatasetFactory, VariableService, HEATMAP_MARGINS, HEATMAP_COLORBAR_WIDTH, _) {
 
   var linkFn = function($scope, ele, iAttrs) {
 
@@ -363,6 +365,7 @@ angular.module('plotter.vis.plotting.heatmap',
         callback: function() {
           var mode = $scope.window.extra().colorScaleMode;
           $scope.window.extra()['colorScaleMode'] = (mode == 'linear') ? $scope.doStretch() : $scope.doLinear();
+          $log.debug("Color scale is now ", $scope.window.extra()['colorScaleMode']);
           $scope.heatmap.render();
         }
       });
@@ -577,7 +580,7 @@ function CustomScale() {
           // only one number in the lower -> full color -> interp = 0
           priv.interpolated[getName(coord)] = -1;
         } else {
-          priv.interpolated[getName(coord)] = -(thre) - (1-thre) * ( correlation - priv.lower.min ) / (priv.lower.max - priv.lower.min);
+          priv.interpolated[getName(coord)] = -(thre) + (1-thre) * ( correlation - priv.lower.max ) / (priv.lower.max - priv.lower.min);
         }
       }
     });
@@ -597,6 +600,8 @@ function CustomScale() {
     priv.lower.max = _.isUndefined(lowerExtent[1]) ? priv.constant.upper : lowerExtent[1];
     priv.upper.min = upperExtent[0];
     priv.upper.max = upperExtent[1];
+
+    console.log("Heatmap lower extent: [", priv.lower.min, priv.lower.max, "], upper extent: [", priv.upper.min, priv.upper.max, "]");
   }
 
   obj.lower = function(x) {
