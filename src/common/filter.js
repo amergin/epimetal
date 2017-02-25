@@ -200,7 +200,9 @@ function CircleFilter() {
     filter.name(state.name);
     filter.color(state.color);
     filter.origin(state.origin);
-    filter.radius(state.radius);
+    if(state.radius !== undefined) {
+      filter.radius(state.radius);
+    }
     return filter;
   };
 
