@@ -24,7 +24,9 @@ function RegressionChart() {
     _groupStartYOffset = 30,
     _svg,
     _bodyG,
-    _axisHeight = 40,
+    _axisHeight = 25,
+    _axisLabelHeight = 25,
+    _axisLabel = "(label)",
     _domain = [],
     _domainAdjust = 0.10,
     _zeroPoint = 0,
@@ -86,6 +88,10 @@ function RegressionChart() {
       function removeAxis() {
         d3.select(_element)
         .selectAll('g.axis')
+        .remove();
+
+        d3.select(_element)
+        .selectAll('g.axis-label')
         .remove();
       }
 
@@ -303,7 +309,7 @@ function RegressionChart() {
   function boxRows() {
     function axis() {
       function getAxisYOffset() {
-        return _chart.estimatedHeight() - _axisHeight;
+        return _chart.estimatedHeight() - _axisHeight - _axisLabelHeight;
       }
 
       function setAxis() {
@@ -330,11 +336,40 @@ function RegressionChart() {
         y = getAxisYOffset();
         return 'translate(' + x + "," + y + ")";
       })
-      .attr('class', 'box-row box-axis')
-      .attr('width', chartMeasurements.width - _starColumnWidth)// + _boxPlotMargins.right + _boxPlotMargins.left)
+      .attr('width', chartMeasurements.width - _starColumnWidth)
       .attr('height', _axisHeight)
       .attr('class', 'x axis')
       .call(_axis);
+
+    }
+
+    function axisLabel() {
+      function getYOffset() {
+        return _chart.estimatedHeight() - _axisLabelHeight;
+      }
+
+      var chartMeasurements = getChartMeasurements();
+
+      // create row: enter
+      var axisLabelEl = _bodyG.selectAll('g.axis-label')
+      .data([_groupedData])
+      .enter()
+      .append('g')
+      .attr('transform', function(d) {
+        var x = 55, //chartMeasurements.xOffset + _boxPlotMargins.left - 1,
+        y = getYOffset();
+        return 'translate(' + x + "," + y + ")";
+      })
+      .attr('width', chartMeasurements.width - _starColumnWidth)
+      .attr('height', _axisHeight)
+      .attr('class', 'x axis-label');
+
+      axisLabelEl
+      .append('text')
+      //.attr("dominant-baseline", "central")
+      .attr('x', 0)
+      .attr('dy', 15)
+      .text(_axisLabel);
 
     }
 
@@ -514,6 +549,7 @@ function RegressionChart() {
 
     // last row is axis on each column
     axis();
+    axisLabel();
     zeroLine();
   }
 
@@ -578,6 +614,12 @@ function RegressionChart() {
     return _chart;
   };
 
+  _chart.axisLabel = function(x) {
+    if(!arguments.length) { return _axisLabel; }
+    _axisLabel = x;
+    return _chart;
+  };
+
   _chart.circleColors = function(x) {
     if(!arguments.length) { return _circleColors; }
     _circleColors = x;
@@ -609,7 +651,7 @@ function RegressionChart() {
   _chart.estimatedHeight = function() {
     sortData(); // ensure calculations are based on fresh data
     var noGroups = _groupedData.length;
-    return getGroupY(noGroups-1).end + _axisHeight;
+    return getGroupY(noGroups-1).end + _axisHeight + _axisLabelHeight;
   };
 
   function computeDomain() {

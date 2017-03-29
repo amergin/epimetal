@@ -10,7 +10,9 @@ angular.module('plotter.vis.regression', [
 ])
 
 .constant('REGRESSION_WIN_X_PX', 40)
-  .constant('REGRESSION_WIN_Y_PX', 100)
+.constant('REGRESSION_WIN_Y_PX', 25)
+.constant('REGRESSION_DEFAULT_X', 9)
+.constant('REGRESSION_DEFAULT_Y', 16)
 
 .controller('RegressionController', function RegressionController(VariableService, $scope, variables, windowHandler, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, _) {
 
@@ -40,7 +42,7 @@ angular.module('plotter.vis.regression', [
     // defaultSizeY: 40,
     columns: 16 * 10,
     width: 16 * 10 * REGRESSION_WIN_X_PX,
-    maxSizeY: 800,
+    maxSizeY: 2000,
     rowHeight: String(REGRESSION_WIN_Y_PX),
     colWidth: REGRESSION_WIN_X_PX,
     resizable: {

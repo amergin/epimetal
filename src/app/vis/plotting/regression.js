@@ -10,14 +10,15 @@ angular.module('plotter.vis.plotting.regression',
   ])
 
 .constant('REGRESSION_WIDTH', 450)
-.constant('REGRESSION_DEFAULT_X', 9)
-.constant('REGRESSION_DEFAULT_Y', 4)
 
-.controller('RegressionPlotController', function RegressionPlotController($scope, DatasetFactory, VariableService, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH, FilterService, _) {
+.controller('RegressionPlotController', function RegressionPlotController($scope, $log, DatasetFactory, VariableService, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH, FilterService, _) {
   function windowSize(width, height) {
+    var x = Math.round(width/REGRESSION_WIN_X_PX) + 1,
+    y = Math.ceil(height/REGRESSION_WIN_Y_PX) + 3;
+    $log.debug("Regression window size is", x, y);
     $scope.window.size({
-      x: Math.round(width/REGRESSION_WIN_X_PX) + 1,
-      y: Math.round(height/REGRESSION_WIN_Y_PX) + 1
+      x: x,
+      y: y
     });
   }
 
@@ -38,6 +39,7 @@ angular.module('plotter.vis.plotting.regression',
         function(v) { return v.labelName(); })
       }
     ])
+    .axisLabel("SD increment in outcome variable per SD increment in exposure variable")
     .circleColors(FilterService.getSOMColorScale())
     .datasetColors(DatasetFactory.getColorScale())
     .colorAccessor(function(name, colorScale) {
@@ -138,51 +140,6 @@ angular.module('plotter.vis.plotting.regression',
         });
       }
     });
-
-
-    /* function renderWithNewDimensions() {
-      function setSize() {
-        $scope.size = angular.copy($scope.window.size()); 
-      }
-
-      $scope.updateChart($scope);
-      setSize();
-    }
-
-    function setResize() {
-      function setSize() {
-        $scope.size = angular.copy($scope.window.size()); 
-      }
-
-      var resizeUnbind = $scope.$on('gridster-item-transition-end', function(item) {
-        function gridSizeSame() {
-          return _.isEqual($scope.size, $scope.window.size());
-        }
-        if(!gridSizeSame()) {
-          renderWithNewDimensions();
-        }
-      });
-
-      setSize();
-      $scope.deregisters.push(resizeUnbind);
-    }
-
-    setResize();
-
-    function setResizeElement() {
-      var renderThr = _.debounce(function() {
-        renderWithNewDimensions();
-      }, 150, { leading: false, trailing: true });
-
-      var resizeUnbind = $scope.$on('gridster-resized', function(sizes, gridster) {
-        var isVisible = _.contains($injector.get('WindowHandler').getVisible(), $scope.window.handler());
-        if(!isVisible) { return; }
-        renderThr();
-      });
-    }
-
-    setResizeElement();
-    */
 
     $scope.deregisters.push(reRenderUnbind, redrawUnbind);
 
