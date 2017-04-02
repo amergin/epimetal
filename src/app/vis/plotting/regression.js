@@ -39,7 +39,7 @@ angular.module('plotter.vis.plotting.regression',
         function(v) { return v.labelName(); })
       }
     ])
-    .axisLabel("SD increment in outcome variable per SD increment in exposure variable")
+    .axisLabel("SD increment in outcome variable per 1-SD increment in exposure variable")
     .circleColors(FilterService.getSOMColorScale())
     .datasetColors(DatasetFactory.getColorScale())
     .colorAccessor(function(name, colorScale) {
