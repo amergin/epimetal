@@ -178,7 +178,9 @@ String.prototype.hashCode = function() {
 };
 
 Utils.pickVariableNames = function(vars) {
-  return _.map(vars, function(v) { return v.name(); });
+  return _.map(vars, function(v) { 
+    return v.type() == 'db' ? v.name() : v.labelName();
+  });
 };
 
 Utils.subarrays = function(array, n) {
