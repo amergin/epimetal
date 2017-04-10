@@ -9,7 +9,8 @@ angular.module('plotter.vis.windowing', ['services.window',
 
 .constant('EXPORT_CONFIG', {
   'svg': '/API/export/svg',
-  'png': '/API/export/png'
+  'png': '/API/export/png',
+  'tsv': '/API/export/tsv'
 })
 
 .constant('EXPORT_PNG_BACKGROUND_COLOR', '#FFFFFF')
@@ -122,7 +123,6 @@ angular.module('plotter.vis.windowing', ['services.window',
     form.submit();
     form.remove();
   };
-
 
   $scope.exportSVG = function() {
     var elements = getSelection(),

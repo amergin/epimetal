@@ -216,14 +216,14 @@ angular.module('services.window', [
       }
 
       function exportFn(cfg) {
-        // if(cfg.element.length > 1) {
-        //   cfg.element = _.first(cfg.element);
-        // }
         var directiveEl = angular.element('<div/>');
         directiveEl.attr('pl-export', '');
         directiveEl.attr('pl-export-source', "'" + cfg.source + "'");
         directiveEl.attr('pl-export-target', "'" + cfg.type + "'");
         directiveEl.attr('pl-export-window', 'window');
+        if(cfg.type == 'tsv') {
+          directiveEl.attr('pl-export-tsv-payload', 'payload');//cfg.payload);
+        }
         directiveEl.attr('pl-export-selector', "'" + cfg.selector + "'");
         directiveEl.attr('pl-export-filename', "'" + getFileName(cfg.window) + "'");
         angular.element('body').append(directiveEl);
@@ -238,6 +238,12 @@ angular.module('services.window', [
 
       function exportPNG(cfg) {
         cfg.type = 'png';
+        exportFn(cfg);
+      }
+
+      function exportTSV(cfg) {
+        cfg.type = 'tsv';
+        console.log("export TSV", cfg);
         exportFn(cfg);
       }
 
@@ -271,6 +277,14 @@ angular.module('services.window', [
           return {
             'text': '<i class="fa fa-download"></i> Export as PNG',
             'click': _.wrap(cfg, exportPNG),
+            'type': cfg.type
+          };
+        }
+
+        function getTSV(cfg) {
+          return {
+            'text': '<i class="fa fa-download"></i> Download regression data in a ZIP file',
+            'click': _.wrap(cfg.callback, doCallback), //_.wrap(cfg, exportTSV),
             'type': cfg.type
           };
         }
@@ -313,6 +327,9 @@ angular.module('services.window', [
           case 'export:png':
             return getPNG(cfg);
 
+          case 'export:tsv':
+            return getTSV(cfg);
+
           case 'correlation':
             return getCorrelation(cfg);
 
@@ -324,6 +341,9 @@ angular.module('services.window', [
 
           case 'plane-highlight':
             return getPlaneHighlight(cfg);
+
+          default:
+            throw new Error("Unexpected dropdown type!");
         }
       }
 

@@ -239,7 +239,7 @@ angular.module('services.regression.ww', [
           result: {
             success: true
           },
-          betas: res.beta,
+          betas: Array.prototype.slice.call(res.beta),//res.beta,
           ci: [res.beta[1] - res.ci[0][1], res.beta[1] + res.ci[0][1]],
           pvalue: res.pvalue[1]
         };

@@ -4,6 +4,7 @@ angular.module('plotter.vis.plotting.regression',
   'services.dataset',
   'services.variable',
   'services.window',
+  'plotter.vis.windowing',
   'services.notify',
   'services.regression.ww',
   'ext.lodash'
@@ -11,7 +12,9 @@ angular.module('plotter.vis.plotting.regression',
 
 .constant('REGRESSION_WIDTH', 450)
 
-.controller('RegressionPlotController', function RegressionPlotController($scope, $log, DatasetFactory, VariableService, REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH, FilterService, _) {
+.controller('RegressionPlotController', function RegressionPlotController($scope, $log, 
+  DatasetFactory, VariableService, FilterService, _,
+  REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH) {
   function windowSize(width, height) {
     var x = Math.round(width/REGRESSION_WIN_X_PX) + 1,
     y = Math.ceil(height/REGRESSION_WIN_Y_PX) + 3;
@@ -69,7 +72,9 @@ angular.module('plotter.vis.plotting.regression',
 
 })
 
-.directive('plRegression', function plRegression($timeout, $rootScope, DatasetFactory, RegressionService, NotifyService, VariableService) {
+.directive('plRegression', function plRegression($timeout, $log, $rootScope, 
+  DatasetFactory, RegressionService, NotifyService, VariableService,
+  EXPORT_CONFIG, EXPORT_FILENAME_MAX_LENGTH) {
 
   function postLink($scope, ele, attrs, ctrl) {
     function initDropdown() {
@@ -91,6 +96,119 @@ angular.module('plotter.vis.plotting.regression',
         source: 'svg',
         window: $scope.window
       });
+
+      function getTSVVariables(payload) {
+        return _.chain(payload.input)
+        .map(function(vars, key) {
+          return [key, Utils.pickVariableNames(vars)];
+        })
+        .zipObject()
+        .value();
+      }
+
+      function getTSVResults(results) {
+        function getIndividual(res) {
+          return {
+            variable: res.variable.name(),
+            result: res.result.success === true ? true : false,
+            payload: res.payload
+          };
+        }
+
+        return _.map(results, getIndividual);
+      }
+
+      var sendFile = function(b64, url, filename) {
+        //create a hidden form that is submitted to get the file.
+        var form = angular.element('<form/>')
+          .attr('action', url)
+          .attr('method', 'POST');
+
+        var input = angular.element('<input/>')
+          .attr('name', 'payload')
+          .attr('value', b64)
+          .attr('type', 'hidden');
+        var input2 = angular.element('<input/>')
+          .attr('name', 'filename')
+          .attr('type', 'text')
+          .attr('value', filename)
+          .attr('type', 'hidden');
+
+        form.append(input);
+        form.append(input2);
+        $scope.element.parent().append(form);
+        form.submit();
+        form.remove();
+      };
+
+      function getFileName(windowInst) {
+        function getVariables(variables) {
+          var hasX = !_.isUndefined(variables.x),
+            hasY = !_.isUndefined(variables.y),
+            hasTarget = !_.isUndefined(variables.target);
+
+          if (hasX && hasY) {
+            return _.template('X_<%= x %>_Y_<%= y %>')({
+              x: variables.x.labelName(),
+              y: variables.y.labelName()
+            });
+          }
+          if (hasTarget) {
+            var template = _.template('target_<%= target %>_association_<%= assoc %>_vars_adjusted_<%= adjust %>_vars');
+            return template({
+              target: _.first(variables.target).name(),
+              assoc: variables.association.length,
+              adjust: variables.adjust.length
+            });
+          } else {
+            if(_.isArray(variables)) {
+              return _.map(variables, function(v) { return v.labelName(); })
+              .join("_");
+            } else {
+              return variables.name();
+            }
+          }
+        }
+        var setNames = _.map(DatasetFactory.activeSets(),
+            function(set) {
+              return set.name();
+            }).join("_"),
+          template = _.template('<%= type %>_of_<%= variable %>_on_<%= datasets %>'),
+          fullLength = template({
+            type: windowInst.figure(),
+            variable: getVariables(windowInst.variables()),
+            datasets: setNames
+          });
+
+        return _.trunc(fullLength, {
+          'length': EXPORT_FILENAME_MAX_LENGTH,
+          'omission': '[...]'
+        });
+      }
+
+      $scope.window.addDropdown({
+        type: "export:tsv",
+        scope: $scope,
+        window: $scope.window,
+        callback: function() {
+          var payload = $scope.window.extra().computation,
+          output = {},
+          exportStr,
+          b64str,
+          filename = getFileName($scope.window),
+          url = EXPORT_CONFIG.tsv;
+
+          output.input = getTSVVariables(payload);
+          output.results = getTSVResults(payload.result);
+          output.datasets = _.map(payload.result[0].payload, function(pay) { return pay.name; });
+
+          exportStr = JSON.stringify(output);
+
+          b64str = btoa(unescape(encodeURIComponent(exportStr)));
+          sendFile(b64str, url, filename);
+        }
+      });
+
     }
 
     function updateChart() {
