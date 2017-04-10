@@ -81,21 +81,8 @@ angular.module('plotter.vis.plotting.regression',
       var selector = _.template('#<%= id %> <%= element %>.<%= cls %>'),
       id = $scope.element.parent().attr('id');
 
-      $scope.window.addDropdown({
-        type: "export:svg",
-        selector: selector({ id: id, element: 'svg', cls: 'regression' }),
-        scope: $scope,
-        source: 'svg',
-        window: $scope.window
-      });
-
-      $scope.window.addDropdown({
-        type: "export:png",
-        selector: selector({ id: id, element: 'svg', cls: 'regression' }),
-        scope: $scope,
-        source: 'svg',
-        window: $scope.window
-      });
+      // empty the dropdown just-in-case
+      $scope.window.dropdown([]);
 
       function getTSVVariables(payload) {
         return _.chain(payload.input)
@@ -136,7 +123,9 @@ angular.module('plotter.vis.plotting.regression',
 
         form.append(input);
         form.append(input2);
-        $scope.element.parent().append(form);
+
+        angular.element(document).find('body').append(form);
+        //$scope.element.parent().append(form);
         form.submit();
         form.remove();
       };
@@ -185,6 +174,22 @@ angular.module('plotter.vis.plotting.regression',
           'omission': '[...]'
         });
       }
+
+      $scope.window.addDropdown({
+        type: "export:svg",
+        selector: selector({ id: id, element: 'svg', cls: 'regression' }),
+        scope: $scope,
+        source: 'svg',
+        window: $scope.window
+      });
+
+      $scope.window.addDropdown({
+        type: "export:png",
+        selector: selector({ id: id, element: 'svg', cls: 'regression' }),
+        scope: $scope,
+        source: 'svg',
+        window: $scope.window
+      });
 
       $scope.window.addDropdown({
         type: "export:tsv",

@@ -284,7 +284,7 @@ angular.module('services.window', [
         function getTSV(cfg) {
           return {
             'text': '<i class="fa fa-download"></i> Download regression data in a ZIP file',
-            'click': _.wrap(cfg.callback, doCallback), //_.wrap(cfg, exportTSV),
+            'click': _.wrap(cfg.callback, doCallback),
             'type': cfg.type
           };
         }

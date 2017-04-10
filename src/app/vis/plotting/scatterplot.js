@@ -541,6 +541,10 @@ angular.module('plotter.vis.plotting.scatterplot', [
     function initDropdown() {
       var selector = _.template('#<%= id %> .<%= cl %>'),
         id = $scope.element.parent().attr('id');
+
+      // empty the dropdown just in case
+      $scope.window.dropdown([]);
+
       $scope.window.addDropdown({
         type: "export:png",
         selector: selector({

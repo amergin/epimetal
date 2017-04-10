@@ -226,6 +226,9 @@ angular.module('plotter.vis.plotting.boxplot',
       var selector = _.template('#<%= id %> <%= element %>'),
       id = $scope.element.parent().attr('id');
 
+      // empty the dropdown just in case
+      $scope.window.dropdown([]);
+
       $scope.window.addDropdown({
         type: "export:svg",
         selector: selector({ id: id, element: 'svg' }),

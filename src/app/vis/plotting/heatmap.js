@@ -409,6 +409,9 @@ angular.module('plotter.vis.plotting.heatmap',
       var selector = _.template('#<%= id %> .<%= cls %> <%= element %>'),
       id = $scope.element.parent().attr('id');
 
+      // empty the dropdown just in case
+      $scope.window.dropdown([]);
+
       $scope.window.addDropdown({
         type: "colorscale",
         scope: $scope,
