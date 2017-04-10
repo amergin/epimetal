@@ -125,7 +125,7 @@ function SOMPlane() {
         return d.i == hexagon.j && d.j == hexagon.i;
       });
 
-      console.log("highlightHexagon found = ", found);
+      //console.log("highlightHexagon found = ", found);
 
       // find the one node
       priv.svg.selectAll('.hexagon').filter( function(d,i) { 
