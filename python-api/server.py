@@ -21,6 +21,8 @@ legalString, isArray, legalArray, legalBool
 from pymongo import ReadPreference
 
 import io
+import StringIO
+import zipfile
 from base64 import b64decode
 
 from hashids import Hashids
@@ -750,8 +752,8 @@ def getInitializedFlask(config):
 				response.status_code = 200
 				return response
 			else:
-				print "common=", validCommon(common)
-				print "browsing=", validBrowsing(browsing)
+				#print "common=", validCommon(common)
+				#print "browsing=", validBrowsing(browsing)
 				return getError()
 		except Exception, e:
 			print "exception occured", e
@@ -796,6 +798,65 @@ def getInitializedFlask(config):
 			abort(400)
 		return flask.send_file( pngFile,
 			as_attachment=True, mimetype='image/png', attachment_filename=filename)
+
+	@app.route( API_PREFIX + 'export/tsv', methods=['POST'] )
+	def exportRegression():
+		def varFile(vars):
+			f = StringIO.StringIO()
+			f.write("\n".join(vars))
+			return f
+
+		def datasetResultFiles(results, datasets):
+			def addHeader(f):
+				# write header
+				headers = ['variable', 'computation_succeeded', 'data_source', 'beta0', 'beta1', 'CI1', 'CI2', 'p_value']
+				f.write(COLUMN_SEPARATOR.join(headers)+"\n")
+
+			def dsetResult(results, dsetInd, f):
+				for res in results:
+					dsetPayload = res.get('payload')[dsetInd]
+					contents = [res.get('variable'), dsetPayload.get('result').get('success')]
+					contents += [dsetPayload.get('name')]
+					contents += dsetPayload.get('betas')
+					contents += dsetPayload.get('ci')
+					contents += [dsetPayload.get('pvalue')]
+					f.write(COLUMN_SEPARATOR.join(str(c) for c in contents))
+					f.write("\n")
+
+			dsetResults = list()
+			FILE_NAME_SUFFIX = '.tsv'
+			for no, dset in enumerate(datasets):
+				f = StringIO.StringIO()
+				addHeader(f)
+				filename = "results_" + dset + FILE_NAME_SUFFIX
+				dsetResult(results, no, f)
+				dsetResults.append({ 'filename': filename, 'file': f })
+			return dsetResults
+
+
+		ARCHIVE_SUFFIX = '.zip'
+		COLUMN_SEPARATOR = '\t'
+		try:
+			filename = request.form.get('filename', 'export') + ARCHIVE_SUFFIX
+			# 1. files to indicate the used variables
+			payload = json.loads(b64decode( request.form.get('payload') ))
+			adjustFile = varFile(payload.get('input').get('adjust'))
+			assocFile = varFile(payload.get('input').get('association'))
+			targetFile = varFile(payload.get('input').get('target'))
+			dsetResultFiles = datasetResultFiles(payload.get('results'), payload.get('datasets'))
+
+			resultZip = io.BytesIO()
+			with zipfile.ZipFile(resultZip, mode='w', compression=zipfile.ZIP_DEFLATED) as archiveFile:
+				archiveFile.writestr('covariates.txt', adjustFile.getvalue())
+				archiveFile.writestr('association_variables.txt', assocFile.getvalue())
+				archiveFile.writestr('outcome_variable.txt', targetFile.getvalue())
+				for dsetResultFile in dsetResultFiles:
+					archiveFile.writestr(dsetResultFile.get('filename'), dsetResultFile.get('file').getvalue())
+			resultZip.seek(0)
+			return flask.send_file(resultZip,
+				as_attachment=True, mimetype='application/zip', attachment_filename=filename)
+		except:
+			abort(400)
 
 	@app.route( API_PREFIX + 'list/', methods=['POST'] )
 	def getBulk():
