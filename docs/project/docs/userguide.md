@@ -152,11 +152,40 @@ Changing the size will trigger a retrain of the SOM and recompute all the visibl
 
 In this view multiple linear regression analysis can be computed and its results can be viewed. Start by clicking on **Create a new regression view** button. 
 
-Analyze the statistical association between a set of variables (*association variables*) to *a target variable*. Optionally, the regression analysis can also be adjusted for a variable or variables by filling in the *adjust variables* field.
+Analyze the statistical association between a set of variables (*exposure variables*) to *a outcome variable*. Optionally, the regression analysis can also be adjusted for a variable or variables by filling in the *covariates* field.
 
 The figure window first appears blank with a circular progress indicator that shows the progress of the calculation. The computation is done in parallel and should complete in well under a minute, depending on the resources of your computer and the amount of samples being processed.
 
-Note that due to technical limitations the regression windows cannot be dragged on the window canvas.
+### Exporting results
+The results of any produced analyses can be exported by selecting the *Download regression data in a ZIP file* option under the cogwheel menu of a forest plot window. 
+
+![Download regression analysis data](img/download_regression_data.png)
+
+
+This allows the user to download a ZIP archive file that contains the following files:
+
+| File name | Description |
+|----------|-------------|
+| covariates.txt | Covariates used in the analysis. One variable per line. |
+| exposure_variables.txt | Exposure variables used in the analysis. One variable per line. |
+| outcome_variable.txt | Outcome variable used in the analysis. One line containing the variable name. |
+| result_[dataset name].tsv | N distinct tab-separated values (TSV) files containing numerical values of the analysis, where N is the amount of datasets used in the analysis.|
+
+The result TSV file contains the following columns:
+
+| Colum name | Value type | Description |
+| ---------- | ---------- | ----------- |
+| variable   | String     | Name of the exposure variable |
+| computation_succeeded | Boolean: **True** / **False** | Whether the computation succeeded. If the result is **False**, the following numerical columns will have value NaN |
+| data_source | String | The dataset name. Should be the same for each row in the same file |
+| beta0 | Float | The standardized regression coefficient, or Beta 0, for this variable |
+| beta1 | Float | The standardized regression coefficient, or Beta 1, for this variable |
+| CI1 | Float | Lower endpoint of the 95% confidence interval |
+| CI2 | Float | Upper endpoint of the 95% confidence interval |
+| p_value | Float | P-value. The number 0 is presented in the case the number precision is not sufficient to display such a small number. |
+
+
+
 
 # Figures 
 
