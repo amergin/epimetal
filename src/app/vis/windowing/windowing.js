@@ -3,7 +3,7 @@ angular.module('plotter.vis.windowing', ['services.window',
   'mgcrea.ngStrap.dropdown',
   'mgcrea.ngStrap.tooltip',
   'angularSpinner',
-  'angular-svg-round-progress',
+  'angular-svg-round-progressbar',
   'ext.lodash'
 ])
 

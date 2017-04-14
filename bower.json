@@ -25,7 +25,7 @@
     "angular-resizable": "~1.2.0",
     "SOM.js": "https://bdad3060cb0b664d4b8df4b10075ca6b12768302@github.com/anttikan/SOM.js.git",
     "ng-tags-input": "~3.1.2",
-    "angular-svg-round-progressbar": "~0.2.10",
+    "angular-svg-round-progressbar": "~0.4.8",
     "core-estimator": "https://github.com/oftn/core-estimator.git",
     "SparkMD5": "~1.0.0",
     "ment.io": "~0.9.24",
