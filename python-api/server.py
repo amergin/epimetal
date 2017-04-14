@@ -815,11 +815,18 @@ def getInitializedFlask(config):
 			def dsetResult(results, dsetInd, f):
 				for res in results:
 					dsetPayload = res.get('payload')[dsetInd]
-					contents = [res.get('variable'), dsetPayload.get('result').get('success')]
+					contents = [res.get('variable')]
+					succeeded = dsetPayload.get('result').get('success')
+					contents += [succeeded]
 					contents += [dsetPayload.get('name')]
-					contents += dsetPayload.get('betas')
-					contents += dsetPayload.get('ci')
-					contents += [dsetPayload.get('pvalue')]
+					if succeeded is False:
+						contents += [float('nan')]
+						contents += [float('nan')]
+						contents += [float('nan')]
+					else:
+						contents += dsetPayload.get('betas')
+						contents += dsetPayload.get('ci')
+						contents += [dsetPayload.get('pvalue')]
 					f.write(COLUMN_SEPARATOR.join(str(c) for c in contents))
 					f.write("\n")
 
@@ -836,8 +843,8 @@ def getInitializedFlask(config):
 
 		ARCHIVE_SUFFIX = '.zip'
 		COLUMN_SEPARATOR = '\t'
+		filename = request.form.get('filename', 'export') + ARCHIVE_SUFFIX
 		try:
-			filename = request.form.get('filename', 'export') + ARCHIVE_SUFFIX
 			# 1. files to indicate the used variables
 			payload = json.loads(b64decode( request.form.get('payload') ))
 			adjustFile = varFile(payload.get('input').get('adjust'))
