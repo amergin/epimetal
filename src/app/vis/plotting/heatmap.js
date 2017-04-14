@@ -93,31 +93,31 @@ angular.module('plotter.vis.plotting.heatmap',
           initial: null // override
         }
       };
-  }
-
-  initHeader();
-  initColorScale();
-  initCrossfilter();
-
-  $scope.isFiltered = function() {
-    return $scope.window.extra().filtered;
-  };
-
-  $scope.window.resetButton(false);
-
-  $scope.format = d3.format('.2g');
-  $scope.limitDisp = null;
-
-  $scope.window.extra().filtered = false;
-
-  $scope.$watch(function() {
-    return $scope.window.extra().filtered;
-  }, function(newVal, oldVal) {
-    if( newVal != oldVal ) {
-      $scope.updateHeader();
-      $scope.heatmap.render();
     }
-  });
+
+    initHeader();
+    initColorScale();
+    initCrossfilter();
+
+    $scope.isFiltered = function() {
+      return $scope.window.extra().filtered;
+    };
+
+    $scope.window.resetButton(false);
+
+    $scope.format = d3.format('.2g');
+    $scope.limitDisp = null;
+
+    $scope.window.extra().filtered = false;
+
+    $scope.$watch(function() {
+      return $scope.window.extra().filtered;
+    }, function(newVal, oldVal) {
+      if( newVal != oldVal ) {
+        $scope.updateHeader();
+        $scope.heatmap.render();
+      }
+    });
 
   // $scope.variablesLookup = {};
 
@@ -181,10 +181,10 @@ angular.module('plotter.vis.plotting.heatmap',
       .range(['blue', 'white', 'red']);
 
       var correlationScale = $scope.colorScale.stretch.scale,
-        corrLowerExtent = correlationScale.lowerExtent(),
-        corrUpperExtent = correlationScale.upperExtent(),
-        lowerThrColor = linearScale(-HEATMAP_STRETCH_COLOR_SCALE_THRESHOLD),
-        upperThrColor = linearScale(HEATMAP_STRETCH_COLOR_SCALE_THRESHOLD);
+      corrLowerExtent = correlationScale.lowerExtent(),
+      corrUpperExtent = correlationScale.upperExtent(),
+      lowerThrColor = linearScale(-HEATMAP_STRETCH_COLOR_SCALE_THRESHOLD),
+      upperThrColor = linearScale(HEATMAP_STRETCH_COLOR_SCALE_THRESHOLD);
 
       var colorbar = new PolylinearColorBar()
       .width(30)
@@ -399,18 +399,18 @@ angular.module('plotter.vis.plotting.heatmap',
 
   var linkFn = function($scope, ele, iAttrs) {
 
-    $scope.window.addDropdown({
-      type: "correlation",
-      limit: $scope.limitDisp,
-      window: $scope.window
-    });
-
     function initDropdown() {
       var selector = _.template('#<%= id %> .<%= cls %> <%= element %>'),
       id = $scope.element.parent().attr('id');
 
       // empty the dropdown just in case
       $scope.window.dropdown([]);
+
+      $scope.window.addDropdown({
+        type: "correlation",
+        limit: $scope.limitDisp,
+        window: $scope.window
+      });
 
       $scope.window.addDropdown({
         type: "colorscale",
@@ -464,16 +464,11 @@ angular.module('plotter.vis.plotting.heatmap',
         );
     }
 
-    // function doLookup(variables) {
-    //   $scope.variablesLookup = _.chain(variables).map(function(d) { return [d.name, d]; }).object().value();  
-    // }
-
       // do init if not done
       VariableService.getVariables().then(function(variables) {
-        // doLookup(variables);
+        initDropdown();
         $scope.computeVariables(function() {
           draw();
-          initDropdown();
         });        
       });
 
