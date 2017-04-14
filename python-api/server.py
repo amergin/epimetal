@@ -848,7 +848,7 @@ def getInitializedFlask(config):
 			resultZip = io.BytesIO()
 			with zipfile.ZipFile(resultZip, mode='w', compression=zipfile.ZIP_DEFLATED) as archiveFile:
 				archiveFile.writestr('covariates.txt', adjustFile.getvalue())
-				archiveFile.writestr('association_variables.txt', assocFile.getvalue())
+				archiveFile.writestr('exposure_variables.txt', assocFile.getvalue())
 				archiveFile.writestr('outcome_variable.txt', targetFile.getvalue())
 				for dsetResultFile in dsetResultFiles:
 					archiveFile.writestr(dsetResultFile.get('filename'), dsetResultFile.get('file').getvalue())
