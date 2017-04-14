@@ -19,7 +19,7 @@
     "angular-ui-layout": "master",
     "angular-spinner": "~1.0.1",
     "d3-tip": "#dc1a7d1",
-    "angular-growl-2": "~0.7.5",
+    "angular-growl-2": "~0.7.9",
     "lodash": "~3.10.0",
     "ngprogress": "~1.1.2",
     "zeroclipboard": "~2.2.0",
