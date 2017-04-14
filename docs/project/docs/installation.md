@@ -115,7 +115,7 @@ The meta data file holds four columns:
 * `unit` (Unit of the variable, free text field, e.g. mmmol/l)
 * `group` (The variable group under which the variable will grouped in the software variable lookups, and in figures)
 
-The `name` column value cannot include any dots (`.`).
+The `name` column value cannot include any dots (`.`) or commas (`,`).
 
 As an example, the row:
 
