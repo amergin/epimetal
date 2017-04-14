@@ -93,7 +93,7 @@ module.exports = {
       // compatibility-service
       'vendor/modernizr/modernizr.custom.min.js',
       'vendor/spin.js/spin.js',
-      'vendor/angular-spinner/angular-spinner.min.js',
+      'vendor/angular-spinner/dist/angular-spinner.js',
       // customize this for release:
       'vendor/angular-bootstrap/custom-build/ui-bootstrap-custom-tpls-0.13.0.js',
       'vendor/angular-growl-2/build/angular-growl.js',

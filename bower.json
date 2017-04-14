@@ -17,7 +17,7 @@
     "bootstrap-additions": "~0.2.2",
     "d3-plugins": "*",
     "angular-ui-layout": "master",
-    "angular-spinner": "~0.5.1",
+    "angular-spinner": "~1.0.1",
     "d3-tip": "#dc1a7d1",
     "angular-growl-2": "~0.7.5",
     "lodash": "~3.10.0",
