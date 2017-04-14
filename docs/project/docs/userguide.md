@@ -259,7 +259,7 @@ On *Self-Organizing Maps* view, the data originates from subselection of samples
 
 ## Profile histogram
 
-A profile histogram can be drawn on the [Self-Organizing Maps](userguide.md#self-organizing-maps) view. Currently three distinct predefined histograms are available:
+A profile histogram can be drawn on the [Self-Organizing Maps](userguide.md#self-organizing-maps) view. The available profile histograms are defined during [installation phase](installation.md#default-view-settings). By default, three distinct predefined histograms are available:
 
 Total lipids:
 
