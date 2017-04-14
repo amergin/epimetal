@@ -26,7 +26,7 @@ Whenever time-consuming computations are being made, two indicators appear on th
 
 ![Task actions](img/navbar_task_actions.png)
 
-*Circular progress bar and a button for cancelling the computation.*
+*Circular progress bar and a button for cancelling any active computational tasks.*
 
 ### Side menu
 The side menu content varies based on the active view and state of the application. To increase the width of the actual page contents, the menu can be hidden by pressing **Hide this menu**.
@@ -56,6 +56,7 @@ The corresponding active filter list as it would be displayed on the side menu:
 
 *Active menu displaying the two active filters from previous figure.*
 
+The numerical values of each active filter can be modified in the input fields representing the upper and lower limit of the filter. 
 
 ##### Self-Organizing Map view
 On the [Self-Organizing Maps view](userguide.md#self-organizing-maps) filters are called *circle filters*. By default two circle filters are created, named A and B. They are placed over the SOM planes on a random coordinate. Circle filters can be moved by dragging them.
