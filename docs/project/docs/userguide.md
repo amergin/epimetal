@@ -107,14 +107,6 @@ Any duplicate samples (i.e. the circle filters intersect) are added only once. T
 
 ***Creating a dataset from circle filters, step 3**: the resulting dynamic dataset is now displayed on the dataset list. Lengthy names are truncated, as in this case.*
 
-Often times it may be useful to see which hexagons have been selected within a particular plane. In this case, click on the plane's cogwheel and select *Toggle hexagon highlighting*.
-
-![Displaying which hexagons have been selected by the circle filters](img/som_plane_cell_highlight.png)
-
-*Displaying which hexagons have been selected by circle filters.*
-
-The plane is then updated to show every hexagon which has been selected by the circle filters. The hexagon selection is indicated by coloring its border with the respective circle filter's color. In the case where two or more circle filters intersect and thereby select one or more of the same hexagons, the border color will only reflect one of those circle filters. Note that this is only a display limitation; naturally all of the intersecting circle filters will contain the samples included in those intersecting hexagons.
-
 # Views
 ##Explore and filter
 This is the default view of the application. The content section consists of a canvas that is populated with windows containing figures. By default, five windows are displayed containing the histograms of `Serum-C`, `Serum-TG`, `HDL-C`, `LDL-C` and `Glc` variables.
@@ -159,6 +151,19 @@ Changing the size will trigger a retrain of the SOM and recompute all the visibl
 When a pivot variable is defined, a rank transformation is performed to the training samples prior to SOM training phase. Whether this pivot feature is enabled is defined during the [installation phase](installation.md#default-view-settings). That is, the installation settings will determine whether to use SOM training at all, and what is the default variable to. Even if the pivot variable is disabled in the installation phase, you can enable it on a session-by-session basis.
 
 ** Note that that each of the samples used must have a value of this pivot variable that can be coerced to a number. Failing to meet this requirement will have unexpected consequences in the SOM results.**
+
+### Display hexagons selected by circle filters
+
+Often times it may be useful to see which hexagons have been selected within a particular plane. In this case, click on the plane's cogwheel and select *Toggle hexagon highlighting*.
+
+![Displaying which hexagons have been selected by the circle filters](img/som_plane_cell_highlight.png)
+
+*Displaying which hexagons have been selected by circle filters.*
+
+The plane is then updated to show every hexagon which has been selected by the circle filters. The hexagon selection is indicated by coloring its border with the respective circle filter's color. 
+
+In the case where two or more circle filters intersect and thereby select one or more of the same hexagons, the border color will only reflect one of those circle filters. Note that this is only a display limitation; naturally all of the intersecting circle filters will contain the samples included in those intersecting hexagons.
+
 
 ##Regression analysis & associations
 
