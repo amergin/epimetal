@@ -17,7 +17,7 @@ angular.module('plotter.vis.plotting.regression',
   REGRESSION_WIN_X_PX, REGRESSION_WIN_Y_PX, REGRESSION_WIDTH) {
   function windowSize(width, height) {
     var x = Math.round(width/REGRESSION_WIN_X_PX) + 1,
-    y = Math.ceil(height/REGRESSION_WIN_Y_PX) + 3;
+    y = Math.ceil(height/REGRESSION_WIN_Y_PX) + 5;
     $log.debug("Regression window size is", x, y);
     $scope.window.size({
       x: x,

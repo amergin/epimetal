@@ -100,8 +100,10 @@ module.exports = {
       'vendor/SOM.js/src/services-compute-som.js',
       'vendor/SOM.js/src/utilities.som.js',
       'vendor/ngprogress/build/ngprogress.js',
-      'vendor/ng-clip/dest/ng-clip.min.js',
-      'vendor/zeroclipboard/dist/ZeroClipboard.js',
+
+      'vendor/clipboard/dist/clipboard.js',
+      'vendor/ngclipboard/dist/ngclipboard.js',
+
       'vendor/angular-resizable/angular-resizable.min.js',
       'vendor/ng-tags-input/ng-tags-input.js',
       'vendor/SparkMD5/spark-md5.js',
@@ -131,7 +133,6 @@ module.exports = {
     assets: [
       'vendor/font-awesome/fonts/*',
       'vendor/bootstrap-chosen/chosen-sprite*',
-      'vendor/zeroclipboard/dist/ZeroClipboard.swf',
       'src/common/utilities.math.js',
       'src/common/utilities.regression.js',
       'vendor/SOM.js/src/utilities.som.js',

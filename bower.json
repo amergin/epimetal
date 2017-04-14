@@ -22,8 +22,6 @@
     "angular-growl-2": "~0.7.9",
     "lodash": "~3.10.0",
     "ngprogress": "~1.1.3",
-    "zeroclipboard": "~2.2.0",
-    "ng-clip": "~0.2.6",
     "angular-resizable": "~1.2.0",
     "SOM.js": "https://bdad3060cb0b664d4b8df4b10075ca6b12768302@github.com/anttikan/SOM.js.git",
     "ng-tags-input": "~3.0.0",
@@ -35,7 +33,8 @@
     "regression-js": "^1.3.0",
     "angularjs-slider": "~5.5.0",
     "ssci": "https://github.com/muonsw/ssci.git#~1.2.4",
-    "big.js": "~3.1.3"
+    "big.js": "~3.1.3",
+    "ngclipboard": "^1.1.1"
   },
   "dependencies": {},
   "resolutions": {

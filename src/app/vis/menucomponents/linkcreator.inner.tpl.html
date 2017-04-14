@@ -6,7 +6,7 @@
 					<textarea readonly select-on-click class="form-control" rows="3" id="longurl">{{getCopyLink()}}</textarea>
 				</p>
 				<p>
-					<button type="button" class="btn btn-primary" clip-copy="getCopyLink()" clip-click="copied()">
+					<button type="button" class="btn btn-primary" ngclipboard data-clipboard-text="{{getCopyLink()}}" ngclipboard-success="copied()" ngclipboard-error="failed()">
 						<i class="fa fa-clipboard"></i> Copy link to clipboard
 					</button>
 				</p>

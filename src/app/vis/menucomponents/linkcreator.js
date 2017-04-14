@@ -1,10 +1,5 @@
 angular.module('plotter.vis.menucomponents.linkcreator', 
-  ['ngClipboard', 'mgcrea.ngStrap.popover'])
-
-.config(function linkcreatorConfig(ngClipProvider) {
-    ngClipProvider.setPath("assets/ZeroClipboard.swf");
-})
-
+  ['ngclipboard', 'mgcrea.ngStrap.popover'])
 .controller('LinkCreatorController', function LinkCreatorController($scope, $q, $popover, $element, UrlHandler, NotifyService, $state, usSpinnerService) {
 
     $scope.stateLink = null;
@@ -41,6 +36,10 @@ angular.module('plotter.vis.menucomponents.linkcreator',
     $scope.popover.$scope.copied = function() {
       NotifyService.addTransient('Copied to clip board', 'Link copied to clip board', 'info');
       $scope.close();
+    };
+
+    $scope.popover.$scope.failed = function() {
+      NotifyService.addSticky('Failed to copy to clip board', 'Could not copy to clip board. Please do it manually.', 'error');
     };
 
     $scope.getStateLink = function() {
