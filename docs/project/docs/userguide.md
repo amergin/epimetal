@@ -40,8 +40,17 @@ Static datasets are preloaded from the database, and in the default view they ar
 
 The user can choose to operate on a specific subset of samples by first creating several filters. Then, this active sample set can be "frozen" as a dynamic dataset by naming it on the **Make a new dataset** field and then pressing the **Create dataset** button. The resulting dataset is then added to the list of datasets. Dynamically created datasets can be deleted as opposed to datasets originating from database which are static.
 
+#### Manage windows
+
+*The manage windows* section displays the windows created on the view's window canvas. You can toggle the visibility of any such windows, or choose to close all windows by type.
+
+![Example of manage windows section](img/manage_windows.png)
+
+*Example of manage windows section. In this example, a total of 12 figure windows are present. 3 box plots and a regression heatmap have been hidden by the user.*
+
+
 #### Filters
-The side menu displays a list of active filters if there are any. 
+The side menu displays a list of active filters if any are present. 
 
 ##### Explore and filter view
 On the [Explore and filter](userguide.md#explore-and-filter) view, histograms can be filtered by clicking and dragging over the figure.  These filters are only active on the current view and are removed when you navigate between views. If you wish to keep the active selection created with filters, you can freeze the sample selection by creating a new dataset as described in [datasets](userguide.md#datasets).
