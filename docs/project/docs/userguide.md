@@ -154,6 +154,12 @@ The SOM grid size can be changed. Three options are available:
 
 Changing the size will trigger a retrain of the SOM and recompute all the visible SOM planes.
 
+#### Pivot variable
+
+When a pivot variable is defined, a rank transformation is performed to the training samples prior to SOM training phase. Whether this pivot feature is enabled is defined during the [installation phase](installation.md#default-view-settings). That is, the installation settings will determine whether to use SOM training at all, and what is the default variable to. Even if the pivot variable is disabled in the installation phase, you can enable it on a session-by-session basis.
+
+** Note that that each of the samples used must have a value of this pivot variable that can be coerced to a number. Failing to meet this requirement will have unexpected consequences in the SOM results.**
+
 ##Regression analysis & associations
 
 In this view multiple linear regression analysis can be computed and its results can be viewed. Start by clicking on **Create a new regression view** button. 
