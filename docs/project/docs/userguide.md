@@ -107,7 +107,13 @@ Any duplicate samples (i.e. the circle filters intersect) are added only once. T
 
 ***Creating a dataset from circle filters, step 3**: the resulting dynamic dataset is now displayed on the dataset list. Lengthy names are truncated, as in this case.*
 
+Often times it may be useful to see which hexagons have been selected within a particular plane. In this case, click on the plane's cogwheel and select *Toggle hexagon highlighting*.
 
+![Displaying which hexagons have been selected by the circle filters](img/som_plane_cell_highlight.png)
+
+*Displaying which hexagons have been selected by circle filters.*
+
+The plane is then updated to show every hexagon which has been selected by the circle filters. The hexagon selection is indicated by coloring its border with the respective circle filter's color. In the case where two or more circle filters intersect and thereby select one or more of the same hexagons, the border color will only reflect one of those circle filters. Note that this is only a display limitation; naturally all of the intersecting circle filters will contain the samples included in those intersecting hexagons.
 
 # Views
 ##Explore and filter
