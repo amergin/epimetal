@@ -16,7 +16,7 @@ The application is divided to a side menu, a header bar, and a content section.
 ### Header bar
 The header bar contains links to three views of this application: [Explore and filter](userguide.md#explore-and-filter), [Self-Organizing Maps](userguide.md#self-organizing-maps) and [Regression analysis & associations](userguide.md#regression-analysis-associations).
 
-The right-hand side of the header bar contains a **Link this view** button. This button opens a menu to save the current state of the application that is currently displayed. The link provided on the opening pop-over can be used to share the contents to other collaborators. Please note that the link provided is not a permanent link and there is no guarantee that the link is functional after 30 days.
+The right-hand side of the header bar contains a **Link this view** button. This button opens a menu to save the current state of the application that is currently displayed. The link provided on the opening pop-over can be used to share the contents to other collaborators. Please note that the link provided is not a permanent link: there is no guarantee that the link is functional after 30 days.
 
 ![Link this view](img/create_link.png)
 
