@@ -29,7 +29,7 @@
     "core-estimator": "https://github.com/oftn/core-estimator.git",
     "SparkMD5": "~3.0.0",
     "ment.io": "~0.9.9",
-    "mathjs": "~2.4.0",
+    "mathjs": "~3.11.5",
     "regression-js": "~1.4.0",
     "ngclipboard": "^1.1.1",
 
