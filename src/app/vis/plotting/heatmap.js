@@ -162,7 +162,8 @@ angular.module('plotter.vis.plotting.heatmap',
 
       svg
       .style('vertical-align', 'top')
-      .style('padding-right', '10px');
+      .style('margin-left', '10px');
+      //.style('padding-right', '10px');
       var g = svg.append("g")
       .attr("transform", "translate(10,10)")
       .classed("colorbar", true);

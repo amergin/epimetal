@@ -162,25 +162,25 @@ angular.module('plotter.vis.plotting',
       return defer.promise;
     };
 
-    function getScale(size) {
-      var scale;
-      if( _.inRange(size, 0, 15) ) {
-        scale = 1;
-      } else if( _.inRange(size, 15, 50) ) {
-        scale = 1.25;
-      } else if( _.inRange(size, 50, 75) ) {
-        scale = 1.50;
-      } else {
-        scale = 1.75;
-      }
-      return {
-        x: Math.ceil(EXPLORE_DEFAULT_SIZE_X * scale),
-        y: Math.ceil(EXPLORE_DEFAULT_SIZE_Y * scale)
-      };
-    }
-
     this.drawHeatmap = function(config, windowHandler) {
-      var draw = function(cfg, windowHandler) {
+      function getScale(size) {
+        var scale;
+        if( _.inRange(size, 0, 25) ) {
+          scale = 1.4;
+        } else if( _.inRange(size, 25, 50) ) {
+          scale = 2.1;
+        } else if( _.inRange(size, 50, 75) ) {
+          scale = 2.4;
+        } else {
+          scale = 3;
+        }
+        return {
+          x: Math.ceil(EXPLORE_DEFAULT_SIZE_X * scale),
+          y: Math.ceil(EXPLORE_DEFAULT_SIZE_Y * scale)
+        };
+      }
+
+      function draw(cfg, windowHandler) {
         var gridWindow = windowHandler.add(),
         type = 'pl-heatmap';
 
@@ -192,7 +192,7 @@ angular.module('plotter.vis.plotting',
         .extra({ separate: cfg.separate, dataset: cfg.dataset });
 
         showAllSameTypeWindows(windowHandler, type);
-      };
+      }
 
       function dispError() {
           var title = 'Could not load variables\n',
