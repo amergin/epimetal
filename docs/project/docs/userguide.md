@@ -216,11 +216,14 @@ On *Explore and filter* view the histogram is drawn based on the active set of s
 
 *Example of histogram of a quantitative variable. A range filter is active.*
 
-On *Self-Organizing Maps* view the histogram sample data is sourced from the samples that are selected with circle filters. In addition, a third histogram is placed on background of the stacked figure to signify **all the samples** that have been used in the SOM computation.
+## SOM Distribution
+An extension of histograms explained in the previous section. On *Self-Organizing Maps* view the histogram sample data is sourced from the samples that are selected with circle filters. In addition, a third distribution - in grey - is placed on background of the stacked figure to signify all the samples that have been used in the training phase.
 
-![SOM histogram](img/som_histogram.png)
+For every active circle filter, a distribution with the corresponding color is displayed. A Gaussian kernel regression smoothing curve is displayed for every filter's distribution, with the parameter bandwidth = 0.10.
 
-*SOM histogram displaying four colors: three colors (orange, dark blue, green) indicating circle filters listed earlier, and a fourth color (light blue) showing all samples that have been included in the SOM training.*
+![SOM histogram](img/som_distributions_with_kde_lines.png)
+
+*The distribution of variable BMI (in gray). Two circle filters are active in this example and the distributions for their sample selections can be seen.*
 
 ## Scatter plot
 A scatter plot contains the dots originating from each active dataset. The top-right corner of the figure contains the regression line equations.
