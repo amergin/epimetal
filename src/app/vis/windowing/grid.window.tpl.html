@@ -12,9 +12,9 @@
 	
 </div>
 <div
-    class="grid-window"
-	ng-show="window.object.circleSpin()"
+    class="grid-window round-progress"
     round-progress
+	ng-show="window.object.circleSpin()"
     max="window.object.circleSpinMax()"
     current="window.object.circleSpinValue()"
     color="#45ccce"
@@ -26,7 +26,8 @@
     rounded="true"
     clockwise="true"
     iterations="100"
-    animation="easeInOutQuart">
+    animation="easeInOutQuart"
+    >
 </div>
 
 <div ng-hide="window.object.circleSpin()" replace-and-compile re-name="window.object.figure()" re-window="window.object"></div>
