@@ -111,9 +111,10 @@ module.exports = {
       'vendor/mathjs/dist/math.js',
       'vendor/regression-js/src/regression.js',
       'vendor/angularjs-slider/dist/rzslider.js',
+
       'vendor/ssci/distrib/ssci.js',
       'vendor/big.js/big.js',
-      // 'vendor/angular-workers/dist/angular-workers.js',
+
       'vendor/angular-svg-round-progressbar/build/roundProgress.js',
       // this is a hack to allow the subdirectories to be copied
       'build/assets/core-estimator/core-estimator.js'
