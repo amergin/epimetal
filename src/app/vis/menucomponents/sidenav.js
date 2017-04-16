@@ -1,5 +1,4 @@
-angular.module('plotter.vis.menucomponents.sidenav', 
-['rzModule'])
+angular.module('plotter.vis.menucomponents.sidenav', [])
 
 .service('SideNavService', function($injector) {
     var that = this,
