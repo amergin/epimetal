@@ -14,6 +14,3 @@ Plotter is an open-source project and its source code is freely available at the
 
 ## Issues
 If you feel you have discovered a bug within this software, please report it by opening an issue on the [Github project page](http://github.com/amergin/plotter/issues).
-
-## Discussion, suggestions, updates
-A user group is open for any discussion you may have about this application at TODO.
