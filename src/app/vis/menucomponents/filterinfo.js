@@ -201,7 +201,7 @@ angular.module('plotter.vis.menucomponents.filterinfo',
     }
 
     $scope.getRangeFilterMin = function(filter) {
-      return filter.chart().x().domain()[0] * 0.9;
+      return filter.chart().x().domain()[0] * 1.10;
     };
 
     $scope.getRangeFilterMax = function(filter) {
