@@ -74,7 +74,6 @@ module.exports = {
       'vendor/angular-gridster/src/angular-gridster.js',
       // routing
       'vendor/angular-ui-router/release/angular-ui-router.js',
-      // 'vendor/ui-router-extras/release/ct-ui-router-extras.js',
       'vendor/ui-router-extras/release/modular/ct-ui-router-extras.core.js',
       'vendor/ui-router-extras/release/modular/ct-ui-router-extras.dsr.js',
       'vendor/ui-router-extras/release/modular/ct-ui-router-extras.sticky.js',
@@ -96,7 +95,6 @@ module.exports = {
       'vendor/angular-spinner/dist/angular-spinner.js',
       // customize this for release:
       'vendor/angular-bootstrap/custom-build/ui-bootstrap-custom-tpls-2.5.0.js',
-      //ui-bootstrap-custom-tpls-0.13.0.js',
       'vendor/angular-growl-2/build/angular-growl.js',
       'vendor/SOM.js/src/services-compute-som.js',
       'vendor/SOM.js/src/utilities.som.js',
@@ -111,7 +109,6 @@ module.exports = {
       'vendor/ment.io/dist/mentio.js',
       'vendor/mathjs/dist/math.js',
       'vendor/regression-js/src/regression.js',
-      'vendor/angularjs-slider/dist/rzslider.js',
 
       'vendor/ssci/distrib/ssci.js',
       'vendor/big.js/big.js',
@@ -127,7 +124,6 @@ module.exports = {
       'vendor/angular-growl-2/build/angular-growl.min.css',
       'vendor/ngprogress/ngProgress.css',
       'vendor/angular-resizable/angular-resizable.min.css',
-      'vendor/angularjs-slider/src/rzslider.css',
       // preserve this order:
       'vendor/ng-tags-input/ng-tags-input.min.css',
       'vendor/ng-tags-input/ng-tags-input.bootstrap.min.css'
