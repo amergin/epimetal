@@ -543,7 +543,7 @@ angular.module('plotter.vis.plotting.heatmap',
           var filtered = _.startsWith(config.action, 'filter');
 
           if($scope.window.extra().separate) {
-            if(filtered) {
+            if(filtered || config.compute === true) {
               doRedraw();
             }
           } else {
