@@ -29,24 +29,24 @@ angular.module('services.dataset', ['services.notify',
     var deferred = $q.defer();
     var res = {};
     $http.get(DATASET_URL_FETCH_DATASETS, {
-        cache: true
-      })
-      .success(function(response) {
-        console.log("load dataset names");
-        _.each(response.result, function(nameObj) {
-          // create a dataset stub
-          var dset = new DatabaseDataset();
-          dset.name(nameObj.name)
-            .color(that.colorScale.useColor(nameObj.name))
-            .size(nameObj.size);
-          res[nameObj.name] = dset;
-        });
-        that.sets = angular.copy(res);
-        deferred.resolve(that.sets);
-      })
-      .error(function() {
-        deferred.reject('Error in fetching dataset list');
+      cache: true
+    })
+    .then(function succFn(response) {
+      console.log("load dataset names");
+      _.each(response.data.result, function(nameObj) {
+        // create a dataset stub
+        var dset = new DatabaseDataset();
+        dset.name(nameObj.name)
+          .color(that.colorScale.useColor(nameObj.name))
+          .size(nameObj.size);
+        res[nameObj.name] = dset;
       });
+      that.sets = angular.copy(res);
+      deferred.resolve(that.sets);
+    }, function errFn() {
+      deferred.reject('Error in fetching dataset list');
+    });
+
     return deferred.promise;
   });
 
@@ -226,20 +226,19 @@ angular.module('services.dataset', ['services.notify',
 
         var performPost = function(normalVars, config, defer, datasetName, processFn, callback, separated) {
           $http.post(DATASET_URL_FETCH_MULTIPLE_VARS, {
-              variables: Utils.pickVariableNames(normalVars),
-              dataset: datasetName
-            }, {
-              cache: true
-            })
-            .success(function(response) {
-              processFn(response.result.values);
-              var addedVars = _.chain(separated).values().flatten().value();
-              if(callback) { callback(); }
-              defer.resolve(priv.getResult(addedVars, config, true));
-            })
-            .error(function(response, status, headers, config) {
-              defer.reject(response);
-            });
+            variables: Utils.pickVariableNames(normalVars),
+            dataset: datasetName
+          }, {
+            cache: true
+          })
+          .then(function sucFn(response) {
+            processFn(response.data.result.values);
+            var addedVars = _.chain(separated).values().flatten().value();
+            if(callback) { callback(); }
+            defer.resolve(priv.getResult(addedVars, config, true));
+          }, function errFn(response) {
+            defer.reject(response);
+          });
         };
 
         function customVarCallback(vars) {

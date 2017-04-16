@@ -1,15 +1,15 @@
 <div class="modal-tabset-wrapper graph-selection-tabs">
-	<tabset class="modal-tabset">
-		<tab select="selectTab(0)">
-			<tab-heading>Histogram</tab-heading>
+	<uib-tabset class="modal-tabset">
+		<uib-tab select="selectTab(0)">
+			<uib-tab-heading>Histogram</uib-tab-heading>
 			<div class="multiple-variable-selection" re-selection="histogram.selection" re-mode="'multi'"></div>	
-		</tab>
-		<tab select="selectTab(1)">
-			<tab-heading>Scatterplot</tab-heading>
+		</uib-tab>
+		<uib-tab select="selectTab(1)">
+			<uib-tab-heading>Scatterplot</uib-tab-heading>
 			<div class="multiple-variable-selection" re-selection="scatterplot.selection" re-mode="'scatterplot'"></div>
-		</tab>
-		<tab select="selectTab(2)">
-			<tab-heading>Heatmap</tab-heading>
+		</uib-tab>
+		<uib-tab select="selectTab(2)">
+			<uib-tab-heading>Heatmap</uib-tab-heading>
 			
 			<div class="heatmap-options-container">
 
@@ -29,12 +29,12 @@
 
 			</div>
 			
-		</tab>
-		<tab select="selectTab(3)">
-			<tab-heading>Box plot</tab-heading>
+		</uib-tab>
+		<uib-tab select="selectTab(3)">
+			<uib-tab-heading>Box plot</uib-tab-heading>
 			<div class="multiple-variable-selection" re-selection="boxplot.selection" re-mode="'multi'"></div>	
 		</tab>
-	</tabset>
+	</uib-tabset>
 	<div class="row col-sm-12 text-center">
 		<div growl inline="true" limit-messages="1" reference="graphinfo" class="am-fade"></div>
 	</div>

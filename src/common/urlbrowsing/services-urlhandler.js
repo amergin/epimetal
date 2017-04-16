@@ -89,14 +89,13 @@ angular.module('services.urlhandler', [
 
       $log.info("Sending URL object: ", sendObject);
       $http.post(API_URL_STATE, sendObject)
-      .success(function(response) {
-        $log.debug('Sending state obj succeeded, got back: ', response.result);
-        defer.resolve(response.result);
-      })
-      .error(function(response) {
+      .then(function succFn(response) {
+        $log.debug('Sending state obj succeeded, got back: ', response.data.result);
+        defer.resolve(response.data.result);        
+      }, function errFn(response) {
         $log.error('Sending state obj FAILED, got back: ', response);
         defer.reject(response);
-      });      
+      });
     }
 
     var defer = $q.defer();
@@ -122,13 +121,12 @@ angular.module('services.urlhandler', [
       var getState = function(hash) {
         var defer = $q.defer();
         $http.get(API_URL_STATE + "/" + hash)
-          .success(function(response) {
-            $log.debug("Loading URL state from object: ", response.result);
-            defer.resolve(response.result);
-          })
-          .error(function(response) {
-            defer.reject(response);
-          });
+        .then(function succFn(response) {
+          $log.debug("Loading URL state from object: ", response.data.result);
+          defer.resolve(response.data.result);          
+        }, function errFn(response) {
+          defer.reject(response);
+        });
         return defer.promise;
       };
 

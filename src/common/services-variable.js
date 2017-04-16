@@ -36,31 +36,31 @@ angular.module('services.variable',
     initCustomGroup();
     $http.get(VARIABLE_GET_URL, {
         cache: true
-      })
-      .success(function(response) {
-        console.log("Load variable list");
-        var varInstance;
-        _.each(response.result, function(variable) {
-          varInstance = new PlDatabaseVariable()
-          .classed(variable.classed === true)
-          .description(variable.desc)
-          .group(variable.group)
-          .name(variable.name)
-          .nameOrder(variable.name_order)
-          .unit(variable.unit);
+    })
+    .then(function succFn(response) {
+      console.log("Load variable list");
+      var varInstance;
+      _.each(response.data.result, function(variable) {
+        varInstance = new PlDatabaseVariable()
+        .classed(variable.classed === true)
+        .description(variable.desc)
+        .group(variable.group)
+        .name(variable.name)
+        .nameOrder(variable.name_order)
+        .unit(variable.unit);
 
-          if(varInstance.classed()) {
-            _classedVariables[varInstance.name()] = varInstance;
-          }
-          _variableCache[varInstance.name()] = varInstance;
-          _groupCache[varInstance.group().order] = varInstance.group();
-        });
-        defer.resolve( _.values(_variableCache) );
-      })
-      .error(function() {
-        NotifyService.addSticky('Error', 'Something went wrong while fetching variables. Please reload the page.', 'error');
-        defer.reject('Something went wrong while fetching variables. Please reload the page');
+        if(varInstance.classed()) {
+          _classedVariables[varInstance.name()] = varInstance;
+        }
+        _variableCache[varInstance.name()] = varInstance;
+        _groupCache[varInstance.group().order] = varInstance.group();
       });
+      defer.resolve( _.values(_variableCache) );
+    }, function errFn() {
+      NotifyService.addSticky('Error', 'Something went wrong while fetching variables. Please reload the page.', 'error');
+      defer.reject('Something went wrong while fetching variables. Please reload the page');
+    });
+
     return defer.promise;
   });
 

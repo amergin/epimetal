@@ -70,7 +70,7 @@ angular.module('services.notify', [
     /* THESE ARE FOR MODAL WINDOWS */
 
     addClosableModal: function(templateUrl, scope, config) {
-      var $modal = $injector.get('$modal');
+      var $modal = $injector.get('$uibModal');
       var $q = $injector.get('$q');
       var deferred = $q.defer();
 

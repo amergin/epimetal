@@ -17,17 +17,24 @@ angular.module('plotter.vis.windowing', ['services.window',
   .constant('EXPORT_FILENAME_MAX_LENGTH', 80)
   .constant('GRID_WINDOW_PADDING', 35)
 
-.directive('plGridWindow', function plGridWindow() {
+.directive('plGridWindow', function plGridWindow($parse) {
   return {
     restrict: 'A',
     controller: 'PlGridWindowCtrl',
-    scope: {
+    /*scope: {
       'window': '=plWindow'
-    },
+    },*/
     templateUrl: 'vis/windowing/grid.window.tpl.html',
-    link: function(scope, element, attrs) {
-      scope.element = element;
+    link: {
+      post: function (scope, element, attrs) {
+        scope.window = $parse(attrs.plWindow)(scope);
+        scope.element = element;
+      }
     }
+
+    /*link: function(scope, element, attrs) {
+      scope.element = element;
+    }*/
   };
 })
 

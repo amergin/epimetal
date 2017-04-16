@@ -1,7 +1,7 @@
 <div class="modal-tabset-wrapper">
-	<tabset class="modal-tabset">
-		<tab select="selectTab('profiles')" >
-			<tab-heading>Profiles</tab-heading>
+	<uib-tabset class="modal-tabset">
+		<uib-tab select="selectTab('profiles')" >
+			<uib-tab-heading>Profiles</uib-tab-heading>
 			<div class="row som-profiles-container">
 				<div class="col-sm-8" ng-repeat="profile in selection.profiles track by $index" style="margin-bottom: 20px;">
 					<div class="input-group">
@@ -22,20 +22,20 @@
 				</div>
 			</div>
 
-		</tab>
-		<tab select="selectTab('distributions')">
-			<tab-heading>Distributions</tab-heading>
+		</uib-tab>
+		<uib-tab select="selectTab('distributions')">
+			<uib-tab-heading>Distributions</uib-tab-heading>
 			<div class="multiple-variable-selection" re-selection="selection.distributions" re-mode="'multi'"></div>
-		</tab>
-		<tab select="selectTab('planes')">
-			<tab-heading>SOM planes</tab-heading>
+		</uib-tab>
+		<uib-tab select="selectTab('planes')">
+			<uib-tab-heading>SOM planes</uib-tab-heading>
 			<div class="multiple-variable-selection" re-selection="selection.planes" re-mode="'multi'"></div>
-		</tab>
-		<tab select="selectTab('boxplots')">
-			<tab-heading>Box plot</tab-heading>
+		</uib-tab>
+		<uib-tab select="selectTab('boxplots')">
+			<uib-tab-heading>Box plot</uib-tab-heading>
 			<div class="multiple-variable-selection" re-selection="selection.boxplots" re-mode="'multi'"></div>
-		</tab>
-	</tabset>
+		</uib-tab>
+	</uib-tabset>
 	<div class="row col-sm-12 text-center">
 		<div growl inline="true" limit-messages="1" reference="sominfo" class="am-fade"></div>
 	</div>

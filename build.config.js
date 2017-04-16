@@ -95,7 +95,8 @@ module.exports = {
       'vendor/spin.js/spin.js',
       'vendor/angular-spinner/dist/angular-spinner.js',
       // customize this for release:
-      'vendor/angular-bootstrap/custom-build/ui-bootstrap-custom-tpls-0.13.0.js',
+      'vendor/angular-bootstrap/custom-build/ui-bootstrap-custom-tpls-2.5.0.js',
+      //ui-bootstrap-custom-tpls-0.13.0.js',
       'vendor/angular-growl-2/build/angular-growl.js',
       'vendor/SOM.js/src/services-compute-som.js',
       'vendor/SOM.js/src/utilities.som.js',

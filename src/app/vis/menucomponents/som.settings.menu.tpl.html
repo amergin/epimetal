@@ -1,11 +1,11 @@
 <div class="modal-tabset-wrapper">
-	<tabset class="modal-tabset">
-		<tab select="selectTab(0)">
-			<tab-heading>Input variables</tab-heading>
+	<uib-tabset class="modal-tabset">
+		<uib-tab select="selectTab(0)">
+			<uib-tab-heading>Input variables</uib-tab-heading>
 			<div class="multiple-variable-selection" re-selection="selection" re-mode="'multi'"></div>
-		</tab>
-		<tab select="selectTab(1)">
-			<tab-heading>SOM Size</tab-heading>
+		</uib-tab>
+		<uib-tab select="selectTab(1)">
+			<uib-tab-heading>SOM Size</uib-tab-heading>
 			<br/><br/>
 			<div class="col-sm-6">
 			    <div ng-repeat="size in sizes track by $index" class="input-group">
@@ -18,9 +18,9 @@
 			      </div>
 			    </div>
 			</div>
-		</tab>
-		<tab select="selectTab(2)">
-			<tab-heading>Pivot variable</tab-heading>
+		</uib-tab>
+		<uib-tab select="selectTab(2)">
+			<uib-tab-heading>Pivot variable</uib-tab-heading>
 			<br/>
 			<div class="col-sm-offset-2 col-sm-8 well well-sm v-align">
 				<p>Please note that the pivot variable cannot contain any values that cannot be coerced into numbers.</p>
@@ -35,8 +35,8 @@
 				</div>
 			</div>
 			<div class="multiple-variable-selection" re-selection="pivot.variable" re-mode="'single'"></div>
-		</tab>
-	</tabset>
+		</uib-tab>
+	</uib-tabset>
 	<div class="row col-sm-12 text-center">
 		<div growl inline="true" limit-messages="1" reference="sominfo" class="am-fade"></div>
 	</div>
