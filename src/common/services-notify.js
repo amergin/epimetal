@@ -1,7 +1,7 @@
 angular.module('services.notify', [
   'mgcrea.ngStrap.alert',
   'mgcrea.ngStrap.popover',
-  'ui.bootstrap',
+  'ui.bootstrap', // don't change this to submodule!
   'angular-growl',
   'ext.lodash'
 ])
