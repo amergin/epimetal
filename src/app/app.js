@@ -71,7 +71,7 @@ angular.module('plotter', [
       });
 
 })
-.controller('AppCtrl', function AppCtrl($scope, $location, $templateCache, CompatibilityService, NotifyService, usSpinnerService) {
+.controller('AppCtrl', function AppCtrl($scope, $location, CompatibilityService, NotifyService, usSpinnerService) {
 
     $scope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
       if (toState.resolve) {

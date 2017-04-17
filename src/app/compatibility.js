@@ -1,8 +1,4 @@
-angular.module('plotter.compatibility', ['services.compatibility', 
-  'ngSanitize', 
-  'mgcrea.ngStrap.alert', 
-  'mgcrea.ngStrap.popover', 
-  'mgcrea.ngStrap.modal'])
+angular.module('plotter.compatibility', ['services.compatibility'])
 
 .directive('compatibilityInform', function($rootScope) {
   return {
@@ -13,19 +9,6 @@ angular.module('plotter.compatibility', ['services.compatibility',
   };
 })
 
-.controller('CompatibilityController', function CompatibilityController($scope, $modal, CompatibilityService) {
-  console.log("compatibility");
-
+.controller('CompatibilityController', function CompatibilityController($scope, CompatibilityService) {
   $scope.features = CompatibilityService.getFeatures();
-
-  var modal = $modal({
-    scope: $scope,
-    contentTemplate: 'compatibility-inform.tpl.html',
-    show: true,
-    backdrop: 'static',
-    keyboard: false,
-    placement: 'center',
-    animation: 'am-fade-and-scale'
-  });
-
 });

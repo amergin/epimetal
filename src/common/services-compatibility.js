@@ -1,30 +1,52 @@
 angular.module('services.compatibility', [
-  'ext.lodash'
+  'ext.lodash',
+  'ui.bootstrap' // don't change this to submodule!
 ])
 
-.service('CompatibilityService', function CompatibilityService($q, $timeout, $modal, $rootScope, _) {
+.constant('COMPATIBILITY_TEMPLATE', 'compatibility-inform.tpl.html')
+
+.service('CompatibilityService', function CompatibilityService($q, $timeout, $uibModal, usSpinnerService, $templateCache, $rootScope, 
+  COMPATIBILITY_TEMPLATE, 
+  _) {
 
   var that = this;
 
   this.features = {
-    websockets: {
-      name: 'Websockets',
+    webworkers: {
+      name: 'Web workers, transferable objects, creation from blobs',
       supported: function() {
-        return Modernizr.websockets;
-      }
+        return Modernizr.webworkers && Modernizr.transferables && 
+        (Modernizr.blobconstructor || Modernizr.bloburls);
+     }
+    },
+
+    datauris: {
+      name: 'Export figures (data URIs, btoa)',
+      supported: function() {
+        return  Modernizr.datauri.over32kb && Modernizr.atobbtoa;
+     }
     },
 
     svg: {
       name: 'Scalable Vector Graphics (SVG)',
       supported: function() {
-        return Modernizr.svg && Modernizr.svgclippaths && Modernizr.inlinesvg;
+        return Modernizr.svg && Modernizr.svgclippaths && 
+        Modernizr.inlinesvg && Modernizr.svgfilters;
       }
     },
 
     canvas: {
-      name: 'HTML5 Canvas',
+      name: 'HTML5 Canvas and Canvas export',
       supported: function() {
-        return Modernizr.canvas && Modernizr.canvastext;
+        return Modernizr.canvas && Modernizr.canvastext && 
+        Modernizr.todataurlpng && Modernizr.todataurljpeg;
+      }
+    },
+
+    flexbox: {
+      name: 'Flexbox (menus)',
+      supported: function() {
+        return Modernizr.flexbox && Modernizr.flexwrap;
       }
     },
 
@@ -34,7 +56,7 @@ angular.module('services.compatibility', [
         var modernBrowser;
         // Detecting IE
         var oldIE;
-        if ($('html').is('.ie6, .ie7, .ie8, .ie9')) {
+        if ($('html').is('.ie6, .ie7, .ie8, .ie9, .ie10')) {
           modernBrowser = false;
         } else {
           modernBrowser = true;
@@ -64,13 +86,14 @@ angular.module('services.compatibility', [
       that.scope = $rootScope.$new(true);
       that.scope.features = that.features;
       that.scope.close = function() {
-        that.modal.hide();
+        that.modal.close();
+        usSpinnerService.spin('main');
         defer.resolve();
       };
 
-      that.modal = $modal({
-        scope: that.scope, //$scope,
-        contentTemplate: 'compatibility-inform.tpl.html',
+      that.modal = $uibModal.open({
+        scope: that.scope,
+        templateUrl: COMPATIBILITY_TEMPLATE,
         show: true,
         backdrop: 'static',
         keyboard: false,
@@ -89,6 +112,7 @@ angular.module('services.compatibility', [
       });
 
       if (!_compatible) {
+        usSpinnerService.stop('main');
         createModal();
       } else {
         defer.resolve('Compatible');
