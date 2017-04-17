@@ -1,7 +1,6 @@
 angular.module('plotter.vis.som', [
   'plotter.vis.plotting',
   'plotter.vis.som.circle-filter-control',
-  'plotter.vis.som.trainvariables',
   'services.dataset',
   'services.notify',
   'services.som',
