@@ -205,7 +205,7 @@ angular.module('plotter.vis.menucomponents.filterinfo',
       multiplier;
       if(lower >= 0) { multiplier = 0.9; }
       else { multiplier = 1.1; }
-      return lower * multiplier;
+      return +rangePrecisionFormat(lower * multiplier);
     };
 
     $scope.getRangeFilterMax = function(filter) {
@@ -213,7 +213,7 @@ angular.module('plotter.vis.menucomponents.filterinfo',
       multiplier;
       if(upper >= 0) { multiplier = 1.1; }
       else { multiplier = 0.9; }
-      return upper * multiplier;
+      return +rangePrecisionFormat(upper * multiplier);
     };
 
     $scope.initRangeFilter = function(filter, location) {
@@ -227,34 +227,44 @@ angular.module('plotter.vis.menucomponents.filterinfo',
       $log.info("setting", filter, location);
       var value = getRangeFilterValue(filter)[location],
       ind = getRangeLocationInd(location);
-      if(isNaN(value) || !isFinite(value)) {
+      if( !_.isNumber(value) || !isFinite(value)) {
         // restore old value to field
         $scope.rangeFilterLookup[filter.variable().id][location] = 
         +rangePrecisionFormat(filter.payload()[ind]);
         return;
       }
       else {
-        // update the filter and redraw with new info
+        // the value is a number, let's round it
+        value = +rangePrecisionFormat(value);
 
-        var lower, upper, payloadFilter, chart;
-        if(location == 'lower') {
-          upper = filter.payload()[1];
-          lower = value;
-        } else if(location == 'upper') {
-          lower = filter.payload()[0];
-          upper = value;
+        // look up the chart value
+        var filterBoundValue = filter.payload()[ind];
+
+        // is the chart value different, i.e. is the value significantly
+        // differing after rounding so it's necessary to change the val
+        if(filterBoundValue !== value) {
+          var lower, upper, payloadFilter, chart;
+          if(location == 'lower') {
+            upper = filter.payload()[1];
+            lower = value;
+          } else if(location == 'upper') {
+            lower = filter.payload()[0];
+            upper = value;
+          }
+
+          payloadFilter = new dc.filters.RangedFilter(lower, upper);
+          chart = filter.chart();
+          chart.filter(null);
+          chart.filter(payloadFilter);
+          $injector.get('WindowHandler').redrawVisible();
+
+          $log.debug('Filter', location, ' value was changed to ', payloadFilter[ind]);
+        } else {
+          $scope.rangeFilterLookup[filter.variable().id][location] = 
+          +rangePrecisionFormat(filter.payload()[ind]);
+
+          $log.debug('Filter ', location, " has not changed, old value is retained.");
         }
-
-        payloadFilter = new dc.filters.RangedFilter(lower, upper);
-        chart = filter.chart();
-        chart.filter(null);
-        chart.filter(payloadFilter);
-        $injector.get('WindowHandler').redrawVisible();
-
-
-        /*filter.payload()[ind] = +rangePrecisionFormat(value);
-        filter.chart().filter(filter.payload());
-        $injector.get('WindowHandler').redrawVisible(); */
       }
     };
 

@@ -16,12 +16,18 @@
                 </label>
               </span>
               <span ng-switch-when="range">
-                <input type="number" class="pl-range-filter-input" ng-init="initRangeFilter(filter, 'lower')" ng-model="rangeFilterLookup[filter.variable().id].lower" ng-change="setRangeFilter(filter, 'lower')" step="0.01" ng-min="getRangeFilterMin(filter)" ng-max="getRangeFilterMax(filter)">
+                <input type="number" class="pl-range-filter-input" ng-init="initRangeFilter(filter, 'lower')" ng-model="rangeFilterLookup[filter.variable().id].lower"
+                ng-min="getRangeFilterMin(filter)" ng-max="getRangeFilterMax(filter)"
+                ng-change="setRangeFilter(filter, 'lower')"
+                >
                 <span class="spaced">&lt;</span>
                 <strong title={{filter.variable().labelName()}}>{{ truncateMiddle( filter.variable().labelName(), 8 ) }}</strong>
                 <span class="spaced">&lt;</span>
-                <input type="number" class="pl-range-filter-input pull-right" ng-init="initRangeFilter(filter, 'upper')" ng-model="rangeFilterLookup[filter.variable().id].upper" ng-change="setRangeFilter(filter, 'upper')" step="0.01" ng-min="getRangeFilterMin(filter)" ng-max="getRangeFilterMax(filter)">
-                <!--{{formatNumber(filter.payload()[1])}} -->
+
+                <input type="number" class="pl-range-filter-input" ng-init="initRangeFilter(filter, 'upper')" ng-model="rangeFilterLookup[filter.variable().id].upper"
+                ng-min="getRangeFilterMin(filter)" ng-max="getRangeFilterMax(filter)"
+                ng-change="setRangeFilter(filter, 'upper')"
+                >
               </span>
               <span ng-switch-when="classed">
                 <strong>{{filter.variable().labelName()}}</strong>
