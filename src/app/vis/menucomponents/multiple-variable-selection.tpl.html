@@ -63,7 +63,7 @@
 </div>
 
 
-<div ng-switch="inputIsDefined()" class="multiple-variable-selection-columns-container">
+<div ng-switch="inputIsDefined()" ng-style="inputIsDefined() && { 'overflow-y': 'scroll' }" class="multiple-variable-selection-columns-container">
 
 	<!-- Show table when text in input field -->
 	<div ng-switch-when="true" class="am-fade search-results-wrapper">

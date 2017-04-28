@@ -6,6 +6,9 @@
     </ng-include>
 </div>
 <div class="modal-footer">
+  <div class="row col-sm-12 text-center">
+    <div growl inline="true" limit-messages="1" reference="graphinfo" class="am-fade"></div>
+  </div>
     <button ng-click="submit.initial()" ng-disabled="!canSubmit.initial()" class="btn btn-primary">
     {{config.actions.submit}}
     </button>
