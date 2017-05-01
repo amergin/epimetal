@@ -5,63 +5,99 @@ angular.module('services.compatibility', [
 
 .constant('COMPATIBILITY_TEMPLATE', 'compatibility-inform.tpl.html')
 
-.service('CompatibilityService', function CompatibilityService($q, $timeout, $uibModal, usSpinnerService, $templateCache, $rootScope, 
+.service('CompatibilityService', function CompatibilityService($window, $q, $timeout, $uibModal, usSpinnerService, $templateCache, $rootScope, 
   COMPATIBILITY_TEMPLATE, 
   _) {
 
   var that = this;
 
+  //Modernizr.on('datauri', function(result) {
+  //  _datauri = result;
+  //});
+
   this.features = {
     webworkers: {
       name: 'Web workers, transferable objects, creation from blobs',
       supported: function() {
-        return Modernizr.webworkers && Modernizr.transferables && 
-        (Modernizr.blobconstructor || Modernizr.bloburls);
+        try {
+          return $window.Modernizr.webworkers && $window.Modernizr.transferables && 
+          ($window.Modernizr.blobconstructor || $window.Modernizr.bloburls);
+        }
+        catch(err) {
+          return false;
+        }
      }
     },
 
     datauris: {
-      name: 'Export figures (data URIs, btoa)',
+      name: 'Export figures',
       supported: function() {
-        return  Modernizr.datauri.over32kb && Modernizr.atobbtoa;
+        try {
+          //return  $window.Modernizr.datauri && $window.Modernizr.datauri.over32kb &&
+          //return _datauri && 
+          return $window.Modernizr.atobbtoa;
+        }
+        catch(err) {
+          return false;
+        }
      }
     },
 
     svg: {
       name: 'Scalable Vector Graphics (SVG)',
       supported: function() {
-        return Modernizr.svg && Modernizr.svgclippaths && 
-        Modernizr.inlinesvg && Modernizr.svgfilters;
+        try {
+          return $window.Modernizr.svg && $window.Modernizr.svgclippaths && 
+          $window.Modernizr.inlinesvg && $window.Modernizr.svgfilters;
+        }
+        catch(err) {
+          return false;
+        }
       }
     },
 
     canvas: {
       name: 'HTML5 Canvas and Canvas export',
       supported: function() {
-        return Modernizr.canvas && Modernizr.canvastext && 
-        Modernizr.todataurlpng && Modernizr.todataurljpeg;
+        try {
+          return $window.Modernizr.canvas && $window.Modernizr.canvastext && 
+          $window.Modernizr.todataurlpng && $window.Modernizr.todataurljpeg;
+        }
+        catch(err) {
+          return false;
+        }
       }
     },
 
     flexbox: {
       name: 'Flexbox (menus)',
       supported: function() {
-        return Modernizr.flexbox && Modernizr.flexwrap;
+        try {
+          return $window.Modernizr.flexbox && $window.Modernizr.flexwrap;
+        }
+        catch(err) {
+          return false;
+        }
       }
     },
 
     browser: {
       name: 'Modern Web browser (Detect outdated Internet Explorer versions)',
       supported: function() {
-        var modernBrowser;
-        // Detecting IE
-        var oldIE;
-        if ($('html').is('.ie6, .ie7, .ie8, .ie9, .ie10')) {
-          modernBrowser = false;
-        } else {
-          modernBrowser = true;
+        try {
+          var modernBrowser;
+          // Detecting IE
+          var oldIE;
+          if ($('html').is('.ie6, .ie7, .ie8, .ie9, .ie10')) {
+            modernBrowser = false;
+          } else {
+            modernBrowser = true;
+          }
+          return modernBrowser;
         }
-        return modernBrowser;
+        catch(err) {
+          return false;
+        }
       }
     }
 
