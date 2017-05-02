@@ -1,0 +1,75 @@
+-----------------------------------------------------------------------------
+                        The MIT License (MIT)
+        applies to:
+        - jQuery, jQuery resize, Copyright (c) JS Foundation and other contributors
+        - AngularJS, Copyright (c) 2010-2017 Google, Inc.
+        - angular-animate, Copyright (c) 2016 Angular
+        - angular-gridster, Copyright (c) 2013 Manifest Web Design
+        - AngularUI Router, Copyright (c) 2013-2015 The AngularUI Team, Karsten Sperling
+        - UI-Router-Extras, Copyright (c) 2015 Chris Thielen
+        - d3-tip, Copyright (c) 2013 Justin Palmer
+        - Angular-strap, Copyright (c) 2012-2014 Olivier Louvignes
+        - Modernizr, Copyright (c) 2009-2017
+        - Spin.js, Copyright (c) 2011-2015 Felix Gnass
+        - Angular-spinner, Copyright (c) Uri Shaked and contributors
+        - UI Bootstrap, Copyright (c) 2012-2017 the AngularUI Team
+        - angular-growl-2, Copyright (c) 2013 Marco Rinck
+        - clipboard.js, Copyright (c) Zeno Rocha
+        - ngclipboard, Copyright (c) 2015 Sachin N
+        - ngTagsInput, Copyright (c) 2013 - 2016,  Michael Benford and ngTagsInput contributors
+        - SparkMD5, Copyright (C) 2015 André Cruz
+        - ment.io, Copyright (c) 2014 Jeff Collins
+        - regression.js, Copyright (c) Tom Alexander
+        - AngularMotion, Copyright (c) 2014 Olivier Louvignes
+        - BootstrapAdditions, Copyright (c) 2014 Olivier Louvignes
+        - SOM.js, Copyright (c) 2015 Antti Kangas
+        - ngProgress, Copyright (c) 2013 Victor Bjelkholm,
+        - big.js, Copyright (c) 2012 Michael Mclaughlin
+        - Angular SVG round progressbar, Copyright (c) 2014 crisbeto
+        - Core estimator, Copyright (c) 2016 OFTN Inc.
+        - bootstrap-chosen, Copyright (c) alxlit
+        - Bootstrap, Copyright (c) 2011-2017 the Bootstrap Authors and Twitter, Inc.
+        - MongoEngine, Copyright (c) 2009 authors and contributors
+
+-----------------------------------------------------------------------------
+                        SIL OFL 1.1
+        applies to:
+         - Font Awesome, Copyright (c) Dave Gandy
+
+-----------------------------------------------------------------------------
+                         GNU Affero General Public License (AGPL)
+        applies to:
+         - MonboDB, Copyright (c) MongoDB, Inc.
+
+-----------------------------------------------------------------------------
+
+                        The "Artistic License"
+        applies to:
+         - statistics-distributions, Copyright (c) 2008 Ben Tilly. Modified by repackaging.
+
+-----------------------------------------------------------------------------
+                        Revised BSD License
+        applies to:
+         - Data-Driven Documents (D3), Copyright 2010-2017 Mike Bostock
+         - d3-hexbin, Copyright Mike Bostock, 2012-2016
+         - Flask, Copyright (c) 2015 by Armin Ronacher and contributors
+
+-----------------------------------------------------------------------------
+                        GNU General Public License v3.0
+        applies to:
+         - ssci, Copyright (c) Simon West
+
+-----------------------------------------------------------------------------
+                        Apache License, Version 2.0
+        applies to:
+         - Crossfilter, Copyright 2012 Square, Inc. Modifications made.
+         - dc.js, Copyright 2012-2016 Nick Zhu & the dc.js Developers. Modifications made.
+         - Math.js, Copyright (C) 2013-2017 Jos de Jong
+         - Docker, Copyright (c) 2017 Docker Inc.
+
+-----------------------------------------------------------------------------
+                        Creative Commons Zero 1.0
+        applies to:
+         - Lodash, Copyright JS Foundation and other contributors
+         
+-----------------------------------------------------------------------------
