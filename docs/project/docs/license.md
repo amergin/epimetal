@@ -238,6 +238,13 @@ This software utilizes several 3rd party libraries and software.
 * [BSD 2-clause](https://github.com/mkdocs/mkdocs-bootswatch/blob/master/LICENSE)
 
 
+**MkDocs**
+
+*Copyright (c) 2014, Tom Christie
+* [https://github.com/mkdocs/mkdocs/](https://github.com/mkdocs/mkdocs/)
+* [BSD 2-clause](https://github.com/mkdocs/mkdocs/blob/master/LICENSE)
+
+
 **Crossfilter**
 
 * Copyright 2012 Square, Inc. 
