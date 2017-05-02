@@ -66,6 +66,7 @@ module.exports = {
       'vendor/jquery/dist/jquery.js',
       'vendor/javascript-detect-element-resize/jquery.resize.js',
       'vendor/angular/angular.js',
+      'vendor/angular-sanitize/angular-sanitize.js',
       // animation framework
       'vendor/angular-animate/angular-animate.js',
       // windowing

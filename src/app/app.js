@@ -9,7 +9,8 @@ angular.module('plotter', [
   'ngAnimate',
   'angularSpinner',
   'ext.lodash',
-  'ext.dc'
+  'ext.dc',
+  'ngSanitize'
   ])
 
 .constant('constants', {
