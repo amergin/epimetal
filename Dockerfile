@@ -42,7 +42,7 @@ RUN chown -R www-data:www-data /plotter
 
 # compile the documentation
 RUN pip install mkdocs
-RUN pip install mkdocs-bootswatch
+RUN pip install mkdocs-material
 WORKDIR /plotter/docs/project
 RUN mkdocs build
 
