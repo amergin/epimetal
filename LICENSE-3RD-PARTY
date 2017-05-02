@@ -1,4 +1,5 @@
 -----------------------------------------------------------------------------
+
                         The MIT License (MIT)
         applies to:
         - jQuery, jQuery resize, Copyright (c) JS Foundation and other contributors
@@ -32,11 +33,13 @@
         - MongoEngine, Copyright (c) 2009 authors and contributors
 
 -----------------------------------------------------------------------------
+
                         SIL OFL 1.1
         applies to:
          - Font Awesome, Copyright (c) Dave Gandy
 
 -----------------------------------------------------------------------------
+
                          GNU Affero General Public License (AGPL)
         applies to:
          - MonboDB, Copyright (c) MongoDB, Inc.
@@ -48,6 +51,7 @@
          - statistics-distributions, Copyright (c) 2008 Ben Tilly. Modified by repackaging.
 
 -----------------------------------------------------------------------------
+
                         Revised BSD License
         applies to:
          - Data-Driven Documents (D3), Copyright 2010-2017 Mike Bostock
@@ -55,11 +59,20 @@
          - Flask, Copyright (c) 2015 by Armin Ronacher and contributors
 
 -----------------------------------------------------------------------------
+
                         GNU General Public License v3.0
         applies to:
          - ssci, Copyright (c) Simon West
 
 -----------------------------------------------------------------------------
+
+                        BSD 2-clause "Simplified" License
+        applies to:
+         - MkDocs Spacelab Bootstrap Theme, Copyright (c) 2015, Dougal Matthews
+         - MkDocs, Copyright (c) 2014, Tom Christie
+
+-----------------------------------------------------------------------------
+
                         Apache License, Version 2.0
         applies to:
          - Crossfilter, Copyright 2012 Square, Inc. Modifications made.
@@ -68,8 +81,9 @@
          - Docker, Copyright (c) 2017 Docker Inc.
 
 -----------------------------------------------------------------------------
+
                         Creative Commons Zero 1.0
         applies to:
          - Lodash, Copyright JS Foundation and other contributors
-         
+
 -----------------------------------------------------------------------------
