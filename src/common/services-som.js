@@ -21,7 +21,7 @@ angular.module('services.som', [
 .constant('SOM_PLANE_GET_URL', '/API/som/plane/<%= somHash %>/<%= variable %>')
 .constant('SOM_PLANE_POST_URL', '/API/som/plane')
 
-.run(function(SOMComputeService, coreEstimator, SOM_DEFAULT_THREADS, $log) {
+.run(function runSomService(SOMComputeService, coreEstimator, SOM_DEFAULT_THREADS, $log) {
   var _availableCores;
 
   coreEstimator.get().then(function succFn(cores) {

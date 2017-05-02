@@ -66,8 +66,6 @@ module.exports = {
       'vendor/jquery/dist/jquery.js',
       'vendor/javascript-detect-element-resize/jquery.resize.js',
       'vendor/angular/angular.js',
-      // html sanitizer for notify service
-      'vendor/angular-sanitize/angular-sanitize.js',
       // animation framework
       'vendor/angular-animate/angular-animate.js',
       // windowing
@@ -77,7 +75,6 @@ module.exports = {
       'vendor/ui-router-extras/release/modular/ct-ui-router-extras.core.js',
       'vendor/ui-router-extras/release/modular/ct-ui-router-extras.dsr.js',
       'vendor/ui-router-extras/release/modular/ct-ui-router-extras.sticky.js',
-      'vendor/angular-ui-utils/modules/route/route.js',
       'vendor/crossfilter/patched/crossfilter.js',
       'vendor/d3/d3.js',
       'vendor/dcjs/dc-develop.js',
@@ -90,7 +87,7 @@ module.exports = {
       // SOM figures
       'vendor/d3-plugins/hexbin/hexbin.js',
       // compatibility-service
-      'vendor/modernizr/modernizr.custom.min.js',
+      'vendor/modernizr/modernizr-custom.min.js',
       'vendor/spin.js/spin.js',
       'vendor/angular-spinner/dist/angular-spinner.js',
       // customize this for release:
@@ -103,7 +100,6 @@ module.exports = {
       'vendor/clipboard/dist/clipboard.js',
       'vendor/ngclipboard/dist/ngclipboard.js',
 
-      'vendor/angular-resizable/angular-resizable.min.js',
       'vendor/ng-tags-input/ng-tags-input.js',
       'vendor/SparkMD5/spark-md5.js',
       'vendor/ment.io/dist/mentio.js',
@@ -123,7 +119,6 @@ module.exports = {
       'vendor/bootstrap-additions/dist/bootstrap-additions.min.css',
       'vendor/angular-growl-2/build/angular-growl.min.css',
       'vendor/ngprogress/ngProgress.css',
-      'vendor/angular-resizable/angular-resizable.min.css',
       // preserve this order:
       'vendor/ng-tags-input/ng-tags-input.min.css',
       'vendor/ng-tags-input/ng-tags-input.bootstrap.min.css'
@@ -135,9 +130,9 @@ module.exports = {
       'src/common/utilities.regression.js',
       'vendor/SOM.js/src/utilities.som.js',
       'vendor/lodash/lodash.min.js',
-      'vendor/numericjs/lib/numeric.min.js',
       'vendor/mathjs/dist/math.min.js',
-      'vendor/statistics-distributions-js-packaged/statistics-distributions-packaged.js'
+      'vendor/statistics-distributions-js-packaged/statistics-distributions-packaged.js',
+      'src/assets/images/*'
     ]
   },
 };

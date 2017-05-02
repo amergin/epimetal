@@ -6,7 +6,6 @@ angular.module('plotter', [
   'ui.router',
   'services.compatibility',
   'plotter.compatibility',
-  'ngSanitize', 
   'ngAnimate',
   'angularSpinner',
   'ext.lodash',

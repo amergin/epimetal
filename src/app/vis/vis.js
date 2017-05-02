@@ -17,7 +17,6 @@ angular.module('plotter.vis', [
   'services.notify',
   'services.task-handler',
   'progressBarInterceptor',
-  'angularResizable',
   'ext.lodash'
 ])
 
