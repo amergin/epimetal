@@ -31,6 +31,7 @@
         - bootstrap-chosen, Copyright (c) alxlit
         - Bootstrap, Copyright (c) 2011-2017 the Bootstrap Authors and Twitter, Inc.
         - MongoEngine, Copyright (c) 2009 authors and contributors
+        - Material for MkDocs, Copyright (c) 2016-2017 Martin Donath
 
         Permission is hereby granted, free of charge, to any person obtaining a copy
         of this software and associated documentation files (the "Software"), to deal
@@ -1653,7 +1654,6 @@
 
                         BSD 2-clause "Simplified" License
         applies to:
-         - MkDocs Spacelab Bootstrap Theme, Copyright (c) 2015, Dougal Matthews
          - MkDocs, Copyright (c) 2014, Tom Christie
 
         Redistribution and use in source and binary forms, with or

@@ -231,16 +231,16 @@ This software utilizes several 3rd party libraries and software.
 * [GNU General Public License v3.0](https://github.com/muonsw/ssci/blob/master/LICENSE)
 
 
-**MkDocs Spacelab Bootstrap Theme**
+**Material for MkDocs**
 
-* Copyright (c) 2015, Dougal Matthews
-* [http://mkdocs.github.io/mkdocs-bootswatch/](http://mkdocs.github.io/mkdocs-bootswatch/)
-* [BSD 2-clause](https://github.com/mkdocs/mkdocs-bootswatch/blob/master/LICENSE)
+* Copyright (c) 2016-2017 Martin Donath
+* [https://github.com/squidfunk/mkdocs-material](https://github.com/squidfunk/mkdocs-material)
+* [MIT license](https://github.com/squidfunk/mkdocs-material/blob/master/LICENSE)
 
 
 **MkDocs**
 
-*Copyright (c) 2014, Tom Christie
+* Copyright (c) 2014, Tom Christie
 * [https://github.com/mkdocs/mkdocs/](https://github.com/mkdocs/mkdocs/)
 * [BSD 2-clause](https://github.com/mkdocs/mkdocs/blob/master/LICENSE)
 
