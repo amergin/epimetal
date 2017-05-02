@@ -68,7 +68,7 @@ Plotter is instructed to imported the data based on the settings stored in the c
 
 Look for the key `dataSource` in the file. The `columnSeparator` field tells the import script what is the separating character in the data source file (`samples.tsv`). Usually this is `\t` (tab-separated values, TSV) or `,` (comma-separated values). The `sampleIdColumn` field tells the script which column to look for to uniquely identify each sample (row) of the data source file. 
 
-For example, the following except from a settings file tells the script that the data source is a tab-separated values file which holds a column named ID to identify the rows:
+For example, the following excerpt from a settings file tells the script that the data source is a tab-separated values file which holds a column named ID to identify the rows:
 
 ```
 "dataSource": {
