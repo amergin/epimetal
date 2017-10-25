@@ -14,7 +14,14 @@
           "regex": "\\.",
           "replaceWith": "-"
         }
-      ]
+      ],
+      "rename": [
+        {
+          "from": "Gender",
+          "to": "Sex"
+        }
+      ],
+      "exclude": ["TG", "TC", "LDL_C", "HDL_C", "Weight", "Waist", "Hip", "W_H_ratio", "HR", "VO2max", "Energy", "Fat", "Sat", "Poly", "Mono", "Protein", "CHO", "Alcohol", "M_i"]
     },
     "dataSource": {
       "columnSeparator": "\t",
@@ -27,7 +34,7 @@
     },
     "dataset": {
       "identifierColumn": "datasetname",
-      "defaultName": "default"
+      "defaultName": "entire_cohort"
     },
     "createDatasetVariables": true,
     "views": {
@@ -50,14 +57,14 @@
           },
           {
               "name": "Clinical variables",
-              "variables": ["Age", "Gender", "BMI", "Weight", "Height", "SBP", "DBP", "HR", "VO2max", "Energy", "Fat", "Sat", "Poly", "Mono", "Protein", "CHO", "Alcohol", "M_i"]
+              "variables": ["Age", "Sex", "BMI", "SBP", "DBP"]
           }
         ],
         "defaultInputVariables": ["XXL-VLDL-L","XL-VLDL-L","L-VLDL-L","M-VLDL-L","S-VLDL-L","XS-VLDL-L","IDL-L","L-LDL-L","M-LDL-L","S-LDL-L","XL-HDL-L","L-HDL-L","M-HDL-L","S-HDL-L","Serum-C","Serum-TG","HDL-C","LDL-C","Glc","Cit","Phe","Gp","Tyr","FAw3toFA","FAw6toFA","SFAtoFA"],
         "defaultPlanes":  ["Serum-C", "Serum-TG", "HDL-C", "LDL-C", "Glc"],
         "pivot": {
           "enabled": true,
-          "defaultVariable": "Gender"
+          "defaultVariable": "Sex"
         }
       }
     }

@@ -209,12 +209,6 @@ class DataLoader( object ):
 					split = name.split(self.topgroupSeparator)
 					topGroup = split[0].strip()
 					groupName = split[1].strip()
-				#print "getGroup=", groupName, "topgroup=", topGroup, "name=", name
-				#print "input=", groupName, "topgroup=", topGroup, "name=", name
-				#res = HeaderGroup.objects.get_or_create(name=groupName, \
-				#	defaults={ 'name': groupName, 'topgroup': topGroup, 'order': _getNewGroupOrder() })
-				#print "getgroup result = ", res
-				#return res
 				try:
 					return HeaderGroup.objects.get(name=groupName)
 				except DoesNotExist, e:
@@ -244,6 +238,42 @@ class DataLoader( object ):
 			def hasSelfRegex(string):
 				return self.selfRegex.search(string) is not None
 
+			def _getRenamedVar(variable, replaceOptions):
+				for option in replaceOptions:
+					fromName = option.get('from')
+					toName = option.get('to')
+					if fromName is None:
+						raise Exception("Check the rename settings: missing 'from' field.")
+					if toName is None:
+						raise Exception("Check the rename settings: missing 'to' field.")
+					if fromName == variable:
+						return toName
+				return variable
+
+			def getExludedHeader(header, excludeInfo):
+				result = list(header)
+				excludeIndices = []
+				for excludeVariable in excludeInfo:
+					index = header.index(excludeVariable)
+					excludeIndices.append(index)
+					result.remove(excludeVariable)
+				return result, excludeIndices
+
+			def getRenamedHeader(header, renameInfo):
+				result = list(header)
+				for variable in renameInfo:
+					fromName = variable.get('from')
+					toName = variable.get('to')
+					if fromName is None:
+						raise Exception("Check the rename settings: missing 'from' field.")
+					if toName is None:
+						raise Exception("Check the rename settings: missing 'to' field.")
+					if fromName not in header:
+						raise Exception("Check the rename settings: variable %r is not in the data source header." %fromName)
+					index = result.index(fromName)
+					result[index] = toName
+				return result
+
 			# find the cached compiled regex by looping the recorded ones,
 			# if something is found then return the rowDict, otherwise
 			# return None
@@ -259,13 +289,18 @@ class DataLoader( object ):
 			metadataSeparator = self.cfg.getVar("dataLoader", "metadata").get("columnSeparator").encode("ascii", "ignore")
 			metaHeaderDict = dict()
 			metaHeaderRegexDict = dict()
+			renameOptions = self.cfg.getVar('dataLoader', "variables").get("rename", [])
+			excludeOptions = self.cfg.getVar('dataLoader', "variables").get("exclude", [])
 
-			# 1. read all metadata from file and form a dictionary from those details.
+			# omit sampleid & dataset
+			datasetKey = self.cfg.getVar("dataLoader", "dataset").get("identifierColumn")
+			sampleidKey = self.cfg.getVar("dataLoader", "dataSource").get("sampleIdColumn")
+
+			# 1. read all METADATA from file and form a dictionary from those details.
 			# assume header contains: [name, desc, unit, group]
 			with open(metadataFileName, 'r') as source:
 				header = []
 
-				#print "delim=", separator, type(separator), len(separator)
 				for no, line in enumerate(csv.reader(source, delimiter=metadataSeparator)):
 					if(no is 0):
 						header = line
@@ -274,7 +309,11 @@ class DataLoader( object ):
 					_checkDimensions(header, line, no)
 
 					rowDict = dict(zip(header, line))
-					name = rowDict.get('name')
+					name = _getRenamedVar(rowDict.get('name'), renameOptions)
+
+					if (name == datasetKey) or (name == sampleidKey):
+						continue
+
 					if varIsRegex(name):
 						raw = name.replace(self.regVarPattern, "")
 						metaHeaderRegexDict[raw] = { 
@@ -283,23 +322,23 @@ class DataLoader( object ):
 						}
 					else:
 						metaHeaderDict[name] = rowDict
-						#print "escape = ", name, _getEscapedVar(self.cfg, name)
-						# rewrite variable name: might contain escaped chars
-						#rowDict['name'] = _getEscapedVar(self.cfg, name)
-						escapedName = _getEscapedVar(self.cfg, name)
-						rowDict['name'] = escapedName
-						#print "row=", metaHeaderDict[name]
-
-					#print "metadata rowdict=", rowDict
+						variableName = _getEscapedVar(self.cfg, name)
+						rowDict['name'] = variableName
 
 			#2. Add only variables that are actually loaded into the database from the TSV file
-			# headerList comes from the data source file
+			# headerList comes from the DATA source file
 			#print "headerList=", headerList
 			#print "metaHeaderDict=", metaHeaderDict
 			#print "metaHeaderRegexDict", metaHeaderRegexDict
-			for variable in headerList:
+
+			renamedHeader = getRenamedHeader(headerList, renameOptions)
+			self.excludedHeader, self.excludedHeaderIndices = getExludedHeader(renamedHeader, excludeOptions)
+
+			for variable in self.excludedHeader:
+				if (variable == datasetKey) or (variable == sampleidKey):
+					continue
+
 				rowDict = metaHeaderDict.get(variable)
-				#print "var=", variable, "dict=", rowDict
 
 				# if variable is not found, it might be matched
 				# with one of the regex's
@@ -313,9 +352,6 @@ class DataLoader( object ):
 						# don't modify the original
 						rowDict = copy.deepcopy(rowDict)
 						rowDict['name'] = _getEscapedVar(self.cfg, variable)
-
-				#test
-				#rowDict = copy.deepcopy(rowDict)
 
 				# check if desc contains self match pattern
 				if hasSelfRegex(rowDict.get('desc')):
@@ -344,14 +380,8 @@ class DataLoader( object ):
 					# header already exists, do nothing
 					pass
 
-		# omit sampleid & dataset
-		datasetKey = self.cfg.getVar("dataLoader", "dataset").get("identifierColumn")
-		sampleidKey = self.cfg.getVar("dataLoader", "dataSource").get("sampleIdColumn")
-
-		filteredHeaderList = filter(lambda a: (a != sampleidKey and a != datasetKey), headerList)
-
 		# create new header info if necessary
-		_createHeaderObjects(filteredHeaderList)
+		_createHeaderObjects(headerList)
 		if self._datasetVariablesEnabled():
 			_createDatasetVariableGroup()
 
@@ -391,6 +421,10 @@ class DataLoader( object ):
 				return 'inf'
 			return f
 
+		def getWithoutIndices(payload, indices):
+			result = list(payload)
+			return [iteratee for ind, iteratee in enumerate(result) if ind not in indices]
+
 		def setDatasetVariables(currentDataset, variables):
 			# 1. fetch all the dataset variables loaded
 			datasetGroup = self._getDatasetVariableGroup()
@@ -416,12 +450,12 @@ class DataLoader( object ):
 			sampleidKey = self.cfg.getVar("dataLoader", "dataSource").get("sampleIdColumn")
 			defaultDatasetName = self.cfg.getVar("dataLoader", "dataset").get("defaultName", "default")
 			for lineNo, line in enumerate(dataSource):
-				if( lineNo == 0):
+				if(lineNo == 0):
 					# header
 					header = line.strip().split(dataSourceSeparator)
 					header = _removeExtraCharactersFromHeader(header)
 					self._modifyHeader(header)
-					header = _getEscapedHeader(self.cfg, header)
+					header = _getEscapedHeader(self.cfg, self.excludedHeader)
 					continue
 
 				line = line.strip()
@@ -434,7 +468,8 @@ class DataLoader( object ):
 				# normal line
 				values = line.strip().split(dataSourceSeparator)
 
-				valuesDict = dict( zip( header, values ) )
+				valuesWithoutExcludedVariables = getWithoutIndices(values, self.excludedHeaderIndices)
+				valuesDict = dict( zip( header, valuesWithoutExcludedVariables ) )
 
 				dataset = valuesDict.get(datasetKey, defaultDatasetName)
 
