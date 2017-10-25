@@ -7,7 +7,7 @@ Plotter is intended to be used on a desktop device rather than a tablet or a sma
 
 ### Browser
 
-Plotter is tested against most modern desktop web browsers. Latest version of [Google Chrome](http://google.com/chrome) is highly recommended. Internet Explorer versions prior to 11 are not supported. Mobile browsers such as as those used in smartphones and tablets are discouraged for performance and usability reasons.
+Latest version of [Google Chrome](http://google.com/chrome) is highly recommended. Internet Explorer versions and Microsoft Edge are not supported. Mobile browsers such as as those used in smartphones and tablets are discouraged for performance and usability reasons.
 
 ## Navigation
 
@@ -107,8 +107,9 @@ Any duplicate samples (i.e. the circle filters intersect) are added only once. T
 
 ***Creating a dataset from circle filters, step 3**: the resulting dynamic dataset is now displayed on the dataset list. Lengthy names are truncated, as in this case.*
 
-# Views
-##Explore and filter
+
+## Views
+### Explore and filter
 This is the default view of the application. The content section consists of a canvas that is populated with windows containing figures. By default, five windows are displayed containing the histograms of `Serum-C`, `Serum-TG`, `HDL-C`, `LDL-C` and `Glc` variables.
 
 New figures can be added by clicking on the **Create a new graph** button and selecting a variable or variables. Several figure types are supported:
@@ -118,25 +119,25 @@ New figures can be added by clicking on the **Create a new graph** button and se
 * [Heatmap](userguide.md#heatmap)
 * [Box plot](userguide.md#box-plot)
 
-### Figure windows
+#### Figure windows
 The windows can be resized, dragged and removed from the canvas as user chooses. A cogwheel on the top-left of the window contains a set of options for the window. These available options vary based on the displayed figure type. For instance, [a histogram](userguide.md#histogram) can be exported either in SVG or PNG format through this dropdown.
 
 ![Figure window settings dropdown](img/window_export.png)
 
 *Settings dropdown for figure window opened up. Two options are available for this histogram: export the figure in PNG or SVG format.*
 
-##Self-Organizing Maps
+### Self-Organizing Maps
 When entering this view, the application either calculates a Self-Organizing Map (SOM) or uses a pre-calculated result if one is available. The SOM is calculated based on the active samples and the train variables.
 
-### Settings
+#### Settings
 The SOM settings can be adjusted by clicking **Adjust SOM settings** from the side menu. The settings include modifying the train variables as well as the size.
 
-#### Input variables
+##### Input variables
 The displayed variable selection contains the current variables which have been used to compute the current SOM. Modifying the variable selection and pressing **Submit** results in the recomputation of the SOM. 
 
 If you made an error in selecting the variables or otherwise wish to cancel the calculation, you can do so by pressing on the **Cancel computation tasks** button that is displayed on the header bar.
 
-#### Size
+##### Size
 
 The SOM grid size can be changed. Three options are available:
 
@@ -146,13 +147,14 @@ The SOM grid size can be changed. Three options are available:
 
 Changing the size will trigger a retrain of the SOM and recompute all the visible SOM planes.
 
-#### Pivot variable
+##### Pivot variable
 
 When a pivot variable is defined, a rank transformation is performed to the training samples prior to SOM training phase. Whether this pivot feature is enabled is defined during the [installation phase](installation.md#default-view-settings). That is, the installation settings will determine whether to use SOM training at all, and what is the default variable to. Even if the pivot variable is disabled in the installation phase, you can enable it on a session-by-session basis.
 
-** Note that that each of the samples used must have a value of this pivot variable that can be coerced to a number. Failing to meet this requirement will have unexpected consequences in the SOM results.**
+**Note that that each of the samples used must have a value of this pivot variable that can be coerced to a number. Failing to meet this requirement will have unexpected consequences in the SOM results.**
 
-### Display hexagons selected by circle filters
+
+#### Display hexagons selected by circle filters
 
 Often times it may be useful to see which hexagons have been selected within a particular plane. In this case, click on the plane's cogwheel and select *Toggle hexagon highlighting*.
 
@@ -165,7 +167,7 @@ The plane is then updated to show every hexagon which has been selected by the c
 In the case where two or more circle filters intersect and thereby select one or more of the same hexagons, the border color will only reflect one of those circle filters. Note that this is only a display limitation; naturally all of the intersecting circle filters will contain the samples included in those intersecting hexagons.
 
 
-##Regression analysis & associations
+### Regression analysis & associations
 
 In this view multiple linear regression analysis can be computed and its results can be viewed. Start by clicking on **Create a new regression view** button. 
 
@@ -173,7 +175,7 @@ Analyze the statistical association between a set of variables (*exposure variab
 
 The figure window first appears blank with a circular progress indicator that shows the progress of the calculation. The computation is done in parallel and should complete in well under a minute, depending on the resources of your computer and the amount of samples being processed.
 
-### Exporting results
+#### Exporting results
 The results of any produced analyses can be exported by selecting the *Download regression data in a ZIP file* option under the cogwheel menu of a forest plot window. 
 
 ![Download regression analysis data](img/download_regression_data.png)
@@ -204,9 +206,9 @@ The result TSV file contains the following columns:
 
 
 
-# Figures 
+## Figures 
 
-## Histogram
+### Histogram
 
 Histograms can be drawn either on the [Explore and filter](userguide.md#explore-and-filter) or the [Self-Organizing Maps](userguide.md#self-organizing-maps) view.
 
@@ -216,7 +218,7 @@ On *Explore and filter* view the histogram is drawn based on the active set of s
 
 *Example of histogram of a quantitative variable. A range filter is active.*
 
-## SOM Distribution
+### SOM Distribution
 An extension of histograms explained in the previous section. On *Self-Organizing Maps* view the histogram sample data is sourced from the samples that are selected with circle filters. In addition, a third distribution - in grey - is placed on background of the stacked figure to signify all the samples that have been used in the training phase.
 
 For every active circle filter, a distribution with the corresponding color is displayed. A Gaussian kernel regression smoothing curve is displayed for every filter's distribution, with the parameter bandwidth = 0.10.
@@ -225,27 +227,27 @@ For every active circle filter, a distribution with the corresponding color is d
 
 *The distribution of variable BMI (in gray). Two circle filters are active in this example and the distributions for their sample selections can be seen.*
 
-## Scatter plot
+### Scatter plot
 A scatter plot contains the dots originating from each active dataset. The top-right corner of the figure contains the regression line equations.
 
-### Toggling
+#### Toggling
 By selecting `Toggle figure pooling` from the options dropdown the active dots are pooled and displayed in black. In this case, a single regression line is displayed instead of separate lines for each active dataset.
 
-## Heatmap
+### Heatmap
 A correlation heatmap from any available variables can be drawn in the [Explore and filter](userguide.md#explore-and-filter) view. The maximum number of variables that can displayed within any heatmap is 100. The active samples used as as source for this figure can either be separated to distinct figures based on the dataset (`Separate heatmaps for each dataset`), or be used together to create a single heatmap (`One combined heatmap`).
 
 In the case of separate heatmaps sfor each dataset, if the dataset which is used as the sample source for a heatmap is deselected the window containing the figure is automatically removed from the canvas.
 
 The heatmap cells can be clicked to draw the corresponding scatter plot of the two variables.
 
-### P value cut-off
+#### P value cut-off
 The Bonferroni adjustment is is used to maintain a familywise error Type I error rate of 0.05. The displayed cut-off value is the adjusted alpha level. Heat map cells having a p value that exceeds the adjusted alpha level are displayed in white color. You can disable the Bonferroni adjustment by clicking on `Toggle correlation cutoff of p < value` on the upper-left settings menu. This will update the heat map to show all pairwise correlation colors regardless of their respective p value and whether they meet the cut-off criterion.
 
-### Default color scale
+#### Default color scale
 
 By default, a correlation heatmap uses a linear color scale (shown right of the heatmap) of three value points: 1 is full red, 0 is white and -1 full blue. 
 
-### Color scale stretching
+#### Color scale stretching
 
 In some cases the default color scaling is not the desired behavior. Consider the case where the correlation values concentrate on a small number range. In this case, the default scaling does not distinguish the values sufficiently by assigning distinct colors. 
 
@@ -257,7 +259,7 @@ By clicking `Toggle color scale stretching` in the figure window options, Plotte
 * 25% blue at r = -0.25
 * 100% blue at r = -0.35
 
-## Box plot
+### Box plot
 
 A box plot can drawn either on the [Explore and filter](userguide.md#explore-and-filter) or the [Self-Organizing Maps](userguide.md#self-organizing-maps) view. 
 
@@ -265,7 +267,7 @@ On *Explore and filter* view, the data source is the active sample selection con
 
 On *Self-Organizing Maps* view, the data originates from subselection of samples confined by the circle filters. That is, one box plot is displayed for each circle filter present and its color corresponds with the color of the box plot.
 
-## Profile histogram
+### Profile histogram
 
 A profile histogram can be drawn on the [Self-Organizing Maps](userguide.md#self-organizing-maps) view. The available profile histograms are defined during [installation phase](installation.md#default-view-settings). By default, three distinct predefined histograms are available:
 
@@ -338,15 +340,15 @@ The profile histogram is a grouped row chart that calculates a separate bar for 
 
 *Example of Fatty acids profile histogram, three circle filters are active. The cursor is on top of the MUFA variable, showing a tooltip that contains the mean score of the variable, standard deviation, and sample count of the filter.*
 
-## Regression box plots
+### Regression box plots
 
 On the resulting figure, the selected variables are grouped according to the variable group and its respective ordering number. 
 
 Each variable row displays a color coded box plot where the color corresponds to the dataset color. The bar contains a white dot indicating the *beta coefficient* of calculation and the bar width depends on the *confidence interval*. The numerical values of these results can be seen by placing the mouse cursor over the bar area, showing a tool tip that contains the beta coefficient, the confidence interval and the p value. The bar is shown in transparent color if p > 0.05. An asterisk (`*`) is placed on the right-hand side of the dataset bar row if the computation is statistically significant within the variable group.
 
-# Variables
+## Variables
 
-## Selecting variables
+### Selecting variables
 
 The principle and user interface for selecting variables is similar throughout the software. There are two methods of selecting a variable. 
 
@@ -356,7 +358,7 @@ The second is by navigating a multi-level hierarchy navigation and choosing a va
 
 Selected variables appear as chips on the free text search field and can be removed by pressing `x` on the chip.
 
-## User-defined variables
+### User-defined variables
 
 Plotter supports creating custom variables and drawing figures that depend on them. To create a custom variable, select User-defined variables > Create a new variable. Start by uniquely naming the variable. Note that the name cannot overlap with previously created variables. On the mathematical expression field, start by typing the colon character (`:`) after which a dropdown list is presented to that is filtered as you type. 
 

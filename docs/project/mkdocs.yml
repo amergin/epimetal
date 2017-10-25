@@ -4,4 +4,6 @@ pages:
  - User guide: userguide.md
  - Installation: installation.md
  - License: license.md
-theme: spacelab
+theme: 'material'
+markdown_extensions:
+  - toc(permalink=true)
