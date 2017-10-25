@@ -160,6 +160,28 @@ Example: the settings file contains the following except
 ```
 and the data source file imports samples belonging to datasets named `set1`, `set2`, and `set3`. The import script would then create variables named `dataset_set1`, `dataset_set2`, and `dataset_set3` under the group *Dataset variables*. For samples that belong to a dataset named `set1`, the `dataset_set1` variable would then have value `1`. The variables `dataset_set2` and `dataset_set2` would correspondingly have value `0` for these samples.
 
+### Excluding variables from source data
+
+By default, all of the variables defined in the source data file are loaded during import. Sometimes it can be handy to exclude some of the variables. This can be achieved by adding the optional `exclude` setting to the configuration file. Example:
+
+```
+"exclude": ["Waist", "Hip", "W_H_ratio", "HR", "VO2max", "Energy", "Fat"]
+
+```
+Note that regular expressions are not supported in this option.
+
+### Renaming variables during import
+
+Variables can be renamed during import. Example:
+
+```
+"rename": [
+  {
+    "from": "Gender",
+    "to": "Sex"
+  }
+]
+```
 
 ### Escaping variable names
 
