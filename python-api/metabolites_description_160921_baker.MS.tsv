@@ -263,47 +263,47 @@ tag_polysaccharides	Polysaccarides	NA	Tags
 tag_low_protein_content	Low protein content	NA	Tags
 tag_plasma_sample	Plasma sample	NA	Tags
 tag_high_ethanol	Ethanol	NA	Tags
-|regex|dhCer_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Dihydroceramide
-|regex|Cer_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Ceramide
-COH	Total Cholesterol	nmol/l	Mass spectrometry: Cholesterol
-|regex|MHC_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Monohexosylceramides
-|regex|THC_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Trihexosylceramides
-|regex|SM_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Sphingomyelins
-|regex|PC_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Phosphatidylcholines
-|regex|PC\(O-\d{1,3}:\d\)	|self|	nmol/l	Mass spectrometry: Alkylphosphatidylcholines
-|regex|PC\(P-\d{1,3}:\d\)	|self|	nmol/l	Mass spectrometry: Alkenylphosphatidylcholines
-|regex|LPC_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Lysophosphatidylcholines
-|regex|LPC\(O-\d{1,3}:\d\)	|self|	nmol/l	Mass spectrometry: Lysoalkylphosphatidylcholines
-|regex|PE_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Phosphatidylethanolamines
-|regex|PE\(O-\d{1,3}:\d\)	|self|	nmol/l	Mass spectrometry: Alkylphosphatidylethanolamines
-|regex|PE\(P-\d{1,3}:\d\)	|self|	nmol/l	Mass spectrometry: Alkenylphosphatidylethanolamines
-|regex|LPE_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Lysophosphatidylethanolamines
-|regex|PI_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Phosphatidylinositols
-|regex|PS_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Phosphatidylserines
-|regex|PG_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Phosphatidylglycerols
-|regex|CE_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Cholesteryl esters
-|regex|DG_\d{1,3}:\d_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Diacylglycerols
-|regex|TG_\d{1,3}:\d_\d{1,3}:\d_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Triaclyglycerols
-|regex|DHC_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: Dihexosylceramides
-|regex|GM3_\d{1,3}:\d	|self|	nmol/l	Mass spectrometry: GM3 gangliosides
-TG	Triglycerides	mmol/l	Mass spectrometry: Total measures
-TC	Total cholines	mmol/l	Mass spectrometry: Total measures
-LDL_C	Total cholesterol in LDL	mmol/l	Mass spectrometry: Total measures
-HDL_C	Total cholesterol in HDL	mmol/l	Mass spectrometry: Total measures
-apoa_I	Apoprotein A-I	g/l	Mass spectrometry: Apoproteins
-FastingGlucose	Fasting glucose	mmol/l	Mass spectrometry: Glycolysis related metabolites
+|regex|dhCer_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Dihydroceramide
+|regex|Cer_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Ceramide
+COH	Total Cholesterol	nmol/l	Lipid molecules: Cholesterol
+|regex|MHC_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Monohexosylceramides
+|regex|THC_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Trihexosylceramides
+|regex|SM_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Sphingomyelins
+|regex|PC_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Phosphatidylcholines
+|regex|PC\(O-\d{1,3}:\d\)	|self|	nmol/l	Lipid molecules: Alkylphosphatidylcholines
+|regex|PC\(P-\d{1,3}:\d\)	|self|	nmol/l	Lipid molecules: Alkenylphosphatidylcholines
+|regex|LPC_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Lysophosphatidylcholines
+|regex|LPC\(O-\d{1,3}:\d\)	|self|	nmol/l	Lipid molecules: Lysoalkylphosphatidylcholines
+|regex|PE_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Phosphatidylethanolamines
+|regex|PE\(O-\d{1,3}:\d\)	|self|	nmol/l	Lipid molecules: Alkylphosphatidylethanolamines
+|regex|PE\(P-\d{1,3}:\d\)	|self|	nmol/l	Lipid molecules: Alkenylphosphatidylethanolamines
+|regex|LPE_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Lysophosphatidylethanolamines
+|regex|PI_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Phosphatidylinositols
+|regex|PS_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Phosphatidylserines
+|regex|PG_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Phosphatidylglycerols
+|regex|CE_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Cholesteryl esters
+|regex|DG_\d{1,3}:\d_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Diacylglycerols
+|regex|TG_\d{1,3}:\d_\d{1,3}:\d_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Triaclyglycerols
+|regex|DHC_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: Dihexosylceramides
+|regex|GM3_\d{1,3}:\d	|self|	nmol/l	Lipid molecules: GM3 gangliosides
+TG	Triglycerides	mmol/l	Lipid molecules: Total measures
+TC	Total cholines	mmol/l	Lipid molecules: Total measures
+LDL_C	Total cholesterol in LDL	mmol/l	Lipid molecules: Total measures
+HDL_C	Total cholesterol in HDL	mmol/l	Lipid molecules: Total measures
+apoa_I	Apoprotein A-I	g/l	Lipid molecules: Apoproteins
+FastingGlucose	Fasting glucose	mmol/l	Lipid molecules: Glycolysis related metabolites
 Waist	Waist circumference	cm	Clinical data
 Hip	Hip circumference	cm	Clinical data
 W_H_ratio	Waist-hip ratio	NA	Clinical data
-FastingInsulin	Fasting insulin	mU/l	Mass spectrometry: Glycolysis related metabolites
-HOMA	Homeostatic model assessment	NA	Mass spectrometry: Glycolysis related metabolites
-2h_glucose	Glucose after 2 hours	mmol/l	Mass spectrometry: Glycolysis related metabolites
-Glucose_AUC0120	Glucose area under the curve, 0, 120 minutes	nmol/l	Mass spectrometry: Glycolysis related metabolites
-Insulin_AUC0120	Insulin area under the curve, 0, 120 minutes	nmol/l	Mass spectrometry: Glycolysis related metabolites
-MatsudaSI	Insulin sensitivity index	nmol/l	Mass spectrometry: Glycolysis related metabolites
-Leptin	Leptin	ng/ml	Mass spectrometry: Other metabolites
-NEFA	Non-esterified fatty acids	mEq/l	Mass spectrometry: Other metabolites
-hsCRP	High-sensitivity C-reactive protein	mg/l	Mass spectrometry: Other metabolites
+FastingInsulin	Fasting insulin	mU/l	Lipid molecules: Glycolysis related metabolites
+HOMA	Homeostatic model assessment	NA	Lipid molecules: Glycolysis related metabolites
+2h_glucose	Glucose after 2 hours	mmol/l	Lipid molecules: Glycolysis related metabolites
+Glucose_AUC0120	Glucose area under the curve, 0, 120 minutes	nmol/l	Lipid molecules: Glycolysis related metabolites
+Insulin_AUC0120	Insulin area under the curve, 0, 120 minutes	nmol/l	Lipid molecules: Glycolysis related metabolites
+MatsudaSI	Insulin sensitivity index	nmol/l	Lipid molecules: Glycolysis related metabolites
+Leptin	Leptin	ng/ml	Lipid molecules: Other metabolites
+NEFA	Non-esterified fatty acids	mEq/l	Lipid molecules: Other metabolites
+hsCRP	High-sensitivity C-reactive protein	mg/l	Inflammation
 HR	Heart rate	BPM	Clinical data
 VO2max	Maximal oxygen consumption relative to fat-free mass	ml/min/(kg FFM)	Clinical data
 Energy	Energy	kcal/day	Clinical data
@@ -315,26 +315,26 @@ Protein	Percentage of proteins in daily diet	%	Clinical data
 CHO	Percentage of carbohydrates in daily diet	%	Clinical data
 Alcohol	Percentage of alcohols in daily diet	%	Clinical data
 M_i	NA	NA	Clinical data
-Total_CE	Total Cholesterol esters	nmol/l	Mass spectrometry: Total measures
-Total_COH	Total Cholesterol	nmol/l	Mass spectrometry: Total measures
-Total_Cer	Total Ceramides	nmol/l	Mass spectrometry: Total measures
-Total_DG	Total Diacylglycerols	nmol/l	Mass spectrometry: Total measures
-Total_DHC	Total Dihexosylceramides	nmol/l	Mass spectrometry: Total measures
-Total_GM3	Total GM3 gangliosides	nmol/l	Mass spectrometry: Total measures
-Total_LPC	Total Lysophosphatidylcholines	nmol/l	Mass spectrometry: Total measures
-Total_LPC(O)	Total Lysoalkylphosphatidylcholines	nmol/l	Mass spectrometry: Total measures
-Total_LPE	Total Lysophosphatidylethanolamines	nmol/l	Mass spectrometry: Total measures
-Total_LPI	Total Lysophosphatidylinositols	nmol/l	Mass spectrometry: Total measures
-Total_MHC	Total Monohexosylceramides	nmol/l	Mass spectrometry: Total measures
-Total_PC	Total Phosphatidylcholines	nmol/l	Mass spectrometry: Total measures
-Total_PC(O)	Total Alkylphosphatidylcholines	nmol/l	Mass spectrometry: Total measures
-Total_PC(P)	Total Alkenylphosphatidylcholines	nmol/l	Mass spectrometry: Total measures
-Total_PE	Total Phosphatidylethanolamines	nmol/l	Mass spectrometry: Total measures
-Total_PE(O)	Total Alkylphosphatidylethanolamines	nmol/l	Mass spectrometry: Total measures
-Total_PE(P)	Total Alkylphosphatidylethanolamines	nmol/l	Mass spectrometry: Total measures
-Total_PG	Total Phosphatidylglycerols	nmol/l	Mass spectrometry: Total measures
-Total_PI	Total Phosphatidylinositols	nmol/l	Mass spectrometry: Total measures
-Total_SM	Total Sphingomyelins	nmol/l	Mass spectrometry: Total measures
-Total_TG	Total Triaclyglycerols	nmol/l	Mass spectrometry: Total measures
-Total_THC	Total Trihexosylceramides	nmol/l	Mass spectrometry: Total measures
-Total_dhCer	Total Dihydroceramides	nmol/l	Mass spectrometry: Total measures
+Total_CE	Total Cholesterol esters	nmol/l	Lipid molecules: Total measures
+Total_COH	Total Cholesterol	nmol/l	Lipid molecules: Total measures
+Total_Cer	Total Ceramides	nmol/l	Lipid molecules: Total measures
+Total_DG	Total Diacylglycerols	nmol/l	Lipid molecules: Total measures
+Total_DHC	Total Dihexosylceramides	nmol/l	Lipid molecules: Total measures
+Total_GM3	Total GM3 gangliosides	nmol/l	Lipid molecules: Total measures
+Total_LPC	Total Lysophosphatidylcholines	nmol/l	Lipid molecules: Total measures
+Total_LPC(O)	Total Lysoalkylphosphatidylcholines	nmol/l	Lipid molecules: Total measures
+Total_LPE	Total Lysophosphatidylethanolamines	nmol/l	Lipid molecules: Total measures
+Total_LPI	Total Lysophosphatidylinositols	nmol/l	Lipid molecules: Total measures
+Total_MHC	Total Monohexosylceramides	nmol/l	Lipid molecules: Total measures
+Total_PC	Total Phosphatidylcholines	nmol/l	Lipid molecules: Total measures
+Total_PC(O)	Total Alkylphosphatidylcholines	nmol/l	Lipid molecules: Total measures
+Total_PC(P)	Total Alkenylphosphatidylcholines	nmol/l	Lipid molecules: Total measures
+Total_PE	Total Phosphatidylethanolamines	nmol/l	Lipid molecules: Total measures
+Total_PE(O)	Total Alkylphosphatidylethanolamines	nmol/l	Lipid molecules: Total measures
+Total_PE(P)	Total Alkylphosphatidylethanolamines	nmol/l	Lipid molecules: Total measures
+Total_PG	Total Phosphatidylglycerols	nmol/l	Lipid molecules: Total measures
+Total_PI	Total Phosphatidylinositols	nmol/l	Lipid molecules: Total measures
+Total_SM	Total Sphingomyelins	nmol/l	Lipid molecules: Total measures
+Total_TG	Total Triaclyglycerols	nmol/l	Lipid molecules: Total measures
+Total_THC	Total Trihexosylceramides	nmol/l	Lipid molecules: Total measures
+Total_dhCer	Total Dihydroceramides	nmol/l	Lipid molecules: Total measures
