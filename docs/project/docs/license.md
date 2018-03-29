@@ -280,3 +280,10 @@ This software utilizes several 3rd party libraries and software. To see the verb
 * Copyright JS Foundation and other contributors
 * [https://lodash.com/](https://lodash.com/)
 * [Creative Commons Zero 1.0](https://github.com/lodash/lodash/blob/master/LICENSE)
+
+
+**Ngbp**
+
+* Copyright (c) 2013 Josh David Miller <josh@joshdmiller.com>
+* [https://github.com/ngbp/ngbp](https://github.com/ngbp/ngbp)
+* [MIT License](https://github.com/ngbp/ngbp/blob/master/LICENSE)
