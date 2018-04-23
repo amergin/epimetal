@@ -1,0 +1,96 @@
+{
+  "dataLoader": {
+    "variables": {
+      "escape": [
+        {
+          "regex": "\/",
+          "replaceWith": "to"
+        },
+        {
+          "regex": "%",
+          "replaceWith": "prc"
+        },
+        {
+          "regex": "\\.",
+          "replaceWith": "-"
+        }
+      ],
+      "rename": [
+        {
+          "from": "Gender",
+          "to": "Sex"
+        }
+      ],
+      "exclude": []
+    },
+    "dataSource": {
+      "columnSeparator": "\t",
+      "sampleIdColumn": "sampleid"
+    },
+    "metadata": {
+      "file": "metabolites_description_160131_clinical.tsv",
+      "columnSeparator": "\t",
+      "topGroupSeparator": ":"
+    },
+    "dataset": {
+      "identifierColumn": "datasetname",
+      "defaultName": "entire_cohort"
+    },
+    "createDatasetVariables": true,
+    "views": {
+      "explore": {
+        "defaultHistograms": ["Serum-C", "Serum-TG", "HDL-C", "LDL-C", "Glc"]
+      },
+      "som": {
+        "defaultProfiles": [
+          {
+            "name": "Fatty acids",
+            "variables": ["TotFA","UnSat","DHA","LA","FAw3","FAw6","PUFA","MUFA","SFA","DHAtoFA","LAtoFA","FAw3toFA","FAw6toFA","PUFAtoFA","MUFAtoFA" ,"SFAtoFA"]
+          },
+          {
+            "name": "Total lipids",
+            "regex": ".*-L\\b"
+          },
+          {
+              "name": "Small molecules",
+              "variables": ["Glc", "Lac", "Pyr", "Cit", "Ala", "Gln", "His", "Ile", "Leu", "Val", "Phe", "Tyr", "Ace", "AcAce", "bOHBut", "Crea", "Alb", "Gp"]
+          },
+          {
+              "name": "Clinical variables",
+              "variables": ["Age", "Sex", "Weight", "Height", "BMI", "BP-syst", "BP-diast"]
+          }
+        ],
+        "defaultInputVariables": ["XXL-VLDL-L","XL-VLDL-L","L-VLDL-L","M-VLDL-L","S-VLDL-L","XS-VLDL-L","IDL-L","L-LDL-L","M-LDL-L","S-LDL-L","XL-HDL-L","L-HDL-L","M-HDL-L","S-HDL-L","Serum-C","Serum-TG","HDL-C","LDL-C","Glc","Cit","Phe","Gp","Tyr","FAw3toFA","FAw6toFA","SFAtoFA"],
+        "defaultPlanes":  ["Serum-C", "Serum-TG", "HDL-C", "LDL-C", "Glc"],
+        "pivot": {
+          "enabled": true,
+          "defaultVariable": "Sex"
+        }
+      }
+    }
+  },
+  "http": {
+    "api": {
+      "prefix": "/API/",
+      "host": "localhost",
+      "port": 8080
+    }
+  },
+  "database": {
+    "samples": {
+      "name": "samples",
+      "host": "localhost",
+      "port": 27017
+    },
+    "settings": {
+      "name": "settings",
+      "host": "localhost",
+      "port": 27017
+    },
+    "som": {
+      "name": "som",
+      "host": "localhost",
+      "port": 27017
+    }
+  }
+}
