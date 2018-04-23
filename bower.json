@@ -21,7 +21,6 @@
     "angular-growl-2": "0.7.9",
     "lodash": "3.10.0",
     "ngprogress": "1.1.3",
-    "SOM.js": "https://bdad3060cb0b664d4b8df4b10075ca6b12768302@github.com/anttikan/SOM.js.git",
     "ng-tags-input": "3.1.2",
     "angular-svg-round-progressbar": "0.4.8",
     "core-estimator": "https://github.com/oftn/core-estimator.git",

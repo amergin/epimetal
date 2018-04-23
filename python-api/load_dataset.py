@@ -254,9 +254,12 @@ class DataLoader( object ):
 				result = list(header)
 				excludeIndices = []
 				for excludeVariable in excludeInfo:
-					index = header.index(excludeVariable)
-					excludeIndices.append(index)
-					result.remove(excludeVariable)
+					try:
+						index = header.index(excludeVariable)
+						excludeIndices.append(index)
+						result.remove(excludeVariable)
+					except ValueError, e:
+						print "[Warning] Variable %r could no be excluded from the variable set as it is not defined in the input file." %excludeVariable
 				return result, excludeIndices
 
 			def getRenamedHeader(header, renameInfo):
