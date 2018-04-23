@@ -1,0 +1,13 @@
+{
+  "name": "SOM.js",
+  "homepage": "https://github.com/anttikan/SOM.js",
+  "_release": "821234a722",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "821234a7221ba3aa8ae5df499e2f6ac162c914b8"
+  },
+  "_source": "https://bdad3060cb0b664d4b8df4b10075ca6b12768302@github.com/anttikan/SOM.js.git",
+  "_target": "*",
+  "_originalSource": "https://bdad3060cb0b664d4b8df4b10075ca6b12768302@github.com/anttikan/SOM.js.git"
+}

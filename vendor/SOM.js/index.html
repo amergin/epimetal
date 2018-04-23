@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title></title>
+
+
+  <link href="css/style.css" rel="stylesheet" type="text/css">
+
+
+
+  <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script src="vendor/d3.v3.min.js" charset="utf-8"></script>
+  <script type="text/javascript" src="vendor/hexbin.js"></script>
+  <script type="text/javascript" src="vendor/lodash.min.js"></script>
+
+  <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+  <script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.0-rc.2/angular.js"></script>
+  <script type='text/javascript' src="vendor/lodash.min.js"></script>
+  <script type='text/javascript' src="src/services-webworker.js"></script>
+  <script type="text/javascript" src="src/templates-common.js"></script>
+  <script type='text/javascript' src="src/utilities.som.js"></script>
+  <script type='text/javascript' src="src/services-compute-som.js"></script>
+
+
+
+
+</head>
+<body>
+  <div ng-app="mainApp">
+
+    <div ng-controller="SOMController">
+
+      <h2>SOM test (N=<span ng-bind="NumRows"></span>)</h2>
+
+      <div id="status" ng-bind="Task"></div>
+
+      <div id="progressbar">
+        <span ng-style="{'width': Progress}" ></span>
+      </div>
+
+      <div id="planes"></div>
+
+
+    </div>
+  </div>
+
+
+
+
+<script type='text/javascript'>
+
+  // Module for injecting lodash
+  angular.module('ext.lodash', []).factory('_', function lodash() {
+    return window._;
+  });
+
+  // Main app
+  var mainApp = angular.module("mainApp", ['templates-common',
+    'ext.lodash',
+    'akangas.services.som'
+  ]);
+
+  mainApp.run(function(SOMComputeService) {
+    var absUrl = window.location.protocol + '//' + window.location.host + window.location.pathname,
+    dependencies = [
+      absUrl + 'vendor/' + 'lodash.min.js',
+      absUrl + 'src/' + 'utilities.som.js'
+    ];
+
+    SOMComputeService.noWorkers(4)
+    .dependencies(dependencies);
+  });
+
+  mainApp.controller('SOMController',
+    function($scope, $q, $timeout, WebWorkerService, SOMComputeService) {
+
+      function report_progress(progress) {
+        $scope.Progress = (4 * progress) + 'px';
+      }
+
+      function make_component_planes() {
+        var plane_spec = [{
+          name: 'Alanine',
+          data: dummy_data.Ala
+        }, {
+          name: 'HDL-C',
+          data: dummy_data['HDL-C']
+        }, {
+          name: 'Phenylalanine',
+          data: dummy_data['Phe']
+        }, {
+          name: 'Serum-TG',
+          data: dummy_data['Serum-TG']
+        }, {
+          name: 'Glucose',
+          data: dummy_data['Glc']
+        }, {
+          name: 'LDL-C',
+          data: dummy_data['LDL-C']
+        }, {
+          name: 'Tyrosine',
+          data: dummy_data['Tyr']
+        }, {
+          name: 'Remnant-C',
+          data: dummy_data['Remnant-C']
+        }, ];
+
+        var promises = [];
+
+
+        console.log('Creating a copy of the existing SOM');
+        _s = SOMComputeService.init(_s.rows,_s.cols,_s.sampleids,_s.bmus.slice(),_s.codebook.slice(),_s.distances.slice(),_s.weights.slice());
+
+        console.log('Samples & BMUs')
+        console.log(SOMComputeService.get_formatter_bmus(_s));
+
+        for (var ind = 0; ind < plane_spec.length; ++ind) {
+          $scope.Task = "Drawing component plane for " + plane_spec[ind].name;
+          var promise = SOMComputeService.calculate_component_plane(
+            _s,
+            sampleids,
+            plane_spec[ind].data,
+            plane_spec[ind].name
+          );
+
+          promises.push(promise);
+          promise.then(function succFn(res) {
+              draw_plane(res.plane, '#planes');
+            },
+            undefined,
+            report_progress);
+        }
+        $q.all(promises)
+          .finally(function() {
+            $scope.Task = "Done!";
+          });
+
+      }
+
+      function draw_plane(plane, elem) {
+
+        var labelFormat = d3.format('.2f');
+
+        var margin = {
+            top: 30,
+            right: 30,
+            bottom: 30,
+            left: 30
+          },
+
+
+          width = 500;
+        height = width * 0.75;
+
+        var rows = plane.size.m;
+        var cols = plane.size.n;
+
+        var hexRadius = Math.floor((width / cols) * 0.5);
+        var points = [];
+
+
+
+        for (var k in plane.cells) {
+          var cell = plane.cells[k];
+          var datarow = [hexRadius * cell.x * 1.75, hexRadius * cell.y * 1.5, cell.color];
+          points.push(datarow);
+        }
+
+
+
+        var hexbin = d3.hexbin()
+          .radius(hexRadius);
+
+
+        var container = d3.select(elem).insert("div", ":first-child");
+
+        container.style('opacity', 0);
+
+        container.append("p").attr("class", "variable").text(plane.variable);
+
+        var svg = container.append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        svg.append("g")
+          .selectAll(".hexagon")
+          .data(hexbin(points))
+          .enter().append("path")
+          .attr("class", "hexagon")
+          .attr("d", function(d) {
+            return "M" + d.x + "," + d.y + hexbin.hexagon();
+          })
+          .attr("stroke", "#fff")
+          .attr("stroke-width", "2px")
+          .style("fill", function(d) {
+            return d[0][2];
+            /*return d3.rgb(255-d[0][2]*255,255-d[0][2]*255,255-d[0][2]*255).toString(); */
+          });
+
+
+
+        svg.append("g")
+          .selectAll(".label")
+          .data(plane.labels)
+          .enter()
+          .append("text")
+          .attr("class", "label noselect")
+          .attr('text-anchor', 'middle')
+          .attr('alignment-baseline', 'middle')
+          .attr("x", function(d) {
+            var x = d.x;
+            var y = d.y;
+            if ((y % 2) === 0) {
+              return x * hexRadius * 1.75;
+            }
+            if ((y % 2) === 1) {
+              return hexRadius * 0.75 + x * hexRadius * 1.75;
+            }
+          })
+          .attr("y", function(d) {
+            return (d.y) * hexRadius * 1.5;
+          })
+          .style("fill", function(d) {
+            return d.color;
+          })
+          .text(function(d) {
+            return labelFormat(+d.label);
+          });
+
+        container.transition().delay(1000).duration(500).style('opacity', 1);
+      }
+
+      function prepare_data_columns(dataobjectarray, training_vars) {
+
+        var all_variables = [];
+
+        for (var key in dataobjectarray[0].variables) {
+          all_variables.push(key);
+
+        }
+
+        var no_missing_data_array = [];
+        var missing = false;
+
+        for (var i = 0; i < dataobjectarray.length; i++) {
+
+          /*missing = false;
+
+          for(var j=0;j<all_variables.length;j++) {
+            if(isNaN(parseFloat(dataobjectarray[i].variables[all_variables[j]])) || 
+              dataobjectarray[i].variables[all_variables[j]] == 0
+              ) {
+              missing = true;
+              break;
+            } 
+            
+          }
+
+          if(!missing) { */
+          no_missing_data_array.push(dataobjectarray[i]);
+          //}
+        }
+
+        for (var j = 0; j < training_vars.length; j++) {
+          data_columns[j] = [];
+        }
+
+        for (var i = 0; i < no_missing_data_array.length; i++) {
+
+          for (var j = 0; j < training_vars.length; j++) {
+            data_columns[j][i] = no_missing_data_array[i].variables[training_vars[j]];
+          }
+
+          sampleids[i] = {
+            'dataset': no_missing_data_array[i].dataset,
+            'sampleid': no_missing_data_array[i].sampleid
+          };
+        }
+
+        dummy_data = {};
+
+        for (var key in dataobjectarray[0].variables) {
+          dummy_data[key] = new Array(no_missing_data_array.length);
+          for (var i = 0; i < no_missing_data_array.length; i++) {
+            dummy_data[key][i] = no_missing_data_array[i].variables[key];
+          }
+        }
+
+        return {
+          'sampleids': sampleids,
+          'data_columns': data_columns
+        };
+
+      }
+
+      var _s; // SOM object
+      var dummy_data;
+      var data_columns = [];
+      var sampleids = [];
+
+      d3.json("data/sampledata.json", function(error, json) {
+        if (error) return console.warn(error);
+
+        var training_vars =
+          ["XXL-VLDL-L", "XL-VLDL-L", "L-VLDL-L", "M-VLDL-L",
+            "S-VLDL-L", "XS-VLDL-L", "IDL-L", "L-LDL-L", "M-LDL-L",
+            "S-LDL-L", "XL-HDL-L", "L-HDL-L", "M-HDL-L", "S-HDL-L", "Glc"
+          ];
+
+        // Picks the specified values and sample ids from data object 
+        // and arranges them in arrays.
+        var res = prepare_data_columns(json.result.values, training_vars);
+
+        sampleids = res.sampleids;
+        data_columns = res.data_columns;
+
+        
+
+        for(var k=0; k<data_columns[0].length; k++) {
+          data_columns[data_columns.length-1][k] = (data_columns[data_columns.length-1][k]>5)?0:1;
+          if(isNaN(data_columns[data_columns.length-1][k])) {
+            data_columns[data_columns.length-1][k] = 1;
+          }
+        }
+
+        $scope.Task = "Initializing...";
+        $scope.NumRows = sampleids.length;
+
+        SOMComputeService.create(7, 9, sampleids, data_columns.slice(0,data_columns.length-1), data_columns[data_columns.length-1])
+          .then(
+            function succFn(result) {
+
+              _s = result.som;
+
+              $scope.Task = "Training...";
+
+              SOMComputeService.train(_s).then(function(res) {
+                // success
+                console.log('trained!');
+                make_component_planes();
+              }, function errFn(err) {
+                console.log('Error ' + err);
+                // error
+              }, report_progress);
+
+            },
+            undefined,
+            report_progress
+          );
+
+      });
+
+    });
+
+
+</script>
+
+
+</body>
+
+</html>

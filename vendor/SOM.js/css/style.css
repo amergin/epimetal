@@ -1,0 +1,111 @@
+    *  {
+      font-family: sans-serif;
+    }
+
+
+    body {
+      background: #fafafa;
+      text-align: center;
+    }
+
+    #planes div {
+      display: inline-block;
+      background: #f0f0f0;
+      margin: 20px;
+      border-radius: 10px;
+    }
+
+    p.variable {
+      text-align: center;
+      font-family: sans-serif;
+      font-size: 20px;
+      padding-top: 30px;
+    }
+
+    .label {
+      font-family: sans-serif;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+
+    #spinner-container {
+      text-align: center;
+      padding-top: 150px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+
+      position: relative;
+      margin: 100px auto;
+    }
+
+    .double-bounce1, .double-bounce2 {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      opacity: 0.6;
+      position: absolute;
+      top: 0;
+      left: 0;
+      
+      -webkit-animation: bounce 2.0s infinite ease-in-out;
+      animation: bounce 2.0s infinite ease-in-out;
+    }
+
+    .double-bounce2 {
+      background-color: #759dc5;
+    }
+
+    .double-bounce1 {
+      background-color: #ff9d90;
+    }
+
+    .double-bounce2 {
+      -webkit-animation-delay: -1.0s;
+      animation-delay: -1.0s;
+    }
+
+    @-webkit-keyframes bounce {
+      0%, 100% { -webkit-transform: scale(0.0) }
+      50% { -webkit-transform: scale(1.0) }
+    }
+
+    @keyframes bounce {
+      0%, 100% { 
+        transform: scale(0.0);
+        -webkit-transform: scale(0.0);
+      } 50% { 
+        transform: scale(1.0);
+        -webkit-transform: scale(1.0);
+      }
+    }
+
+    #progressbar span {
+      display: inline-block;
+      height: 10px;
+      border-radius: 20px;
+      background: #e0e0e0;
+
+    }
+
+    #progressbar {
+      width: 410px;
+      padding:5px;
+      text-align: left;
+      margin-left: auto;
+      margin-right: auto;
+      background: #f0f0f0;
+      border-radius: 20px;
+    }
+
+    #status {
+      padding: 6px;
+      font-size: 12px;
+      color: #666666;
+    }
+
+    
+    
