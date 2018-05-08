@@ -3,7 +3,7 @@
 ## Technical requirements
 
 ### Device
-Plotter is intended to be used on a desktop device rather than a tablet or a smartphone.
+Epidemia is intended to be used on a desktop device rather than a tablet or a smartphone.
 
 ### Browser
 
@@ -34,7 +34,7 @@ The side menu content varies based on the active view and state of the applicati
 Most of the user actions are controlled through this menu.
 
 #### Datasets
-Plotter operates by displaying various types of figures that are drawn based on the active selection of samples. The samples are part of a dataset. Plotter supports two kinds of datasets: static datasets and datasets created on-the-go by selecting a subset of samples with filters. Any dataset can be selected or inactivated, and figures presented on the content section are updated to reflect any changes on the active datasets.
+Epidemia operates by displaying various types of figures that are drawn based on the active selection of samples. The samples are part of a dataset. Epidemia supports two kinds of datasets: static datasets and datasets created on-the-go by selecting a subset of samples with filters. Any dataset can be selected or inactivated, and figures presented on the content section are updated to reflect any changes on the active datasets.
 
 Static datasets are preloaded from the database, and in the default view they are all selected as active. Static datasets cannot deleted.
 
@@ -251,7 +251,7 @@ By default, a correlation heatmap uses a linear color scale (shown right of the 
 
 In some cases the default color scaling is not the desired behavior. Consider the case where the correlation values concentrate on a small number range. In this case, the default scaling does not distinguish the values sufficiently by assigning distinct colors. 
 
-By clicking `Toggle color scale stretching` in the figure window options, Plotter assigns 75% of the upper or lower color range to the correlation value range. For instance, if the highest positive correlation was at r = 0.99 and lowest at r = 0.85, and negative correlations span from r = -0.2 to r = -0.35, the colors would be mapped as follows:
+By clicking `Toggle color scale stretching` in the figure window options, Epidemia assigns 75% of the upper or lower color range to the correlation value range. For instance, if the highest positive correlation was at r = 0.99 and lowest at r = 0.85, and negative correlations span from r = -0.2 to r = -0.35, the colors would be mapped as follows:
 
 * 100% red at r = 0.99
 * 25% red at r = 0.85
@@ -360,7 +360,7 @@ Selected variables appear as chips on the free text search field and can be remo
 
 ### User-defined variables
 
-Plotter supports creating custom variables and drawing figures that depend on them. To create a custom variable, select User-defined variables > Create a new variable. Start by uniquely naming the variable. Note that the name cannot overlap with previously created variables. On the mathematical expression field, start by typing the colon character (`:`) after which a dropdown list is presented to that is filtered as you type. 
+Epidemia supports creating custom variables and drawing figures that depend on them. To create a custom variable, select User-defined variables > Create a new variable. Start by uniquely naming the variable. Note that the name cannot overlap with previously created variables. On the mathematical expression field, start by typing the colon character (`:`) after which a dropdown list is presented to that is filtered as you type. 
 
 ![Adding a variable on the mathematical expression field](img/user_defined_variable_dropdown.png)
 

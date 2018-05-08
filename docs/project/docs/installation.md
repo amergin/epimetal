@@ -1,9 +1,9 @@
 # Installation
 
-These instructions are provided in case you want to run your own instance of Plotter. The software is encapsulated in [Docker](http://docker.com) containers, making the software relatively easy to deploy on different host systems.
+These instructions are provided in case you want to run your own instance of Epidemia. The software is encapsulated in [Docker](http://docker.com) containers, making the software relatively easy to deploy on different host systems.
 
 ## Technical overview
-There are four Docker containers that are set up in order to run Plotter. 
+There are four Docker containers that are set up in order to run Epidemia. 
 
 First is the *web container* that first compiles the latest version of the front end application and serves it with [Nginx](http://nginx.com) web server.
 
@@ -25,11 +25,11 @@ These instructions presume your host system has Docker, Docker-compose and Git c
 
 Clone the Github repository:
 
-`$ git clone https://github.com/amergin/plotter.git`
+`$ git clone https://github.com/amergin/epidemia.git`
 
 Change the directory:
 
-`$ cd plotter`
+`$ cd epidemia`
 
 ## 3. Check the Docker project settings
 
@@ -52,17 +52,17 @@ Look for the line containing
 command: "/run.sh load"
 ```
 
-The run script initializes the database (populates the database from a TSV file provided) with the command `load`. This is the correct behaviour when you are installing Plotter. In case you later on want to re-compile the Docker instance and preserve any modifications made to the database in the mean time, be sure to change `load` to `start`. Otherwise, the database will be re-initialized and any modifications done to the database will be lost.
+The run script initializes the database (populates the database from a TSV file provided) with the command `load`. This is the correct behaviour when you are installing Epidemia. In case you later on want to re-compile the Docker instance and preserve any modifications made to the database in the mean time, be sure to change `load` to `start`. Otherwise, the database will be re-initialized and any modifications done to the database will be lost.
 
 ## 4. Configure the data source and import settings
 
 ## Source file
 
-During the compilation phase, Plotter looks for a file named `python-api/api-docker/samples.tsv`. In this file, the first row indicates the variable names (columns). Each sample (row in the data source file) needs to be uniquely identifiable by the combination of dataset name and the sample ID (see later sections of this documentation). 
+During the compilation phase, Epidemia looks for a file named `python-api/api-docker/samples.tsv`. In this file, the first row indicates the variable names (columns). Each sample (row in the data source file) needs to be uniquely identifiable by the combination of dataset name and the sample ID (see later sections of this documentation). 
 
 ## Import settings
 
-Plotter is instructed to imported the data based on the settings stored in the configuration file `python-api/setup.json`. Open this file with a text editor. The import settings are stored in the file under the key `dataLoader`.
+Epidemia is instructed to imported the data based on the settings stored in the configuration file `python-api/setup.json`. Open this file with a text editor. The import settings are stored in the file under the key `dataLoader`.
 
 ### Separator, ID column
 
@@ -283,7 +283,7 @@ If everything went fine and you did not see any error messages, you should now h
 
 In certain cases it may be desirable to protect your instance with a username/password combination. To do this, first install `htpasswd` on your operating system, or use a online-generator.
 
-In the `plotter` directory, issue the following command:
+In the `epidemia` directory, issue the following command:
 
 `$ htpasswd -c .htpasswd username`.
 
@@ -298,7 +298,7 @@ auth_basic "Restricted";
 auth_basic_user_file /etc/nginx/.htpasswd;
 ```
 
-Next, open the file `Dockerfile` in the plotter root directory using a text editor. Look for the line 
+Next, open the file `Dockerfile` in the epidemia root directory using a text editor. Look for the line 
 
 ```
 # Add Nginx configuration
