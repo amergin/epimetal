@@ -82,7 +82,7 @@ angular.module('plotter', [
     $scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
       console.log("change route from", fromState, "-", toState);
       if (angular.isDefined(toState.data.pageTitle)) {
-        $scope.pageTitle = toState.data.pageTitle + ' | Epidemia';
+        $scope.pageTitle = toState.data.pageTitle + ' | EpiMetal';
       }
 
       if (toState.resolve) {

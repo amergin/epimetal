@@ -1,5 +1,5 @@
-# Epidemia
+# EpiMetal
 
 ## Introduction
 
-Epidemia is a modern single-page web application for real-time visualization and analysis of data.
+EpiMetal is an interactive single-page web application for real-time visualization and analysis of data.
