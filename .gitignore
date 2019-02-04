@@ -27,3 +27,4 @@ docs/*
 !docs/requirements.txt
 !docs/project/
 docs/project/site/
+!.bowerrc
