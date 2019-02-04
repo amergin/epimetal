@@ -1,5 +1,5 @@
 # Dockerfile for the API of Plotter
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 MAINTAINER Jussi Ekholm "jussi@sedaris.fi"
 # install packages:
 RUN apt-get update && apt-get install -y \

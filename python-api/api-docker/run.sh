@@ -6,6 +6,7 @@ FLUSH_SCRIPT=/api/flush_database.py
 WORK_DIR=/api
 SAMPLES=/load/samples.tsv
 SUPERVISORD=/usr/bin/supervisord
+SUPERVISOR_CONF=/etc/supervisor/supervisord.conf
 
 PIDFILE=/var/run/api.pid
 
@@ -34,7 +35,7 @@ start() {
     return 1
   fi
   echo 'Starting service…' >&2
-  supervisord
+  supervisord -c $SUPERVISOR_CONF
   echo 'Service started' >&2
 }
 

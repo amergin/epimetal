@@ -1,5 +1,5 @@
 # "web" Dockerfile: compiles the latest version of Plotter
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 MAINTAINER Jussi Ekholm "jussi@sedaris.fi"
 
 # install packages:
@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     nginx \
     subversion \
-    python-pip
+    python-pip \
+    sudo
 
 # install node
 RUN curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
@@ -36,6 +37,7 @@ ADD web-docker/karma-unit.tpl.js karma/karma-unit.tpl.js
 RUN grunt build
 
 # Add Nginx configuration
+ADD ./.htpasswd /etc/nginx/.htpasswd
 ADD python-api/http-docker/nginx.conf /etc/nginx/nginx.conf
 RUN chown -R www-data:www-data /var/lib/nginx
 RUN chown -R www-data:www-data /plotter
