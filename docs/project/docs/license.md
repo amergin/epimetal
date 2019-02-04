@@ -2,11 +2,11 @@
 
 ## This software
 
-This software is licensed under The MIT License (MIT). For further information, see the [license file](https://github.com/amergin/epidemia/blob/master/LICENSE).
+This software is licensed under The MIT License (MIT). For further information, see the [license file](https://github.com/amergin/epimetal/blob/master/LICENSE).
 
 ## Third party software
 
-This software utilizes several 3rd party libraries and software. To see the verbatim of the licenses, see the [third party license file](https://github.com/amergin/epidemia/blob/master/LICENSE-3RD-PARTY).
+This software utilizes several 3rd party libraries and software. To see the verbatim of the licenses, see the [third party license file](https://github.com/amergin/epimetal/blob/master/LICENSE-3RD-PARTY).
 
 **jQuery and jQuery resize**
 

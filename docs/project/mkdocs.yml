@@ -1,4 +1,4 @@
-site_name: Epidemia documentation
+site_name: EpiMetal documentation
 pages:
  - Home: index.md
  - User guide: userguide.md
@@ -6,4 +6,5 @@ pages:
  - License: license.md
 theme: 'material'
 markdown_extensions:
-  - toc(permalink=true)
+    - toc:
+        permalink: true
