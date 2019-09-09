@@ -27,6 +27,7 @@ function RegressionChart() {
     _axisHeight = 25,
     _axisLabelHeight = 25,
     _axisLabel = "(label)",
+    _logScale = false,
     _domain = [],
     _domainAdjust = 0.10,
     _zeroPoint = 0,
@@ -208,7 +209,7 @@ function RegressionChart() {
   function zeroLine() {
     function xOffset() {
       var scale = getScale(),
-      scaleOffset = scale(0),
+      scaleOffset = scale(_zeroPoint),
       boxPadding = _boxPlotMargins.left,
       chartOffset = getChartMeasurements().xOffset;
       return chartOffset + scaleOffset + boxPadding - 1;
@@ -313,13 +314,34 @@ function RegressionChart() {
       }
 
       function setAxis() {
+
         var format = d3.format(",.2f"),
+
         scale = getScale();
-        _axis = d3.svg.axis()
-        .scale(scale)
-        .orient('bottom')
-        .ticks(6)
-        .tickFormat(format);
+
+        if(_logScale) {
+
+          var minmax = getScale().domain();
+          var tickValues = _.remove([0.25, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0], function(n) {
+              return n > minmax[0] && n < minmax[1];
+          });
+
+          _axis = d3.svg.axis()
+          .scale(scale)
+          .orient('bottom')
+          .tickValues(tickValues)
+          .tickFormat(format);
+
+        } else {
+
+          _axis = d3.svg.axis()
+          .scale(scale)
+          .orient('bottom')
+          .ticks(6)
+          .tickFormat(format);
+
+        }
+        
       }
 
       var chartMeasurements = getChartMeasurements();
@@ -443,6 +465,7 @@ function RegressionChart() {
           .height(_boxPlotHeight)
           .threshold(0.05)
           .transform({ 'x': 0, 'y': getChartOffset(index) })
+          .logScale(_logScale)
           .domain(_domain)
           .margins(_boxPlotMargins)
           .variable(d.variable)
@@ -617,6 +640,18 @@ function RegressionChart() {
   _chart.axisLabel = function(x) {
     if(!arguments.length) { return _axisLabel; }
     _axisLabel = x;
+    return _chart;
+  };
+
+  _chart.logScale = function(x) {
+    if(!arguments.length) { return _logScale; }
+    _logScale = x;
+    return _chart;
+  };
+
+  _chart.zeroPoint = function(x) {
+    if(!arguments.length) { return _zeroPoint; }
+    _zeroPoint = x;
     return _chart;
   };
 

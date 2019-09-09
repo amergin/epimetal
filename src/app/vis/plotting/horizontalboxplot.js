@@ -20,6 +20,7 @@ function HorizontalBoxPlot() {
       _transform,
       _bodyG,
       _xScale,
+      _logScale,
       _tooltipPvalueFormat = d3.format('.2e'),
       _tooltipFormat = d3.format('.2f'),
       _tooltipAccessor = function(obj) {
@@ -88,7 +89,12 @@ function HorizontalBoxPlot() {
   };
 
   function setXScale() {
-    _xScale = d3.scale.linear().domain(_domain).range([0,_width]);
+    if(_logScale) {
+      _xScale = d3.scale.log().domain(_domain).range([0,_width]);
+    } else {
+      _xScale = d3.scale.linear().domain(_domain).range([0,_width]);  
+    }
+    
   }
 
   function wholeBox() {
@@ -172,6 +178,14 @@ function HorizontalBoxPlot() {
   // getter
   _chart.scale = function() {
     return _xScale;
+  };
+
+  _chart.logScale = function(x) {
+      if (!arguments.length) {
+          return _logScale;
+      }
+      _logScale = x;
+      return _chart;
   };
 
   _chart.element = function(x) {

@@ -36,6 +36,7 @@ angular.module('services.regression.ww', [
       worker
         .script(threadFunction)
         .addDependency(absUrl + 'assets/lodash.min.js')
+        .addDependency(absUrl + 'assets/jsregression.js')
         // .addDependency(absUrl + 'assets/numeric.min.js')
         // .addDependency(absUrl + 'assets/math.min.js')
         .addDependency(absUrl + 'assets/statistics-distributions-packaged.js')
@@ -235,13 +236,16 @@ angular.module('services.regression.ww', [
           xColumns = [strippedAssoc].concat(strippedAdjust);
 
         var res = regressionUtils.regress(xColumns, strippedTarget, 0.05, true, true);
+        //console.log(res);
         return {
           result: {
             success: true
           },
           betas: Array.prototype.slice.call(res.beta),//res.beta,
-          ci: [res.beta[1] - res.ci[0][1], res.beta[1] + res.ci[0][1]],
-          pvalue: res.pvalue[1]
+          ci: [res.ci[1][0],res.ci[1][1]],
+          //ci: [res.beta[1] - res.ci[0][1], res.beta[1] + res.ci[0][1]],
+          pvalue: res.pvalue[1],
+          logisticRegression: res.logisticRegression
         };
       } catch (error) {
         console.log(error.stack);

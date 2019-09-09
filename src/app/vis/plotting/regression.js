@@ -29,6 +29,20 @@ angular.module('plotter.vis.plotting.regression',
     var width = REGRESSION_WIDTH,
     height;
 
+    var axisLabel;
+    var zeroPoint;
+    var logScale;
+
+    if(data[0].payload[0].logisticRegression) {
+      axisLabel = "Odds ratio for outcome per 1-SD increment in exposure variable";
+      zeroPoint = 1;
+      logScale = true;
+    } else {
+      axisLabel = "SD increment in outcome variable per 1-SD increment in exposure variable";
+      zeroPoint = 0;
+      logScale = false;
+    }
+
     $scope.chart = new RegressionChart()
     .element( $scope.element[0] )
     .width(width)
@@ -42,7 +56,9 @@ angular.module('plotter.vis.plotting.regression',
         function(v) { return v.labelName(); })
       }
     ])
-    .axisLabel("SD increment in outcome variable per 1-SD increment in exposure variable")
+    .axisLabel(axisLabel)
+    .logScale(logScale)
+    .zeroPoint(zeroPoint)
     .circleColors(FilterService.getSOMColorScale())
     .datasetColors(DatasetFactory.getColorScale())
     .colorAccessor(function(name, colorScale) {
