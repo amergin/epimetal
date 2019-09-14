@@ -62,7 +62,7 @@ During the compilation phase, EpiMetal looks for a file named `python-api/api-do
 
 ## Import settings
 
-EpiMetal is instructed to imported the data based on the settings stored in the configuration file `python-api/setup.json`. Open this file with a text editor. The import settings are stored in the file under the key `dataLoader`.
+EpiMetal is instructed to import the data based on the settings stored in the configuration file `python-api/setup.json`. Open this file with a text editor. The import settings are stored in the file under the key `dataLoader`.
 
 ### Separator, ID column
 
