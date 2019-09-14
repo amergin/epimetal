@@ -58,7 +58,7 @@ The run script initializes the database (populates the database from a TSV file 
 
 ## Source file
 
-During the compilation phase, EpiMetal looks for a file named `python-api/api-docker/samples.tsv`. In this file, the first row indicates the variable names (columns). Each sample (row in the data source file) needs to be uniquely identifiable by the combination of dataset name and the sample ID (see later sections of this documentation). 
+During the compilation phase, EpiMetal looks for a file named `python-api/api-docker/samples.tsv`. In this file, the first row indicates the variable names (columns). Each sample (row in the data source file) needs to be uniquely identifiable by the combination of dataset name and the sample ID (see later sections of this documentation). It is permissible for samples not to have a proper value for all of the variables; as long as the import data file and its rows are syntactically correct, missing data is tolerated.
 
 ## Import settings
 
