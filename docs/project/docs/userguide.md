@@ -120,7 +120,7 @@ New figures can be added by clicking on the **Create a new graph** button and se
 * [Box plot](userguide.md#box-plot)
 
 #### Figure windows
-The windows can be resized, dragged and removed from the canvas as user chooses. A cogwheel on the top-left of the window contains a set of options for the window. These available options vary based on the displayed figure type. For instance, [a histogram](userguide.md#histogram) can be exported either in SVG or PNG format through this dropdown.
+The windows can be resized, dragged and removed from the canvas as user chooses. A cogwheel on the top-left of the window contains a set of options for the window. These available options vary based on the displayed figure type. For instance, [a histogram](userguide.md#histogram) can be exported either in SVG or PNG format through this dropdown. The PNG image is in a resolution of 96 DPI (Dots Per Inch). To increase the output resolution of a PNG file, increase the grid window size as needed (where applicable).
 
 ![Figure window settings dropdown](img/window_export.png)
 
