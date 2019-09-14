@@ -119,6 +119,7 @@
       stDev = mathUtils.stDeviation(columns[ii], avg, accessor);
       
       if(stDev === 0) {
+        // console.log(columns[ii]);
         // all sample values are the same, constant variable -> error
         throw new Error('Constant variable');
       }
@@ -520,77 +521,224 @@
 
     var nvars = xcolumns.length;
     var nsamples = ycolumn.length;
+
     
-    var normalTargetData = root.prepareRegressionData(ycolumn, false, normalize);
-    var xMatrix = root.prepareRegressionData(xcolumns, add_constant, normalize);
 
+    // Check if y is binary (0 or 1). If so, we use logistic regression. Otherwise linear regression
 
-    if(add_constant) {
-      nvars+=1;
+    var i,j;
+
+    var useLogisticRegression = true;
+    for (i=0;i<ycolumn.length;i++) {
+      if(ycolumn[i] !== 0 && ycolumn[i] !== 1) {
+        useLogisticRegression = false;
+        break;
+      }
     }
 
-    
-    var innerProductInv = root.matrixInnerProduct(xMatrix, nsamples, (nvars));
 
-    root.matrixInverseInPlace(innerProductInv, nvars);
-
-    var multi2 = root.matrixMultiplyTrB(innerProductInv, nvars, nvars, xMatrix, nsamples, nvars);
-
-    var betas = root.matrixMultiply(multi2, nvars, nsamples, normalTargetData, nsamples, 1);
+    var xMatrix = [];
 
 
 
-    
-    // Calculating predicted data with betas
+    if(useLogisticRegression) {
 
-    predictedTargetData = root.matrixMultiply(xMatrix,nsamples, nvars, betas, nvars,1);
+      // console.log('Using logistic regression!');
+      xMatrix = root.prepareRegressionData(xcolumns, true, true);
 
-    // Calculating residuals
+      nvars = xcolumns.length + 1;
 
-    root.matrixSubtractInPlace(normalTargetData, nsamples, 1, predictedTargetData, nsamples, 1);
+      var trainingData = [];
 
-    residuals = normalTargetData;
-    normalTargetData = null;
+      for(i=0; i < nsamples ; ++i) {
 
+        var row = [];
 
-    // MSE
+        // No need to push the constant term in here, 
+        // since jsregression adds it automatically.
+        // That's why we start from index 1
+        for(j=1; j<nvars; j++) {
 
-    var sigma2 = root.matrixMultiply(residuals,1,nsamples,residuals,nsamples,1);
+          row.push(xMatrix[i*nvars+j]);
 
-    var degrees =  nsamples - nvars;
+        }
 
-    sigma2[0] = sigma2[0] / degrees;
+        row.push(ycolumn[i]);
 
+        trainingData.push(row);
 
-    
-    cmatrix = innerProductInv;
-    innerProductInv = null;
-
-    root.matrixScaleInPlace(cmatrix, nvars, nvars, sigma2[0]);
-
+      }
     
 
-    resobj.pvalue = [];
-    resobj.ci = [];
+      // === Create the linear regression === //
+      var logistic = new jsregression.LogisticRegression({
+         alpha: 0.1,
+         iterations: 1000,
+         lambda: 0.01
+      });
 
-    for(var_num = 0; var_num<nvars; var_num++) {
+      // === Train the logistic regression === //
+
+      var model = logistic.fit(trainingData);
+
+      // === Print the trained model === //
 
 
-      var _sqrt = Math.sqrt(cmatrix[var_num * (nvars) + var_num]);
+      //      console.log(model);
 
-      var ci = statDist.tdistr(degrees, alpha/2) * _sqrt;
 
-        var beta = betas[var_num];
+      // === Testing the trained logistic regression === //
 
-        var t = Math.abs(beta / _sqrt);
-        var pvalue = statDist.tprob(degrees, t) * 2;
+      var predictedProb = [];
 
-        resobj.pvalue.push(pvalue);
-        resobj.ci.push([beta - ci, beta + ci]);
+      for(i=0; i < trainingData.length; ++i){
+         predictedProb[i] = logistic.transform(trainingData[i]);
+         //let predicted = logistic.transform(trainingData[i]) >= 0.5 ? 1 : 0;
+      //   console.log("actual: " + trainingData[i][2] + " probability of being Iris-setosa: " + predictedProb[i]);
+      //   console.log("actual: " + trainingData[i][2] + " predicted: " + predicted);
+      }
 
+
+      // === Calculate odds ratios === 
+
+      // The standard errors of the model coefficients are the square 
+      // roots of the diagonal entries of the covariance matrix.
+
+      // covariance matrix = inv(tr(X)VX)
+
+      // https://stats.stackexchange.com/questions/89484/how-to-compute-the-standard-errors-of-a-logistic-regressions-coefficients
+
+
+      // Here we need the constant term
+      var VX = xMatrix.slice();
+
+      for(i=0;i<nsamples;i++) {
+        for(j=0;j<nvars;j++) {
+
+          VX[i*nvars+j] = VX[i*nvars+j] * predictedProb[i] * (1-predictedProb[i]);
+
+        }
+      }
+
+      var XTVX = new Float32Array(nvars*nvars);
+
+      for(var r = 0;r<nvars;r++) {
+        for(var c = 0;c<nvars;c++) {
+
+          XTVX[r*nvars+c] = 0;
+          for(i = 0;i<nsamples;i++) {
+            XTVX[r*nvars+c] += xMatrix[i*nvars+r]*VX[i*nvars+c];
+          }
+
+        }
+      }
+
+      root.matrixInverseInPlace(XTVX,nvars);
+
+
+      resobj.pvalue = [];
+      resobj.ci = [];
+      resobj.beta = [];
+      resobj.logisticRegression = true;
+
+      for (i=0;i<nvars;i++) {
+
+        var se = Math.sqrt(XTVX[(i)*nvars+(i)]);
+        var or = Math.exp(model.theta[i]);
+
+        // Pvalue = 2*pnorm(-abs(z))
+
+        var zscore = model.theta[i] / se;
+
+
+        //console.log("Beta for var " + i + " :" + model.theta[i] + " SE: "+ se + ", p-value: "+2*statDist.uprob(Math.abs(zscore)));
+        //console.log("Odds ratio for var " + i + " :"  + or + " CI: "+Math.exp(model.theta[i] - 1.96*se) +" - "+Math.exp(model.theta[i] + 1.96*se) );
+
+        resobj.pvalue.push(2*statDist.uprob(Math.abs(zscore)));
+        resobj.ci.push([Math.exp(model.theta[i] - 1.96*se), Math.exp(model.theta[i] + 1.96*se)]);
+        resobj.beta.push(or);
+      }
+
+
+    } else {
+
+
+      xMatrix = root.prepareRegressionData(xcolumns, add_constant, normalize);
+      //console.log("data");
+      //console.log(xMatrix);
+
+      if(add_constant) {
+        nvars+=1;
+      }
+
+      // Linear regression here:
+      // console.log('Using linear regression!');
+      
+      var normalTargetData = root.prepareRegressionData(ycolumn, false, normalize);
+      
+      var innerProductInv = root.matrixInnerProduct(xMatrix, nsamples, (nvars));
+
+      root.matrixInverseInPlace(innerProductInv, nvars);
+
+      var multi2 = root.matrixMultiplyTrB(innerProductInv, nvars, nvars, xMatrix, nsamples, nvars);
+
+      var betas = root.matrixMultiply(multi2, nvars, nsamples, normalTargetData, nsamples, 1);
+
+
+
+      
+      // Calculating predicted data with betas
+
+      predictedTargetData = root.matrixMultiply(xMatrix,nsamples, nvars, betas, nvars,1);
+
+      // Calculating residuals
+
+      root.matrixSubtractInPlace(normalTargetData, nsamples, 1, predictedTargetData, nsamples, 1);
+
+      residuals = normalTargetData;
+      normalTargetData = null;
+
+
+      // MSE
+
+      var sigma2 = root.matrixMultiply(residuals,1,nsamples,residuals,nsamples,1);
+
+      var degrees =  nsamples - nvars;
+
+      sigma2[0] = sigma2[0] / degrees;
+
+
+      
+      cmatrix = innerProductInv;
+      innerProductInv = null;
+
+      root.matrixScaleInPlace(cmatrix, nvars, nvars, sigma2[0]);
+
+      
+
+      resobj.pvalue = [];
+      resobj.ci = [];
+      resobj.logisticRegression = false;
+
+      for(var_num = 0; var_num<nvars; var_num++) {
+
+
+        var _sqrt = Math.sqrt(cmatrix[var_num * (nvars) + var_num]);
+
+        var ci = statDist.tdistr(degrees, alpha/2) * _sqrt;
+
+          var beta = betas[var_num];
+
+          var t = Math.abs(beta / _sqrt);
+          var pvalue = statDist.tprob(degrees, t) * 2;
+
+          resobj.pvalue.push(pvalue);
+          resobj.ci.push([beta - ci, beta + ci]);
+
+      }
+
+      resobj.beta = betas;
     }
-
-    resobj.beta = betas;
 
     return resobj;
   };

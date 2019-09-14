@@ -6,6 +6,7 @@ bin/
 node_modules/
 !vendor/
 vendor/*
+!vendor/js-regression
 !vendor/dcjs
 vendor/dcjs/*
 !vendor/dcjs/dc.js

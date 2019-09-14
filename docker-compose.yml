@@ -19,13 +19,13 @@ api:
   - db
 
 mongodata:  
-  image: mongo:latest
+  image: mongo:4.0
   volumes:
     - /data/db
   command: --break-mongo
 
 db:
- image: mongo:latest
+ image: mongo:4.0
  volumes_from:
   - mongodata
  command: --smallfiles

@@ -105,7 +105,7 @@ module.exports = {
       'vendor/SparkMD5/spark-md5.js',
       'vendor/ment.io/dist/mentio.js',
       'vendor/mathjs/dist/math.js',
-      'vendor/regression-js/src/regression.js',
+
 
       'vendor/ssci/distrib/ssci.js',
       'vendor/big.js/big.js',
@@ -125,6 +125,7 @@ module.exports = {
       'vendor/ng-tags-input/ng-tags-input.bootstrap.min.css'
     ],
     assets: [
+      'vendor/js-regression/src/jsregression.js',
       'vendor/font-awesome/fonts/*',
       'vendor/bootstrap-chosen/chosen-sprite*',
       'src/common/utilities.math.js',
