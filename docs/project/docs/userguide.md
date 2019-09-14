@@ -197,7 +197,7 @@ The result TSV file contains the following columns:
 | variable   | String     | Name of the exposure variable |
 | computation_succeeded | Boolean: **True** / **False** | Whether the computation succeeded. If the result is **False**, the following numerical columns will have value NaN |
 | data_source | String | The dataset name. Should be the same for each row in the same file |
-| beta0 | Float | The standardized regression coefficient, or Beta 0, for this variable |
+| beta0 | Float | The regression coefficient for the constant term (intercept) |
 | beta1 | Float | The standardized regression coefficient, or Beta 1, for this variable |
 | CI1 | Float | Lower endpoint of the 95% confidence interval |
 | CI2 | Float | Upper endpoint of the 95% confidence interval |
