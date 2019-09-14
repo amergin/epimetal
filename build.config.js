@@ -105,7 +105,7 @@ module.exports = {
       'vendor/SparkMD5/spark-md5.js',
       'vendor/ment.io/dist/mentio.js',
       'vendor/mathjs/dist/math.js',
-
+      'vendor/regression-js/src/regression.js',      
 
       'vendor/ssci/distrib/ssci.js',
       'vendor/big.js/big.js',
