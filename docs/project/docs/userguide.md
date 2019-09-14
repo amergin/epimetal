@@ -236,7 +236,7 @@ By selecting `Toggle figure pooling` from the options dropdown the active dots a
 ### Heatmap
 A correlation heatmap from any available variables can be drawn in the [Explore and filter](userguide.md#explore-and-filter) view. The maximum number of variables that can displayed within any heatmap is 100. The active samples used as as source for this figure can either be separated to distinct figures based on the dataset (`Separate heatmaps for each dataset`), or be used together to create a single heatmap (`One combined heatmap`).
 
-In the case of separate heatmaps sfor each dataset, if the dataset which is used as the sample source for a heatmap is deselected the window containing the figure is automatically removed from the canvas.
+In the case of separate heatmaps for each dataset, if the dataset which is used as the sample source for a heatmap is deselected the window containing the figure is automatically removed from the canvas.
 
 The heatmap cells can be clicked to draw the corresponding scatter plot of the two variables.
 
