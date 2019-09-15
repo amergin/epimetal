@@ -135,9 +135,9 @@ angular.module('plotter.vis.plotting.boxplot',
         .height($scope.getHeight(config.element))
         .renderLabel(true)
         .dimension(config.dimension)
-        .colorAccessor(function(d) {
-          return d.key.dataset;
-        })
+        //.colorAccessor(function(d) {
+        //  return d.key.dataset;
+        //})
         .group(config.filter(config.reduced))
         // .keyAccessor(function(d) {
         //   return d.key;
@@ -184,7 +184,9 @@ angular.module('plotter.vis.plotting.boxplot',
         .yAxisLabel(config.variable.axisLabel())
         .elasticX(true)
         .elasticY(true)
-        .yAxisPadding('10%')
+        .yAxisPadding('15%')//'15%')
+        //.outerPadding(0.70)
+        //.boxPadding(0.85)
         .width($scope.getWidth(config.element))
         .height($scope.getHeight(config.element))
         .renderLabel(true)
@@ -203,7 +205,10 @@ angular.module('plotter.vis.plotting.boxplot',
         .colorAccessor(function(d) {
           return config.colorScale.getAccessor(d.key);
         })
-        .tickFormat(constants.tickFormat);
+        .tickFormat(constants.tickFormat)
+        .on('renderlet', function(chart, filter) {
+          console.log("boxplot renderlet trigger");
+        });
         // .on("postRender", resizeSVG)
         // .on("postRedraw", resizeSVG)
 
