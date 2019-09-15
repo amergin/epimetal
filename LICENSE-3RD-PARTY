@@ -33,6 +33,7 @@
         - MongoEngine, Copyright (c) 2009 authors and contributors
         - Material for MkDocs, Copyright (c) 2016-2017 Martin Donath
         - ngbp, Copyright (c) 2013 Josh David Miller <josh@joshdmiller.com>
+        - js-regression, Copyright (c) 2017 Xianshun Chen
 
         Permission is hereby granted, free of charge, to any person obtaining a copy
         of this software and associated documentation files (the "Software"), to deal
