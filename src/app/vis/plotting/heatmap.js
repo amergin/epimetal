@@ -217,7 +217,8 @@ angular.module('plotter.vis.plotting.heatmap',
     $scope.heatmap = dc.heatMap(element[0], constants.groups.heatmap);
 
     var width = $scope.getWidth(baseElement),
-    height = $scope.getHeight(baseElement);
+    height = $scope.getHeight(baseElement),
+    tickFormat = d3.scale.pow().exponent(1);
 
     function labelOrdering(a, b) {
       var grpA = getVarGroupOrder(a),
@@ -271,7 +272,7 @@ angular.module('plotter.vis.plotting.heatmap',
       "Vertical variable:  " +
       VariableService.getVariable(d.key.y).labelName() + "\n" +
       "Correlation:  " + 
-      constants.tickFormat(d.value) + "\n" + 
+      tickFormat(d.value).toFixed(2) + "\n" + 
       "P-value:   " + 
       ( _(d.key.pvalue).isNaN() || _(d.key.pvalue).isUndefined() ? "(not available)" : $scope.format(d.key.pvalue) );
     })
