@@ -21,14 +21,14 @@
           "to": "Sex"
         }
       ],
-      "exclude": []
+      "exclude": ["FastingGlucose", "FastingInsulin", "HOMA", "2h_glucose", "Glucose_AUC0120", "Insulin_AUC0120", "MatsudaSI", "apoa_I", "Leptin", "NEFA", "TG", "TC", "LDL_C", "HDL_C", "Weight", "Waist", "Hip", "W_H_ratio", "HR", "VO2max", "Energy", "Fat", "Sat", "Poly", "Mono", "Protein", "CHO", "Alcohol", "M_i"]
     },
     "dataSource": {
       "columnSeparator": "\t",
-      "sampleIdColumn": "sampleid"
+      "sampleIdColumn": "ID"
     },
     "metadata": {
-      "file": "metabolites_description_160131_clinical.tsv",
+      "file": "metabolites_description_160921_baker.MS.tsv",
       "columnSeparator": "\t",
       "topGroupSeparator": ":"
     },
@@ -57,7 +57,7 @@
           },
           {
               "name": "Clinical variables",
-              "variables": ["Age", "Sex", "Weight", "Height", "BMI", "BP-syst", "BP-diast"]
+              "variables": ["Age", "Sex", "BMI", "SBP", "DBP"]
           }
         ],
         "defaultInputVariables": ["XXL-VLDL-L","XL-VLDL-L","L-VLDL-L","M-VLDL-L","S-VLDL-L","XS-VLDL-L","IDL-L","L-LDL-L","M-LDL-L","S-LDL-L","XL-HDL-L","L-HDL-L","M-HDL-L","S-HDL-L","Serum-C","Serum-TG","HDL-C","LDL-C","Glc","Cit","Phe","Gp","Tyr","FAw3toFA","FAw6toFA","SFAtoFA"],
