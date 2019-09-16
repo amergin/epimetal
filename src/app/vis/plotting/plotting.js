@@ -189,7 +189,7 @@ angular.module('plotter.vis.plotting',
         .variables(cfg.variables)
         .size(getScale(cfg.variables.length))
         .pooled(false)
-        .extra({ separate: cfg.separate, dataset: cfg.dataset });
+        .extra({ separate: cfg.separate, dataset: cfg.dataset, correlationType: 'spearman-rank' });
 
         showAllSameTypeWindows(windowHandler, type);
       }

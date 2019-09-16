@@ -326,7 +326,8 @@ angular.module('plotter.vis.plotting.heatmap',
     CorrelationService.compute( { 
       variables: variables, 
       separate: $scope.window.extra().separate, 
-      dataset: $scope.window.extra().dataset 
+      dataset: $scope.window.extra().dataset,
+      correlationType: 'spearman-rank'
     }, $scope.window )
     .then(function succFn(coordinates) {
       $scope.applyColorScale(coordinates);

@@ -76,9 +76,13 @@ module.exports = {
       'vendor/ui-router-extras/release/modular/ct-ui-router-extras.core.js',
       'vendor/ui-router-extras/release/modular/ct-ui-router-extras.dsr.js',
       'vendor/ui-router-extras/release/modular/ct-ui-router-extras.sticky.js',
+
       'vendor/crossfilter/patched/crossfilter.js',
+      //'vendor/crossfilter/develop/crossfilter.js',
+
       'vendor/d3/d3.js',
       'vendor/dcjs/dc-develop.js',
+      //'vendor/dcjs/2.0.0/dc.js',
       'vendor/d3-tip/index.js',
       // Utilities
       'vendor/lodash/lodash.js',
@@ -134,6 +138,7 @@ module.exports = {
       'vendor/lodash/lodash.min.js',
       'vendor/mathjs/dist/math.min.js',
       'vendor/statistics-distributions-js-packaged/statistics-distributions-packaged.js',
+      'vendor/Spearson/lib/spearson.js',
       'src/assets/images/*'
     ]
   },

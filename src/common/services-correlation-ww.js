@@ -31,7 +31,8 @@ angular.module('services.correlation.ww', [
       worker
         .script(threadFunction)
         .addDependency(absUrl + 'assets/lodash.min.js')
-        .addDependency(absUrl + 'assets/utilities.math.js');
+        .addDependency(absUrl + 'assets/utilities.math.js')
+        .addDependency(absUrl + 'assets/spearson.js');
       return worker;
     });
   }
@@ -125,7 +126,8 @@ angular.module('services.correlation.ww', [
 
   function threadFunction(input, output) {
     var coordinates = input.coordinates,
-      samples = input.samples;
+      samples = input.samples,
+      correlationType = input.correlationType;
 
     function notify(loopInd, iterations) {
       output.notify({
@@ -139,20 +141,35 @@ angular.module('services.correlation.ww', [
 
     try {
       _.each(coordinates, function(coord, ind) {
-        var varX = coord.x,
+        var inputX = _.pluck(samples, coord.x),
+        inputY = _.pluck(samples, coord.y);
+
+        if (correlationType == 'pearson') {
+          /*
+          var varX = coord.x,
           varY = coord.y,
           meanX = mathUtils.mean(samples, varX),
           meanY = mathUtils.mean(samples, varY);
 
-        var stdX = mathUtils.stDeviation(samples, meanX, function(item) {
-            return +item[varX];
-          }),
-          stdY = mathUtils.stDeviation(samples, meanY, function(item) {
-            return +item[varY];
-          });
+          var stdX = mathUtils.stDeviation(samples, meanX, function(item) {
+              return +item[varX];
+            }),
+            stdY = mathUtils.stDeviation(samples, meanY, function(item) {
+              return +item[varY];
+            });
 
-        // correlation
-        coord['corr'] = mathUtils.sampleCorrelation(samples, varX, meanX, stdX, varY, meanY, stdY);
+          // correlation
+          coord['corr'] = mathUtils.sampleCorrelation(samples, varX, meanX, stdX, varY, meanY, stdY);
+          */
+          coord['corr'] = spearson.correlation.pearson(inputX, inputY, true);
+        }
+        else if (correlationType == 'spearman-rank') {
+          coord['corr'] = spearson.correlation.spearman(inputX, inputY, true);
+        }
+        else if(correlationType == 'spearman') {
+          coord['corr'] = spearson.correlation.spearman(inputX, inputY, false);
+        }
+
         // p-value
         coord['pvalue'] = mathUtils.calcPForPearsonR(coord['corr'], samples.length);
 
@@ -222,7 +239,7 @@ angular.module('services.correlation.ww', [
         var workerPromises = [];
         _.each(_workers, function(worker, ind) {
           var coordinates = cellInfo.coordinates[ind];
-          // consider the case where there are more workers than variables  to calculate
+          // consider the case where there are more workers than variables to calculate
           if (coordinates) {
             var promise = worker
               .onTerminate(onTerminate)
@@ -230,7 +247,8 @@ angular.module('services.correlation.ww', [
                 samples: data.slice(0),
                 variables: config.variables,
                 coordinates: coordinates,
-                workerId: worker.id()
+                workerId: worker.id(),
+                correlationType: config.correlationType
               });
 
             promise.then(null, null, function notifyFn(data) {
@@ -266,6 +284,20 @@ angular.module('services.correlation.ww', [
           });
 
       });
+    }
+
+    switch (config.correlationType) {
+      case 'pearson':
+        break;
+
+      case 'spearman-rank':
+        break;
+
+      case 'spearman':
+        break;
+
+      default:
+        throw new Error('Unsupported correlation type.');
     }
 
     checkWorkers();
