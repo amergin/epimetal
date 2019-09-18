@@ -34,11 +34,11 @@ angular.module('plotter.vis.plotting.regression',
     var logScale;
 
     if(data[0].payload[0].logisticRegression) {
-      axisLabel = "Odds ratio for outcome per 1-SD increment in exposure variable";
+      axisLabel = "Standardized odds ratios with 95% CI";
       zeroPoint = 1;
       logScale = true;
     } else {
-      axisLabel = "SD increment in outcome variable per 1-SD increment in exposure variable";
+      axisLabel = "Standardized regression coefficients with 95% CI";
       zeroPoint = 0;
       logScale = false;
     }

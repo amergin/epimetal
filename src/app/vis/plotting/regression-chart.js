@@ -378,7 +378,7 @@ function RegressionChart() {
       .enter()
       .append('g')
       .attr('transform', function(d) {
-        var x = 55, //chartMeasurements.xOffset + _boxPlotMargins.left - 1,
+        var x = 140, //chartMeasurements.xOffset + _boxPlotMargins.left - 1,
         y = getYOffset();
         return 'translate(' + x + "," + y + ")";
       })
