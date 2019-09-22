@@ -287,3 +287,9 @@ This software utilizes several 3rd party libraries and software. To see the verb
 * Copyright (c) 2013 Josh David Miller <josh@joshdmiller.com>
 * [https://github.com/ngbp/ngbp](https://github.com/ngbp/ngbp)
 * [MIT License](https://github.com/ngbp/ngbp/blob/master/LICENSE)
+
+**Js-regression**
+
+* Copyright (c) 2017 Xianshun Chen
+* [https://github.com/chen0040/js-regression](https://github.com/chen0040/js-regression)
+* [MIT License](https://github.com/chen0040/js-regression/blob/master/LICENSE)

@@ -120,7 +120,7 @@ New figures can be added by clicking on the **Create a new graph** button and se
 * [Box plot](userguide.md#box-plot)
 
 #### Figure windows
-The windows can be resized, dragged and removed from the canvas as user chooses. A cogwheel on the top-left of the window contains a set of options for the window. These available options vary based on the displayed figure type. For instance, [a histogram](userguide.md#histogram) can be exported either in SVG or PNG format through this dropdown.
+The windows can be resized, dragged and removed from the canvas as user chooses. A cogwheel on the top-left of the window contains a set of options for the window. These available options vary based on the displayed figure type. For instance, [a histogram](userguide.md#histogram) can be exported either in SVG or PNG format through this dropdown. The PNG image is in a resolution of 96 DPI (Dots Per Inch). To increase the output resolution of a PNG file, increase the grid window size as needed (where applicable).
 
 ![Figure window settings dropdown](img/window_export.png)
 
@@ -197,7 +197,7 @@ The result TSV file contains the following columns:
 | variable   | String     | Name of the exposure variable |
 | computation_succeeded | Boolean: **True** / **False** | Whether the computation succeeded. If the result is **False**, the following numerical columns will have value NaN |
 | data_source | String | The dataset name. Should be the same for each row in the same file |
-| beta0 | Float | The standardized regression coefficient, or Beta 0, for this variable |
+| beta0 | Float | The regression coefficient for the constant term (intercept) |
 | beta1 | Float | The standardized regression coefficient, or Beta 1, for this variable |
 | CI1 | Float | Lower endpoint of the 95% confidence interval |
 | CI2 | Float | Upper endpoint of the 95% confidence interval |
@@ -234,9 +234,9 @@ A scatter plot contains the dots originating from each active dataset. The top-r
 By selecting `Toggle figure pooling` from the options dropdown the active dots are pooled and displayed in black. In this case, a single regression line is displayed instead of separate lines for each active dataset.
 
 ### Heatmap
-A correlation heatmap from any available variables can be drawn in the [Explore and filter](userguide.md#explore-and-filter) view. The maximum number of variables that can displayed within any heatmap is 100. The active samples used as as source for this figure can either be separated to distinct figures based on the dataset (`Separate heatmaps for each dataset`), or be used together to create a single heatmap (`One combined heatmap`).
+A correlation heatmap from any available variables can be drawn in the [Explore and filter](userguide.md#explore-and-filter) view. The correlation coefficient is the [Spearman's rank correlation coefficient](https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient). The maximum number of variables that can displayed within any heatmap is 100. The active samples used as as source for this figure can either be separated to distinct figures based on the dataset (`Separate heatmaps for each dataset`), or be used together to create a single heatmap (`One combined heatmap`).
 
-In the case of separate heatmaps sfor each dataset, if the dataset which is used as the sample source for a heatmap is deselected the window containing the figure is automatically removed from the canvas.
+In the case of separate heatmaps for each dataset, if the dataset which is used as the sample source for a heatmap is deselected the window containing the figure is automatically removed from the canvas.
 
 The heatmap cells can be clicked to draw the corresponding scatter plot of the two variables.
 

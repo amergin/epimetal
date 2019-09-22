@@ -145,6 +145,34 @@ angular.module('plotter.vis.windowing', ['services.window',
   };
 
   $scope.exportPNG = function() {
+
+    // function setDPI(canvas, dpi) {
+    //     // Set up CSS size.
+    //     canvas.style.width = canvas.style.width || canvas.width + 'px';
+    //     canvas.style.height = canvas.style.height || canvas.height + 'px';
+
+    //     // Get size information.
+    //     var scaleFactor = 2;//dpi / 96;
+    //     var width = parseFloat(canvas.style.width);
+    //     var height = parseFloat(canvas.style.height);
+
+    //     // Backup the canvas contents.
+    //     var oldScale = canvas.width / width;
+    //     var backupScale = scaleFactor / oldScale;
+    //     var backup = canvas.cloneNode(false);
+    //     backup.getContext('2d').drawImage(canvas, 0, 0);
+
+    //     // Resize the canvas.
+    //     var ctx = canvas.getContext('2d');
+    //     canvas.width = Math.ceil(width * scaleFactor);
+    //     canvas.height = Math.ceil(height * scaleFactor);
+
+    //     // Redraw the canvas image and scale future draws.
+    //     ctx.setTransform(backupScale, 0, 0, backupScale, 0, 0);
+    //     ctx.drawImage(backup, 0, 0);
+    //     ctx.setTransform(scaleFactor, 0, 0, scaleFactor, 0, 0);
+    // }
+
     var svgToCanvas = function(svgElement) {
       var DOMURL = window.URL || window.webkitURL || window;
 
@@ -168,6 +196,8 @@ angular.module('plotter.vis.windowing', ['services.window',
         canvas.height = image.height;
         var context = canvas.getContext('2d');
         context.drawImage(image, 0, 0);
+
+        //setDPI(canvas, 300);
         // DOMURL.revokeObjectURL(url);
         defer.resolve(canvas);
       };
@@ -200,7 +230,7 @@ angular.module('plotter.vis.windowing', ['services.window',
       context.fillRect(0, 0, w, h);
 
       var regex = new RegExp('data:image\/png;base64,', 'g');
-      return canvas.toDataURL("image/png").replace(regex, '');
+      return canvas.toDataURL("image/png", 1.0).replace(regex, '');
     };
 
     function getCombined(element) {

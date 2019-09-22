@@ -10082,6 +10082,10 @@ dc.boxPlot = function (parent, chartGroup) {
     var _box = d3.box();
     var _tickFormat = null;
 
+    // Used in yAxisMin and yAxisMax to add padding in pixel coordinates
+    // so the min and max data points/whiskers are within the chart
+    var _yRangePadding = 8;
+
     var _boxWidth = function (innerChartWidth, xUnits) {
         if (_chart.isOrdinal()) {
             return _chart.x().rangeBand();
@@ -10240,6 +10244,34 @@ dc.boxPlot = function (parent, chartGroup) {
         return _chart.hasFilter(d.key);
     };
 
+    // MODIFICATION IS HERE
+    function minDataValue () {
+        return d3.min(_chart.data(), function (e) {
+            return d3.min(_chart.valueAccessor()(e));
+        });
+    }
+
+    function maxDataValue () {
+        return d3.max(_chart.data(), function (e) {
+            return d3.max(_chart.valueAccessor()(e));
+        });
+    }
+
+    function yAxisRangeRatio () {
+        return ((maxDataValue() - minDataValue()) / _chart.effectiveHeight());
+    }
+
+    _chart.yAxisMin = function () {
+        var padding = _yRangePadding * yAxisRangeRatio();
+        return dc.utils.subtract(minDataValue() - padding, _chart.yAxisPadding());
+    };
+
+    _chart.yAxisMax = function () {
+        var padding = _yRangePadding * yAxisRangeRatio();
+        return dc.utils.add(maxDataValue() + padding, _chart.yAxisPadding());
+    };
+        
+    /*
     _chart.yAxisMin = function () {
         var min = d3.min(_chart.data(), function (e) {
             return d3.min(_chart.valueAccessor()(e));
@@ -10252,7 +10284,7 @@ dc.boxPlot = function (parent, chartGroup) {
             return d3.max(_chart.valueAccessor()(e));
         });
         return dc.utils.add(max, _chart.yAxisPadding());
-    };
+    }; */
 
     /**
      * Set the numerical format of the boxplot median, whiskers and quartile labels. Defaults to

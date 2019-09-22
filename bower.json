@@ -30,9 +30,9 @@
     "regression-js": "1.4.0",
     "ngclipboard": "1.1.1",
     "ssci": "https://github.com/muonsw/ssci.git#1.2.4",
-    "big.js": "3.1.3"
+    "big.js": "3.1.3",
+    "Spearson": "https://github.com/agrueneberg/Spearson.git#94b4cc5d4a0153faed9271fce2121cf7884e2dc0"
   },
-  "dependencies": {},
   "resolutions": {
     "angular-ui-router": "0.4.2",
     "angular": "1.6.4",

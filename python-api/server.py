@@ -7,7 +7,7 @@ from flask import Flask, Request, request, Response, abort
 from mongoengine import register_connection
 from mongoengine.queryset import DoesNotExist
 from mongoengine.errors import NotUniqueError
-from flask.ext.mongoengine import MongoEngine
+from flask_mongoengine import MongoEngine
 
 import json
 
