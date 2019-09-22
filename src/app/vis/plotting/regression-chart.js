@@ -465,6 +465,7 @@ function RegressionChart() {
           .height(_boxPlotHeight)
           .threshold(0.05)
           .transform({ 'x': 0, 'y': getChartOffset(index) })
+          .symbol(_logScale?"OR":"ß")
           .logScale(_logScale)
           .domain(_domain)
           .margins(_boxPlotMargins)

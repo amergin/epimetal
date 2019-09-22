@@ -11,6 +11,7 @@ function HorizontalBoxPlot() {
         left: 0
       },
       _domain = null,
+      _symbol = "ß",
       _value = Number,
       _quartiles,
       _pvalue = null,
@@ -26,7 +27,7 @@ function HorizontalBoxPlot() {
       _tooltipAccessor = function(obj) {
         var difference = _tooltipFormat(obj.quartiles[1] - obj.quartiles[0]);
         return [
-        "<strong>ß = </strong> <span style='color: red'>" + _tooltipFormat(obj.quartiles[1]) + " ± " + difference + "</span>",
+        "<strong>" + obj.symbol + " = </strong> <span style='color: red'>" + _tooltipFormat(obj.quartiles[1]) + " (CI: " + _tooltipFormat(obj.quartiles[0]) + " — " + _tooltipFormat(obj.quartiles[2]) +" )</span>",
         "<span style='color: red'>(</span>" + "<strong>p = </strong>" + "<span style='color: red'>" + _tooltipPvalueFormat(obj.pvalue) + ")</span>"
         ].join('<br>');
       },
@@ -56,7 +57,7 @@ function HorizontalBoxPlot() {
 
     // body enter
     _bodyG =_svg.selectAll('g.body')
-    .data([{quartiles: _quartiles, pvalue: _pvalue}])
+    .data([{quartiles: _quartiles, pvalue: _pvalue, symbol: _symbol}])
     .enter()
     .append('g')
     // .attr("transform", function(d) {
@@ -227,6 +228,15 @@ function HorizontalBoxPlot() {
       }
       _domain = x;
       setXScale();
+      return _chart;
+  };
+
+
+  _chart.symbol = function(x) {
+      if (!arguments.length) {
+          return _symbol;
+      }
+      _symbol = x;
       return _chart;
   };
 
