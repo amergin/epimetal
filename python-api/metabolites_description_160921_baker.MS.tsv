@@ -244,7 +244,7 @@ Crea	Creatinine	mmol/l	Fluid balance
 Alb	Albumin	signal area	Fluid balance
 Gp	Glycoprotein acetyls, mainly a1-acid glycoprotein	mmol/l	Inflammation
 Age	Patient age	years	Clinical data
-Gender	Patient gender	|C|1=male|2=female	Clinical data
+Gender	Patient gender	|B|0=male|1=female	Clinical data
 BMI	Body Mass Index	kg/m2	Clinical data
 Weight	Patient weight	kg	Clinical data
 Height	Patient height	m	Clinical data

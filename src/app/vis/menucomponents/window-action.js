@@ -24,7 +24,7 @@ angular.module('plotter.vis.menucomponents.window-action',
         return 'Histogram';
 
       case 'pl-classed-bar-chart':
-        return 'Class variable';
+        return 'Binary variable';
 
       case 'pl-boxplot':
         return 'Box plot';

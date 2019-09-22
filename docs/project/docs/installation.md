@@ -126,9 +126,9 @@ Describes a variable named *L-VLDL-P* that has description *Concentration of lar
 
 Note that the order rows in this file is significant. Each variable group and a variable within this group is assigned an ordering number. The first occurence of a variable group in the file determines its order number. The ordering numbers are used in displaying the variable lists in the user interface as well as in arranging the computation results in various figures.
 
-#### Categorical variables
+#### Binary variables
 
-If a variable has discrete value range (i.e. categorical variable), supply the unit in the following format: `|C|value1=description|value2=description|...`.  The values must be convertable to numbers.
+If a variable has a discrete value range of 0 or 1, supply the unit in the following format: `|B|0=description|1=description|...`.  Only values of 0 and 1 are tolerated.
 
 For instance, the row
 
@@ -136,7 +136,7 @@ For instance, the row
 Gender  Patient gender  |C|0=female|1=male|NaN=(Not available) Clinical data
 ```
 
-describes a variable named *Gender* with a description of *Patient gender*. The variable is a class variable and will have values 0 (will be presented as *female*) and 1 (will be presented as *male*). If the value is not coercible to number, it will be presented as *(Not available)*.
+describes a variable named *Gender* with a description of *Patient gender*. The variable is a binary variable and will have values 0 (will be presented as *female*) and 1 (will be presented as *male*). If the value is not coercible to number, it will be presented as *(Not available)*.
 
 #### Regular expressions
 

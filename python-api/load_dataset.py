@@ -15,6 +15,7 @@ import copy
 DATASET_VARIABLE_GROUP_NAME = 'Dataset variables'
 DATASET_VARIABLE_SAMPLE_DESC = 'Variable indicating whether the sample is a member of the named dataset'
 DATASET_VARIABLE_PREFIX = 'dataset_'
+ALLOWED_CLASS_VARIABLE_VALUES = [0,1]
 
 # Utilities, not part of the class
 def _getEscapedVar(cfg, var):
@@ -50,7 +51,7 @@ class DataLoader( object ):
 		connect( db=dbSettings.get("samples").get("name"), alias='samples', host=dbSettings.get("samples").get("host"), port=dbSettings.get("samples").get("port"), w=1 )
 		connect( db=dbSettings.get("settings").get("name"), alias='db_settings', host=dbSettings.get("settings").get("host"), port=dbSettings.get("settings").get("port"), w=1 )
 		# has 'C|' in the beginning
-		self.classVarRegex = re.compile('(\|C\|)(.+)', re.IGNORECASE)
+		self.classVarRegex = re.compile('(\|B\|)(.+)', re.IGNORECASE)
 		self.regVarPattern = "|regex|"
 		self.regVarRegex = re.compile(re.escape(self.regVarPattern), re.IGNORECASE)
 		self.selfRegex = re.compile('\|self\|', re.IGNORECASE)
@@ -230,7 +231,15 @@ class DataLoader( object ):
 			def getSplitClassVariable(payload):
 				unit = payload.get('unit')
 				content = self.classVarRegex.search(unit).group(2)
-				return dict( keypair.split("=") for keypair in content.split("|") )
+				varvalues = dict( keypair.split("=") for keypair in content.split("|") )
+				for value in varvalues.keys():
+					try:
+						valuenum = int(value)
+						if not valuenum in ALLOWED_CLASS_VARIABLE_VALUES:
+							raise Exception("Value %s is not an allowed value for binary variable %s. Check the meta data file syntax." %(value, payload.get('name')))
+					except ValueError, e:
+						raise Exception("Could not convert value %s to binary value outcome on variable %s. Check the meta data file syntax." %(value, payload.get('name')))
+				return varvalues
 
 			def varIsRegex(string):
 				return self.regVarRegex.search(string) is not None
@@ -370,8 +379,8 @@ class DataLoader( object ):
 					# That is, make a copy of the original.
 					payload = copy.deepcopy(rowDict)
 					if _isClassVariable(payload):
+						print "payload=", payload
 						payload['classed'] = True
-						#print "payload=", payload
 						payload['unit'] = getSplitClassVariable(payload)
 
 					payload['group'] = group
@@ -442,8 +451,11 @@ class DataLoader( object ):
 
 		def checkHeaderAndSampleDimensions(headerList, valuesDict, lineNo):
 			if len(headerList) != len(valuesDict):
-				print '[Error] Header and line lengths must agree, error at line %i' %lineNo
+				print '[Error] Header and line lengths must agree, error at line %i' %(lineNo+1)
 				sys.exit(-1)
+
+		def _isClassVariable(name):
+			return HeaderSample.objects.get(name=name).classed == True
 
 		dataSourceSeparator = self.cfg.getVar("dataLoader", "dataSource").get("columnSeparator").encode("ascii", "ignore")
 
@@ -464,7 +476,7 @@ class DataLoader( object ):
 				line = line.strip()
 
 				if len(line) is 0:
-					print "[Info] Line number %i is empty." %lineNo
+					print "[Info] Line number %i is empty, skipping." %(lineNo+1)
 					# empty line, silently continue
 					continue
 
@@ -478,7 +490,6 @@ class DataLoader( object ):
 
 				# check every column is provided on this line
 				checkHeaderAndSampleDimensions(header, valuesDict, lineNo)
-
 				checkDatasetVariable(dataset)
 
 				variables = {}
@@ -487,7 +498,18 @@ class DataLoader( object ):
 					if key == datasetKey or key == sampleidKey:
 						continue
 					try:
+						#print "key = ", key
+						#print "valuesdict", valuesDict
 						filteredCharacters = valuesDict[key].replace('"', "").replace("'", "")
+						if _isClassVariable(key.encode('ascii')):
+							try:
+								classVarValue = int(filteredCharacters)
+								if classVarValue not in ALLOWED_CLASS_VARIABLE_VALUES:
+									raise Exception("Binary variable %s has value %s on line number %i, which is not an allowed value." %(key, classVarValue, lineNo+1))
+							except ValueError, e:
+								raise Exception("Binary variable %s has value %s on line number %i, which is not an allowed value." %(key, filteredCharacters, lineNo+1))
+
+						# value is the same whether numerical or class var
 						variables[key.encode('ascii')] = ffloat( float( filteredCharacters ) )
 					except ValueError:
 						variables[key.encode('ascii')] = ffloat( float('NaN') )
