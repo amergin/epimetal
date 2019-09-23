@@ -124,7 +124,24 @@
         throw new Error('Constant variable');
       }
 
-      if(normalize) {
+
+      var isBinaryVariable = true;
+      for (j=0;j<columns[ii].length;j++) {
+        if(columns[ii][j] !== 0 && columns[ii][j] !== 1) {
+          isBinaryVariable = false;
+          break;
+        }
+      }
+
+      if(isBinaryVariable) {
+        console.log('This is a binary variable!');
+      }
+
+
+
+      if(!isBinaryVariable && normalize) {
+
+        console.log('normalizing!');
 
         for(var j=0; j<columns[ii].length; j++) {
 
@@ -132,6 +149,8 @@
         }
 
       } else {
+
+        console.log('Not normalizing!');
 
         for(var k=0; k<columns[ii].length; k++) {
 

@@ -39,17 +39,22 @@ def _getEscapedHeader(cfg, headerList):
 
 class DataLoader( object ):
 	def __init__(self, configFile, fileName):
+		print "[Info] Loading config file..."
 		self.cfg = JSONConfig(configFile)
+		print "[Info] ... done"
 		self.dataFile = fileName
 
 		dataloaderSettings = self.cfg.getVar("dataLoader")
 		self.topgroupSeparator = dataloaderSettings.get("metadata").get("topGroupSeparator", ":").encode("ascii", "ignore")
 		
+
 		time.sleep(10)
 
+		print "[Info] Connecting to database"
 		dbSettings = self.cfg.getVar("database")
 		connect( db=dbSettings.get("samples").get("name"), alias='samples', host=dbSettings.get("samples").get("host"), port=dbSettings.get("samples").get("port"), w=1 )
 		connect( db=dbSettings.get("settings").get("name"), alias='db_settings', host=dbSettings.get("settings").get("host"), port=dbSettings.get("settings").get("port"), w=1 )
+		print "[Info] Connected!"
 		# has 'C|' in the beginning
 		self.classVarRegex = re.compile('(\|B\|)(.+)', re.IGNORECASE)
 		self.regVarPattern = "|regex|"
@@ -474,6 +479,7 @@ class DataLoader( object ):
 					continue
 
 				line = line.strip()
+
 
 				if len(line) is 0:
 					print "[Info] Line number %i is empty, skipping." %(lineNo+1)

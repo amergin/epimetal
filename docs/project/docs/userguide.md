@@ -169,11 +169,15 @@ In the case where two or more circle filters intersect and thereby select one or
 
 ### Regression analysis & associations
 
-In this view multiple linear regression analysis can be computed and its results can be viewed. Start by clicking on **Create a new regression view** button. 
+In this view multiple linear regression or logistic regression analysis can be computed and its results can be viewed. Start by clicking on **Create a new regression view** button. 
 
-Analyze the statistical association between a set of variables (*exposure variables*) to *a outcome variable*. Optionally, the regression analysis can also be adjusted for a variable or variables by filling in the *covariates* field.
+With regression analysis, one can analyze the statistical association between a set of variables (*exposure variables*) to *a outcome variable*. Optionally, the regression analysis can also be adjusted for a variable or variables by filling in the *covariates* field.
 
-The figure window first appears blank with a circular progress indicator that shows the progress of the calculation. The computation is done in parallel and should complete in well under a minute, depending on the resources of your computer and the amount of samples being processed.
+If the *outcome variable* is a continuous numeric variable, linear regression is used and the results are displayed as regression coefficients with their respective confidence intervals. In case the outcome is a binary variable (having only values 0 or 1), the analysis is performed using logistic regression and the results are displayed as odds ratios and confidence intervals on a logarithmic scale.
+
+All continuous (non binary) variables are standardized to zero mean and unit standard deviation prior to the analyses regardless whether they are defined as outcome, exposure or covariate variables.
+
+After starting the analyses, the result window first appears blank with a circular progress indicator that shows the progress of the calculation. The computation is done in parallel and should complete in well under a minute, depending on the resources of your computer and the amount of samples being processed.
 
 #### Exporting results
 The results of any produced analyses can be exported by selecting the *Download regression data in a ZIP file* option under the cogwheel menu of a forest plot window. 
@@ -198,7 +202,7 @@ The result TSV file contains the following columns:
 | computation_succeeded | Boolean: **True** / **False** | Whether the computation succeeded. If the result is **False**, the following numerical columns will have value NaN |
 | data_source | String | The dataset name. Should be the same for each row in the same file |
 | beta0 | Float | The regression coefficient for the constant term (intercept) |
-| beta1 | Float | The standardized regression coefficient, or Beta 1, for this variable |
+| beta1 | Float | The standardized regression coefficient or the odds ratio for this variable |
 | CI1 | Float | Lower endpoint of the 95% confidence interval |
 | CI2 | Float | Upper endpoint of the 95% confidence interval |
 | p_value | Float | P-value. The number 0 is presented in the case the number precision is not sufficient to display such a small number. |
@@ -340,11 +344,11 @@ The profile histogram is a grouped row chart that calculates a separate bar for 
 
 *Example of Fatty acids profile histogram, three circle filters are active. The cursor is on top of the MUFA variable, showing a tooltip that contains the mean score of the variable, standard deviation, and sample count of the filter.*
 
-### Regression box plots
+### Regression forest plots
 
 On the resulting figure, the selected variables are grouped according to the variable group and its respective ordering number. 
 
-Each variable row displays a color coded box plot where the color corresponds to the dataset color. The bar contains a white dot indicating the *beta coefficient* of calculation and the bar width depends on the *confidence interval*. The numerical values of these results can be seen by placing the mouse cursor over the bar area, showing a tool tip that contains the beta coefficient, the confidence interval and the p value. The bar is shown in transparent color if p > 0.05. An asterisk (`*`) is placed on the right-hand side of the dataset bar row if the computation is statistically significant within the variable group.
+Each variable row displays a color coded box plot where the color corresponds to the dataset color. The bar contains a white dot indicating the *regression coefficient* or in case of logistic regression, the *odds ratio* for the variable, and the full width of the bar covers the *confidence interval*. The numerical values of these results can be seen by placing the mouse cursor over the bar area, showing a tool tip that contains the beta coefficient (or the odds ratio), the confidence interval and the p value. The bar is shown in transparent color if p > 0.05. An asterisk (`*`) is placed on the right-hand side of the dataset bar row if the computation is statistically significant within the variable group.
 
 ## Variables
 
