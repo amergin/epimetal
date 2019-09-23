@@ -61,6 +61,8 @@ class DataLoader( object ):
 		self.regVarRegex = re.compile(re.escape(self.regVarPattern), re.IGNORECASE)
 		self.selfRegex = re.compile('\|self\|', re.IGNORECASE)
 
+		self.classVariableLookup = dict()
+
 	def load(self):
 		print "[Info] Starting to load samples"
 		self._loadSamples()
@@ -231,7 +233,9 @@ class DataLoader( object ):
 
 			def _isClassVariable(payload):
 				unit = payload.get('unit')
-				return self.classVarRegex.search(unit) is not None
+				isClassVariable = self.classVarRegex.search(unit) is not None
+				if isClassVariable:
+					self.classVariableLookup[payload.get('name')] = True
 
 			def getSplitClassVariable(payload):
 				unit = payload.get('unit')
@@ -384,7 +388,6 @@ class DataLoader( object ):
 					# That is, make a copy of the original.
 					payload = copy.deepcopy(rowDict)
 					if _isClassVariable(payload):
-						print "payload=", payload
 						payload['classed'] = True
 						payload['unit'] = getSplitClassVariable(payload)
 
@@ -460,7 +463,7 @@ class DataLoader( object ):
 				sys.exit(-1)
 
 		def _isClassVariable(name):
-			return HeaderSample.objects.get(name=name).classed == True
+			return self.classVariableLookup.get(name, False)
 
 		dataSourceSeparator = self.cfg.getVar("dataLoader", "dataSource").get("columnSeparator").encode("ascii", "ignore")
 
