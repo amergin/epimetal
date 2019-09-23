@@ -37,7 +37,7 @@ ADD web-docker/karma-unit.tpl.js karma/karma-unit.tpl.js
 RUN grunt build
 
 # Add Nginx configuration
-ADD ./.htpasswd /etc/nginx/.htpasswd
+#ADD ./.htpasswd /etc/nginx/.htpasswd
 ADD python-api/http-docker/nginx.conf /etc/nginx/nginx.conf
 RUN chown -R www-data:www-data /var/lib/nginx
 RUN chown -R www-data:www-data /plotter
