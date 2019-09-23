@@ -128,7 +128,7 @@ Note that the order rows in this file is significant. Each variable group and a 
 
 #### Binary variables
 
-If a variable has a discrete value range of 0 or 1, supply the unit in the following format: `|B|0=description|1=description|...`.  Only values of 0 and 1 are tolerated.
+If a variable has a discrete value range of 0 or 1, supply the unit in the following format: `|B|0=description|1=description|NaN=description`. Numeric values must be either 0 or 1. Non-numerical values (values that cannot be coerced to an allowed number) will be treated as missing and labeled as NaN.
 
 For instance, the row
 
@@ -136,7 +136,7 @@ For instance, the row
 Gender  Patient gender  |C|0=female|1=male|NaN=(Not available) Clinical data
 ```
 
-describes a variable named *Gender* with a description of *Patient gender*. The variable is a binary variable and will have values 0 (will be presented as *female*) and 1 (will be presented as *male*). If the value is not coercible to number, it will be presented as *(Not available)*.
+describes a variable named *Gender* with a description of *Patient gender*. The variable is a binary variable and will have values 0 (will be presented as *female*) and 1 (will be presented as *male*). If the value is not coercible to number, it will be presented as *(Not available)* in the software.
 
 #### Regular expressions
 

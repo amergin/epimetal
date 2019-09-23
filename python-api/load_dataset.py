@@ -236,6 +236,7 @@ class DataLoader( object ):
 				isClassVariable = self.classVarRegex.search(unit) is not None
 				if isClassVariable:
 					self.classVariableLookup[payload.get('name')] = True
+				return isClassVariable
 
 			def getSplitClassVariable(payload):
 				unit = payload.get('unit')
@@ -247,7 +248,10 @@ class DataLoader( object ):
 						if not valuenum in ALLOWED_CLASS_VARIABLE_VALUES:
 							raise Exception("Value %s is not an allowed value for binary variable %s. Check the meta data file syntax." %(value, payload.get('name')))
 					except ValueError, e:
-						raise Exception("Could not convert value %s to binary value outcome on variable %s. Check the meta data file syntax." %(value, payload.get('name')))
+						if value == 'NaN':
+							pass
+						else:
+							raise Exception("Could not convert value %s to binary value outcome on variable %s. Check the meta data file syntax." %(value, payload.get('name')))
 				return varvalues
 
 			def varIsRegex(string):
@@ -515,11 +519,14 @@ class DataLoader( object ):
 								classVarValue = int(filteredCharacters)
 								if classVarValue not in ALLOWED_CLASS_VARIABLE_VALUES:
 									raise Exception("Binary variable %s has value %s on line number %i, which is not an allowed value." %(key, classVarValue, lineNo+1))
+								variables[key.encode('ascii')] = classVarValue
 							except ValueError, e:
-								raise Exception("Binary variable %s has value %s on line number %i, which is not an allowed value." %(key, filteredCharacters, lineNo+1))
+								print "[Info] Binary variable %s has value %s on line number %i. This is not coercible to number, so setting to NaN." %(key, filteredCharacters, lineNo+1)
+								variables[key.encode('ascii')] = ffloat( float('NaN') )
+								#raise Exception("Binary variable %s has value %s on line number %i, which is not an allowed value." %(key, filteredCharacters, lineNo+1))
 
-						# value is the same whether numerical or class var
-						variables[key.encode('ascii')] = ffloat( float( filteredCharacters ) )
+						else:
+							variables[key.encode('ascii')] = ffloat( float( filteredCharacters ) )
 					except ValueError:
 						variables[key.encode('ascii')] = ffloat( float('NaN') )
 				#print "values=", valuesDict, sampleidKey
