@@ -18,7 +18,7 @@
       "rename": [
         {
           "from": "Gender",
-          "to": "Sex"
+          "to": "Sex_female"
         }
       ],
       "exclude": ["FastingGlucose", "FastingInsulin", "HOMA", "2h_glucose", "Glucose_AUC0120", "Insulin_AUC0120", "MatsudaSI", "apoa_I", "Leptin", "NEFA", "TG", "TC", "LDL_C", "HDL_C", "Weight", "Waist", "Hip", "W_H_ratio", "HR", "VO2max", "Energy", "Fat", "Sat", "Poly", "Mono", "Protein", "CHO", "Alcohol", "M_i"]
@@ -57,14 +57,14 @@
           },
           {
               "name": "Clinical variables",
-              "variables": ["Age", "Sex", "BMI", "SBP", "DBP"]
+              "variables": ["Age", "Sex_female", "BMI", "SBP", "DBP"]
           }
         ],
         "defaultInputVariables": ["XXL-VLDL-L","XL-VLDL-L","L-VLDL-L","M-VLDL-L","S-VLDL-L","XS-VLDL-L","IDL-L","L-LDL-L","M-LDL-L","S-LDL-L","XL-HDL-L","L-HDL-L","M-HDL-L","S-HDL-L","Serum-C","Serum-TG","HDL-C","LDL-C","Glc","Cit","Phe","Gp","Tyr","FAw3toFA","FAw6toFA","SFAtoFA"],
         "defaultPlanes":  ["Serum-C", "Serum-TG", "HDL-C", "LDL-C", "Glc"],
         "pivot": {
           "enabled": true,
-          "defaultVariable": "Sex"
+          "defaultVariable": "Sex_female"
         }
       }
     }
@@ -79,17 +79,17 @@
   "database": {
     "samples": {
       "name": "samples",
-      "host": "db",
+      "host": "localhost",
       "port": 27017
     },
     "settings": {
       "name": "settings",
-      "host": "db",
+      "host": "localhost",
       "port": 27017
     },
     "som": {
       "name": "som",
-      "host": "db",
+      "host": "localhost",
       "port": 27017
     }
   }
