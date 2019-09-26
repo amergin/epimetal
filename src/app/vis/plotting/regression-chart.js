@@ -322,7 +322,7 @@ function RegressionChart() {
         if(_logScale) {
 
           var minmax = getScale().domain();
-          var tickValues = _.remove([0.25, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0], function(n) {
+          var tickValues = _.remove([0.01, 0.03, 0.06, 0.13, 0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 8.0, 16.0, 32.0], function(n) {
               return n > minmax[0] && n < minmax[1];
           });
 
@@ -691,11 +691,19 @@ function RegressionChart() {
   };
 
   function computeDomain() {
+
     function getLowerValue(lowVal) {
       if( lowVal >= _zeroPoint ) {
         return _zeroPoint - _domainAdjust;
       }
-      return lowVal - _domainAdjust;
+
+      if(_logScale && lowVal - _domainAdjust <= 0) {
+        return lowVal;
+      } else {
+        return lowVal - _domainAdjust;  
+      }
+
+      
     }
 
     function getUpperValue(upperVal) {
@@ -717,6 +725,7 @@ function RegressionChart() {
     lowerValue = getLowerValue(extent[0]),
     upperValue = getUpperValue(extent[1]);
 
+    
     _domain = [lowerValue, upperValue];
   }
 
