@@ -46,6 +46,7 @@ angular.module('plotter.vis.plotting.regression',
     $scope.chart = new RegressionChart()
     .element( $scope.element[0] )
     .width(width)
+    .logScale(logScale)
     .data(data)
     .groupLookupCallback(function groupLookup(order) {
       return VariableService.getGroup(order);
@@ -57,7 +58,6 @@ angular.module('plotter.vis.plotting.regression',
       }
     ])
     .axisLabel(axisLabel)
-    .logScale(logScale)
     .zeroPoint(zeroPoint)
     .circleColors(FilterService.getSOMColorScale())
     .datasetColors(DatasetFactory.getColorScale())
